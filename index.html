@@ -526,6 +526,86 @@ footer.bottom .auteurs{margin-top:4px;}
 .mode-approfondi-panel h4{font-size:16px;font-weight:700;margin-bottom:6px;color:var(--teal-deep);}
 .mode-approfondi-panel p{font-size:14px;color:var(--ink-soft);margin:0;}
 
+/* ─── Journée type : créneaux rapide ──────────────────────── */
+.creneau-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
+.creneau-row{
+  display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+}
+.creneau-row select{
+  padding:6px 8px;border:1px solid var(--line);border-radius:var(--radius-sm);
+  background:var(--card);color:var(--ink);font-size:13px;min-width:80px;
+  cursor:pointer;
+}
+.creneau-row input[type=text]{
+  flex:1;min-width:120px;padding:6px 9px;
+  border:1px solid var(--line);border-radius:var(--radius-sm);
+  background:var(--card);color:var(--ink);font-size:13px;
+}
+.creneau-row input[type=text]:focus,
+.creneau-row select:focus{
+  outline:none;border-color:var(--coral);
+}
+.creneau-del{
+  background:none;border:none;cursor:pointer;
+  color:var(--ink-soft);font-size:16px;padding:4px;
+  border-radius:4px;transition:color .12s;flex-shrink:0;
+}
+.creneau-del:hover{color:var(--coral-deep);}
+.creneau-add{
+  display:flex;align-items:center;gap:6px;
+  background:none;border:1.5px dashed var(--line);
+  border-radius:var(--radius-sm);padding:6px 14px;
+  color:var(--ink-soft);font-size:13px;font-weight:600;
+  cursor:pointer;transition:border-color .12s,color .12s;
+  margin-top:4px;
+}
+.creneau-add:hover{border-color:var(--coral);color:var(--coral-deep);}
+
+/* ─── Grille semaine (mode approfondi) ─────────────────────── */
+.semaine-toolbar{
+  display:flex;gap:8px;flex-wrap:wrap;
+  margin-bottom:14px;align-items:center;
+}
+.semaine-toolbar button{font-size:12.5px;}
+.semaine-grid-outer{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.semaine-grid{
+  border-collapse:collapse;
+  min-width:600px;width:100%;
+  font-size:13px;
+}
+.semaine-grid th{
+  background:var(--paper-deep);
+  border:1px solid var(--line);
+  padding:7px 10px;
+  font-size:12px;font-weight:700;
+  color:var(--ink-soft);text-transform:uppercase;
+  letter-spacing:.04em;white-space:nowrap;
+  position:sticky;top:0;z-index:2;
+}
+.semaine-grid th.col-activite{min-width:140px;}
+.semaine-grid td{
+  border:1px solid var(--line);
+  padding:5px 7px;vertical-align:middle;
+}
+.semaine-grid td.col-horaire{
+  white-space:nowrap;color:var(--ink-soft);
+  font-size:12px;font-weight:600;background:var(--paper);
+  min-width:90px;
+}
+.semaine-grid td input[type=text]{
+  width:100%;border:none;background:transparent;
+  color:var(--ink);font-size:13px;padding:2px 4px;
+}
+.semaine-grid td input[type=text]:focus{
+  outline:1px solid var(--coral);border-radius:2px;
+}
+.semaine-grid td input[type=text]::placeholder{color:var(--line);}
+.semaine-grid tr:hover td{background:var(--paper);}
+.semaine-grid tr:hover td.col-horaire{background:var(--paper-deep);}
+.semaine-ajouter-jour{
+  margin-top:12px;font-size:12.5px;
+}
+
 /* En-tête visible uniquement à l'impression */
 .print-header {
   display: none;
@@ -1265,10 +1345,23 @@ footer.bottom .auteurs{margin-top:4px;}
         <button id="m1-btn-approfondi" onclick="setMode('m1','approfondi')">🔬 Approfondi</button>
       </div>
     </div>
-    <div id="m1-approfondi-panel" class="mode-approfondi-panel" style="display:none;">
-      <div class="ico-wip">🔬</div>
-      <h4>Mode approfondi — en construction</h4>
-      <p>Ce module enrichi sera disponible dans une prochaine version de la BAF.</p>
+    <div id="m1-approfondi-panel" style="display:none;">
+      <div class="card">
+        <div class="semaine-toolbar">
+          <span style="font-size:13px;font-weight:700;color:var(--ink);">📅 Emploi du temps hebdomadaire</span>
+          <button class="btn btn-ghost btn-sm" onclick="dupliquerJourneeType()" title="Copier la journée type sur tous les jours actifs">⬇ Depuis la journée type</button>
+          <button class="btn btn-ghost btn-sm" onclick="ajouterJourSemaine()">＋ Ajouter un jour</button>
+        </div>
+        <div class="semaine-grid-outer">
+          <table class="semaine-grid" id="semaine-grid">
+            <thead id="semaine-thead"></thead>
+            <tbody id="semaine-tbody"></tbody>
+          </table>
+        </div>
+        <div class="semaine-ajouter-jour" id="semaine-ajouter-msg" style="color:var(--ink-soft);font-style:italic;font-size:13px;margin-top:8px;">
+          Les jours d'accueil cochés dans le Préambule apparaissent automatiquement. Vous pouvez en ajouter d'autres.
+        </div>
+      </div>
     </div>
     <div id="m1-rapide-content">
     <div class="card">
@@ -1344,9 +1437,10 @@ footer.bottom .auteurs{margin-top:4px;}
       </div>
 
       <div class="field">
-        <label for="m1-journee">La journée type, si vous pouvez la décrire</label>
-        <div class="help">Lever, repas, activités, coucher... Ce n'est pas pour figer un emploi du temps rigide, mais pour faire apparaître les moments creux et les transitions — souvent déterminants dans l'analyse.</div>
-        <textarea id="m1-journee" placeholder="ex : lever 7h30, petit-déjeuner, transport, arrivée structure 9h, activité du matin, repas 12h, temps libre, activité après-midi, retour 16h30..." oninput="saveM1()"></textarea>
+        <label>La journée type <span style="font-weight:400;color:var(--ink-soft);">(créneaux)</span></label>
+        <div class="help">Ajoutez autant de créneaux que nécessaire. Ce n'est pas un emploi du temps rigide — c'est pour faire apparaître les transitions, souvent déterminantes dans l'analyse.</div>
+        <div class="creneau-list" id="m1-creneau-list"></div>
+        <button type="button" class="creneau-add" onclick="ajouterCreneau()">＋ Ajouter un créneau</button>
       </div>
 
       <div class="field">
@@ -1685,12 +1779,14 @@ function setMode(moduleId, mode){
     btnRapide.classList.remove('active');
     if(panelApprofondi) panelApprofondi.style.display = '';
     if(rapideContent)   rapideContent.style.display   = 'none';
+    // Re-rendre la grille semaine si on est en m1
+    if (moduleId === 'm1') renderGrilleSemaine();
   }
 }
 
 let state = {
   version: 1,
-  m1: {prenom:'', age:'', diag:'', lieux:[], statut:'', lieuAnalyse:'', jours:[], heures:'', journee:'', libre:''},
+  m1: {prenom:'', age:'', diag:'', lieux:[], statut:'', lieuAnalyse:'', jours:[], heures:'', journeeCreneaux:[], semaineCreneaux:{}, libre:''},
   m2: {evenements: []},
   m3: {sous:'cp', categories:{cp:{},antecedents:{},declencheurs:{},consequences:{},interventions:{}}},
   m4: {patterns: [], gradations: [], vase: {monte:[], descend:[], texte:''}}
@@ -1704,6 +1800,10 @@ function replaceState(newObj){
   // (compatibilité ascendante : exports anciens peuvent manquer certaines clés)
   if (!state.m1) state.m1 = {};
   if (state.m1.lieuAnalyse === undefined) state.m1.lieuAnalyse = '';
+  // Compat : ancien format journee (string libre) → on le conserve mais on initialise les nouveaux tableaux
+  if (!Array.isArray(state.m1.journeeCreneaux)) state.m1.journeeCreneaux = [];
+  if (!state.m1.semaineCreneaux || typeof state.m1.semaineCreneaux !== 'object') state.m1.semaineCreneaux = {};
+  if (!Array.isArray(state.m1.joursExtras)) state.m1.joursExtras = [];
   if (!state.m2) state.m2 = {evenements:[]};
   if (!Array.isArray(state.m2.evenements)) state.m2.evenements = [];
   if (!state.m3) state.m3 = {};
@@ -1757,6 +1857,172 @@ document.querySelectorAll('.nav-btn').forEach(btn=>{
 });
 
 
+const HEURES_OPTIONS = ["00h00", "00h30", "01h00", "01h30", "02h00", "02h30", "03h00", "03h30", "04h00", "04h30", "05h00", "05h30", "06h00", "06h30", "07h00", "07h30", "08h00", "08h30", "09h00", "09h30", "10h00", "10h30", "11h00", "11h30", "12h00", "12h30", "13h00", "13h30", "14h00", "14h30", "15h00", "15h30", "16h00", "16h30", "17h00", "17h30", "18h00", "18h30", "19h00", "19h30", "20h00", "20h30", "21h00", "21h30", "22h00", "22h30", "23h00", "23h30"];
+
+function makeHeureSelect(val, onchange) {
+  const sel = `<select onchange="${onchange}" style="min-width:75px;">` +
+    HEURES_OPTIONS.map(h => `<option value="${h}"${h===val?' selected':''}>${h}</option>`).join('') +
+    '</select>';
+  return sel;
+}
+
+// ─────────────────────────────────────────────────────────────
+// JOURNÉE TYPE — MODE RAPIDE
+// ─────────────────────────────────────────────────────────────
+function renderCreneauList() {
+  const list = document.getElementById('m1-creneau-list');
+  if (!list) return;
+  const creneaux = state.m1.journeeCreneaux || [];
+  if (creneaux.length === 0) {
+    list.innerHTML = '<div style="color:var(--ink-soft);font-size:13px;font-style:italic;padding:4px 0;">Aucun créneau — cliquez sur « Ajouter un créneau ».</div>';
+    return;
+  }
+  list.innerHTML = creneaux.map((c, i) => `
+    <div class="creneau-row">
+      ${makeHeureSelect(c.debut || '08h00', `updateCreneau(${i},'debut',this.value)`)}
+      <span style="color:var(--ink-soft);font-size:13px;">→</span>
+      ${makeHeureSelect(c.fin || '09h00', `updateCreneau(${i},'fin',this.value)`)}
+      <input type="text" value="${esc(c.nom||'')}" placeholder="Nom du temps (ex : Atelier cuisine)"
+        oninput="updateCreneau(${i},'nom',this.value)" style="flex:1;min-width:120px;">
+      <button class="creneau-del" onclick="supprimerCreneau(${i})" title="Supprimer ce créneau">×</button>
+    </div>`).join('');
+}
+
+function ajouterCreneau() {
+  if (!Array.isArray(state.m1.journeeCreneaux)) state.m1.journeeCreneaux = [];
+  const last = state.m1.journeeCreneaux.slice(-1)[0];
+  state.m1.journeeCreneaux.push({
+    debut: last ? last.fin : '08h00',
+    fin:   last ? avancerHeure(last.fin) : '09h00',
+    nom:   ''
+  });
+  renderCreneauList();
+  persist();
+}
+
+function supprimerCreneau(idx) {
+  state.m1.journeeCreneaux.splice(idx, 1);
+  renderCreneauList();
+  persist();
+}
+
+function updateCreneau(idx, champ, val) {
+  if (!state.m1.journeeCreneaux[idx]) return;
+  state.m1.journeeCreneaux[idx][champ] = val;
+  persist();
+}
+
+function avancerHeure(h) {
+  const idx = HEURES_OPTIONS.indexOf(h);
+  return idx >= 0 && idx < HEURES_OPTIONS.length - 1 ? HEURES_OPTIONS[idx + 1] : h;
+}
+
+// ─────────────────────────────────────────────────────────────
+// GRILLE SEMAINE — MODE APPROFONDI
+// ─────────────────────────────────────────────────────────────
+const JOURS_ALL = [
+  {id:'lundi',label:'Lundi'},{id:'mardi',label:'Mardi'},{id:'mercredi',label:'Mercredi'},
+  {id:'jeudi',label:'Jeudi'},{id:'vendredi',label:'Vendredi'},
+  {id:'samedi',label:'Samedi'},{id:'dimanche',label:'Dimanche'}
+];
+
+// Jours actifs = jours d'accueil cochés + jours ajoutés manuellement
+function joursActifs() {
+  const cochés = state.m1.jours || [];
+  const extras  = state.m1.joursExtras || [];
+  const actifs  = [];
+  JOURS_ALL.forEach(j => {
+    if (cochés.includes(j.id) || extras.includes(j.id)) actifs.push(j);
+  });
+  return actifs;
+}
+
+function renderGrilleSemaine() {
+  const thead = document.getElementById('semaine-thead');
+  const tbody = document.getElementById('semaine-tbody');
+  if (!thead || !tbody) return;
+
+  ensureSemaineCreneaux();
+  const jours = joursActifs();
+  const creneaux = state.m1.journeeCreneaux || [];
+
+  if (jours.length === 0) {
+    thead.innerHTML = '';
+    tbody.innerHTML = '<tr><td colspan="2" style="color:var(--ink-soft);font-style:italic;padding:14px;">Cochez d\'abord des jours d\'accueil dans le Préambule, ou utilisez « Ajouter un jour ».</td></tr>';
+    return;
+  }
+  if (creneaux.length === 0) {
+    thead.innerHTML = '';
+    tbody.innerHTML = '<tr><td colspan="' + (jours.length+1) + '" style="color:var(--ink-soft);font-style:italic;padding:14px;">Créez d\'abord des créneaux en mode Rapide, puis revenez ici.</td></tr>';
+    return;
+  }
+
+  // En-tête
+  thead.innerHTML = '<tr><th style="min-width:90px;">Horaire</th>' +
+    jours.map(j => `<th class="col-activite">${j.label}</th>`).join('') + '</tr>';
+
+  // Corps : une ligne par créneau
+  tbody.innerHTML = creneaux.map((c, ci) => {
+    const horaire = `${c.debut||'?'} → ${c.fin||'?'}`;
+    const cells = jours.map(j => {
+      const val = ((state.m1.semaineCreneaux[j.id] || [])[ci] || {}).activite || '';
+      return `<td><input type="text" value="${esc(val)}"
+        placeholder="${esc(c.nom||'')}"
+        oninput="updateSemaine('${j.id}',${ci},this.value)"></td>`;
+    }).join('');
+    return `<tr><td class="col-horaire">${esc(horaire)}<br><span style="font-size:11px;color:var(--coral-deep);font-weight:600;">${esc(c.nom||'')}</span></td>${cells}</tr>`;
+  }).join('');
+}
+
+function ensureSemaineCreneaux() {
+  if (!state.m1.semaineCreneaux) state.m1.semaineCreneaux = {};
+  const jours = joursActifs();
+  const nb = (state.m1.journeeCreneaux || []).length;
+  jours.forEach(j => {
+    if (!Array.isArray(state.m1.semaineCreneaux[j.id])) {
+      state.m1.semaineCreneaux[j.id] = [];
+    }
+    // S'assurer qu'il y a autant d'entrées que de créneaux
+    while (state.m1.semaineCreneaux[j.id].length < nb) {
+      state.m1.semaineCreneaux[j.id].push({activite:''});
+    }
+  });
+}
+
+function updateSemaine(jourId, creneauIdx, val) {
+  ensureSemaineCreneaux();
+  if (!Array.isArray(state.m1.semaineCreneaux[jourId])) state.m1.semaineCreneaux[jourId] = [];
+  if (!state.m1.semaineCreneaux[jourId][creneauIdx]) {
+    state.m1.semaineCreneaux[jourId][creneauIdx] = {};
+  }
+  state.m1.semaineCreneaux[jourId][creneauIdx].activite = val;
+  persist();
+}
+
+function dupliquerJourneeType() {
+  ensureSemaineCreneaux();
+  const creneaux = state.m1.journeeCreneaux || [];
+  const jours = joursActifs();
+  jours.forEach(j => {
+    state.m1.semaineCreneaux[j.id] = creneaux.map(c => ({activite: c.nom || ''}));
+  });
+  renderGrilleSemaine();
+  persist();
+  showToast('Journée type dupliquée sur tous les jours actifs.');
+}
+
+function ajouterJourSemaine() {
+  // Proposer d'ajouter un jour non encore actif
+  const actuels = joursActifs().map(j => j.id);
+  const dispo = JOURS_ALL.filter(j => !actuels.includes(j.id));
+  if (dispo.length === 0) { showToast('Tous les jours de la semaine sont déjà présents.'); return; }
+  // Ajouter le premier disponible
+  if (!Array.isArray(state.m1.joursExtras)) state.m1.joursExtras = [];
+  state.m1.joursExtras.push(dispo[0].id);
+  persist();
+  renderGrilleSemaine();
+}
+
 function cocherTousJours() {
   document.querySelectorAll('#m1-jours input').forEach(cb => { cb.checked = true; });
   saveM1();
@@ -1773,7 +2039,7 @@ function saveM1(){
   state.m1.lieuAnalyse = lieuAnalyseEl ? lieuAnalyseEl.value : '';
   state.m1.jours = Array.from(document.querySelectorAll('#m1-jours input:checked')).map(i=>i.value);
   state.m1.heures = document.getElementById('m1-heures').value;
-  state.m1.journee = document.getElementById('m1-journee').value;
+  // journeeCreneaux est mis à jour directement par updateCreneau/ajouterCreneau
   state.m1.libre = document.getElementById('m1-libre').value;
   persist();
 }
@@ -1787,7 +2053,8 @@ function loadM1FromState(){
   document.querySelectorAll('#m1-lieu-analyse input').forEach(i=>{ i.checked = (state.m1.lieuAnalyse === i.value); });
   document.querySelectorAll('#m1-jours input').forEach(i=>{ i.checked = (state.m1.jours||[]).includes(i.value); });
   document.getElementById('m1-heures').value = state.m1.heures || '';
-  document.getElementById('m1-journee').value = state.m1.journee || '';
+  renderCreneauList();
+  renderGrilleSemaine();
   document.getElementById('m1-libre').value = state.m1.libre || '';
 }
 
@@ -1958,7 +2225,7 @@ const ETAPES = [
           <label>De quel type vous semble-t-il ? <span style="font-weight:400;color:var(--ink-soft);">(plusieurs choix possibles)</span></label>
           <div class="help">Ce n'est pas une case à cocher de façon certaine — juste votre impression, comme point de départ.</div>
           <div class="choice-row" id="f-declencheur-type" style="flex-wrap:wrap;">
-            ${['Consigne / demande', 'Fin d'activité appréciée', 'Transition / changement', 'Stimulus sensoriel', 'Contact physique', 'Changement de personne', 'Absence / attente', 'Autre / incertain'].map(v =>
+            ${['Consigne / demande', 'Fin d\'activité appréciée', 'Transition / changement', 'Stimulus sensoriel', 'Contact physique', 'Changement de personne', 'Absence / attente', 'Autre / incertain'].map(v =>
               `<label><input type="checkbox" name="fdecltype" value="${v}" ${(d.declencheurTypes||[]).includes(v)?'checked':''}> ${v}</label>`
             ).join('')}
           </div>
@@ -2658,7 +2925,7 @@ function confirmReset(){
   if(confirm('Effacer toutes les données saisies dans cet outil ? Cette action est irréversible (pensez à exporter avant si besoin).')){
     replaceState({
       version:1,
-      m1:{prenom:'',age:'',diag:'',lieux:[],statut:'',lieuAnalyse:'',jours:[],heures:'',journee:'',libre:''},
+      m1:{prenom:'',age:'',diag:'',lieux:[],statut:'',lieuAnalyse:'',jours:[],heures:'',journeeCreneaux:[],semaineCreneaux:{},libre:''},
       m2:{evenements:[]},
       m3:{sous:'cp',categories:{cp:{},antecedents:{},declencheurs:{},consequences:{},interventions:{}}},
       m4:{patterns:[],gradations:[],vase:{monte:[],descend:[],texte:''}}
@@ -2680,21 +2947,21 @@ function simuler(){
       prenom:'Léo', age:'19', diag:'TSA sans déficience intellectuelle',
       lieux:['institution'], statut:'professionnel',
       jours:['lundi','mardi','mercredi','jeudi','vendredi'], heures:'9h-17h',
-      journee:'Lever 7h, transport 8h, arrivée 9h. Activité du matin 9h30-11h30. Repas 12h. Temps libre 13h-13h45. Activité après-midi 14h-16h. Retour 17h.',
+      journeeCreneaux:[{debut:'07h00',fin:'08h00',nom:'Lever / transport'},{debut:'08h00',fin:'09h00',nom:'Trajet'},{debut:'09h00',fin:'09h30',nom:'Accueil'},{debut:'09h30',fin:'11h30',nom:'Activité du matin'},{debut:'11h30',fin:'12h00',nom:'Transition / rangement'},{debut:'12h00',fin:'13h00',nom:'Repas'},{debut:'13h00',fin:'13h45',nom:'Temps libre'},{debut:'13h45',fin:'16h00',nom:'Activité après-midi'},{debut:'16h00',fin:'17h00',nom:'Retour'}], semaineCreneaux:{}, joursExtras:[],
       libre:'Sensible au bruit. Apprécie les routines stables. Difficultés importantes aux transitions.'
     },
     {
       prenom:'Naomie', age:'32', diag:'TSA + déficience intellectuelle modérée',
       lieux:['institution','famille'], statut:'professionnel',
       jours:['lundi','mardi','jeudi','vendredi'], heures:'9h-16h30',
-      journee:'Arrivée 9h. Atelier cuisine 9h30. Temps libre 11h. Repas 12h. Sieste libre 13h-14h. Atelier créatif 14h-16h. Départ 16h30.',
+      journeeCreneaux:[{debut:'09h00',fin:'09h30',nom:'Accueil'},{debut:'09h30',fin:'11h00',nom:'Atelier cuisine'},{debut:'11h00',fin:'12h00',nom:'Temps libre'},{debut:'12h00',fin:'13h00',nom:'Repas'},{debut:'13h00',fin:'14h00',nom:'Sieste libre'},{debut:'14h00',fin:'16h00',nom:'Atelier créatif'},{debut:'16h00',fin:'16h30',nom:'Départ'}], semaineCreneaux:{}, joursExtras:[],
       libre:'Communique par pictogrammes et quelques mots. Aime beaucoup la musique. Très sensible aux changements imprévus.'
     },
     {
       prenom:'Tom', age:'14', diag:'TSA, profil asperger, anxiété sévère',
       lieux:['ecole','famille'], statut:'professionnel',
       jours:['lundi','mardi','mercredi','jeudi','vendredi'], heures:'8h30-16h30',
-      journee:'Accueil 8h30. Cours le matin. Récréation 10h30. Déjeuner 12h. Cours après-midi. Récréation 15h. Départ 16h30.',
+      journeeCreneaux:[{debut:'08h30',fin:'09h00',nom:'Accueil'},{debut:'09h00',fin:'10h30',nom:'Cours du matin'},{debut:'10h30',fin:'11h00',nom:'Récréation'},{debut:'11h00',fin:'12h00',nom:'Cours (fin de matinée)'},{debut:'12h00',fin:'13h00',nom:'Déjeuner'},{debut:'13h00',fin:'15h00',nom:'Cours après-midi'},{debut:'15h00',fin:'15h30',nom:'Récréation'},{debut:'15h30',fin:'16h30',nom:'Cours / départ'}], semaineCreneaux:{}, joursExtras:[],
       libre:'Scolarisé avec AESH. Très fort en mathématiques. Difficultés majeures en récréation et aux changements de salle.'
     }
   ];
