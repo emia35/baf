@@ -606,6 +606,51 @@ footer.bottom .auteurs{margin-top:4px;}
   margin-top:12px;font-size:12.5px;
 }
 
+/* ─── Modale de choix de simulation ────────────────────────── */
+.sim-modal-overlay{
+  position:fixed;inset:0;
+  background:rgba(44,36,22,.45);
+  z-index:900;
+  display:flex;align-items:center;justify-content:center;
+  padding:16px;
+}
+.sim-modal{
+  background:var(--card);
+  border-radius:var(--radius);
+  box-shadow:0 8px 32px rgba(44,36,22,.22);
+  max-width:560px;width:100%;
+  padding:28px 28px 22px;
+}
+.sim-modal h3{
+  font-size:17px;font-weight:700;color:var(--ink);
+  margin-bottom:6px;
+}
+.sim-modal .sim-modal-sub{
+  font-size:13px;color:var(--ink-soft);margin-bottom:20px;
+}
+.sim-profil-list{display:flex;flex-direction:column;gap:10px;}
+.sim-profil-card{
+  border:1.5px solid var(--line);
+  border-radius:var(--radius-sm);
+  padding:13px 16px;
+  cursor:pointer;
+  transition:border-color .14s, background .14s;
+  text-align:left;background:var(--paper);width:100%;
+}
+.sim-profil-card:hover{
+  border-color:var(--coral);
+  background:var(--coral-pale);
+}
+.sim-profil-card .spn{font-size:14px;font-weight:700;color:var(--ink);}
+.sim-profil-card .spd{font-size:12.5px;color:var(--ink-soft);margin-top:3px;line-height:1.5;}
+.sim-modal-close{
+  display:block;width:100%;text-align:center;
+  margin-top:16px;padding:8px;
+  font-size:13px;color:var(--ink-soft);cursor:pointer;
+  background:none;border:none;
+}
+.sim-modal-close:hover{color:var(--ink);}
+
 /* En-tête visible uniquement à l'impression */
 .print-header {
   display: none;
@@ -1289,7 +1334,7 @@ footer.bottom .auteurs{margin-top:4px;}
     <div class="modules-stack">
       <!-- Barre d'actions (anciennement dans le header) -->
       <div class="accueil-actions">
-        <button class="accueil-btn sim" onclick="simuler()" title="Remplit l'outil avec un scénario fictif pour le test">🧪 Simuler</button>
+        <button class="accueil-btn sim" onclick="ouvrirSimModal()" title="Choisir un profil de simulation fictif">🧪 Simuler</button>
         <button class="accueil-btn" onclick="exporterJSON()" title="Sauvegarder le travail en cours">💾 Exporter</button>
         <button class="accueil-btn" onclick="document.getElementById('import-file').click()" title="Reprendre un fichier exporté">📂 Importer</button>
         <input type="file" id="import-file" accept=".json" onchange="importerJSON(event)" style="display:none;">
@@ -1774,6 +1819,18 @@ footer.bottom .auteurs{margin-top:4px;}
       <button class="btn btn-secondary" onclick="window.print()">🖨️ Imprimer / PDF</button>
     </div>
   </section>
+
+<!-- Modale de choix de simulation -->
+<div id="sim-modal-overlay" class="sim-modal-overlay" style="display:none;" onclick="fermerSimModal(event)">
+  <div class="sim-modal" role="dialog" aria-modal="true" aria-label="Choisir un profil de simulation">
+    <h3>🧪 Choisir un profil de simulation</h3>
+    <p class="sim-modal-sub">L'outil sera pré-rempli avec des données fictives. Vous pourrez les explorer et les effacer ensuite.</p>
+    <div class="sim-profil-list" id="sim-profil-list">
+      <!-- Rempli dynamiquement -->
+    </div>
+    <button class="sim-modal-close" onclick="fermerSimModal()">Annuler</button>
+  </div>
+</div>
 
 </main>
 
@@ -3251,7 +3308,54 @@ function confirmReset(){
   }
 }
 
-function simuler(){
+
+// ─────────────────────────────────────────────────────────────
+// MODALE DE CHOIX DE SIMULATION
+// ─────────────────────────────────────────────────────────────
+const SIM_PROFILS = [
+  {
+    idx: 0,
+    nom: 'Léo · 19 ans',
+    desc: 'TSA sans déficience intellectuelle · Accueil en institution · Difficultés aux transitions et aux changements imprévus · 15 évènements sur 3 semaines'
+  },
+  {
+    idx: 1,
+    nom: 'Naomie · 32 ans',
+    desc: 'TSA + déficience intellectuelle modérée · Accueil en institution (Lun–Mar–Jeu–Ven) · Communication par pictogrammes · Très sensible aux changements imprévus et aux séparations · 15 évènements'
+  },
+  {
+    idx: 2,
+    nom: 'Tom · 14 ans',
+    desc: 'TSA profil Asperger, anxiété sévère · Scolarisé avec AESH · Difficultés en récréation et aux transitions de salle · Très fort en mathématiques · 15 évènements'
+  }
+];
+
+function ouvrirSimModal() {
+  const overlay = document.getElementById('sim-modal-overlay');
+  const list = document.getElementById('sim-profil-list');
+  if (!overlay || !list) return;
+
+  list.innerHTML = SIM_PROFILS.map(p => `
+    <button class="sim-profil-card" onclick="simulerProfil(${p.idx})">
+      <div class="spn">${esc(p.nom)}</div>
+      <div class="spd">${esc(p.desc)}</div>
+    </button>`).join('');
+
+  overlay.style.display = 'flex';
+  overlay.focus && overlay.focus();
+}
+
+function fermerSimModal(evt) {
+  if (evt && evt.target !== document.getElementById('sim-modal-overlay')) return;
+  document.getElementById('sim-modal-overlay').style.display = 'none';
+}
+
+function simulerProfil(idx) {
+  document.getElementById('sim-modal-overlay').style.display = 'none';
+  simuler(idx);
+}
+
+function simuler(idx){
   // 3 scénarios différents, tirés au hasard à chaque appel
   const SCENARIOS = [
     {
@@ -3336,7 +3440,7 @@ function simuler(){
   ];
 
   // Tirage aléatoire du scénario
-  const idx = Math.floor(Math.random() * SCENARIOS.length);
+  if (idx === undefined || idx === null) idx = Math.floor(Math.random() * SCENARIOS.length);
   const scenario = SCENARIOS[idx];
   const banque = BANQUES[idx];
 
