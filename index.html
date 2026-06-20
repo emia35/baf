@@ -1135,6 +1135,19 @@ footer.bottom .auteurs{margin-top:4px;}
   width:12px;height:12px;border-radius:50%;flex-shrink:0;
 }
 
+/* ── Indice de confiance du recueil ────────────────────────── */
+.indice-global-wrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:6px;}
+.indice-score{font-size:38px;font-weight:800;line-height:1;color:var(--ink);}
+.indice-bar-outer{flex:1;min-width:120px;height:10px;background:var(--line);border-radius:5px;overflow:hidden;}
+.indice-bar-inner{height:100%;border-radius:5px;transition:width .4s;}
+.indice-label{font-size:13px;font-weight:600;color:var(--ink);}
+.indice-criteria{display:flex;flex-direction:column;gap:10px;}
+.indice-crit{display:flex;align-items:flex-start;gap:10px;font-size:13px;}
+.indice-crit-icon{flex-shrink:0;font-size:16px;line-height:1.3;}
+.indice-crit-body{flex:1;}
+.indice-crit-label{font-weight:600;color:var(--ink);margin-bottom:2px;}
+.indice-crit-conseil{color:var(--ink-soft);font-size:12px;font-style:italic;}
+
 /* ── Co-occurrences / corrélations ───────────────────────── */
 .corr-section{
   margin-bottom:20px;
@@ -1262,6 +1275,12 @@ footer.bottom .auteurs{margin-top:4px;}
     <div class="intro-card">
       <h3>Qu'est-ce qu'une analyse fonctionnelle ?</h3>
       <p>Un comportement-défi n'est jamais isolé : il s'inscrit dans un contexte, répond à quelque chose qui se passe juste avant, produit des effets juste après. L'analyse fonctionnelle cherche à comprendre <i>la fonction</i> que ce comportement remplit pour la personne — pas à le juger, pas à le supprimer d'emblée. Cet outil vous accompagne à travers trois temps : <b>recueillir</b> un déclaratif de qualité, <b>organiser</b> les données recueillies, et <b>repérer des patterns</b> qui méritent d'être discutés avec une équipe ou un clinicien.</p>
+
+      <p style="margin-top:12px;"><b>Ce qu'on entend par « comportement-défi ».</b> Un comportement est qualifié de « défi » parce qu'il fait défi <i>pour nous</i> — pour l'entourage, l'institution, l'équipe — pas nécessairement pour la personne elle-même. Cette distinction est centrale : le comportement répond à un besoin, exprime quelque chose, remplit une fonction. Il n'est pas une erreur à corriger, mais un signal à comprendre.</p>
+
+      <p style="margin-top:12px;"><b>Ne pas attendre la « crise ».</b> L'analyse fonctionnelle ne commence pas au moment du pic. Chaque comportement-défi s'inscrit dans une galaxie de comportements : certains sont des précurseurs discrets, des signaux faibles qui montent bien avant l'explosion visible. Des comportements que personne ne repère comme des « défis » — une agitation, un retrait, une stéréotypie inhabituelle — peuvent être les premières marches d'une montée en tension. Les ignorer, c'est arriver trop tard.</p>
+
+      <p style="margin-top:12px;"><b>De l'étude du comportement à l'étude de la tension interne.</b> Nous proposons de faire glisser le regard : plutôt que d'étudier isolément un comportement-défi ponctuel, cherchons à lire <i>la tension interne qui s'accumule</i> chez la personne — ce qui la fait monter, ce qui la fait descendre, ce qui la régule ou au contraire l'amplifie. C'est ce déplacement de focale qui rend l'analyse fonctionnelle réellement utile pour proposer des accompagnements durables.</p>
       <div class="ethique">
         <b>Avant de commencer :</b> n'inscrivez aucun nom de famille, ville, structure ou tout élément qui permettrait d'identifier la personne ou son entourage. Utilisez un prénom seul, fictif si besoin. Cet outil ne pense pas et ne pose pas de diagnostic : il accompagne une réflexion clinique déjà à l'œuvre. Tout ce qu'il fait apparaître — catégories, patterns, hypothèses — est à prendre au conditionnel, comme matériau de discussion, jamais comme conclusion.
       </div>
@@ -1281,17 +1300,16 @@ footer.bottom .auteurs{margin-top:4px;}
       <details class="multiposte-info">
         <summary>📋 Utilisation partagée entre plusieurs postes</summary>
         <div class="multiposte-body">
-          <p>Ce mode d'emploi s'adresse aux équipes qui souhaitent utiliser la BAF à plusieurs, sur des postes différents, via un <strong>dossier commun</strong> (réseau intranet, serveur partagé, etc.).</p>
-          <p><strong>Principe :</strong> la BAF sauvegarde les données localement dans votre navigateur. Pour travailler à plusieurs, l'équipe s'appuie sur un fichier <code>.json</code> qui circule via le dossier commun — comme un document partagé que l'on se passe de main en main.</p>
+          <p><b>La BAF est un outil d'équipe avant d'être un outil individuel.</b> Avant que chaque professionnel ou membre de la famille remplisse sa part, il faut d'abord construire un point de départ commun. C'est exactement le rôle du module <i>Apprenons à nous connaître</i>.</p>
+          <p><b>Pourquoi le pluridisciplinaire et le pluriprofessionnel sont indispensables.</b> Un comportement-défi observé à l'atelier n'a pas forcément la même signification que le même comportement observé en famille ou à la cantine. Les contextes diffèrent, les déclencheurs diffèrent, les conséquences diffèrent. Une analyse fonctionnelle sérieuse ne peut pas reposer sur le regard d'une seule personne depuis un seul espace. Elle suppose des déclarants multiples — professionnels de terrain, paramédicaux, familles, parfois la personne elle-même — qui ont accès à des situations différentes.</p>
+          <p><b>Comment démarrer une AF en équipe avec la BAF.</b></p>
           <ol>
-            <li><strong>Récupérer le fichier en cours</strong> — Allez dans le dossier commun de l'équipe et téléchargez le <code>.json</code> correspondant à la personne suivie (ex. <code>BAF_Lou_2025.json</code>).</li>
-            <li><strong>Importer dans la BAF</strong> — Cliquez sur <strong>📂 Importer</strong> ci-dessus, puis sélectionnez le fichier récupéré. L'ensemble du travail en cours s'affiche.</li>
-            <li><strong>Compléter votre saisie</strong> — Remplissez les modules ou ajoutez de nouvelles entrées. La BAF sauvegarde automatiquement sur votre poste.</li>
-            <li><strong>Exporter avant de quitter</strong> — Cliquez sur <strong>💾 Exporter</strong>. Un fichier <code>.json</code> mis à jour est téléchargé sur votre poste.</li>
-            <li><strong>Déposer le fichier mis à jour</strong> — Copiez ce nouveau <code>.json</code> dans le dossier commun, <em>en remplacement de l'ancien</em>. Vérifiez que l'ancien est bien supprimé ou écrasé pour éviter les doublons.</li>
+            <li><strong>Réunion de lancement (collective).</strong> Avant tout recueil, réunissez l'équipe — ou a minima un représentant de chaque espace de vie. Remplissez ensemble le module <i>Apprenons à nous connaître</i> : qui est la personne, quel est le contexte, quels sont les comportements-défis identifiés. Ce moment pose les bases d'une démarche clinique partagée. Il évite que chacun parte dans une direction différente.</li>
+            <li><strong>Partage du fichier JSON (multi-postes).</strong> Une fois le préambule complété, exportez le fichier JSON via le bouton correspondant. Placez-le dans un dossier partagé accessible à tous les déclarants (intranet, serveur commun). Chaque personne qui souhaite saisir un évènement téléchargera ce fichier, ajoutera ses observations, puis le re-déposera à l'emplacement partagé.</li>
+            <li><strong>Convention collective indispensable.</strong> Définissez ensemble qui dépose quoi et quand. Sans convention, le fichier risque d'être écrasé par deux personnes en même temps. Une règle simple : chacun exporte, ajoute, réimporte — et signale qu'il a terminé avant qu'un autre commence.</li>
+            <li><strong>Synthèse et interprétation (collective).</strong> Après plusieurs semaines de recueil, relisez la synthèse en équipe. Les corrélations, le scatterplot et les patterns ne sont pas des conclusions — ce sont des matériaux à discuter, à confronter avec l'expérience clinique de chacun.</li>
           </ol>
-          <p class="multiposte-warn">⚠️ <strong>Important :</strong> deux personnes ne doivent pas travailler simultanément sur le même fichier <code>.json</code>. Si cela se produit, des données risquent d'être perdues. Convenez d'un tour de rôle au sein de l'équipe.</p>
-          <p>💡 <strong>Conseil :</strong> nommez le fichier de manière cohérente et anonymisée (ex. initiales + date de début d'AF), et rangez-le toujours au même endroit dans le dossier commun.</p>
+          <p><b>À retenir :</b> le fichier JSON est la mémoire partagée de l'analyse. Chaque membre de l'équipe y contribue depuis son propre espace d'observation. La BAF ne remplace pas la réunion clinique — elle l'alimente et la structure.</p>
         </div>
       </details>
       <button class="mod-btn m1" onclick="route('m1')">
@@ -1312,7 +1330,7 @@ footer.bottom .auteurs{margin-top:4px;}
           <span class="num">Module 2 · Temps de comprendre</span>
           <span class="titre">Organiser</span>
           <span class="temps">les données</span>
-          <span class="desc">Catégoriser CP, antécédents, déclencheurs, conséquences.</span>
+          <span class="desc">Catégoriser CD, antécédents, déclencheurs, conséquences.</span>
         </button>
         <button class="mod-btn m2" onclick="route('m4')">
           <span class="num">Module 3 · Moment de conclure</span>
@@ -1418,7 +1436,7 @@ footer.bottom .auteurs{margin-top:4px;}
       </div>
 
       <div class="field">
-        <label>Jours d'accueil habituels <button type="button" class="btn-link" onclick="cocherTousJours()" style="font-size:12px;font-weight:600;color:var(--coral-deep);background:none;border:none;cursor:pointer;margin-left:8px;padding:0;">Tout cocher</button></label>
+        <label>Jours d'accueil habituels <button type="button" id="btn-cocher-jours" class="btn-link" onclick="toggleTousJours()" style="font-size:12px;font-weight:600;color:var(--coral-deep);background:none;border:none;cursor:pointer;margin-left:8px;padding:0;">Tout cocher</button></label>
         <div class="choice-row" id="m1-jours">
           <label><input type="checkbox" value="lundi" onchange="saveM1()"> Lundi</label>
           <label><input type="checkbox" value="mardi" onchange="saveM1()"> Mardi</label>
@@ -1485,6 +1503,7 @@ footer.bottom .auteurs{margin-top:4px;}
 
     <div class="card">
       <h4 style="font-size:16px;color:var(--ink);margin-bottom:4px;">Évènements déjà décrits <span id="m2-compteur" style="color:var(--ink-soft);font-weight:400;font-size:13px;"></span></h4>
+      <div id="m2-periode" style="font-size:12.5px;color:var(--ink-soft);font-style:italic;margin-bottom:10px;min-height:18px;"></div>
       <div class="event-list" id="m2-event-list">
         <div class="event-empty">Aucun évènement déclaré pour le moment.</div>
       </div>
@@ -1624,7 +1643,7 @@ footer.bottom .auteurs{margin-top:4px;}
     <!-- GRADATION -->
     <div id="m4-sous-gradation" style="display:none;">
       <div class="grad-intro">
-        <b>Comment la tension monte-t-elle ?</b> Certains comportements s'enchaînent — la personne commence par un signe discret, puis ça s'intensifie. Proposez ici les séquences de montée en tension que vous repérez, à partir des comportements décrits dans le module 1. Plusieurs CP peuvent apparaître dans la même séquence.
+        <b>Comment la tension monte-t-elle ?</b> Certains comportements s'enchaînent — la personne commence par un signe discret, puis ça s'intensifie. Proposez ici les séquences de montée en tension que vous repérez, à partir des comportements décrits dans le module 1. Plusieurs CD peuvent apparaître dans la même séquence.
         <div class="vase-svg-wrap">
           <svg viewBox="0 0 200 160" width="180" height="140" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M60 20 L50 130 Q50 145 65 145 L135 145 Q150 145 150 130 L140 20 Z" stroke="var(--amber)" stroke-width="2" fill="var(--amber-pale)" fill-opacity=".4"/>
@@ -1738,6 +1757,16 @@ footer.bottom .auteurs{margin-top:4px;}
     <div class="card synth-block">
       <h4>Interprétation (module 3)</h4>
       <div id="synth-m4"></div>
+    </div>
+
+    <div class="card synth-block" id="synth-indice-card">
+      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px;">
+        <h4 style="margin:0;">Indice de confiance du recueil</h4>
+        <span style="font-size:11px;font-weight:400;color:var(--ink-soft);">mini-ÉQAF · qualité du déclaratif uniquement</span>
+      </div>
+      <div class="help" style="margin-bottom:14px;">Cet indice jauge la <i>solidité du matériau collecté</i>, pas la qualité de l'analyse clinique. Il pointe les manques pour vous aider à cibler ce qu'il reste à renforcer — pas pour invalider ce que vous avez déjà.</div>
+      <div id="synth-indice-global" style="margin-bottom:18px;"></div>
+      <div id="synth-indice-detail"></div>
     </div>
 
     <div class="actions-row">
@@ -2026,6 +2055,28 @@ function ajouterJourSemaine() {
 function cocherTousJours() {
   document.querySelectorAll('#m1-jours input').forEach(cb => { cb.checked = true; });
   saveM1();
+  updateBtnTousJours();
+}
+
+function decocherTousJours() {
+  document.querySelectorAll('#m1-jours input').forEach(cb => { cb.checked = false; });
+  saveM1();
+  updateBtnTousJours();
+}
+
+function updateBtnTousJours() {
+  const btn = document.getElementById('btn-cocher-jours');
+  if (!btn) return;
+  const cases = document.querySelectorAll('#m1-jours input');
+  const toutCoche = cases.length > 0 && Array.from(cases).every(cb => cb.checked);
+  btn.textContent = toutCoche ? 'Tout décocher' : 'Tout cocher';
+  btn.onclick = toutCoche ? decocherTousJours : cocherTousJours;
+}
+
+function toggleTousJours() {
+  const cases = document.querySelectorAll('#m1-jours input');
+  const toutCoche = cases.length > 0 && Array.from(cases).every(cb => cb.checked);
+  if (toutCoche) { decocherTousJours(); } else { cocherTousJours(); }
 }
 
 function saveM1(){
@@ -2052,6 +2103,7 @@ function loadM1FromState(){
   document.querySelectorAll('#m1-statut input').forEach(i=>{ i.checked = (state.m1.statut === i.value); });
   document.querySelectorAll('#m1-lieu-analyse input').forEach(i=>{ i.checked = (state.m1.lieuAnalyse === i.value); });
   document.querySelectorAll('#m1-jours input').forEach(i=>{ i.checked = (state.m1.jours||[]).includes(i.value); });
+  updateBtnTousJours();
   document.getElementById('m1-heures').value = state.m1.heures || '';
   renderCreneauList();
   renderGrilleSemaine();
@@ -2328,6 +2380,11 @@ const ETAPES = [
           </div>
         </div>
         <div class="field">
+          <label for="f-inter1eff-comment">Précision sur l'effet (facultatif)</label>
+          <div class="help">Dans quelles circonstances ? Avec quel délai ? Y a-t-il eu un rebond ?</div>
+          <textarea id="f-inter1eff-comment" style="min-height:56px;" placeholder="ex : apaisement progressif sur 15 min, puis rebond verbal. Ou : aggravation immédiate dès qu'on a insisté.">${esc(d.inter1EffComment||'')}</textarea>
+        </div>
+        <div class="field">
           <label for="f-inter2">Intervention suivante, si nécessaire</label>
           <input type="text" id="f-inter2" placeholder="ex : contention, relais d'un autre pro, isolation..." value="${esc(d.inter2||'')}">
         </div>
@@ -2340,6 +2397,10 @@ const ETAPES = [
           </div>
         </div>
         <div class="field">
+          <label for="f-inter2eff-comment">Précision sur l'effet de la deuxième intervention (facultatif)</label>
+          <textarea id="f-inter2eff-comment" style="min-height:56px;" placeholder="Nuances, délais, conditions...">${esc(d.inter2EffComment||'')}</textarea>
+        </div>
+        <div class="field">
           <label for="f-interautre">Autres observations sur comment vous avez géré la situation</label>
           <textarea id="f-interautre" placeholder="Tout ce qui vous semble utile à noter sur votre réponse à l'évènement...">${esc(d.interAutre||'')}</textarea>
         </div>
@@ -2347,8 +2408,10 @@ const ETAPES = [
     collect: () => ({
       inter1: val('f-inter1'),
       inter1Eff: radioVal('finter1eff'),
+      inter1EffComment: val('f-inter1eff-comment'),
       inter2: val('f-inter2'),
       inter2Eff: radioVal('finter2eff'),
+      inter2EffComment: val('f-inter2eff-comment'),
       interAutre: val('f-interautre'),
     })
   },
@@ -2370,7 +2433,10 @@ const ETAPES = [
           ${recapBloc('🎥 Comportement', d.comportement||'—', d.duree ? `Durée : ${d.duree}` + (d.intensite ? ` · Intensité : ${d.intensite}` : '') : '')}
           ${d.gradation ? recapBloc('📈 Gradation', d.gradation) : ''}
           ${recapBloc(`🔄 Conséquence pour ${prenom}`, [d.obtenu ? 'Obtenu : '+d.obtenu : '', d.evite ? 'Évité : '+d.evite : ''].filter(Boolean).join(' / ') || '—')}
-          ${recapBloc('🙌 Intervention', [d.inter1, d.inter1Eff ? '→ '+d.inter1Eff : ''].filter(Boolean).join(' ') + (d.inter2 ? ' / puis : '+d.inter2 + (d.inter2Eff ? ' → '+d.inter2Eff : '') : '') || '—')}
+          ${recapBloc('🙌 Intervention', [
+              d.inter1 ? (d.inter1 + (d.inter1Eff ? ' → '+d.inter1Eff : '') + (d.inter1EffComment ? ' ('+d.inter1EffComment+')' : '')) : null,
+              d.inter2 ? ('puis : '+d.inter2 + (d.inter2Eff ? ' → '+d.inter2Eff : '') + (d.inter2EffComment ? ' ('+d.inter2EffComment+')' : '')) : null
+            ].filter(Boolean).join(' / ') || '—')}
         </div>
       </div>
       <div class="card">
@@ -2515,6 +2581,32 @@ function refreshM2List(){
   const list = document.getElementById('m2-event-list');
   const evts = state.m2.evenements || [];
   document.getElementById('m2-compteur').textContent = evts.length ? '('+evts.length+' / 100)' : '';
+
+  // Encart période couverte
+  const periodeEl = document.getElementById('m2-periode');
+  if (periodeEl) {
+    if (evts.length >= 2) {
+      const dates = evts
+        .map(e => e.date ? new Date(e.date) : null)
+        .filter(d => d && !isNaN(d))
+        .sort((a, b) => a - b);
+      if (dates.length >= 2) {
+        const fmt = d => d.toLocaleDateString('fr-FR', {day:'2-digit', month:'long', year:'numeric'});
+        const diffMs = dates[dates.length-1] - dates[0];
+        const diffJ = Math.round(diffMs / (1000*60*60*24));
+        const diffSem = Math.round(diffJ / 7);
+        const duree = diffJ < 7
+          ? diffJ + ' jour' + (diffJ > 1 ? 's' : '')
+          : diffSem + ' semaine' + (diffSem > 1 ? 's' : '') + ' environ';
+        periodeEl.textContent = 'Du ' + fmt(dates[0]) + ' au ' + fmt(dates[dates.length-1]) + ' — ' + duree + ' de recueil';
+      } else {
+        periodeEl.textContent = '';
+      }
+    } else {
+      periodeEl.textContent = '';
+    }
+  }
+
   if(evts.length === 0){
     list.innerHTML = '<div class="event-empty">Aucun évènement déclaré pour le moment.</div>';
     return;
@@ -2740,9 +2832,228 @@ function refreshSynthese(){
 
   // Co-occurrences
   renderCorrelations();
+
+  // Indice de confiance du recueil
+  renderIndice();
 }
 
 
+
+
+// ─────────────────────────────────────────────────────────────
+// INDICE DE CONFIANCE DU RECUEIL (mini-ÉQAF)
+// Juge uniquement la qualité du déclaratif — pas de l'analyse.
+// 8 critères, chacun score 0 / 0.5 / 1 → moyenne en %.
+// ─────────────────────────────────────────────────────────────
+function computeIndice() {
+  const evts = state.m2.evenements || [];
+  const n = evts.length;
+  const cats = state.m3.categories || {};
+
+  // Helpers
+  const nbDates = evts.filter(e => e.date).length;
+  const nbHeure = evts.filter(e => e.heure).length;
+  const nbMoment = evts.filter(e => e.moment).length;
+  const nbLieu = evts.filter(e => e.lieu && e.lieu.trim()).length;
+  const nbPresences = evts.filter(e => e.presences && e.presences.trim()).length;
+  const nbComportement = evts.filter(e => e.comportement && e.comportement.trim()).length;
+  const nbConsequence = evts.filter(e => (e.obtenu && e.obtenu.trim()) || (e.evite && e.evite.trim())).length;
+  const nbAntecedent = evts.filter(e =>
+    (e.demande && e.demande.trim()) ||
+    (e.finTerminee && e.finTerminee.trim()) ||
+    (e.etatAvant && e.etatAvant.trim())
+  ).length;
+  const nbDeclencheur = evts.filter(e => e.declencheur && e.declencheur.trim()).length;
+
+  // Déclarants uniques (par prénom/initiales)
+  const declarantsSet = new Set(
+    evts.map(e => (e.declarant||'').trim().toLowerCase()).filter(Boolean)
+  );
+  const nbDeclarants = declarantsSet.size;
+
+  // Diversité des rôles (famille / pro / autre)
+  const rolesSet = new Set(
+    evts.map(e => (e.role||'').trim()).filter(Boolean)
+  );
+  const hasMultiRoles = rolesSet.size >= 2;
+
+  // Période de recueil
+  const dates = evts
+    .map(e => e.date ? new Date(e.date) : null)
+    .filter(d => d && !isNaN(d));
+  dates.sort((a, b) => a - b);
+  const diffJ = dates.length >= 2
+    ? Math.round((dates[dates.length-1] - dates[0]) / (1000*60*60*24))
+    : 0;
+
+  // Jours distincts de recueil
+  const joursDistincts = new Set(
+    evts.map(e => e.date).filter(Boolean)
+  ).size;
+
+  // Taux de catégorisation (items dans m3)
+  let totalItems = 0;
+  Object.values(cats).forEach(scat => {
+    Object.values(scat).forEach(cat => { totalItems += (cat.items||[]).length; });
+  });
+  const nbItemsPossibles = n * 4; // antécédent, déclencheur, CD, conséquence
+  const tauxCateg = nbItemsPossibles > 0 ? totalItems / nbItemsPossibles : 0;
+
+  // ── 8 Critères ─────────────────────────────────────────────
+  const criteres = [
+    {
+      id: 'volume',
+      label: 'Volume de comportements-défis décrits',
+      seuils: {ok: 20, partial: 10},
+      valeur: n,
+      score: n >= 20 ? 1 : n >= 10 ? 0.5 : 0,
+      affichage: n + ' CD décrit' + (n > 1 ? 's' : ''),
+      conseils: {
+        0: 'Moins de 10 CD : l\'analyse repose sur trop peu d\'évènements pour dégager des patterns fiables. Continuez le recueil.',
+        0.5: 'Entre 10 et 19 CD : les tendances émergent, mais restent fragiles. Visez au moins 20 évènements.',
+        1: null
+      }
+    },
+    {
+      id: 'declarants',
+      label: 'Pluralité des déclarants',
+      valeur: nbDeclarants,
+      score: nbDeclarants >= 4 ? 1 : nbDeclarants >= 2 ? 0.5 : 0,
+      affichage: nbDeclarants + ' déclarant' + (nbDeclarants > 1 ? 's' : '') + ' distinct' + (nbDeclarants > 1 ? 's' : ''),
+      conseils: {
+        0: 'Un seul point de vue : les biais d\'observation d\'une personne peuvent fausser l\'analyse. Invitez d\'autres déclarants.',
+        0.5: '2-3 déclarants : mieux, mais cherchez à atteindre 4 sources distinctes pour une robustesse suffisante.',
+        1: null
+      }
+    },
+    {
+      id: 'roles',
+      label: 'Diversité des rôles (famille, professionnels…)',
+      valeur: rolesSet.size,
+      score: hasMultiRoles ? 1 : (rolesSet.size === 1 ? 0.5 : 0),
+      affichage: hasMultiRoles ? 'Plusieurs rôles représentés' : (rolesSet.size === 1 ? 'Un seul type de déclarant' : 'Rôles non renseignés'),
+      conseils: {
+        0: 'Les rôles ne sont pas renseignés dans les évènements. Demandez aux déclarants d\'indiquer leur rapport à la personne.',
+        0.5: 'Un seul type de déclarant (ex : professionnels uniquement). L\'analyse gagnera à inclure le regard de la famille ou d\'autres espaces.',
+        1: null
+      }
+    },
+    {
+      id: 'periode',
+      label: 'Durée de la période de recueil',
+      valeur: diffJ,
+      score: diffJ >= 30 ? 1 : diffJ >= 14 ? 0.5 : 0,
+      affichage: diffJ > 0 ? diffJ + ' jour' + (diffJ > 1 ? 's' : '') + ' de recueil' : 'Période non calculable',
+      conseils: {
+        0: 'Moins de 14 jours : trop court pour distinguer des patterns des fluctuations normales. Prolongez le recueil.',
+        0.5: '2 à 4 semaines : les tendances commencent à apparaître, mais un mois complet reste l\'objectif.',
+        1: null
+      }
+    },
+    {
+      id: 'jours_distincts',
+      label: 'Régularité du recueil (jours distincts notés)',
+      valeur: joursDistincts,
+      score: joursDistincts >= 10 ? 1 : joursDistincts >= 5 ? 0.5 : 0,
+      affichage: joursDistincts + ' jour' + (joursDistincts > 1 ? 's' : '') + ' distinct' + (joursDistincts > 1 ? 's' : '') + ' de notation',
+      conseils: {
+        0: 'Moins de 5 jours de notation : le recueil est très concentré. Des observations sur plus de journées distinctes rendraient les patterns plus fiables.',
+        0.5: '5-9 jours de notation : le recueil se consolide. Continuez à noter régulièrement sur la durée.',
+        1: null
+      }
+    },
+    {
+      id: 'completude_contexte',
+      label: 'Complétude du contexte (date, heure, lieu, moment, présences)',
+      valeur: n > 0 ? Math.round(((nbDates+nbHeure+nbMoment+nbLieu+nbPresences) / (n*5))*100) : 0,
+      score: n === 0 ? 0 : (() => {
+        const taux = (nbDates+nbHeure+nbMoment+nbLieu+nbPresences) / (n*5);
+        return taux >= 0.8 ? 1 : taux >= 0.5 ? 0.5 : 0;
+      })(),
+      affichage: n > 0 ? Math.round(((nbDates+nbHeure+nbMoment+nbLieu+nbPresences)/(n*5))*100) + '% des champs de contexte renseignés' : 'Aucun évènement',
+      conseils: {
+        0: 'Moins de 50% des champs de contexte renseignés (date, heure, lieu, moment, présences). Ces champs sont essentiels pour identifier les patterns temporels et situationnels.',
+        0.5: '50-79% de complétude. Invitez les déclarants à être plus précis sur le contexte de chaque évènement.',
+        1: null
+      }
+    },
+    {
+      id: 'completude_abc',
+      label: 'Complétude de la séquence A→CD→C (antécédent, déclencheur, conséquence)',
+      valeur: n > 0 ? Math.round(((nbAntecedent+nbDeclencheur+nbConsequence)/(n*3))*100) : 0,
+      score: n === 0 ? 0 : (() => {
+        const taux = (nbAntecedent+nbDeclencheur+nbConsequence) / (n*3);
+        return taux >= 0.8 ? 1 : taux >= 0.5 ? 0.5 : 0;
+      })(),
+      affichage: n > 0 ? Math.round(((nbAntecedent+nbDeclencheur+nbConsequence)/(n*3))*100) + '% des séquences A→CD→C complètes' : 'Aucun évènement',
+      conseils: {
+        0: 'Les antécédents, déclencheurs ou conséquences sont souvent absents. C\'est pourtant là que la fonction se lit. Rappelez aux déclarants l\'importance de remplir ces champs.',
+        0.5: 'La moitié des séquences sont incomplètes. La fonction sera difficile à lire sur les évènements incomplets.',
+        1: null
+      }
+    },
+    {
+      id: 'categorisation',
+      label: 'Taux de catégorisation (module 2 — Organiser)',
+      valeur: Math.round(tauxCateg * 100),
+      score: tauxCateg >= 0.6 ? 1 : tauxCateg >= 0.3 ? 0.5 : 0,
+      affichage: Math.round(tauxCateg * 100) + '% des items catégorisés',
+      conseils: {
+        0: 'Très peu d\'items catégorisés. Sans le module Organiser, les corrélations ne peuvent pas être calculées et la synthèse reste superficielle.',
+        0.5: '30-59% des items catégorisés. Encouragez l\'équipe à utiliser davantage le module Organiser.',
+        1: null
+      }
+    }
+  ];
+
+  const totalScore = criteres.reduce((s, c) => s + c.score, 0);
+  const pct = Math.round((totalScore / criteres.length) * 100);
+
+  return {criteres, pct};
+}
+
+function renderIndice() {
+  const globalEl = document.getElementById('synth-indice-global');
+  const detailEl = document.getElementById('synth-indice-detail');
+  if (!globalEl || !detailEl) return;
+
+  const {criteres, pct} = computeIndice();
+
+  // Couleur selon score
+  const color = pct >= 75 ? '#5A9E72'   // vert
+              : pct >= 50 ? '#C9A84C'   // ocre
+              : '#D04040';              // rouge-brique
+
+  const label = pct >= 75 ? 'Recueil solide'
+              : pct >= 50 ? 'Recueil en cours de consolidation'
+              : 'Recueil insuffisant pour conclure';
+
+  globalEl.innerHTML = `
+    <div class="indice-global-wrap">
+      <div class="indice-score" style="color:${color};">${pct}%</div>
+      <div style="flex:1;">
+        <div class="indice-label">${label}</div>
+        <div class="indice-bar-outer" style="margin-top:6px;">
+          <div class="indice-bar-inner" style="width:${pct}%;background:${color};"></div>
+        </div>
+      </div>
+    </div>`;
+
+  const scoreIcon = s => s === 1 ? '✅' : s === 0.5 ? '⚠️' : '❌';
+
+  detailEl.innerHTML = `<div class="indice-criteria">` +
+    criteres.map(c => {
+      const conseil = c.conseils[c.score];
+      return `<div class="indice-crit">
+        <div class="indice-crit-icon">${scoreIcon(c.score)}</div>
+        <div class="indice-crit-body">
+          <div class="indice-crit-label">${c.label} <span style="font-weight:400;color:var(--ink-soft);font-size:12px;">— ${c.affichage}</span></div>
+          ${conseil ? `<div class="indice-crit-conseil">${conseil}</div>` : ''}
+        </div>
+      </div>`;
+    }).join('') +
+    `</div>`;
+}
 
 // ─────────────────────────────────────────────────────────────
 // CO-OCCURRENCES / CORRÉLATIONS
@@ -3030,7 +3341,7 @@ function simuler(){
   const banque = BANQUES[idx];
 
   // Générer les dates : réparties sur 3 semaines réalistes
-  // Avec patterns temporels visibles (plus de CP le matin, plus en semaine)
+  // Avec patterns temporels visibles (plus de CD le matin, plus en semaine)
   const baseDate = new Date('2026-04-07'); // lundi de référence
   const JOURS_DISPO = [1,1,2,3,3,4,4,5,5,5,8,8,9,10,10,11,12,12,13,14]; // lundi=1...ven=5, semaine suivante...
   
@@ -3081,7 +3392,7 @@ function simuler(){
     // Léo
     {sous:'pattern', patterns:[
       {id:'p1', label:'Fin activité → Refus/agitation → Évitement', a:'a1', b:'c3', c:'co1', note:'Semble se produire systématiquement quand une activité appréciée se termine de façon abrupte.'},
-      {id:'p2', label:'Nuit/transport agité → Cris → Attention exclusive', a:'a2', b:'c1', c:'co2', note:'Les jours où le contexte de départ est perturbé, les CP sont plus fréquents et plus intenses.'}
+      {id:'p2', label:'Nuit/transport agité → Cris → Attention exclusive', a:'a2', b:'c1', c:'co2', note:'Les jours où le contexte de départ est perturbé, les CD sont plus fréquents et plus intenses.'}
     ], gradations:[
       {id:'g1', label:'Mont\u00e9e progressive en fin de journ\u00e9e', cps:['c3','c1','c2'], note:'En fin de journ\u00e9e, L\u00e9o passe de l\'opposition tranquille aux cris puis aux comportements moteurs.'}
     ], vase:{
@@ -3646,7 +3957,7 @@ function renderPatterns() {
         <div class="abc-slot">
           <span class="abc-slot-letter b">B — Comportement</span>
           <select class="abc-slot-select" onchange="updatePattern('${esc(p.id)}','b',this.value)">
-            ${buildCatOptions('cp', p.b, 'Catégorie CP…')}
+            ${buildCatOptions('cp', p.b, 'Catégorie CD…')}
           </select>
         </div>
         <span class="abc-arrow">→</span>
@@ -3714,15 +4025,15 @@ function renderGradations() {
       <div class="grad-sequence">
         ${g.cps.map((cpId, ci) => `
           <div class="grad-cp-slot">
-            <span class="grad-cp-label">CP ${ci+1}</span>
+            <span class="grad-cp-label">CD ${ci+1}</span>
             <select class="grad-cp-select" onchange="updateGradationCP('${esc(g.id)}',${ci},this.value)">
-              <option value="">— catégorie CP —</option>
+              <option value="">— catégorie CD —</option>
               ${catsCP.map(c => `<option value="${esc(c.id)}" ${c.id===cpId?'selected':''}>${esc(c.nom)}</option>`).join('')}
             </select>
           </div>
           ${ci < g.cps.length - 1 ? '<span class="grad-arrow">↗</span>' : ''}
         `).join('')}
-        <button class="grad-add-cp" onclick="ajouterCPGradation('${esc(g.id)}')">+ CP suivant</button>
+        <button class="grad-add-cp" onclick="ajouterCPGradation('${esc(g.id)}')">+ CD suivant</button>
       </div>
       <textarea class="grad-item-note"
         onchange="updateGradation('${esc(g.id)}','note',this.value)"
