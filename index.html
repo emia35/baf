@@ -865,6 +865,7 @@ footer.bottom .auteurs{margin-top:4px;}
   border-radius:999px;
   padding:2px 9px;
   margin-top:4px;
+  margin-right:4px;
   cursor:pointer;
 }
 .m3-item-cat-badge:hover{background:var(--teal-deep);}
@@ -3966,14 +3967,11 @@ function extraireItems(sousId) {
   return items;
 }
 
-// Trouver la catégorie d\'un item (ou null)
+// Trouver les catégories d\'un item (un item peut appartenir à plusieurs catégories)
 function catDunItem(sousId, itemId) {
   ensureM3();
   const cats = state.m3.categories[sousId];
-  for (const catId of Object.keys(cats)) {
-    if ((cats[catId].items || []).includes(itemId)) return catId;
-  }
-  return null;
+  return Object.keys(cats).filter(catId => (cats[catId].items || []).includes(itemId));
 }
 
 // Rendu du module M3 (appelé depuis route() quand on va sur 'm3')
@@ -3999,7 +3997,7 @@ function renderM3() {
     const items = extraireItems(s.id);
     const cats = state.m3.categories[s.id] || {};
     const nCat = Object.keys(cats).length;
-    const nAssignes = items.filter(it => catDunItem(s.id, it.id)).length;
+    const nAssignes = items.filter(it => catDunItem(s.id, it.id).length > 0).length;
     const isOn = state.m3.sous === s.id;
     return `<button class="m3-tab${isOn?' on':''}" onclick="changerSous('${s.id}')">
       ${s.icon} ${s.label}
@@ -4036,16 +4034,19 @@ function renderM3Sous(sousId) {
     listEl.innerHTML = '<div class="event-empty">Aucun élément extrait des évènements du module 1 pour ce sous-module.</div>';
   } else {
     listEl.innerHTML = items.map(item => {
-      const catId = catDunItem(sousId, item.id);
-      const cat = catId ? cats[catId] : null;
-      const catBadge = cat
-        ? `<span class="m3-item-cat-badge" style="background:${cat.color||'var(--teal)'};" onclick="retirerDeCat('${sousId}','${item.id}',event)">
+      const catIds = catDunItem(sousId, item.id);
+      const catBadge = catIds.length > 0
+        ? catIds.map(cid => {
+            const cat = cats[cid];
+            if (!cat) return '';
+            return `<span class="m3-item-cat-badge" style="background:${cat.color||'var(--teal)'};" onclick="retirerDeUneCat('${sousId}','${item.id}','${cid}',event)">
              ${esc(cat.nom)} ×
-           </span>`
+           </span>`;
+          }).join(' ')
         : `<span style="font-size:11.5px;color:var(--ink-soft);font-style:italic;">Non catégorisé — cliquez pour assigner</span>`;
       const dateStr = item.date ? formatDate(item.date) : '';
       const src = [dateStr, item.moment].filter(Boolean).join(' · ');
-      return `<div class="m3-item${catId?' categorise':''}" onclick="ouvrirAssign('${sousId}','${item.id}',event)">
+      return `<div class="m3-item${catIds.length>0?' categorise':''}" onclick="ouvrirAssign('${sousId}','${item.id}',event)">
         <div style="flex:1">
           <div class="m3-item-text">${esc(item.texte)}</div>
           ${src ? `<div class="m3-item-source">Évt. ${item.evtIdx+1}${src?' — '+src:''}</div>` : ''}
@@ -4081,7 +4082,7 @@ function renderM3Sous(sousId) {
             : catItems.map(it => `
               <span class="m3-cat-item-chip">
                 ${esc(it.texte.length > 50 ? it.texte.substring(0,50)+'…' : it.texte)}
-                <button onclick="retirerDeCat('${sousId}','${it.id}',event)" title="Retirer">×</button>
+                <button onclick="retirerDeUneCat('${sousId}','${it.id}','${catId}',event)" title="Retirer">×</button>
               </span>`).join('')
           }
         </div>
@@ -4091,29 +4092,29 @@ function renderM3Sous(sousId) {
 }
 
 // Ouvrir le popup d\'assignation au clic sur un item
+// Un item peut être assigné à plusieurs catégories : le popup reste ouvert
+// et chaque clic sur une catégorie bascule (toggle) son appartenance.
 let currentPopup = null;
+let popupOutsideHandler = null;
+let popupSousId = null;
+let popupItemId = null;
 
-function ouvrirAssign(sousId, itemId, event) {
-  fermerPopup();
-  ensureM3();
+function assignPopupContent(sousId, itemId) {
   const cats = state.m3.categories[sousId] || {};
   const catKeys = Object.keys(cats);
-  const currentCatId = catDunItem(sousId, itemId);
+  const activeCatIds = catDunItem(sousId, itemId);
   const items = extraireItems(sousId);
   const item = items.find(it => it.id === itemId);
-
-  const popup = document.createElement('div');
-  popup.className = 'm3-assign-popup';
-
   const preview = item ? (item.texte.length > 60 ? item.texte.substring(0,60)+'…' : item.texte) : '';
-  popup.innerHTML = `
-    <h5>Assigner à une catégorie</h5>
+
+  return `
+    <h5>Assigner à une ou plusieurs catégories</h5>
     <div style="font-size:12px;color:var(--ink-soft);margin-bottom:10px;font-style:italic;">"${esc(preview)}"</div>
     ${catKeys.length === 0
       ? `<div style="font-size:12.5px;color:var(--ink-soft);font-style:italic;margin-bottom:8px;">Créez d\'abord une catégorie.</div>`
       : catKeys.map(catId => {
           const cat = cats[catId];
-          const isActive = catId === currentCatId;
+          const isActive = activeCatIds.includes(catId);
           return `<button class="m3-assign-opt" style="${isActive?'background:var(--teal-pale);color:var(--teal-deep);':''}"
             onclick="assignerItem('${sousId}','${itemId}','${catId}')">
             <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${cat.color||'var(--teal)'};margin-right:6px;vertical-align:middle;"></span>
@@ -4121,9 +4122,19 @@ function ouvrirAssign(sousId, itemId, event) {
           </button>`;
         }).join('')
     }
-    ${currentCatId ? `<button class="m3-assign-opt" style="color:var(--coral-deep);" onclick="retirerDeCat('${sousId}','${itemId}',event)">✕ Retirer de la catégorie</button>` : ''}
-    <button class="m3-assign-close" onclick="fermerPopup()">Annuler</button>
+    <button class="m3-assign-close" onclick="fermerPopup()">Fermer</button>
   `;
+}
+
+function ouvrirAssign(sousId, itemId, event) {
+  fermerPopup();
+  ensureM3();
+  popupSousId = sousId;
+  popupItemId = itemId;
+
+  const popup = document.createElement('div');
+  popup.className = 'm3-assign-popup';
+  popup.innerHTML = assignPopupContent(sousId, itemId);
 
   // Positionner le popup près du clic
   document.body.appendChild(popup);
@@ -4134,9 +4145,11 @@ function ouvrirAssign(sousId, itemId, event) {
   popup.style.left = Math.max(8, px) + 'px';
   popup.style.top = py + 'px';
 
-  // Fermer si clic ailleurs
+  // Fermer si clic ailleurs (écouteur retiré explicitement dans fermerPopup,
+  // sinon un écouteur jamais déclenché reste accroché et bloque la prochaine ouverture)
   setTimeout(() => {
-    document.addEventListener('click', fermerPopupSiExterieur, {once:true});
+    popupOutsideHandler = (e) => fermerPopupSiExterieur(e);
+    document.addEventListener('click', popupOutsideHandler);
   }, 10);
 }
 
@@ -4145,33 +4158,38 @@ function fermerPopupSiExterieur(e) {
 }
 
 function fermerPopup() {
+  if (popupOutsideHandler) {
+    document.removeEventListener('click', popupOutsideHandler);
+    popupOutsideHandler = null;
+  }
   if (currentPopup) { currentPopup.remove(); currentPopup = null; }
+  popupSousId = null;
+  popupItemId = null;
 }
 
 function assignerItem(sousId, itemId, catId) {
   ensureM3();
-  fermerPopup();
   const cats = state.m3.categories[sousId];
-  // Retirer de l\'ancienne catégorie si elle existe
-  Object.keys(cats).forEach(cid => {
-    cats[cid].items = (cats[cid].items || []).filter(id => id !== itemId);
-  });
-  // Ajouter à la nouvelle
   if (!cats[catId].items) cats[catId].items = [];
-  cats[catId].items.push(itemId);
+  const idx = cats[catId].items.indexOf(itemId);
+  if (idx === -1) cats[catId].items.push(itemId);
+  else cats[catId].items.splice(idx, 1);
   persist();
   renderM3Sous(sousId);
   renderM3Tabs();
+  // Le popup reste ouvert pour permettre d\'assigner à d\'autres catégories
+  if (currentPopup && popupSousId === sousId && popupItemId === itemId) {
+    currentPopup.innerHTML = assignPopupContent(sousId, itemId);
+  }
 }
 
-function retirerDeCat(sousId, itemId, event) {
+function retirerDeUneCat(sousId, itemId, catId, event) {
   if (event) event.stopPropagation();
-  fermerPopup();
   ensureM3();
   const cats = state.m3.categories[sousId];
-  Object.keys(cats).forEach(cid => {
-    cats[cid].items = (cats[cid].items || []).filter(id => id !== itemId);
-  });
+  if (cats[catId]) {
+    cats[catId].items = (cats[catId].items || []).filter(id => id !== itemId);
+  }
   persist();
   renderM3Sous(sousId);
   renderM3Tabs();
@@ -4222,7 +4240,7 @@ function renderM3Tabs() {
   if (!tabsEl) return;
   tabsEl.innerHTML = M3_SOUS.map(s => {
     const items = extraireItems(s.id);
-    const nAssignes = items.filter(it => catDunItem(s.id, it.id)).length;
+    const nAssignes = items.filter(it => catDunItem(s.id, it.id).length > 0).length;
     const isOn = state.m3.sous === s.id;
     return `<button class="m3-tab${isOn?' on':''}" onclick="changerSous('${s.id}')">
       ${s.icon} ${s.label}
