@@ -507,6 +507,7 @@ body.tool-idc .scrolltop-btn{background:var(--teal-deep);}
 .event-item .ev-date{font-size:13px;font-weight:700;color:var(--ink);}
 .event-item .ev-desc{font-size:12.5px;color:var(--ink-soft);margin-top:2px;}
 .event-item .ev-arrow{color:var(--ink-soft);font-size:18px;}
+.event-brouillon-tag{display:inline-block;background:var(--amber-pale);color:var(--coral-deep);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 7px;border-radius:999px;margin-left:4px;}
 .event-empty{
   text-align:center;padding:32px;color:var(--ink-soft);
   font-size:13.5px;font-style:italic;
@@ -1970,6 +1971,7 @@ body.tool-idc .scrolltop-btn{background:var(--teal-deep);}
     <div class="card">
       <h4 style="font-size:16px;color:var(--ink);margin-bottom:4px;">Évènements déjà décrits <span id="m2-compteur" style="color:var(--ink-soft);font-weight:400;font-size:13px;"></span></h4>
       <div id="m2-periode" style="font-size:12.5px;color:var(--ink-soft);font-style:italic;margin-bottom:10px;min-height:18px;"></div>
+      <div id="m2-brouillon-banner" class="ethique no-print" style="display:none;background:var(--amber-pale);border-left:3px solid var(--coral-deep);padding:10px 14px;margin-bottom:14px;font-size:13px;"></div>
       <div class="event-list" id="m2-event-list">
         <div class="event-empty">Aucun évènement déclaré pour le moment.</div>
       </div>
@@ -2345,6 +2347,12 @@ function loadPersisted(){
 }
 
 function route(name, fromHistory){
+  // Si on quitte le formulaire d\'évènement sans valider, conserver la
+  // saisie en cours comme brouillon (rien n\'est perdu).
+  const formView = document.getElementById('view-m2-form');
+  if (name !== 'm2-form' && formView && formView.classList.contains('show') && typeof ETAPES !== 'undefined' && ETAPES[currentEtapeIdx]) {
+    try { Object.assign(formDraft, ETAPES[currentEtapeIdx].collect()); saveBrouillon(); } catch(e) {}
+  }
   document.querySelectorAll('section.view').forEach(s=>s.classList.remove('show'));
   const target = document.getElementById('view-'+name);
   if(target) target.classList.add('show');
@@ -2352,7 +2360,7 @@ function route(name, fromHistory){
   const navBtn = document.querySelector('.nav-btn[data-go="'+name+'"]');
   if(navBtn) navBtn.classList.add('on');
 
-  const isBaf = ['baf-accueil','m1','m2','m3','m4','synthese'].includes(name);
+  const isBaf = ['baf-accueil','m1','m2','m2-form','m3','m4','synthese'].includes(name);
   const isIdc = ['idc-accueil','idc-main'].includes(name);
   const bafNavGroup = document.getElementById('baf-nav-group');
   const idcNavGroup = document.getElementById('idc-nav-group');
@@ -2368,7 +2376,7 @@ function route(name, fromHistory){
   // Barre fixe sous le header : flèche retour + export, propre à chaque outil
   const subbarBaf = document.getElementById('subbar-baf');
   const subbarIdc = document.getElementById('subbar-idc');
-  const showSubbarBaf = ['m1','m2','m3','m4','synthese'].includes(name);
+  const showSubbarBaf = ['m1','m2','m2-form','m3','m4','synthese'].includes(name);
   const showSubbarIdc = (name === 'idc-main');
   if(subbarBaf) subbarBaf.style.display = showSubbarBaf ? '' : 'none';
   if(subbarIdc) subbarIdc.style.display = showSubbarIdc ? '' : 'none';
@@ -2939,6 +2947,42 @@ const ETAPES = [
     })
   },
   {
+    id: 'comportement',
+    label: 'Comportement (B)',
+    render: (d) => `
+      <div class="card">
+        <div style="background:var(--coral-pale);border-left:3px solid var(--coral);padding:13px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;">
+          <b>Imaginez qu'une caméra filmait la scène.</b> Qu'est-ce qu'elle aurait enregistré exactement ? Pas "il a fait sa crise habituelle", pas "il a été difficile" — mais quels gestes, quels sons, dans quel ordre, pendant combien de temps ?
+        </div>
+        <div class="field">
+          <label for="f-comportement">Décrivez le comportement, dans l'ordre où ça s'est passé</label>
+          <div class="help">Quoi en premier ? Quoi ensuite ? La séquence compte. Soyez précis sur les actes : "a frappé la table avec son poing", pas "a été violent".</div>
+          <textarea id="f-comportement" style="min-height:100px;" placeholder="ex : d'abord il a crié très fort (environ 30 secondes), puis il a saisi la chaise et l'a retournée, puis s'est mis à taper sur le mur avec sa main ouverte.">${esc(d.comportement||'')}</textarea>
+        </div>
+        <div class="field">
+          <label>Durée approximative</label>
+          <div class="choice-row" id="f-duree">
+            ${['< 1 min','1 à 5 min','5 à 15 min','15 à 30 min','> 30 min','Non estimée'].map(v =>
+              `<label><input type="radio" name="fduree" value="${v}" ${d.duree===v?'checked':''}> ${v}</label>`
+            ).join('')}
+          </div>
+        </div>
+        <div class="field">
+          <label>Intensité ressentie (votre impression globale)</label>
+          <div class="choice-row" id="f-intensite">
+            ${['1 — Très faible','2 — Faible','3 — Modérée','4 — Forte','5 — Très forte'].map(v =>
+              `<label><input type="radio" name="fintens" value="${v}" ${d.intensite===v?'checked':''}> ${v}</label>`
+            ).join('')}
+          </div>
+        </div>
+      </div>`,
+    collect: () => ({
+      comportement: val('f-comportement'),
+      duree: radioVal('fduree'),
+      intensite: radioVal('fintens'),
+    })
+  },
+  {
     id: 'antecedent',
     label: 'Antécédent immédiat (A)',
     render: (d) => `
@@ -2997,91 +3041,10 @@ const ETAPES = [
             ).join('')}
           </div>
         </div>
-
-        <div class="field">
-          <label>De quel type vous semble-t-il ? <span style="font-weight:400;color:var(--ink-soft);">(plusieurs choix possibles)</span></label>
-          <div class="help">Ce n'est pas une case à cocher de façon certaine — juste votre impression, comme point de départ.</div>
-          <div class="choice-row" id="f-declencheur-type" style="flex-wrap:wrap;">
-            ${['Consigne / demande', 'Fin d\'activité appréciée', 'Transition / changement', 'Stimulus sensoriel', 'Contact physique', 'Changement de personne', 'Absence / attente', 'Autre / incertain'].map(v =>
-              `<label><input type="checkbox" name="fdecltype" value="${v}" ${(d.declencheurTypes||[]).includes(v)?'checked':''}> ${v}</label>`
-            ).join('')}
-          </div>
-        </div>
       </div>`,
     collect: () => ({
       declencheur: val('f-declencheur-desc'),
       declencheurRecurrent: radioVal('fdeclrec'),
-      declencheurTypes: checkVals('fdecltype'),
-    })
-  },
-  {
-    id: 'comportement',
-    label: 'Comportement (B)',
-    render: (d) => `
-      <div class="card">
-        <div style="background:var(--coral-pale);border-left:3px solid var(--coral);padding:13px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;">
-          <b>Imaginez qu'une caméra filmait la scène.</b> Qu'est-ce qu'elle aurait enregistré exactement ? Pas "il a fait sa crise habituelle", pas "il a été difficile" — mais quels gestes, quels sons, dans quel ordre, pendant combien de temps ?
-        </div>
-        <div class="field">
-          <label for="f-comportement">Décrivez le comportement, dans l'ordre où ça s'est passé</label>
-          <div class="help">Quoi en premier ? Quoi ensuite ? La séquence compte. Soyez précis sur les actes : "a frappé la table avec son poing", pas "a été violent".</div>
-          <textarea id="f-comportement" style="min-height:100px;" placeholder="ex : d'abord il a crié très fort (environ 30 secondes), puis il a saisi la chaise et l'a retournée, puis s'est mis à taper sur le mur avec sa main ouverte.">${esc(d.comportement||'')}</textarea>
-        </div>
-        <div class="field">
-          <label>Durée approximative</label>
-          <div class="choice-row" id="f-duree">
-            ${['< 1 min','1 à 5 min','5 à 15 min','15 à 30 min','> 30 min','Non estimée'].map(v =>
-              `<label><input type="radio" name="fduree" value="${v}" ${d.duree===v?'checked':''}> ${v}</label>`
-            ).join('')}
-          </div>
-        </div>
-        <div class="field">
-          <label>Intensité ressentie (votre impression globale)</label>
-          <div class="choice-row" id="f-intensite">
-            ${['1 — Très faible','2 — Faible','3 — Modérée','4 — Forte','5 — Très forte'].map(v =>
-              `<label><input type="radio" name="fintens" value="${v}" ${d.intensite===v?'checked':''}> ${v}</label>`
-            ).join('')}
-          </div>
-        </div>
-        <div class="field">
-          <label for="f-gradation">Y a-t-il eu une gradation — le comportement a-t-il évolué ou changé de forme en cours ?</label>
-          <div class="help">Ex : a d'abord verbalisé, puis crié, puis frappé. C'est important pour comprendre la montée en tension.</div>
-          <textarea id="f-gradation" placeholder="ex : oui, a commencé par répéter 'j'veux pas, j'veux pas' puis le ton a monté, puis les coups. Ou : non, d'un seul coup.">${esc(d.gradation||'')}</textarea>
-        </div>
-      </div>`,
-    collect: () => ({
-      comportement: val('f-comportement'),
-      duree: radioVal('fduree'),
-      intensite: radioVal('fintens'),
-      gradation: val('f-gradation'),
-    })
-  },
-  {
-    id: 'consequence',
-    label: 'Conséquence pour la personne (C)',
-    render: (d) => `
-      <div class="card">
-        <div style="background:var(--amber-pale);border-left:3px solid var(--amber);padding:13px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;">
-          <b>Ce n'est pas la même chose que ce que vous avez fait.</b> La conséquence, c'est ce qui a changé <em>pour la personne</em> après le comportement — ce qu'elle a obtenu, ce qu'elle a évité. C'est ce qui nous dit pourquoi le comportement "marche" pour elle.
-        </div>
-        <div class="field">
-          <label for="f-obtenu">Qu'est-ce que la personne a obtenu après le comportement ?</label>
-          <div class="help">Attention d'un pro ? Arrêt d'une demande ? Accès à quelque chose ? Sortie de la situation ? Même si c'est involontaire de votre côté, ça compte.</div>
-          <textarea id="f-obtenu" placeholder="ex : la consigne de rangement a été abandonnée et elle est restée dans la pièce. Ou : elle a obtenu qu'on s'asseye à côté d'elle.">${esc(d.obtenu||'')}</textarea>
-        </div>
-        <div class="field">
-          <label for="f-evite">Qu'est-ce que la personne a évité après le comportement ?</label>
-          <textarea id="f-evite" placeholder="ex : elle n'est pas allée à la piscine (activité qui semble lui déplaire). Ou : rien de visible.">${esc(d.evite||'')}</textarea>
-        </div>
-        <div class="field">
-          <label for="f-finpersonne">Comment s'est terminé l'épisode pour la personne ?</label>
-          <textarea id="f-finpersonne" placeholder="ex : s'est calmée progressivement, a fini par s'asseoir seule dans un coin. S'est endormie. A repris l'activité.">${esc(d.finPersonne||'')}</textarea>
-        </div>
-      </div>`,
-    collect: () => ({
-      obtenu: val('f-obtenu'),
-      evite: val('f-evite'),
-      finPersonne: val('f-finpersonne'),
     })
   },
   {
@@ -3138,6 +3101,34 @@ const ETAPES = [
       inter2Eff: radioVal('finter2eff'),
       inter2EffComment: val('f-inter2eff-comment'),
       interAutre: val('f-interautre'),
+    })
+  },
+  {
+    id: 'consequence',
+    label: 'Conséquence pour la personne (C)',
+    render: (d) => `
+      <div class="card">
+        <div style="background:var(--amber-pale);border-left:3px solid var(--amber);padding:13px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;">
+          <b>Ce n'est pas la même chose que ce que vous avez fait.</b> La conséquence, c'est ce qui a changé <em>pour la personne</em> après le comportement — ce qu'elle a obtenu, ce qu'elle a évité. C'est ce qui nous dit pourquoi le comportement "marche" pour elle.
+        </div>
+        <div class="field">
+          <label for="f-obtenu">Qu'est-ce que la personne a obtenu après le comportement ?</label>
+          <div class="help">Attention d'un pro ? Arrêt d'une demande ? Accès à quelque chose ? Sortie de la situation ? Même si c'est involontaire de votre côté, ça compte.</div>
+          <textarea id="f-obtenu" placeholder="ex : la consigne de rangement a été abandonnée et elle est restée dans la pièce. Ou : elle a obtenu qu'on s'asseye à côté d'elle.">${esc(d.obtenu||'')}</textarea>
+        </div>
+        <div class="field">
+          <label for="f-evite">Qu'est-ce que la personne a évité après le comportement ?</label>
+          <textarea id="f-evite" placeholder="ex : elle n'est pas allée à la piscine (activité qui semble lui déplaire). Ou : rien de visible.">${esc(d.evite||'')}</textarea>
+        </div>
+        <div class="field">
+          <label for="f-finpersonne">Comment s'est terminé l'épisode pour la personne ?</label>
+          <textarea id="f-finpersonne" placeholder="ex : s'est calmée progressivement, a fini par s'asseoir seule dans un coin. S'est endormie. A repris l'activité.">${esc(d.finPersonne||'')}</textarea>
+        </div>
+      </div>`,
+    collect: () => ({
+      obtenu: val('f-obtenu'),
+      evite: val('f-evite'),
+      finPersonne: val('f-finpersonne'),
     })
   },
   {
@@ -3239,18 +3230,42 @@ function formatDate(d) {
 
 let currentEtapeIdx = 0;
 
-function ouvrirFormulaireEvenement(idx) {
-  formEditIdx = (idx !== undefined) ? idx : null;
-  // Charger le brouillon existant ou vide
-  if (formEditIdx !== null && state.m2.evenements[formEditIdx]) {
-    formDraft = Object.assign({}, state.m2.evenements[formEditIdx]);
-  } else {
-    formDraft = {};
+// Brouillon : si on quitte le formulaire sans valider (navigation, retour
+// arrière...), la saisie en cours n\'est pas perdue — on la retrouve en
+// rouvrant le même évènement (ou "nouvel évènement").
+function saveBrouillon() {
+  state.m2.brouillon = { draft: Object.assign({}, formDraft), editIdx: formEditIdx, etape: currentEtapeIdx };
+  persist();
+}
+function chargerBrouillonSiPresent(idx) {
+  const b = state.m2.brouillon;
+  if (b && b.editIdx === idx) {
+    formDraft = Object.assign({}, b.draft);
+    currentEtapeIdx = b.etape || 0;
+    return true;
   }
-  currentEtapeIdx = 0;
+  return false;
+}
+function effacerBrouillon() {
+  state.m2.brouillon = null;
+  persist();
+}
+
+function ouvrirFormulaireEvenement(idx) {
+  const targetIdx = (idx !== undefined) ? idx : null;
+  formEditIdx = targetIdx;
+  const repris = chargerBrouillonSiPresent(targetIdx);
+  if (!repris) {
+    if (formEditIdx !== null && state.m2.evenements[formEditIdx]) {
+      formDraft = Object.assign({}, state.m2.evenements[formEditIdx]);
+    } else {
+      formDraft = {};
+    }
+    currentEtapeIdx = 0;
+  }
   document.getElementById('m2form-titre').textContent =
-    formEditIdx !== null ? 'Modifier un évènement' : 'Décrire un évènement';
-  renderEtape(0);
+    (formEditIdx !== null ? 'Modifier un évènement' : 'Décrire un évènement') + (repris ? ' (brouillon repris)' : '');
+  renderEtape(currentEtapeIdx);
   route('m2-form');
 }
 
@@ -3283,13 +3298,27 @@ function renderEtape(idx) {
       : `<button class="btn btn-gold" onclick="validerFormulaireEvt()">✓ Enregistrer cet évènement</button>`
     }
   `;
+  window.scrollTo({top:0, behavior:'instant'});
 }
 
 function aller(idx) {
   // Collecter l\'étape courante
   const collected = ETAPES[currentEtapeIdx].collect();
   Object.assign(formDraft, collected);
+  saveBrouillon();
   renderEtape(idx);
+}
+
+// Tri chronologique (date puis heure) des évènements — un évènement ajouté
+// entre deux autres se range automatiquement au bon endroit.
+function trierEvenements() {
+  state.m2.evenements.sort((a, b) => {
+    const da = a.date || '', db = b.date || '';
+    if (da !== db) return da < db ? -1 : 1;
+    const ha = a.heure || '', hb = b.heure || '';
+    if (ha !== hb) return ha < hb ? -1 : 1;
+    return 0;
+  });
 }
 
 function validerFormulaireEvt() {
@@ -3304,9 +3333,11 @@ function validerFormulaireEvt() {
     formDraft.id = Date.now();
     state.m2.evenements.push(formDraft);
   }
-  persist();
+  trierEvenements();
+  effacerBrouillon();
   formDraft = {};
   formEditIdx = null;
+  persist();
   refreshM2List();
   refreshAccueilBadges();
   route('m2');
@@ -3314,6 +3345,7 @@ function validerFormulaireEvt() {
 }
 
 function annulerFormulaireEvt() {
+  effacerBrouillon();
   formDraft = {};
   formEditIdx = null;
   route('m2');
@@ -3359,20 +3391,34 @@ function refreshM2List(){
     }
   }
 
+  // Brouillon non validé (saisie en cours quittée sans valider)
+  const brouillonEl = document.getElementById('m2-brouillon-banner');
+  if (brouillonEl) {
+    const b = state.m2.brouillon;
+    if (b && b.editIdx === null) {
+      brouillonEl.style.display = '';
+      brouillonEl.innerHTML = `⏳ Vous avez un nouvel évènement en cours de saisie (non validé). <button class="btn btn-ghost btn-sm" onclick="ouvrirFormulaireEvenement()">Reprendre le brouillon →</button>`;
+    } else {
+      brouillonEl.style.display = 'none';
+    }
+  }
+
   if(evts.length === 0){
     list.innerHTML = '<div class="event-empty">Aucun évènement déclaré pour le moment.</div>';
     return;
   }
+  const brouillonIdx = state.m2.brouillon ? state.m2.brouillon.editIdx : undefined;
   list.innerHTML = evts.map((e,i) => {
     const desc = e.comportement
       ? e.comportement.substring(0,80) + (e.comportement.length > 80 ? '…' : '')
       : (e.description ? e.description.substring(0,80) : 'Évènement sans description');
     const dateStr = e.date ? formatDate(e.date) : (e.date || 'Date non précisée');
     const heureStr = e.heure ? ' — ' + e.heure : '';
+    const brouillonTag = (brouillonIdx === i) ? '<span class="event-brouillon-tag" title="Modifications non validées">brouillon</span>' : '';
     return `<div class="event-item" onclick="ouvrirFormulaireEvenement(${i})">
       <div class="ev-num">${i+1}</div>
       <div class="ev-info">
-        <div class="ev-date">${esc(dateStr)}${esc(heureStr)}${e.moment ? ' · '+esc(e.moment) : ''}</div>
+        <div class="ev-date">${esc(dateStr)}${esc(heureStr)}${e.moment ? ' · '+esc(e.moment) : ''} ${brouillonTag}</div>
         <div class="ev-desc">${esc(desc)}</div>
       </div>
       <button class="btn btn-ghost btn-sm no-print" onclick="supprimerEvt(${i},event)" style="flex-shrink:0;padding:6px 10px;font-size:12px;border-color:transparent;" title="Supprimer">🗑</button>
