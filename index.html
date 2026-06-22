@@ -50,6 +50,7 @@
 }
 
 *{box-sizing:border-box;}
+input::placeholder, textarea::placeholder{color:var(--line);opacity:1;}
 html,body{margin:0;padding:0;}
 body{
   background:var(--paper);
@@ -68,6 +69,21 @@ h1,h2,h3,h4{
 p{margin:0 0 12px;}
 button{font-family:inherit;cursor:pointer;}
 input,textarea,select{font-family:inherit;font-size:15px;}
+textarea{overflow-y:hidden;}
+/* Uniformiser visuellement cases à cocher et boutons radio : tout en rond */
+input[type=checkbox]{
+  appearance:none;-webkit-appearance:none;
+  width:16px;height:16px;border:1.5px solid var(--line);border-radius:50%;
+  display:inline-block;vertical-align:middle;margin-right:4px;
+  position:relative;cursor:pointer;background:var(--card);
+  flex-shrink:0;
+}
+input[type=checkbox]:checked{background:var(--coral-deep);border-color:var(--coral-deep);}
+input[type=checkbox]:checked::after{
+  content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:10px;font-weight:700;
+}
+body.tool-idc input[type=checkbox]:checked{background:var(--teal-deep);border-color:var(--teal-deep);}
 a{color:var(--coral-deep);}
 
 .wrap{max-width:1080px;margin:0 auto;padding:0 24px;}
@@ -79,7 +95,13 @@ header.top{
   background:var(--slate);
   border-bottom:3px solid var(--coral);
   position:sticky;top:0;z-index:100;
+  transition:border-color .2s;
 }
+/* Identité couleur par outil : corail pour le Recueil (par défaut),
+   or/teal pour l'Indice de confiance — même palette, teinte différente. */
+body.tool-idc header.top{border-bottom-color:var(--teal-deep);}
+body.tool-idc .idc-nav-btn.on{background:var(--teal-deep);border-color:var(--teal-deep);}
+body.tool-idc .brand svg.rose{color:var(--teal-deep);}
 .top-inner{
   display:flex;align-items:center;gap:18px;
   padding:10px 24px;
@@ -90,6 +112,37 @@ header.top{
 @media(max-width:680px){
   .top-inner{flex-wrap:wrap;padding:10px 14px;}
 }
+
+/* ── BARRE FIXE SOUS LE HEADER (retour outil + export) ── */
+#tool-subbar{
+  position:sticky;top:var(--header-h,60px);z-index:98;
+  background:var(--paper-deep);
+  border-bottom:1px solid var(--line);
+}
+.subbar-inner{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  max-width:1080px;margin:0 auto;padding:8px 24px;
+}
+.subbar-back{
+  display:flex;align-items:center;gap:8px;
+  background:none;border:none;cursor:pointer;
+  font-size:14px;font-weight:700;color:var(--slate);
+  padding:4px 2px;
+}
+.subbar-back svg{width:20px;height:20px;flex-shrink:0;color:var(--coral-deep);}
+body.tool-idc .subbar-back svg{color:var(--teal-deep);}
+.subbar-back:hover{color:var(--coral-deep);}
+body.tool-idc .subbar-back:hover{color:var(--teal-deep);}
+.subbar-export{
+  background:var(--coral-deep);color:#fff;border:none;border-radius:7px;
+  padding:7px 16px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap;
+}
+body.tool-idc .subbar-export{background:var(--teal-deep);}
+@media(max-width:680px){
+  .subbar-inner{padding:8px 14px;}
+  .subbar-back{font-size:12.5px;}
+}
+
 .brand{
   display:flex;align-items:center;gap:11px;
   cursor:pointer;
@@ -117,8 +170,8 @@ nav.main{
 }
 nav.main button{
   background:none;border:1px solid transparent;
-  padding:7px 13px;
-  font-size:13px;font-weight:600;
+  padding:7px 11px;
+  font-size:14.5px;font-weight:600;
   color:rgba(255,255,255,.72);
   border-radius:8px;
   transition:background .15s, color .15s, border-color .15s;
@@ -126,6 +179,10 @@ nav.main button{
 }
 nav.main button:hover{background:rgba(255,255,255,.08);color:#fff;}
 nav.main button.on{background:var(--coral);color:#fff;border-color:var(--coral);}
+#baf-nav-group, #idc-nav-group{display:flex;gap:4px;flex-wrap:nowrap;align-items:center;}
+@media(max-width:1140px){
+  nav.main button{font-size:13px;padding:7px 9px;}
+}
 
 .top-actions{
   margin-left:auto;
@@ -277,24 +334,44 @@ section.view.show{display:block;animation:fadein .25s ease;}
    FOOTER
    ============================================================ */
 footer.bottom{
-  border-top:1px solid var(--line);
-  padding:24px 24px 32px;
-  text-align:center;
-  font-size:12.5px;
+  position:fixed;left:0;right:0;bottom:0;z-index:90;
+  max-width:1080px;margin:0 auto;
+  background:var(--card);
+  border:1px solid var(--line);border-bottom:none;
+  border-radius:10px 10px 0 0;
+  padding:6px 22px;
+  font-size:10.5px;
   color:var(--ink-soft);
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  flex-wrap:wrap;
 }
 footer.bottom .wip{
-  display:inline-block;
   background:var(--amber-pale);
   color:var(--coral-deep);
-  padding:4px 13px;
+  padding:2px 10px;
   border-radius:999px;
   font-weight:700;
-  font-size:11.5px;
-  margin-bottom:9px;
+  font-size:10.5px;
+  white-space:nowrap;
 }
 footer.bottom a{color:var(--ink-soft);text-decoration:underline;}
-footer.bottom .auteurs{margin-top:4px;}
+footer.bottom .auteurs{text-align:right;white-space:nowrap;}
+@media(max-width:760px){
+  footer.bottom{font-size:10px;padding:5px 10px;gap:8px;}
+  footer.bottom .auteurs{display:none;}
+}
+body{padding-bottom:38px;}
+
+/* ── BOUTON FLOTTANT "REMONTER EN HAUT" ── */
+.scrolltop-btn{
+  position:fixed;right:18px;bottom:54px;z-index:95;
+  width:42px;height:42px;border-radius:50%;
+  background:var(--coral-deep);color:#fff;border:none;
+  font-size:20px;cursor:pointer;box-shadow:var(--shadow-card);
+  line-height:1;
+}
+.scrolltop-btn:hover{background:var(--slate);}
+body.tool-idc .scrolltop-btn{background:var(--teal-deep);}
 
 /* ============================================================
    MODULE GÉNÉRIQUE (header de module)
@@ -319,7 +396,7 @@ footer.bottom .auteurs{margin-top:4px;}
   margin-bottom:10px;
 }
 .mod-header h2{font-size:27px;margin-bottom:7px;}
-.mod-header .sub{font-family:'Source Serif 4',serif;font-size:15px;color:var(--ink-soft);max-width:680px;line-height:1.6;}
+.mod-header .sub{font-family:'Source Serif 4',serif;font-size:15px;color:var(--ink-soft);max-width:none;line-height:1.6;text-align:justify;text-justify:inter-word;}
 .mod-header .sub b{color:var(--ink);font-weight:600;}
 
 .tag-m1{background:var(--m1-pale);color:var(--m1);}
@@ -671,7 +748,7 @@ footer.bottom .auteurs{margin-top:4px;}
 }
 @media print{
   /* ── Masquer tout ce qui n'est pas contenu ── */
-  header.top, footer.bottom, .no-print,
+  header.top, footer.bottom, #tool-subbar, .no-print,
   .accueil-actions, .multiposte-info,
   .mode-toggle-bar, .mode-approfondi-panel,
   .m3-tabs, .m4-tabs,
@@ -1028,7 +1105,7 @@ footer.bottom .auteurs{margin-top:4px;}
   resize:vertical;min-height:50px;
 }
 .abc-pattern-note:focus{outline:none;border-color:var(--coral);}
-.abc-pattern-note::placeholder{color:var(--ink-soft);}
+.abc-pattern-note::placeholder{color:var(--line);}
 
 .abc-add-btn{
   display:flex;align-items:center;justify-content:center;
@@ -1443,7 +1520,7 @@ footer.bottom .auteurs{margin-top:4px;}
     </div>
     <nav class="main" id="nav">
       <span id="baf-nav-group" style="display:none;">
-        <button data-go="m1" class="nav-btn">① Se connaître</button>
+        <button data-go="m1" class="nav-btn">Se connaître</button>
         <button data-go="m2" class="nav-btn">① Recueillir</button>
         <button data-go="m3" class="nav-btn">② Organiser</button>
         <button data-go="m4" class="nav-btn">③ Interpréter</button>
@@ -1472,6 +1549,24 @@ footer.bottom .auteurs{margin-top:4px;}
     </div>
   </div>
 </header>
+
+<div id="tool-subbar" style="display:none;">
+  <div class="subbar-inner" id="subbar-baf" style="display:none;">
+    <button class="subbar-back" onclick="route('baf-accueil')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+      Accueil recueil des données
+    </button>
+    <button class="subbar-export" onclick="exporterJSON()">💾 Exporter</button>
+  </div>
+  <div class="subbar-inner" id="subbar-idc" style="display:none;">
+    <button class="subbar-back" onclick="route('idc-accueil')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+      Accueil indice de confiance
+    </button>
+    <button class="subbar-export" onclick="saveJ()">💾 Sauvegarder</button>
+  </div>
+</div>
+
 
 <main class="wrap">
 
@@ -1654,13 +1749,11 @@ footer.bottom .auteurs{margin-top:4px;}
   <!-- VUE PRINCIPALE ICAF (cotation + synthèse) -->
   <section class="view" id="view-idc-main">
     <div class="wrap">
-      <div class="crumb"><button onclick="route('idc-accueil')">← Accueil indice de confiance</button></div>
       <div id="idc-main-content"></div>
     </div>
   </section>
   <section id="view-m1" class="view">
     <div class="mod-header">
-      <div class="crumb"><button onclick="route('baf-accueil')">← Accueil recueil des données</button></div>
       <span class="temps-tag tag-m1">Préambule</span>
       <h2>Apprenons à se connaître</h2>
       <div class="sub">Quelques informations de contexte avant de commencer le recueil. Elles serviront tout au long de l'outil.</div>
@@ -1787,7 +1880,6 @@ footer.bottom .auteurs{margin-top:4px;}
 
   <section id="view-m2" class="view">
     <div class="mod-header">
-      <div class="crumb"><button onclick="route('baf-accueil')">← Accueil recueil des données</button></div>
       <span class="temps-tag tag-m2">Module 1 · Instant de voir</span>
       <h2>Recueillir les données</h2>
       <div class="sub">Un comportement-défi est un comportement comme un autre — entouré de plein d'autres comportements. Certains font plus mal que d'autres, mais ici, on parle d'<b>évènements</b> : chaque entrée déclarative décrit une situation, qu'elle se rapporte à un ou plusieurs comportements-défis.</div>
@@ -1850,7 +1942,6 @@ footer.bottom .auteurs{margin-top:4px;}
 
   <section id="view-m3" class="view">
     <div class="mod-header">
-      <div class="crumb"><button onclick="route('baf-accueil')">← Accueil recueil des données</button></div>
       <span class="temps-tag tag-m2">Module 2 · Temps de comprendre</span>
       <h2>Organiser les données</h2>
       <div class="sub">Reprendre ce qui a été décrit dans le module 1 et l'associer à des catégories que <b>vous</b> définissez — pour faire apparaître des regroupements, sans rien figer. Pas de catégories imposées : vous créez les vôtres.</div>
@@ -1915,7 +2006,6 @@ footer.bottom .auteurs{margin-top:4px;}
 
   <section id="view-m4" class="view">
     <div class="mod-header">
-      <div class="crumb"><button onclick="route('baf-accueil')">← Accueil recueil des données</button></div>
       <span class="temps-tag tag-m2">Module 3 · Moment de conclure</span>
       <h2>Interpréter les données</h2>
       <div class="sub">À partir de ce que vous avez organisé, vous pouvez maintenant proposer des patterns — pas pour conclure définitivement, mais pour <b>donner à voir ce que vous, vous repérez</b>. Ce matériau sera discuté avec un clinicien.</div>
@@ -2018,7 +2108,6 @@ footer.bottom .auteurs{margin-top:4px;}
       <span id="print-profil"></span>
     </div>
     <div class="mod-header">
-      <div class="crumb"><button onclick="route('baf-accueil')">← Accueil recueil des données</button></div>
       <span class="temps-tag tag-m4">Lecture transversale</span>
       <h2>Synthèse de l'analyse fonctionnelle</h2>
       <div class="sub">Se met à jour automatiquement à mesure que vous remplissez les modules. Exportable pour reprise, imprimable pour un partage clinique.</div>
@@ -2102,8 +2191,8 @@ footer.bottom .auteurs{margin-top:4px;}
 <div class="gtt" id="idc-tooltip"></div>
 
 <footer class="bottom no-print">
-  <div class="wip">⚠ Outil toujours en cours de construction</div>
   <div>Une question, une remarque ? <a href="mailto:emia35@adapei35.asso.fr">emia35@adapei35.asso.fr</a></div>
+  <div class="wip">⚠ Outil toujours en cours de construction</div>
   <div class="auteurs">Outil créé par Émilie Musard, éducatrice spécialisée, et Arthur Guillieux, psychologue clinicien — EMIA35</div>
 </footer>
 
@@ -2191,7 +2280,7 @@ function loadPersisted(){
   }catch(e){}
 }
 
-function route(name){
+function route(name, fromHistory){
   document.querySelectorAll('section.view').forEach(s=>s.classList.remove('show'));
   const target = document.getElementById('view-'+name);
   if(target) target.classList.add('show');
@@ -2204,9 +2293,30 @@ function route(name){
   const bafNavGroup = document.getElementById('baf-nav-group');
   const idcNavGroup = document.getElementById('idc-nav-group');
   const idcTopActions = document.getElementById('idc-top-actions');
-  if(bafNavGroup) bafNavGroup.style.display = isBaf ? '' : 'none';
-  if(idcNavGroup) idcNavGroup.style.display = isIdc ? '' : 'none';
+  if(bafNavGroup) bafNavGroup.style.display = isBaf ? 'flex' : 'none';
+  if(idcNavGroup) idcNavGroup.style.display = isIdc ? 'flex' : 'none';
   if(idcTopActions) idcTopActions.style.display = (name==='idc-main') ? '' : 'none';
+
+  // Identité visuelle par outil (couleur d\'accent du header/nav)
+  document.body.classList.toggle('tool-baf', isBaf);
+  document.body.classList.toggle('tool-idc', isIdc);
+
+  // Barre fixe sous le header : flèche retour + export, propre à chaque outil
+  const subbarBaf = document.getElementById('subbar-baf');
+  const subbarIdc = document.getElementById('subbar-idc');
+  const showSubbarBaf = ['m1','m2','m3','m4','synthese'].includes(name);
+  const showSubbarIdc = (name === 'idc-main');
+  if(subbarBaf) subbarBaf.style.display = showSubbarBaf ? '' : 'none';
+  if(subbarIdc) subbarIdc.style.display = showSubbarIdc ? '' : 'none';
+  const subbar = document.getElementById('tool-subbar');
+  if(subbar) subbar.style.display = (showSubbarBaf || showSubbarIdc) ? '' : 'none';
+  syncHeaderHeight();
+
+  // Historique navigateur : le bouton "précédent" doit naviguer dans l\'outil,
+  // pas sortir de la page.
+  if(!fromHistory && (!history.state || history.state.route !== name)){
+    history.pushState({route:name}, '', '#'+name);
+  }
 
   window.scrollTo({top:0, behavior:'instant'});
   refreshAccueilBadges();
@@ -2214,7 +2324,23 @@ function route(name){
   if(name==='m3') renderM3();
   if(name==='m4') renderM4();
   if(name==='idc-main') { setNavActive('cotation'); renderMain(); }
+  setTimeout(autoGrowAllTextareas, 30);
 }
+
+window.addEventListener('popstate', (e)=>{
+  const name = (e.state && e.state.route) || 'accueil';
+  route(name, true);
+});
+
+function syncHeaderHeight(){
+  const header = document.querySelector('header.top');
+  const subbar = document.getElementById('tool-subbar');
+  const hH = header ? header.offsetHeight : 0;
+  document.documentElement.style.setProperty('--header-h', hH + 'px');
+  const sH = (subbar && subbar.style.display !== 'none') ? subbar.offsetHeight : 0;
+  document.documentElement.style.setProperty('--subbar-h', sH + 'px');
+}
+window.addEventListener('resize', syncHeaderHeight);
 
 document.querySelectorAll('.nav-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>route(btn.dataset.go));
@@ -4811,7 +4937,8 @@ loadPersisted();
 loadM1FromState();
 refreshM2List();
 refreshAccueilBadges();
-route('accueil');
+history.replaceState({route:'accueil'}, '', '#accueil');
+route('accueil', true);
 
 // ============================================================
 // INDICE DE CONFIANCE (ICAF) — logique fusionnée ici.
@@ -5714,7 +5841,27 @@ function confirmerReset(){
   goAccueil();
 }
 
+window.addEventListener('scroll', ()=>{
+  const btn = document.getElementById('btn-scrolltop');
+  if(!btn) return;
+  btn.style.display = window.scrollY > 400 ? '' : 'none';
+});
+
+// Auto-agrandissement des zones de texte libre quand le contenu dépasse
+function autoGrowTextarea(el){
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+document.addEventListener('input', (e)=>{
+  if(e.target && e.target.tagName === 'TEXTAREA') autoGrowTextarea(e.target);
+});
+function autoGrowAllTextareas(){
+  document.querySelectorAll('textarea').forEach(autoGrowTextarea);
+}
+
 </script>
+
+<button id="btn-scrolltop" class="scrolltop-btn no-print" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Remonter en haut de page" aria-label="Remonter en haut de page" style="display:none;">↑</button>
 
 </body>
 </html>
