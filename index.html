@@ -2852,8 +2852,27 @@ const ETAPES = [
           <label>Votre rôle auprès de la personne</label>
           <div class="choice-row" id="f-role">
             ${['Professionnel·le','Famille / proche','Autre'].map(r =>
-              `<label><input type="radio" name="frole" value="${r}" ${d.role===r?'checked':''}> ${r}</label>`
+              `<label><input type="radio" name="frole" value="${r}" ${d.role===r?'checked':''} onchange="onRoleChange()"> ${r}</label>`
             ).join('')}
+          </div>
+          <div id="f-role-pro-wrap" class="field" style="display:${d.role==='Professionnel·le'?'':'none'};margin-top:8px;">
+            <label for="f-role-pro">Fonction</label>
+            <select id="f-role-pro" onchange="onRoleProChange()">
+              <option value="">— choisir —</option>
+              ${['Éducateur·rice spécialisé·e','AES / AMP','Moniteur·rice-éducateur·rice','Psychologue','Infirmier·ère','Enseignant·e','Orthophoniste','Psychomotricien·ne','Chef de service','Autre fonction'].map(f=>`<option value="${esc(f)}" ${d.rolePro===f?'selected':''}>${f}</option>`).join('')}
+            </select>
+            <input type="text" id="f-role-pro-autre" placeholder="Précisez la fonction..." value="${esc(d.roleProAutre||'')}" style="margin-top:6px;display:${d.rolePro==='Autre fonction'?'':'none'};">
+          </div>
+          <div id="f-role-autre-wrap" class="field" style="display:${d.role==='Autre'?'':'none'};margin-top:8px;">
+            <label for="f-role-autre">Précisez quel rôle</label>
+            <input type="text" id="f-role-autre" value="${esc(d.roleAutre||'')}">
+          </div>
+          <div id="f-role-famille-wrap" class="field" style="display:${d.role==='Famille / proche'?'':'none'};margin-top:8px;">
+            <label for="f-role-famille">Lien avec la personne</label>
+            <select id="f-role-famille">
+              <option value="">— choisir —</option>
+              ${['Père','Mère','Frère','Sœur','Oncle','Tante','Grand-père','Grand-mère','Tuteur·rice','Autre lien'].map(f=>`<option value="${esc(f)}" ${d.roleFamille===f?'selected':''}>${f}</option>`).join('')}
+            </select>
           </div>
         </div>
         <div class="field">
@@ -2867,18 +2886,27 @@ const ETAPES = [
         <div class="field">
           <label>Moment de la journée</label>
           <div class="choice-row" id="f-moment">
-            ${['Matin (avant activité)','Matin (activité)','Transition','Repas','Après-midi (activité)','Après-midi (fin journée)','Soir / départ'].map(m =>
-              `<label><input type="radio" name="fmoment" value="${m}" ${d.moment===m?'checked':''}> ${m}</label>`
+            ${momentOptions().map(m =>
+              `<label><input type="radio" name="fmoment" value="${esc(m)}" ${d.moment===m?'checked':''}> ${esc(m)}</label>`
             ).join('')}
+          </div>
+          <div class="field" style="margin-top:8px;">
+            <label for="f-moment-precision">Précision sur le moment (facultatif)</label>
+            <input type="text" id="f-moment-precision" value="${esc(d.momentPrecision||'')}" placeholder="ex : tout début de l'activité, juste avant le brossage de dents...">
           </div>
         </div>
       </div>`,
     collect: () => ({
       declarant: val('f-declarant'),
       role: radioVal('frole'),
+      rolePro: val('f-role-pro'),
+      roleProAutre: val('f-role-pro-autre'),
+      roleAutre: val('f-role-autre'),
+      roleFamille: val('f-role-famille'),
       date: val('f-date'),
       heure: val('f-heure'),
       moment: radioVal('fmoment'),
+      momentPrecision: val('f-moment-precision'),
     })
   },
   {
@@ -3170,6 +3198,33 @@ function val(id) {
 function radioVal(name) {
   const el = document.querySelector(`input[name="${name}"]:checked`);
   return el ? el.value : '';
+}
+function onRoleChange() {
+  const r = document.querySelector('#f-role input:checked');
+  const v = r ? r.value : '';
+  const proWrap = document.getElementById('f-role-pro-wrap');
+  const autreWrap = document.getElementById('f-role-autre-wrap');
+  const familleWrap = document.getElementById('f-role-famille-wrap');
+  if (proWrap) proWrap.style.display = v === 'Professionnel·le' ? '' : 'none';
+  if (autreWrap) autreWrap.style.display = v === 'Autre' ? '' : 'none';
+  if (familleWrap) familleWrap.style.display = v === 'Famille / proche' ? '' : 'none';
+}
+function onRoleProChange() {
+  const sel = document.getElementById('f-role-pro');
+  const autre = document.getElementById('f-role-pro-autre');
+  if (sel && autre) autre.style.display = sel.value === 'Autre fonction' ? '' : 'none';
+}
+// Les créneaux de la journée type (module Apprenons à se connaître) servent
+// directement d\'options pour le "moment de la journée" d\'un évènement.
+function momentOptions() {
+  const reels = (state.m1.journeeCreneaux || []).filter(c => c.nom && c.nom.trim());
+  if (reels.length === 0) {
+    return ['Matin (avant activité)','Matin (activité)','Transition','Repas','Après-midi (activité)','Après-midi (fin journée)','Soir / départ'];
+  }
+  const seen = new Set();
+  const opts = [];
+  reels.forEach(c => { if (!seen.has(c.nom)) { seen.add(c.nom); opts.push(c.nom); } });
+  return opts;
 }
 function checkVals(name) {
   return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(el=>el.value);
@@ -5140,19 +5195,6 @@ function renderCharts() {
   const momentsFreq = countFrequencies(momentsRaw)
     .sort((a,b) => MOMENTS_ORDER.indexOf(a.label) - MOMENTS_ORDER.indexOf(b.label));
 
-  // Tranches horaires (2h)
-  const heuresRaw = evts.map(e => {
-    if (!e.heure) return null;
-    try {
-      const h = parseInt(e.heure.split(':')[0]);
-      // Regrouper en tranches de 2h
-      const slot = Math.floor(h / 2) * 2;
-      return `${slot}h–${slot+2}h`;
-    } catch(err) { return null; }
-  }).filter(Boolean);
-  const heuresFreq = countFrequencies(heuresRaw)
-    .sort((a,b) => parseInt(a.label) - parseInt(b.label));
-
   // Intensités
   const intensRaw = evts.map(e => e.intensite).filter(Boolean);
   const intensFreq = countFrequencies(intensRaw);
@@ -5163,7 +5205,6 @@ function renderCharts() {
   let html = '';
   if (joursFreq.length > 0) html += buildChartBlock('Jours de la semaine', joursFreq);
   if (momentsFreq.length > 0) html += buildChartBlock('Moment de la journée', momentsFreq);
-  if (heuresFreq.length > 0) html += buildChartBlock('Tranche horaire', heuresFreq);
   if (intensFreq.length > 0) html += buildChartBlock('Intensité ressentie', intensFreq);
 
   el.innerHTML = html || '<div style="color:var(--ink-soft);font-style:italic;font-size:13.5px;">Données insuffisantes pour les graphiques (complétez les champs Jour, Moment et Heure dans les évènements).</div>';
