@@ -342,13 +342,14 @@ footer.bottom{
   padding:6px 22px;
   font-size:10.5px;
   color:var(--ink-soft);
-  display:flex;align-items:center;justify-content:center;
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
   width:100%;
 }
 footer.bottom .footer-line{
   min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
-  max-width:100%;text-align:center;
 }
+footer.bottom .footer-left{text-align:left;flex:1;}
+footer.bottom .footer-right{text-align:right;flex-shrink:0;}
 footer.bottom a{color:var(--ink-soft);text-decoration:underline;}
 @media(max-width:760px){
   footer.bottom{font-size:9.5px;padding:5px 10px;}
@@ -2259,7 +2260,8 @@ body.tool-idc .scrolltop-btn{background:var(--teal-deep);}
 <div class="gtt" id="idc-tooltip"></div>
 
 <footer class="bottom no-print">
-  <div class="footer-line">Outil créé par Émilie Musard, éducatrice spécialisée, et Arthur Guillieux, psychologue clinicien — <a href="mailto:emia35@adapei35.asso.fr">emia35@adapei35.asso.fr</a> · ⚠ Outil toujours en cours de construction</div>
+  <div class="footer-line footer-left">Outil créé par Émilie Musard, éducatrice spécialisée, et Arthur Guillieux, psychologue clinicien — <a href="mailto:emia35@adapei35.asso.fr">emia35@adapei35.asso.fr</a></div>
+  <div class="footer-line footer-right">⚠ Outil toujours en cours de construction</div>
 </footer>
 
 <div class="toast" id="toast"></div>
