@@ -424,6 +424,15 @@ body.tool-idc .scrolltop-btn{background:var(--teal-deep);}
   margin-bottom:6px;
 }
 .field .help{font-family:'Source Serif 4',serif;font-size:12.5px;color:var(--ink-soft);margin-bottom:8px;font-style:italic;}
+.help-toggle{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:18px;height:18px;margin:0 0 6px 6px;vertical-align:middle;
+  background:none;border:1px solid var(--line);border-radius:50%;
+  color:var(--ink-soft);font-size:10px;cursor:pointer;
+  transition:transform .15s,border-color .15s,color .15s;
+}
+.help-toggle:hover{border-color:var(--coral-deep);color:var(--coral-deep);}
+.help-toggle.open{transform:rotate(180deg);}
 .field input[type=text],.field input[type=number],.field textarea,.field select{
   width:100%;
   padding:10px 13px;
@@ -6181,6 +6190,43 @@ document.addEventListener('input', (e)=>{
 function autoGrowAllTextareas(){
   document.querySelectorAll('textarea').forEach(autoGrowTextarea);
 }
+
+// Sous-textes d\'aide repliables : un petit bouton flèche, juste après le
+// libellé, pour déplier/replier le sous-texte d\'aide — pour alléger les
+// pages visuellement chargées (ex. "Antécédents immédiats").
+function setupHelpToggles(){
+  document.querySelectorAll('.help').forEach(helpEl => {
+    if (helpEl.dataset.toggleReady) return;
+    helpEl.dataset.toggleReady = '1';
+    helpEl.style.display = 'none';
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'help-toggle';
+    btn.title = "Afficher / masquer l'aide";
+    btn.textContent = '▾';
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const show = helpEl.style.display === 'none';
+      helpEl.style.display = show ? '' : 'none';
+      btn.classList.toggle('open', show);
+    });
+    const prev = helpEl.previousElementSibling;
+    if (prev && prev.tagName === 'LABEL') {
+      prev.appendChild(btn);
+    } else {
+      helpEl.parentNode.insertBefore(btn, helpEl);
+    }
+  });
+}
+let helpObserverScheduled = false;
+const helpObserver = new MutationObserver(() => {
+  if (helpObserverScheduled) return;
+  helpObserverScheduled = true;
+  setTimeout(() => { setupHelpToggles(); helpObserverScheduled = false; }, 30);
+});
+helpObserver.observe(document.body, {childList:true, subtree:true});
+setupHelpToggles();
 
 </script>
 
