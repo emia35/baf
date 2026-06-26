@@ -1938,6 +1938,21 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
       </div>
 
       <div class="field">
+        <label>Heures de coucher / lever <span style="font-weight:400;color:var(--ink-soft);">(facultatif)</span></label>
+        <div class="help">Permet d'identifier la période « nuit » comme moment de la journée possible, distincte de la journée type.</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:140px;">
+            <label for="m1-coucher" style="font-size:12px;font-weight:600;color:var(--ink-soft);">Coucher</label>
+            <input type="text" id="m1-coucher" placeholder="ex : 21h00" oninput="saveM1()">
+          </div>
+          <div style="flex:1;min-width:140px;">
+            <label for="m1-lever" style="font-size:12px;font-weight:600;color:var(--ink-soft);">Lever</label>
+            <input type="text" id="m1-lever" placeholder="ex : 07h00" oninput="saveM1()">
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
         <label>La journée type <span style="font-weight:400;color:var(--ink-soft);">(créneaux)</span></label>
         <div class="help">Ajoutez autant de créneaux que nécessaire. Ce n'est pas un emploi du temps rigide — c'est pour faire apparaître les transitions, souvent déterminantes dans l'analyse.</div>
         <div class="creneau-list" id="m1-creneau-list"></div>
@@ -2336,7 +2351,7 @@ function setMode(moduleId, mode){
 
 let state = {
   version: 1,
-  m1: {prenom:'', age:'', diag:'', lieux:[], statut:'', lieuAnalyse:'', jours:[], heures:'', journeeCreneaux:[], semaineCreneaux:{}, libre:''},
+  m1: {prenom:'', age:'', diag:'', lieux:[], statut:'', lieuAnalyse:'', jours:[], heures:'', coucher:'', lever:'', journeeCreneaux:[], semaineCreneaux:{}, libre:''},
   m2: {evenements: []},
   m3: {sous:'cp', categories:{cp:{},antecedents:{},declencheurs:{},consequences:{},interventions:{}}},
   m4: {patterns: [], gradations: [], vase: {monte:[], descend:[], texte:''}}
@@ -2798,6 +2813,8 @@ function saveM1(){
   state.m1.lieuAnalyse = lieuAnalyseEl ? lieuAnalyseEl.value : '';
   state.m1.jours = Array.from(document.querySelectorAll('#m1-jours input:checked')).map(i=>i.value);
   state.m1.heures = document.getElementById('m1-heures').value;
+  state.m1.coucher = document.getElementById('m1-coucher').value;
+  state.m1.lever = document.getElementById('m1-lever').value;
   // journeeCreneaux est mis à jour directement par updateCreneau/ajouterCreneau
   state.m1.trajetAvant = {
     mode: document.getElementById('m1-trajet-avant-mode').value,
@@ -2885,6 +2902,8 @@ function loadM1FromState(){
   document.querySelectorAll('#m1-jours input').forEach(i=>{ i.checked = (state.m1.jours||[]).includes(i.value); });
   updateBtnTousJours();
   document.getElementById('m1-heures').value = state.m1.heures || '';
+  document.getElementById('m1-coucher').value = state.m1.coucher || '';
+  document.getElementById('m1-lever').value = state.m1.lever || '';
   trierEtComblerCreneaux();
   renderCreneauList();
   renderGrilleSemaine();
@@ -2947,7 +2966,7 @@ const ETAPES = [
             <label for="f-role-pro">Fonction</label>
             <select id="f-role-pro" onchange="onRoleProChange()">
               <option value="">— choisir —</option>
-              ${['Éducateur·rice spécialisé·e','AES / AMP','Moniteur·rice-éducateur·rice','Psychologue','Infirmier·ère','Enseignant·e','Orthophoniste','Psychomotricien·ne','Chef de service','Autre fonction'].map(f=>`<option value="${esc(f)}" ${d.rolePro===f?'selected':''}>${f}</option>`).join('')}
+              ${['Éducateur·rice spécialisé·e','AES / AMP','Moniteur·rice-éducateur·rice','Surveillant·e de nuit','Psychologue','Infirmier·ère','Enseignant·e','Orthophoniste','Psychomotricien·ne','Chef de service','Autre fonction'].map(f=>`<option value="${esc(f)}" ${d.rolePro===f?'selected':''}>${f}</option>`).join('')}
             </select>
             <input type="text" id="f-role-pro-autre" placeholder="Précisez la fonction..." value="${esc(d.roleProAutre||'')}" style="margin-top:6px;display:${d.rolePro==='Autre fonction'?'':'none'};">
           </div>
@@ -3289,12 +3308,24 @@ function onRoleProChange() {
 // directement d\'options pour le "moment de la journée" d\'un évènement.
 function momentOptions() {
   const reels = (state.m1.journeeCreneaux || []).filter(c => c.nom && c.nom.trim());
+  let opts;
   if (reels.length === 0) {
-    return ['Matin (avant activité)','Matin (activité)','Transition','Repas','Après-midi (activité)','Après-midi (fin journée)','Soir / départ'];
+    opts = ['Matin (avant activité)','Matin (activité)','Transition','Repas','Après-midi (activité)','Après-midi (fin journée)','Soir / départ'];
+  } else {
+    // Un même nom de créneau peut apparaître plusieurs fois dans la journée
+    // type (ex : WC à 9h et à 11h) : on distingue ces occurrences par leurs
+    // heures plutôt que de les fusionner en une seule option.
+    const nomCount = {};
+    reels.forEach(c => { nomCount[c.nom] = (nomCount[c.nom] || 0) + 1; });
+    opts = reels.map(c => {
+      if (nomCount[c.nom] <= 1) return c.nom;
+      const horaire = (c.debut || c.fin) ? ` (${c.debut||'?'}–${c.fin||'?'})` : '';
+      return `${c.nom}${horaire}`;
+    });
   }
-  const seen = new Set();
-  const opts = [];
-  reels.forEach(c => { if (!seen.has(c.nom)) { seen.add(c.nom); opts.push(c.nom); } });
+  if (state.m1.coucher && state.m1.lever) {
+    opts.push(`Nuit (${state.m1.coucher}–${state.m1.lever})`);
+  }
   return opts;
 }
 function checkVals(name) {
