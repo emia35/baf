@@ -556,8 +556,10 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
 .stepper{display:flex;gap:4px;margin-bottom:24px;flex-wrap:wrap;}
 .stepper .step-dot{
   flex:1;min-width:18px;height:5px;border-radius:999px;
-  background:var(--line);
+  background:var(--line);cursor:pointer;
+  transition:transform .12s, background-color .12s;
 }
+.stepper .step-dot:hover{background:var(--hdr-accent);transform:scaleY(1.6);}
 .stepper .step-dot.done{background:var(--teal);}
 .stepper .step-dot.current{background:var(--coral);}
 
@@ -3388,7 +3390,7 @@ function renderEtape(idx) {
   const stepper = document.getElementById('form-stepper');
   stepper.innerHTML = ETAPES.map((e, i) => {
     let cls = i < idx ? 'done' : i === idx ? 'current' : '';
-    return `<div class="step-dot ${cls}" title="${e.label}"></div>`;
+    return `<div class="step-dot ${cls}" onclick="aller(${i})" title="Aller à : ${esc(e.label)}"></div>`;
   }).join('');
 
   // Label d\'étape
