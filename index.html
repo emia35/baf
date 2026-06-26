@@ -2302,7 +2302,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
 
     <div class="actions-row">
       <button class="btn btn-gold" onclick="exporterJSON()">💾 Exporter cette analyse</button>
-      <button class="btn btn-secondary" onclick="window.print()">🖨️ Imprimer / PDF</button>
+      <button class="btn btn-secondary" onclick="exporterWord()">📄 Exporter en Word</button>
     </div>
   </section>
 
@@ -4189,6 +4189,90 @@ function exporterJSON(){
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
   showToast('Fichier exporté.');
+}
+
+// Export Word : produit un fichier .doc (HTML balisé Word, ouvert nativement
+// par Word) reprenant le même contenu que l'impression — pas de dépendance
+// externe, pas de vrai .docx (zip OOXML), mais éditable et intégrable
+// directement dans un bilan.
+function exporterWord(){
+  const main = document.querySelector('main');
+  const clone = main.cloneNode(true);
+
+  // Ne garder que les vues de contenu (pas les pages d'accueil)
+  const exclude = ['view-accueil','view-baf-accueil','view-idc-accueil'];
+  clone.querySelectorAll('section.view').forEach(sec => {
+    if (exclude.includes(sec.id)) { sec.remove(); return; }
+    sec.style.display = 'block';
+  });
+
+  // Retirer les éléments interactifs / non pertinents pour un rapport
+  ['.no-print','.accueil-actions','.multiposte-info','.mode-toggle-bar',
+   '.mode-approfondi-panel','.m3-tabs','.m4-tabs','.actions-row',
+   '#btn-details-toggle','.abc-add-btn','.grad-add-btn','.vase-input-row',
+   '.abc-pattern-del','.creneau-del','.creneau-add','.m3-cat-del','.col-del',
+   'button','nav','.crumb','.semaine-toolbar','.semaine-tabs','.m3-cat-color',
+   '.m3-item-cat-badge'
+  ].forEach(sel => clone.querySelectorAll(sel).forEach(el => el.remove()));
+
+  // Geler les valeurs des champs de saisie en texte statique : un input/textarea
+  // cloné ne reflète pas la valeur affectée en JS (.value), seulement l'attribut
+  // d'origine — il faut donc les remplacer par leur valeur affichée actuelle.
+  clone.querySelectorAll('textarea').forEach(el => {
+    const div = document.createElement('div');
+    div.textContent = el.value || '';
+    el.replaceWith(div);
+  });
+  clone.querySelectorAll('select').forEach(el => {
+    const span = document.createElement('span');
+    span.textContent = el.options[el.selectedIndex] ? el.options[el.selectedIndex].text : '';
+    el.replaceWith(span);
+  });
+  clone.querySelectorAll('input[type=checkbox], input[type=radio]').forEach(el => {
+    const label = el.closest('label');
+    if (!el.checked) { if (label) label.remove(); else el.remove(); return; }
+    const span = document.createElement('span');
+    span.textContent = (label ? label.textContent : (el.value || '')).trim();
+    if (label) label.replaceWith(span); else el.replaceWith(span);
+  });
+  clone.querySelectorAll('input').forEach(el => {
+    const span = document.createElement('span');
+    span.textContent = el.value || '';
+    el.replaceWith(span);
+  });
+
+  const prenom = state.m1.prenom || 'sans nom';
+  const dateAffichee = new Date().toLocaleDateString('fr-FR');
+  const css = `
+    body{font-family:Calibri,Arial,sans-serif;font-size:11pt;color:#1a1a1a;}
+    h1{font-size:18pt;}
+    h2{font-size:15pt;margin-top:18pt;}
+    h3,h4{font-size:12.5pt;margin-top:12pt;}
+    .card{border:1px solid #ccc;padding:10px;margin-bottom:12px;}
+    table{border-collapse:collapse;width:100%;}
+    td,th{border:1px solid #ccc;padding:4px 6px;font-size:10pt;}
+  `;
+  const html = `<!DOCTYPE html>
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head><meta charset="utf-8"><title>BAF</title><style>${css}</style></head>
+<body>
+<h1>BAF — Boussole pour une Analyse Fonctionnelle</h1>
+<p><i>${esc(prenom)} — exporté le ${dateAffichee}</i></p>
+${clone.innerHTML}
+</body></html>`;
+
+  const blob = new Blob(['﻿', html], {type:'application/msword'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const prenomFile = state.m1.prenom ? state.m1.prenom.replace(/[^a-zA-Z0-9]/g,'_') : 'sans_nom';
+  const dateFile = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = `BAF_${prenomFile}_${dateFile}.doc`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Document Word exporté.');
 }
 
 function importerJSON(event){
