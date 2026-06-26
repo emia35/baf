@@ -229,11 +229,11 @@ nav.main button.on{background:var(--hdr-accent);color:var(--hdr-accent-text);bor
 .top-actions input[type=file]{display:none;}
 
 .emia-mark{
-  display:flex;flex-direction:column;align-items:flex-end;
+  display:flex;flex-direction:column;align-items:flex-start;
   line-height:1;margin-left:auto;
   flex-shrink:0;
 }
-.emia-mark .by{font-size:9px;font-weight:600;color:rgba(255,255,255,.55);letter-spacing:.1em;text-transform:lowercase;margin-bottom:3px;}
+.emia-mark .by{font-size:9px;font-weight:600;color:var(--hdr-text-faint);letter-spacing:.1em;text-transform:lowercase;margin-bottom:3px;}
 .emia-mark img{height:20px;width:auto;display:block;}
 
 /* ============================================================
@@ -1224,6 +1224,11 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   font-family:inherit;font-size:13px;
 }
 .grad-cp-select:focus{outline:none;border-color:var(--amber);}
+.grad-cp-del{
+  background:none;border:none;cursor:pointer;
+  font-size:11px;color:var(--ink-soft);padding:1px 4px;
+}
+.grad-cp-del:hover{color:#D6573F;}
 .grad-arrow{font-size:20px;color:var(--ink-soft);flex-shrink:0;align-self:flex-end;margin-bottom:4px;}
 .grad-add-cp{
   padding:6px 12px;border:1.5px dashed var(--line);border-radius:999px;
@@ -2369,6 +2374,32 @@ function replaceState(newObj){
   // Nettoyer les clés mortes d'ancien format vase
   delete state.m4.vase.augmente;
   delete state.m4.vase.diminue;
+  migrerIdsCategorisation();
+}
+
+// Les items catégorisables étaient identifiés par "evtIdx_partIdx" (position dans
+// le tableau). Un tri (chronologique, suppression…) change la position d'un
+// évènement, donc l'ancien id pointait vers le mauvais évènement après coup.
+// On bascule sur un id stable de l'évènement (evt.id), et on migre une fois les
+// anciens ids déjà enregistrés dans les catégories.
+function migrerIdsCategorisation() {
+  if (state.m3 && state.m3._idsMigratedV2) return;
+  (state.m2.evenements || []).forEach(evt => {
+    if (!evt.id) evt.id = 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+  });
+  const reOld = /^(\d+)_(\d+)$/;
+  Object.values((state.m3 && state.m3.categories) || {}).forEach(sousCats => {
+    Object.values(sousCats).forEach(cat => {
+      if (!Array.isArray(cat.items)) return;
+      cat.items = cat.items.map(itemId => {
+        const m = reOld.exec(itemId);
+        if (!m) return itemId;
+        const evt = state.m2.evenements[parseInt(m[1], 10)];
+        return evt ? `e${evt.id}_${m[2]}` : itemId;
+      });
+    });
+  });
+  if (state.m3) state.m3._idsMigratedV2 = true;
 }
 
 const STORAGE_KEY = 'baf_emia35_state_v1';
@@ -2381,6 +2412,7 @@ function loadPersisted(){
     const raw = localStorage.getItem(STORAGE_KEY);
     if(raw){ state = Object.assign(state, JSON.parse(raw)); }
   }catch(e){}
+  migrerIdsCategorisation();
 }
 
 function route(name, fromHistory){
@@ -3385,6 +3417,7 @@ function validerFormulaireEvt() {
   effacerBrouillon();
   formDraft = {};
   formEditIdx = null;
+  currentEtapeIdx = 0;
   persist();
   refreshM2List();
   refreshAccueilBadges();
@@ -3396,6 +3429,7 @@ function annulerFormulaireEvt() {
   effacerBrouillon();
   formDraft = {};
   formEditIdx = null;
+  currentEtapeIdx = 0;
   route('m2');
 }
 
@@ -3914,14 +3948,14 @@ const CORR_MIN = 2; // seuil d'affichage
 
 // Retourner les noms de catégories assignées à l'évènement evtIdx
 // dans le sous-module sousId
-function catsDeEvt(sousId, evtIdx) {
+function catsDeEvt(sousId, evtId) {
   ensureM3();
   const cats = state.m3.categories[sousId] || {};
   const result = [];
   Object.entries(cats).forEach(([catId, cat]) => {
     const items = cat.items || [];
-    // L'item ID est de la forme "evtIdx_partIdx"
-    const match = items.some(itemId => itemId.startsWith(String(evtIdx) + '_'));
+    // L'item ID est de la forme "e{evtId}_partIdx"
+    const match = items.some(itemId => itemId.startsWith(`e${evtId}_`));
     if (match && cat.nom) result.push(cat.nom);
   });
   return result;
@@ -3938,9 +3972,10 @@ function computeCorrelations() {
   const pairsAnteDecl = {};
 
   evts.forEach((evt, idx) => {
-    const antes = catsDeEvt('antecedents', idx);
-    const decls = catsDeEvt('declencheurs', idx);
-    const conss = catsDeEvt('consequences', idx);
+    if (!evt.id) evt.id = 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    const antes = catsDeEvt('antecedents', evt.id);
+    const decls = catsDeEvt('declencheurs', evt.id);
+    const conss = catsDeEvt('consequences', evt.id);
 
     // antécédent × conséquence
     antes.forEach(a => conss.forEach(c => {
@@ -4336,6 +4371,7 @@ function simuler(idx){
   });
   state.m4 = m4data;
 
+  migrerIdsCategorisation();
   persist();
   loadM1FromState();
   refreshM2List();
@@ -4461,11 +4497,12 @@ function extraireItems(sousId) {
   if (!sous) return [];
   const items = [];
   (state.m2.evenements || []).forEach((evt, evtIdx) => {
+    if (!evt.id) evt.id = 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
     const extraits = sous.extract(evt);
     extraits.forEach((texte, i) => {
       if (texte && texte.trim()) {
         items.push({
-          id: `${evtIdx}_${i}`,
+          id: `e${evt.id}_${i}`,
           evtIdx,
           texte: texte.trim(),
           date: evt.date || '',
@@ -4940,6 +4977,7 @@ function renderGradations() {
               <option value="">— catégorie CD —</option>
               ${catsCP.map(c => `<option value="${esc(c.id)}" ${c.id===cpId?'selected':''}>${esc(c.nom)}</option>`).join('')}
             </select>
+            ${g.cps.length > 2 ? `<button type="button" class="grad-cp-del" onclick="retirerCPGradation('${esc(g.id)}',${ci})" title="Retirer ce CD de la séquence">✕</button>` : ''}
           </div>
           ${ci < g.cps.length - 1 ? '<span class="grad-arrow">↗</span>' : ''}
         `).join('')}
@@ -4969,6 +5007,12 @@ function ajouterCPGradation(id) {
   ensureM4();
   const g = state.m4.gradations.find(x => x.id === id);
   if (g && g.cps.length < 6) { g.cps.push(''); persist(); renderGradations(); }
+}
+
+function retirerCPGradation(id, idx) {
+  ensureM4();
+  const g = state.m4.gradations.find(x => x.id === id);
+  if (g && g.cps.length > 2) { g.cps.splice(idx, 1); persist(); renderGradations(); }
 }
 
 function supprimerGradation(id) {
