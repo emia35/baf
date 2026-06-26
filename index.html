@@ -1002,6 +1002,12 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   background:var(--teal-pale);
 }
 .m3-item-text{flex:1;font-size:13.5px;color:var(--ink);line-height:1.45;}
+.m3-item-tag-post{
+  display:inline-block;margin-bottom:4px;
+  background:#D6573F;color:#fff;
+  font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+  padding:2px 7px;border-radius:999px;
+}
 .m3-item-source{font-size:11px;color:var(--ink-soft);margin-top:3px;font-style:italic;}
 .m3-item-cat-badge{
   display:inline-block;
@@ -2403,6 +2409,25 @@ function migrerIdsCategorisation() {
   if (state.m3 && state.m3._idsMigratedV2) return;
   (state.m2.evenements || []).forEach(evt => {
     if (!evt.id) evt.id = 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    // Ancien format : interventions figées (inter1/inter2). On les bascule
+    // une fois vers le tableau dynamique d'interventions.
+    if (!Array.isArray(evt.interventions) && (evt.inter1 || evt.inter2)) {
+      evt.interventions = [];
+      if (evt.inter1) {
+        evt.interventions.push({
+          id: 'iv_' + evt.id + '_0', texte: evt.inter1, effet: evt.inter1Eff || '',
+          precision: evt.inter1Eff === 'Aggravation' ? '' : (evt.inter1EffComment || ''),
+          cdPostIntervention: evt.inter1Eff === 'Aggravation' ? (evt.inter1EffComment || '') : '',
+        });
+      }
+      if (evt.inter2) {
+        evt.interventions.push({
+          id: 'iv_' + evt.id + '_1', texte: evt.inter2, effet: evt.inter2Eff || '',
+          precision: evt.inter2Eff === 'Aggravation' ? '' : (evt.inter2EffComment || ''),
+          cdPostIntervention: evt.inter2Eff === 'Aggravation' ? (evt.inter2EffComment || '') : '',
+        });
+      }
+    }
   });
   const reOld = /^(\d+)_(\d+)$/;
   Object.values((state.m3 && state.m3.categories) || {}).forEach(sousCats => {
@@ -3150,59 +3175,41 @@ const ETAPES = [
   },
   {
     id: 'intervention',
-    label: "Intervention de l\u2019entourage",
-    render: (d) => `
+    label: "Intervention de l’entourage",
+    render: (d) => {
+      const interventions = (d.interventions && d.interventions.length) ? d.interventions : [{id:'iv_'+Date.now(), texte:'', effet:'', precision:'', cdPostIntervention:''}];
+      return `
       <div class="card">
         <div style="background:var(--m1-pale);border-left:3px solid var(--m1);padding:13px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;">
           <b>Ce que vous ou l'entourage avez fait en réponse.</b> Y compris "on n'a rien fait" — les moments où le comportement cesse sans intervention sont des données précieuses qu'on perd souvent.
         </div>
-        <div class="field">
-          <label for="f-inter1">Qu'avez-vous fait en premier ?</label>
-          <input type="text" id="f-inter1" placeholder="ex : on lui a rappelé le cadre verbalement. Ou : on n'a pas intervenu immédiatement." value="${esc(d.inter1||'')}">
+        <div id="inter-list">
+          ${interventions.map((iv, i) => renderInterventionBlock(iv, i, interventions.length)).join('')}
         </div>
-        <div class="field">
-          <label>Ça a eu quel effet ?</label>
-          <div class="choice-row" id="f-inter1eff">
-            ${['Apaisement','Aggravation','Aucun effet visible','NSP (non statué)'].map(v =>
-              `<label><input type="radio" name="finter1eff" value="${v}" ${d.inter1Eff===v?'checked':''}> ${v}</label>`
-            ).join('')}
-          </div>
-        </div>
-        <div class="field">
-          <label for="f-inter1eff-comment">Précision sur l'effet (facultatif)</label>
-          <div class="help">Dans quelles circonstances ? Avec quel délai ? Y a-t-il eu un rebond ?</div>
-          <textarea id="f-inter1eff-comment" style="min-height:56px;" placeholder="ex : apaisement progressif sur 15 min, puis rebond verbal. Ou : aggravation immédiate dès qu'on a insisté.">${esc(d.inter1EffComment||'')}</textarea>
-        </div>
-        <div class="field">
-          <label for="f-inter2">Intervention suivante, si nécessaire</label>
-          <input type="text" id="f-inter2" placeholder="ex : contention, relais d'un autre pro, isolation..." value="${esc(d.inter2||'')}">
-        </div>
-        <div class="field">
-          <label>Effet de la deuxième intervention</label>
-          <div class="choice-row" id="f-inter2eff">
-            ${['Apaisement','Aggravation','Aucun effet visible','NSP','Non applicable'].map(v =>
-              `<label><input type="radio" name="finter2eff" value="${v}" ${d.inter2Eff===v?'checked':''}> ${v}</label>`
-            ).join('')}
-          </div>
-        </div>
-        <div class="field">
-          <label for="f-inter2eff-comment">Précision sur l'effet de la deuxième intervention (facultatif)</label>
-          <textarea id="f-inter2eff-comment" style="min-height:56px;" placeholder="Nuances, délais, conditions...">${esc(d.inter2EffComment||'')}</textarea>
-        </div>
-        <div class="field">
+        <button type="button" class="creneau-add" onclick="ajouterInterventionEvt()">＋ Ajouter une intervention</button>
+        <div class="field" style="margin-top:18px;">
           <label for="f-interautre">Autres observations sur comment vous avez géré la situation</label>
           <textarea id="f-interautre" placeholder="Tout ce qui vous semble utile à noter sur votre réponse à l'évènement...">${esc(d.interAutre||'')}</textarea>
         </div>
-      </div>`,
-    collect: () => ({
-      inter1: val('f-inter1'),
-      inter1Eff: radioVal('finter1eff'),
-      inter1EffComment: val('f-inter1eff-comment'),
-      inter2: val('f-inter2'),
-      inter2Eff: radioVal('finter2eff'),
-      inter2EffComment: val('f-inter2eff-comment'),
-      interAutre: val('f-interautre'),
-    })
+      </div>`;
+    },
+    collect: () => {
+      const idxs = Array.from(document.querySelectorAll('[id^="f-inter-texte-"]'))
+        .map(el => parseInt(el.id.replace('f-inter-texte-',''), 10))
+        .sort((a,b)=>a-b);
+      const prevList = formDraft.interventions || [];
+      const interventions = idxs.map(i => ({
+        id: (prevList[i] && prevList[i].id) || ('iv_'+Date.now()+'_'+i),
+        texte: val(`f-inter-texte-${i}`),
+        effet: radioVal(`finter-eff-${i}`),
+        precision: val(`f-inter-precision-${i}`),
+        cdPostIntervention: val(`f-inter-cdpost-${i}`),
+      }));
+      return {
+        interventions,
+        interAutre: val('f-interautre'),
+      };
+    }
   },
   {
     id: 'consequence',
@@ -3250,10 +3257,13 @@ const ETAPES = [
           ${recapBloc('🎥 Comportement', d.comportement||'—', d.duree ? `Durée : ${d.duree}` + (d.intensite ? ` · Intensité : ${d.intensite}` : '') : '')}
           ${d.gradation ? recapBloc('📈 Gradation', d.gradation) : ''}
           ${recapBloc(`🔄 Conséquence pour ${prenom}`, [d.obtenu ? 'Obtenu : '+d.obtenu : '', d.evite ? 'Évité : '+d.evite : ''].filter(Boolean).join(' / ') || '—')}
-          ${recapBloc('🙌 Intervention', [
-              d.inter1 ? (d.inter1 + (d.inter1Eff ? ' → '+d.inter1Eff : '') + (d.inter1EffComment ? ' ('+d.inter1EffComment+')' : '')) : null,
-              d.inter2 ? ('puis : '+d.inter2 + (d.inter2Eff ? ' → '+d.inter2Eff : '') + (d.inter2EffComment ? ' ('+d.inter2EffComment+')' : '')) : null
-            ].filter(Boolean).join(' / ') || '—')}
+          ${recapBloc('🙌 Intervention', (d.interventions||[]).map((iv, i) => {
+              if (!iv.texte && !iv.effet) return null;
+              const detail = iv.effet === 'Aggravation'
+                ? (iv.cdPostIntervention ? ' (nouveau CD : '+iv.cdPostIntervention+')' : '')
+                : (iv.precision ? ' ('+iv.precision+')' : '');
+              return (i === 0 ? '' : 'puis : ') + (iv.texte||'—') + (iv.effet ? ' → '+iv.effet : '') + detail;
+            }).filter(Boolean).join(' / ') || '—')}
         </div>
       </div>
       <div class="card">
@@ -3306,6 +3316,65 @@ function onRoleProChange() {
   const autre = document.getElementById('f-role-pro-autre');
   if (sel && autre) autre.style.display = sel.value === 'Autre fonction' ? '' : 'none';
 }
+
+// ── Interventions de l'entourage (liste dynamique, étape "intervention") ──
+function renderInterventionBlock(iv, i, total) {
+  const ordinal = i === 0 ? 'Première intervention' : `Intervention suivante (n°${i+1})`;
+  const isAggrav = iv.effet === 'Aggravation';
+  return `
+    <div class="card" style="margin-bottom:14px;background:var(--paper);" id="inter-block-${i}">
+      <div class="field">
+        <label for="f-inter-texte-${i}">${esc(ordinal)}</label>
+        <input type="text" id="f-inter-texte-${i}" placeholder="ex : on lui a rappelé le cadre verbalement. Ou : on n'a pas intervenu immédiatement." value="${esc(iv.texte||'')}">
+      </div>
+      <div class="field">
+        <label>Ça a eu quel effet ?</label>
+        <div class="choice-row" id="f-inter-eff-${i}">
+          ${['Apaisement','Aggravation','Aucun effet visible','NSP (non statué)'].map(v =>
+            `<label><input type="radio" name="finter-eff-${i}" value="${v}" ${iv.effet===v?'checked':''} onchange="onInterEffetChange(${i},this.value)"> ${v}</label>`
+          ).join('')}
+        </div>
+      </div>
+      <div class="field" id="f-inter-precision-wrap-${i}" style="display:${isAggrav?'none':''};">
+        <label for="f-inter-precision-${i}">Précision sur l'effet (facultatif)</label>
+        <div class="help">Dans quelles circonstances ? Avec quel délai ? Y a-t-il eu un rebond ?</div>
+        <textarea id="f-inter-precision-${i}" style="min-height:56px;" placeholder="ex : apaisement progressif sur 15 min, puis rebond verbal.">${esc(iv.precision||'')}</textarea>
+      </div>
+      <div class="field" id="f-inter-cdpost-wrap-${i}" style="display:${isAggrav?'':'none'};">
+        <label for="f-inter-cdpost-${i}">Décrivez le nouveau comportement observé après cette intervention</label>
+        <div class="help">Ce comportement sera repéré comme un CD distinct (« post-intervention ») dans le module Organiser — la réponse a elle-même produit un nouveau comportement-défi à analyser.</div>
+        <textarea id="f-inter-cdpost-${i}" style="min-height:56px;" placeholder="ex : est passé des cris à des coups contre le mur.">${esc(iv.cdPostIntervention||'')}</textarea>
+      </div>
+      ${total > 1 ? `<button type="button" class="grad-item-del" onclick="retirerInterventionEvt(${i})" title="Retirer cette intervention" style="margin-top:4px;">✕ Retirer cette intervention</button>` : ''}
+    </div>`;
+}
+
+function onInterEffetChange(i, value) {
+  const precWrap = document.getElementById('f-inter-precision-wrap-'+i);
+  const cdWrap = document.getElementById('f-inter-cdpost-wrap-'+i);
+  if (precWrap) precWrap.style.display = value === 'Aggravation' ? 'none' : '';
+  if (cdWrap) cdWrap.style.display = value === 'Aggravation' ? '' : 'none';
+}
+
+function ajouterInterventionEvt() {
+  const collected = ETAPES[currentEtapeIdx].collect();
+  Object.assign(formDraft, collected);
+  if (!formDraft.interventions || !formDraft.interventions.length) {
+    formDraft.interventions = [{id:'iv_'+Date.now(), texte:'', effet:'', precision:'', cdPostIntervention:''}];
+  }
+  formDraft.interventions.push({id:'iv_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), texte:'', effet:'', precision:'', cdPostIntervention:''});
+  renderEtape(currentEtapeIdx);
+}
+
+function retirerInterventionEvt(i) {
+  const collected = ETAPES[currentEtapeIdx].collect();
+  Object.assign(formDraft, collected);
+  if (formDraft.interventions && formDraft.interventions.length > 1) {
+    formDraft.interventions.splice(i, 1);
+  }
+  renderEtape(currentEtapeIdx);
+}
+
 // Les créneaux de la journée type (module Apprenons à se connaître) servent
 // directement d\'options pour le "moment de la journée" d\'un évènement.
 function momentOptions() {
@@ -4440,6 +4509,11 @@ const M3_SOUS = [
       const parts = [];
       if (evt.comportement) parts.push(evt.comportement);
       if (evt.gradation) parts.push('(gradation) ' + evt.gradation);
+      (evt.interventions || []).forEach(iv => {
+        if (iv.effet === 'Aggravation' && iv.cdPostIntervention && iv.cdPostIntervention.trim()) {
+          parts.push('§POST§' + iv.cdPostIntervention.trim());
+        }
+      });
       return parts;
     }
   },
@@ -4534,10 +4608,12 @@ function extraireItems(sousId) {
     const extraits = sous.extract(evt);
     extraits.forEach((texte, i) => {
       if (texte && texte.trim()) {
+        const isPost = texte.startsWith('§POST§');
         items.push({
           id: `e${evt.id}_${i}`,
           evtIdx,
-          texte: texte.trim(),
+          texte: (isPost ? texte.slice(6) : texte).trim(),
+          tag: isPost ? 'post-intervention' : '',
           date: evt.date || '',
           heure: evt.heure || '',
           moment: evt.moment || '',
@@ -4629,6 +4705,7 @@ function renderM3Sous(sousId) {
       const src = [dateStr, item.moment].filter(Boolean).join(' · ');
       return `<div class="m3-item${catIds.length>0?' categorise':''}" onclick="ouvrirAssign('${sousId}','${item.id}',event)">
         <div style="flex:1">
+          ${item.tag==='post-intervention' ? `<span class="m3-item-tag-post">post-intervention</span>` : ''}
           <div class="m3-item-text">${esc(item.texte)}</div>
           ${src ? `<div class="m3-item-source">Évt. ${item.evtIdx+1}${src?' — '+src:''}</div>` : ''}
           <div style="margin-top:5px;">${catBadge}</div>
