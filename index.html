@@ -592,6 +592,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   white-space:nowrap;
 }
 .kpi .lbl{font-size:11.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin-top:3px;}
+.kpi .kpi-sub{font-size:11px;color:var(--ink-soft);font-style:italic;margin-top:4px;}
 
 @media (max-width:720px){
   .hero h1{font-size:27px;}
@@ -2257,8 +2258,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
       <div class="kpi-row">
         <div class="kpi"><div class="val" id="kpi-nb-evt">0</div><div class="lbl">Évènements</div></div>
         <div class="kpi"><div class="val" id="kpi-jour">—</div><div class="lbl">Jour dominant</div></div>
-        <div class="kpi"><div class="val" id="kpi-moment">—</div><div class="lbl">Moment dominant</div></div>
-        <div class="kpi"><div class="val" id="kpi-heure">—</div><div class="lbl">Heure dominante</div></div>
+        <div class="kpi"><div class="val" id="kpi-moment">—</div><div class="lbl">Moment dominant</div><div class="kpi-sub" id="kpi-moment-heures"></div></div>
       </div>
       <div style="margin-top:14px;">
         <button class="btn btn-ghost btn-sm" id="btn-details-toggle" onclick="toggleDetailsStats()" style="font-size:13px;">
@@ -3639,6 +3639,16 @@ function fitKpiText(el, maxPx, minPx){
 // ─── Utilitaire : normaliser un libellé de moment ─────────────
 // Utilisé par les KPI et par les graphiques détaillés.
 // Retourne un libellé court mais lisible.
+// Retrouve, dans la journée type, les heures associées au nom de moment
+// dominant (ex : "WC" → "09h00–09h30, 11h00–11h15").
+function heuresPourMoment(momentLabel) {
+  if (!momentLabel || momentLabel === '—') return '';
+  const baseName = momentLabel.replace(/\s*\([^)]*\)\s*$/, '').trim();
+  const creneaux = (state.m1.journeeCreneaux || []).filter(c => c.nom === baseName);
+  if (!creneaux.length) return '';
+  return creneaux.map(c => `${c.debut||'?'}–${c.fin||'?'}`).join(', ');
+}
+
 function normaliseMoment(m) {
   if (!m) return null;
   if (m.startsWith('Matin')) return 'Matin';
@@ -3712,19 +3722,8 @@ function refreshSynthese(){
   const momentEl = document.getElementById('kpi-moment');
   momentEl.textContent = momentVal;
   fitKpiText(momentEl);
-
-  // Heure dominante (tranche de 2h)
-  const heures = evts.map(e => {
-    if (!e.heure) return null;
-    try {
-      const h = parseInt(e.heure.split(':')[0]);
-      return `${h}h-${h+2}h`;
-    } catch(err) { return null; }
-  }).filter(Boolean);
-  const heureVal = modeArray(heures) || '—';
-  const heureEl = document.getElementById('kpi-heure');
-  heureEl.textContent = heureVal;
-  fitKpiText(heureEl);
+  const momentHeuresEl = document.getElementById('kpi-moment-heures');
+  if (momentHeuresEl) momentHeuresEl.textContent = heuresPourMoment(momentVal);
 
   // ── M3 : résumé des catégories ──────────────────────────────────
   const synthM3El = document.getElementById('synth-m3');
