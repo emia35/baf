@@ -94,21 +94,21 @@ p{margin:0 0 12px;}
 button{font-family:inherit;cursor:pointer;}
 input,textarea,select{font-family:inherit;font-size:15px;}
 textarea{overflow-y:hidden;}
-/* Uniformiser visuellement cases à cocher et boutons radio : tout en rond */
-input[type=checkbox]{
+/* Uniformiser visuellement cases à cocher et boutons radio : même rond, même coche */
+input[type=checkbox],input[type=radio]{
   appearance:none;-webkit-appearance:none;
   width:16px;height:16px;border:1.5px solid var(--line);border-radius:50%;
   display:inline-block;vertical-align:middle;margin-right:4px;
   position:relative;cursor:pointer;background:var(--card);
   flex-shrink:0;
 }
-input[type=checkbox]:checked{background:var(--coral-deep);border-color:var(--coral-deep);}
-input[type=checkbox]:checked::after{
+input[type=checkbox]:checked,input[type=radio]:checked{background:var(--coral-deep);border-color:var(--coral-deep);}
+input[type=checkbox]:checked::after,input[type=radio]:checked::after{
   content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
   color:#fff;font-size:10px;font-weight:700;
 }
-body.tool-baf input[type=checkbox]:checked{background:var(--slate);border-color:var(--slate);}
-body.tool-idc input[type=checkbox]:checked{background:var(--m1);border-color:var(--m1);}
+body.tool-baf input[type=checkbox]:checked,body.tool-baf input[type=radio]:checked{background:var(--slate);border-color:var(--slate);}
+body.tool-idc input[type=checkbox]:checked,body.tool-idc input[type=radio]:checked{background:var(--m1);border-color:var(--m1);}
 a{color:var(--coral-deep);}
 body.tool-baf a{color:var(--slate);}
 body.tool-idc a{color:var(--m1);}
@@ -276,7 +276,7 @@ section.view.show{display:block;animation:fadein .25s ease;}
   border-top:3px solid var(--slate);
 }
 .intro-card h3{font-size:17px;margin-bottom:10px;}
-.intro-card p{font-family:'Source Serif 4', serif;font-size:15.5px;color:var(--ink-soft);line-height:1.65;}
+.intro-card p{font-family:'Source Serif 4', serif;font-size:15.5px;color:var(--ink-soft);line-height:1.65;text-align:justify;text-justify:inter-word;}
 .intro-card p i{color:var(--coral-deep);font-style:italic;}
 .intro-card p b{color:var(--ink);font-weight:600;}
 .intro-card .ethique{
@@ -287,6 +287,7 @@ section.view.show{display:block;animation:fadein .25s ease;}
   border-radius:var(--radius-sm);
   font-size:13.5px;
   color:var(--ink);
+  text-align:justify;text-justify:inter-word;
 }
 .intro-card .ethique b{color:var(--coral-deep);}
 
@@ -305,7 +306,7 @@ body.tool-idc .intro-card .ethique{background:var(--amber-pale);border-left-colo
   margin-bottom:10px;
 }
 .mod-btn{
-  display:block;width:100%;
+  display:flex;flex-direction:column;width:100%;
   border:none;border-radius:var(--radius);
   padding:24px 28px;
   text-align:left;
@@ -337,7 +338,7 @@ body.tool-idc .intro-card .ethique{background:var(--amber-pale);border-left-colo
   font-size:11.5px;font-weight:700;
 }
 
-.mod-btn.m1{background:var(--slate);color:#fff;max-width:680px;}
+.mod-btn.m1{background:var(--slate);color:#fff;max-width:680px;text-align:center;}
 .mod-btn.m1 .num,.mod-btn.m1 .temps{color:#fff;}
 
 .mod-row{display:flex;gap:14px;width:100%;max-width:880px;flex-wrap:wrap;}
@@ -359,7 +360,6 @@ body.tool-idc .intro-card .ethique{background:var(--amber-pale);border-left-colo
   text-align:center;
   box-shadow:var(--shadow-soft);
 }
-.mod-btn.synth::after{display:none;}
 .mod-btn.synth .num{color:#fff;}
 .mod-btn.synth .titre{color:#fff;}
 .mod-btn.synth .desc{color:rgba(255,255,255,.82);}
@@ -369,15 +369,16 @@ body.tool-idc .intro-card .ethique{background:var(--amber-pale);border-left-colo
    ============================================================ */
 footer.bottom{
   position:fixed;left:0;right:0;bottom:0;z-index:90;
-  max-width:1080px;margin:0 auto;
+  width:100%;
   background:var(--card);
-  border:1px solid var(--hdr-accent);border-bottom:none;
-  border-radius:10px 10px 0 0;
-  padding:6px 22px;
+  border-top:1px solid var(--hdr-accent);
   font-size:10.5px;
   color:var(--ink-soft);
+}
+footer.bottom .footer-inner{
+  max-width:1080px;margin:0 auto;
+  padding:6px 24px;
   display:flex;align-items:center;justify-content:space-between;gap:14px;
-  width:100%;
 }
 footer.bottom .footer-line{
   min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
@@ -386,7 +387,7 @@ footer.bottom .footer-left{text-align:left;flex:1;}
 footer.bottom .footer-right{text-align:right;flex-shrink:0;}
 footer.bottom a{color:var(--ink-soft);text-decoration:underline;}
 @media(max-width:760px){
-  footer.bottom{font-size:9.5px;padding:5px 10px;}
+  footer.bottom .footer-inner{font-size:9.5px;padding:5px 14px;}
 }
 body{padding-bottom:38px;}
 
@@ -487,7 +488,6 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   background:var(--paper);
   transition:border-color .15s, color .15s, background .15s;
 }
-.choice-row input{accent-color:var(--teal);}
 .choice-row label:has(input:checked){
   border-color:var(--teal);
   background:var(--teal-pale);
@@ -546,6 +546,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
 .event-item .ev-desc{font-size:12.5px;color:var(--ink-soft);margin-top:2px;}
 .event-item .ev-arrow{color:var(--ink-soft);font-size:18px;}
 .event-brouillon-tag{display:inline-block;background:var(--amber-pale);color:var(--coral-deep);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 7px;border-radius:999px;margin-left:4px;}
+.event-indirect-tag{display:inline-block;background:var(--paper-deep);color:var(--ink-soft);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 7px;border-radius:999px;margin-left:4px;border:1px solid var(--line);}
 .event-empty{
   text-align:center;padding:32px;color:var(--ink-soft);
   font-size:13.5px;font-style:italic;
@@ -912,6 +913,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   padding:18px 22px 20px;
   font-family:'Source Serif 4', serif;
   font-size:14px;color:var(--ink-soft);line-height:1.65;
+  text-align:justify;text-justify:inter-word;
 }
 .multiposte-body p{margin-bottom:10px;}
 .multiposte-body ol{margin:10px 0 14px 20px;}
@@ -1123,6 +1125,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   border-left:3px solid var(--coral);
   border-radius:var(--radius-sm);
   padding:14px 18px;margin-bottom:20px;font-size:13.5px;
+  text-align:justify;text-justify:inter-word;
 }
 .abc-patterns-list{display:flex;flex-direction:column;gap:16px;margin-bottom:18px;}
 .abc-pattern{
@@ -1198,6 +1201,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   border-left:3px solid var(--amber);
   border-radius:var(--radius-sm);
   padding:14px 18px;margin-bottom:20px;font-size:13.5px;
+  text-align:justify;text-justify:inter-word;
 }
 .grad-intro b{color:var(--coral-deep);}
 .vase-svg-wrap{text-align:center;margin:10px 0 20px;}
@@ -1743,6 +1747,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
         <span class="num">Préambule</span>
         <span class="titre">Apprenons à se connaître</span>
         <span class="desc">Le contexte : qui, où, quand on peut observer.</span>
+        <span class="badge-count" id="count-m1" style="display:none;"></span>
       </button>
 
       <div class="mod-row">
@@ -1758,12 +1763,14 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
           <span class="titre">Organiser</span>
           <span class="temps">les données</span>
           <span class="desc">Catégoriser CD, antécédents, déclencheurs, conséquences.</span>
+          <span class="badge-count" id="count-m3" style="display:none;"></span>
         </button>
         <button class="mod-btn m2" onclick="route('m4')">
           <span class="num">Module 3 · Moment de conclure</span>
           <span class="titre">Interpréter</span>
           <span class="temps">les données</span>
           <span class="desc">Proposer des patterns, observer la gradation.</span>
+          <span class="badge-count" id="count-m4" style="display:none;"></span>
         </button>
       </div>
 
@@ -1875,7 +1882,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
     </div>
     <div id="m1-rapide-content">
     <div class="card">
-      <div class="ethique" style="background:var(--coral-pale);border-left:3px solid var(--coral);padding:14px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;">
+      <div class="ethique" style="background:var(--coral-pale);border-left:3px solid var(--coral);padding:14px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;text-align:justify;text-justify:inter-word;">
         Ne renseignez aucun nom de famille, aucune ville, aucune structure nommément. Un prénom seul suffit — fictif si besoin.
       </div>
 
@@ -1901,29 +1908,11 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
           <label><input type="checkbox" value="institution" onchange="saveM1()"> Institution</label>
           <label><input type="checkbox" value="ecole" onchange="saveM1()"> École</label>
           <label><input type="checkbox" value="travail" onchange="saveM1()"> Travail / ESAT</label>
-          <label><input type="checkbox" value="autre" onchange="saveM1()"> Autre</label>
         </div>
-      </div>
-
-      <div class="field">
-        <label>Vous êtes...</label>
-        <div class="choice-row" id="m1-statut">
-          <label><input type="radio" name="m1statut" value="professionnel" onchange="saveM1()"> Professionnel</label>
-          <label><input type="radio" name="m1statut" value="famille" onchange="saveM1()"> Famille</label>
-          <label><input type="radio" name="m1statut" value="autre" onchange="saveM1()"> Autre</label>
-        </div>
-        <div class="help">Vous allez décrire des évènements observés là où vous êtes présent. C'est important : on ne décrit que ce qu'on a vu.</div>
-      </div>
-
-      <div class="field">
-        <label>Sur quel lieu d'accueil porte cette analyse ?</label>
-        <div class="help">Indiquez le lieu où vous observez la personne et que vous allez décrire.</div>
-        <div class="choice-row" id="m1-lieu-analyse">
-          <label><input type="radio" name="m1lieuanalyse" value="famille" onchange="saveM1()"> Famille</label>
-          <label><input type="radio" name="m1lieuanalyse" value="institution" onchange="saveM1()"> Institution</label>
-          <label><input type="radio" name="m1lieuanalyse" value="ecole" onchange="saveM1()"> École</label>
-          <label><input type="radio" name="m1lieuanalyse" value="travail" onchange="saveM1()"> Travail / ESAT</label>
-          <label><input type="radio" name="m1lieuanalyse" value="autre" onchange="saveM1()"> Autre</label>
+        <div class="creneau-list" id="m1-lieux-custom-list" style="margin-top:8px;"></div>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <input type="text" id="m1-lieu-custom-input" placeholder="ex : accueil de jour, chez les grands-parents..." style="flex:1;">
+          <button type="button" class="btn btn-ghost btn-sm" onclick="ajouterLieuCustom()">＋ Ajouter un lieu</button>
         </div>
       </div>
 
@@ -2124,7 +2113,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
           </div>
           <div class="help" style="margin-bottom:12px;">Créez vos propres catégories. Pas de bonne réponse — juste ce qui vous semble faire sens pour cette personne.</div>
           <div id="m3-cats-list"></div>
-          <button class="btn btn-secondary btn-sm" style="margin-top:10px;width:100%;" onclick="ajouterCategorie()">+ Nouvelle catégorie</button>
+          <button class="btn btn-secondary btn-sm" style="margin-top:10px;width:100%;" onclick="ajouterCategorie()">+ Ajouter une catégorie</button>
         </div>
       </div>
     </div>
@@ -2323,8 +2312,10 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
 <div class="gtt" id="idc-tooltip"></div>
 
 <footer class="bottom no-print">
-  <div class="footer-line footer-left">Outil créé par Émilie Musard, éducatrice spécialisée, et Arthur Guillieux, psychologue clinicien — <a href="mailto:emia35@adapei35.asso.fr">emia35@adapei35.asso.fr</a></div>
-  <div class="footer-line footer-right">⚠ Outil toujours en cours de construction</div>
+  <div class="footer-inner">
+    <div class="footer-line footer-left">Outil créé par Émilie Musard, éducatrice spécialisée, et Arthur Guillieux, psychologue clinicien — <a href="mailto:emia35@adapei35.asso.fr">emia35@adapei35.asso.fr</a></div>
+    <div class="footer-line footer-right">⚠ Outil toujours en cours de construction</div>
+  </div>
 </footer>
 
 <div class="toast" id="toast"></div>
@@ -2359,7 +2350,7 @@ function setMode(moduleId, mode){
 
 let state = {
   version: 1,
-  m1: {prenom:'', age:'', diag:'', lieux:[], statut:'', lieuAnalyse:'', jours:[], heures:'', coucher:'', lever:'', journeeCreneaux:[], semaineCreneaux:{}, libre:''},
+  m1: {prenom:'', age:'', diag:'', lieux:[], lieuxCustom:[], jours:[], heures:'', coucher:'', lever:'', journeeCreneaux:[], semaineCreneaux:{}, libre:''},
   m2: {evenements: []},
   m3: {sous:'cp', categories:{cp:{},antecedents:{},declencheurs:{},consequences:{},interventions:{}}},
   m4: {patterns: [], gradations: [], vase: {monte:[], descend:[], texte:''}}
@@ -2372,7 +2363,7 @@ function replaceState(newObj){
   // Garantir la présence des sous-structures critiques
   // (compatibilité ascendante : exports anciens peuvent manquer certaines clés)
   if (!state.m1) state.m1 = {};
-  if (state.m1.lieuAnalyse === undefined) state.m1.lieuAnalyse = '';
+  if (!Array.isArray(state.m1.lieuxCustom)) state.m1.lieuxCustom = [];
   // Compat : ancien format journee (string libre) → on le conserve mais on initialise les nouveaux tableaux
   if (!Array.isArray(state.m1.journeeCreneaux)) state.m1.journeeCreneaux = [];
   if (!state.m1.semaineCreneaux || typeof state.m1.semaineCreneaux !== 'object') state.m1.semaineCreneaux = {};
@@ -2405,43 +2396,71 @@ function replaceState(newObj){
 // évènement, donc l'ancien id pointait vers le mauvais évènement après coup.
 // On bascule sur un id stable de l'évènement (evt.id), et on migre une fois les
 // anciens ids déjà enregistrés dans les catégories.
-function migrerIdsCategorisation() {
-  if (state.m3 && state.m3._idsMigratedV2) return;
+// Vocabulaire de l'effet d'une intervention : on est passé d'un choix binaire
+// (Apaisement/Aggravation/NSP) à une échelle de tension à 4 niveaux. Idempotent
+// (une valeur déjà migrée traverse sans changer) : peut tourner à chaque appel,
+// donc sans dépendre du garde-fou "une seule fois" de la migration des ids.
+function migrerVocabulaireEffet() {
+  const EFFET_MAP = {
+    'Aggravation': 'Augmentation de la tension',
+    'Apaisement': 'Diminution de la tension',
+    'Aucun effet visible': 'Aucun effet visible',
+  };
   (state.m2.evenements || []).forEach(evt => {
-    if (!evt.id) evt.id = 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
-    // Ancien format : interventions figées (inter1/inter2). On les bascule
-    // une fois vers le tableau dynamique d'interventions.
-    if (!Array.isArray(evt.interventions) && (evt.inter1 || evt.inter2)) {
-      evt.interventions = [];
-      if (evt.inter1) {
-        evt.interventions.push({
-          id: 'iv_' + evt.id + '_0', texte: evt.inter1, effet: evt.inter1Eff || '',
-          precision: evt.inter1Eff === 'Aggravation' ? '' : (evt.inter1EffComment || ''),
-          cdPostIntervention: evt.inter1Eff === 'Aggravation' ? (evt.inter1EffComment || '') : '',
-        });
-      }
-      if (evt.inter2) {
-        evt.interventions.push({
-          id: 'iv_' + evt.id + '_1', texte: evt.inter2, effet: evt.inter2Eff || '',
-          precision: evt.inter2Eff === 'Aggravation' ? '' : (evt.inter2EffComment || ''),
-          cdPostIntervention: evt.inter2Eff === 'Aggravation' ? (evt.inter2EffComment || '') : '',
-        });
-      }
-    }
-  });
-  const reOld = /^(\d+)_(\d+)$/;
-  Object.values((state.m3 && state.m3.categories) || {}).forEach(sousCats => {
-    Object.values(sousCats).forEach(cat => {
-      if (!Array.isArray(cat.items)) return;
-      cat.items = cat.items.map(itemId => {
-        const m = reOld.exec(itemId);
-        if (!m) return itemId;
-        const evt = state.m2.evenements[parseInt(m[1], 10)];
-        return evt ? `e${evt.id}_${m[2]}` : itemId;
-      });
+    if (!Array.isArray(evt.interventions)) return;
+    evt.interventions.forEach(iv => {
+      if (EFFET_MAP[iv.effet]) iv.effet = EFFET_MAP[iv.effet];
+      else if (iv.effet && !EFFET_INTERVENTION_OPTIONS.includes(iv.effet)) iv.effet = '';
     });
   });
-  if (state.m3) state.m3._idsMigratedV2 = true;
+}
+
+function migrerIdsCategorisation() {
+  (state.m2.evenements || []).forEach(evt => {
+    if (!evt.id) evt.id = 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+  });
+  if (!(state.m3 && state.m3._idsMigratedV2)) {
+    (state.m2.evenements || []).forEach(evt => {
+      // Ancien format : interventions figées (inter1/inter2/interAutre). On les
+      // bascule une fois vers le tableau dynamique d'interventions.
+      if (!Array.isArray(evt.interventions) && (evt.inter1 || evt.inter2 || evt.interAutre)) {
+        evt.interventions = [];
+        if (evt.inter1) {
+          evt.interventions.push({
+            id: 'iv_' + evt.id + '_0', texte: evt.inter1, effet: evt.inter1Eff || '',
+            precision: evt.inter1Eff === 'Aggravation' ? '' : (evt.inter1EffComment || ''),
+            cdPostIntervention: evt.inter1Eff === 'Aggravation' ? (evt.inter1EffComment || '') : '',
+          });
+        }
+        if (evt.inter2) {
+          evt.interventions.push({
+            id: 'iv_' + evt.id + '_1', texte: evt.inter2, effet: evt.inter2Eff || '',
+            precision: evt.inter2Eff === 'Aggravation' ? '' : (evt.inter2EffComment || ''),
+            cdPostIntervention: evt.inter2Eff === 'Aggravation' ? (evt.inter2EffComment || '') : '',
+          });
+        }
+        if (evt.interAutre) {
+          evt.interventions.push({
+            id: 'iv_' + evt.id + '_2', texte: evt.interAutre, effet: '', precision: '', cdPostIntervention: '',
+          });
+        }
+      }
+    });
+    const reOld = /^(\d+)_(\d+)$/;
+    Object.values((state.m3 && state.m3.categories) || {}).forEach(sousCats => {
+      Object.values(sousCats).forEach(cat => {
+        if (!Array.isArray(cat.items)) return;
+        cat.items = cat.items.map(itemId => {
+          const m = reOld.exec(itemId);
+          if (!m) return itemId;
+          const evt = state.m2.evenements[parseInt(m[1], 10)];
+          return evt ? `e${evt.id}_${m[2]}` : itemId;
+        });
+      });
+    });
+    if (state.m3) state.m3._idsMigratedV2 = true;
+  }
+  migrerVocabulaireEffet();
 }
 
 const STORAGE_KEY = 'baf_emia35_state_v1';
@@ -2834,10 +2853,6 @@ function saveM1(){
   state.m1.age = document.getElementById('m1-age').value;
   state.m1.diag = document.getElementById('m1-diag').value;
   state.m1.lieux = Array.from(document.querySelectorAll('#m1-lieux input:checked')).map(i=>i.value);
-  const statutEl = document.querySelector('#m1-statut input:checked');
-  state.m1.statut = statutEl ? statutEl.value : '';
-  const lieuAnalyseEl = document.querySelector('#m1-lieu-analyse input:checked');
-  state.m1.lieuAnalyse = lieuAnalyseEl ? lieuAnalyseEl.value : '';
   state.m1.jours = Array.from(document.querySelectorAll('#m1-jours input:checked')).map(i=>i.value);
   state.m1.heures = document.getElementById('m1-heures').value;
   state.m1.coucher = document.getElementById('m1-coucher').value;
@@ -2870,20 +2885,60 @@ function loadApprofondiAccueilFromState() {
   // Provenance/retour gérés directement dans la grille EDT (renderGrilleSemaine)
 }
 
-function refreshM1Progress() {
-  const fill = document.getElementById('m1-progress-fill');
-  const label = document.getElementById('m1-progress-label');
-  if (!fill || !label) return;
+function computeM1Pct() {
   const champs = [
     state.m1.prenom, state.m1.age, state.m1.diag,
-    (state.m1.lieux||[]).length>0 ? 'x' : '',
-    state.m1.statut, state.m1.lieuAnalyse,
+    ((state.m1.lieux||[]).length>0 || (state.m1.lieuxCustom||[]).length>0) ? 'x' : '',
     (state.m1.jours||[]).length>0 ? 'x' : '',
     state.m1.heures,
     (state.m1.journeeCreneaux||[]).filter(c=>!c.transition).length>0 ? 'x' : ''
   ];
   const remplis = champs.filter(v => v && String(v).trim()).length;
-  const pct = Math.round(remplis / champs.length * 100);
+  return Math.round(remplis / champs.length * 100);
+}
+
+function ajouterLieuCustom() {
+  const input = document.getElementById('m1-lieu-custom-input');
+  const val = (input.value||'').trim();
+  if (!val) return;
+  if (!Array.isArray(state.m1.lieuxCustom)) state.m1.lieuxCustom = [];
+  state.m1.lieuxCustom.push(val);
+  input.value = '';
+  persist();
+  renderLieuxCustom();
+  refreshM1Progress();
+}
+function retirerLieuCustom(idx) {
+  if (!Array.isArray(state.m1.lieuxCustom)) return;
+  state.m1.lieuxCustom.splice(idx,1);
+  persist();
+  renderLieuxCustom();
+  refreshM1Progress();
+}
+function renderLieuxCustom() {
+  const el = document.getElementById('m1-lieux-custom-list');
+  if (!el) return;
+  const list = state.m1.lieuxCustom || [];
+  el.innerHTML = list.map((l,i) => `<span style="display:inline-flex;align-items:center;gap:6px;background:var(--paper);border:1.5px solid var(--line);border-radius:999px;padding:6px 12px;margin:0 6px 6px 0;font-size:13px;color:var(--ink-soft);font-weight:600;">${esc(l)}<button type="button" onclick="retirerLieuCustom(${i})" title="Supprimer ce lieu" style="background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:14px;line-height:1;padding:0;">×</button></span>`).join('');
+}
+
+function computeM4Pct() {
+  const gradations = state.m4.gradations || [];
+  const patterns = state.m4.patterns || [];
+  const vase = state.m4.vase || {};
+  const sousRemplis = [
+    patterns.length > 0,
+    gradations.length > 0,
+    (vase.monte||[]).length > 0 || (vase.descend||[]).length > 0 || (vase.texte && vase.texte.trim())
+  ].filter(Boolean).length;
+  return Math.round(sousRemplis / 3 * 100);
+}
+
+function refreshM1Progress() {
+  const fill = document.getElementById('m1-progress-fill');
+  const label = document.getElementById('m1-progress-label');
+  if (!fill || !label) return;
+  const pct = computeM1Pct();
   fill.style.width = pct + '%';
   label.textContent = pct + '% complété';
 }
@@ -2924,8 +2979,7 @@ function loadM1FromState(){
   document.getElementById('m1-age').value = state.m1.age || '';
   document.getElementById('m1-diag').value = state.m1.diag || '';
   document.querySelectorAll('#m1-lieux input').forEach(i=>{ i.checked = (state.m1.lieux||[]).includes(i.value); });
-  document.querySelectorAll('#m1-statut input').forEach(i=>{ i.checked = (state.m1.statut === i.value); });
-  document.querySelectorAll('#m1-lieu-analyse input').forEach(i=>{ i.checked = (state.m1.lieuAnalyse === i.value); });
+  renderLieuxCustom();
   document.querySelectorAll('#m1-jours input').forEach(i=>{ i.checked = (state.m1.jours||[]).includes(i.value); });
   updateBtnTousJours();
   document.getElementById('m1-heures').value = state.m1.heures || '';
@@ -2978,9 +3032,18 @@ const ETAPES = [
     render: (d) => `
       <div class="card">
         <div class="field">
-          <label for="f-declarant">Votre prénom ou initiales <span style="font-weight:400;color:var(--ink-soft);">(pour traçabilité)</span></label>
+          <label for="f-declarant">Votre prénom <span style="font-weight:400;color:var(--ink-soft);">(pour traçabilité)</span></label>
           <div class="help">Pas de nom de famille, pas d'identification de la structure.</div>
-          <input type="text" id="f-declarant" placeholder="ex : Sophie, M.L., l'éducatrice du soir..." value="${esc(d.declarant||'')}">
+          <input type="text" id="f-declarant" placeholder="ex : Sophie, l'éducatrice du soir..." value="${esc(d.declarant||'')}">
+        </div>
+        <div class="field">
+          <label>Avez-vous vu la scène vous-même ?</label>
+          <div class="choice-row" id="f-temoin">
+            ${['Témoin direct','Rapporté par un tiers','Constaté après coup'].map(v =>
+              `<label><input type="radio" name="ftemoin" value="${v}" ${d.temoin===v?'checked':''}> ${v}</label>`
+            ).join('')}
+          </div>
+          <div class="help">« Rapporté » : un collègue, un proche vous l'a raconté. « Constaté après coup » : vous n'avez pas vu la scène, mais vous en avez vu les traces (chambre, personne encore en tension...).</div>
         </div>
         <div class="field">
           <label>Votre rôle auprès de la personne</label>
@@ -3032,6 +3095,7 @@ const ETAPES = [
       </div>`,
     collect: () => ({
       declarant: val('f-declarant'),
+      temoin: radioVal('ftemoin'),
       role: radioVal('frole'),
       rolePro: val('f-role-pro'),
       roleProAutre: val('f-role-pro-autre'),
@@ -3086,18 +3150,18 @@ const ETAPES = [
           <textarea id="f-comportement" style="min-height:100px;" placeholder="ex : d'abord il a crié très fort (environ 30 secondes), puis il a saisi la chaise et l'a retournée, puis s'est mis à taper sur le mur avec sa main ouverte.">${esc(d.comportement||'')}</textarea>
         </div>
         <div class="field">
-          <label>Durée approximative</label>
+          <label>Durée approximative <span style="font-weight:400;color:var(--ink-soft);">(cliquez à nouveau pour décocher)</span></label>
           <div class="choice-row" id="f-duree">
             ${['< 1 min','1 à 5 min','5 à 15 min','15 à 30 min','> 30 min','Non estimée'].map(v =>
-              `<label><input type="radio" name="fduree" value="${v}" ${d.duree===v?'checked':''}> ${v}</label>`
+              `<label><input type="radio" name="fduree" value="${v}" ${d.duree===v?'checked':''} onmousedown="this._wasChecked=this.checked" onclick="radioClearOnReclick(this)"> ${v}</label>`
             ).join('')}
           </div>
         </div>
         <div class="field">
-          <label>Intensité ressentie (votre impression globale)</label>
+          <label>Intensité ressentie (votre impression globale) <span style="font-weight:400;color:var(--ink-soft);">(cliquez à nouveau pour décocher)</span></label>
           <div class="choice-row" id="f-intensite">
             ${['1 — Très faible','2 — Faible','3 — Modérée','4 — Forte','5 — Très forte'].map(v =>
-              `<label><input type="radio" name="fintens" value="${v}" ${d.intensite===v?'checked':''}> ${v}</label>`
+              `<label><input type="radio" name="fintens" value="${v}" ${d.intensite===v?'checked':''} onmousedown="this._wasChecked=this.checked" onclick="radioClearOnReclick(this)"> ${v}</label>`
             ).join('')}
           </div>
         </div>
@@ -3248,7 +3312,7 @@ const ETAPES = [
       <div class="card" style="border-top:3px solid var(--teal);">
         <h3 style="font-size:18px;margin-bottom:18px;">Récapitulatif de l'évènement</h3>
         <div style="display:grid;gap:14px;">
-          ${recapBloc('👤 Déclarant', `${d.declarant||'—'} (${d.role||'—'})`)}
+          ${recapBloc('👤 Déclarant', `${d.declarant||'—'} (${d.role||'—'})` + (d.temoin ? ' · '+d.temoin : ''))}
           ${recapBloc('📅 Quand', `${formatDate(d.date)} ${d.heure?'à '+d.heure:''} — ${d.moment||'moment non précisé'}`)}
           ${recapBloc('📍 Où / Qui présent', [d.lieu, d.presences].filter(Boolean).join(' — ') || '—')}
           ${recapBloc('⏮ Avant (lointain)', d.avantLoin||'—')}
@@ -3259,7 +3323,7 @@ const ETAPES = [
           ${recapBloc(`🔄 Conséquence pour ${prenom}`, [d.obtenu ? 'Obtenu : '+d.obtenu : '', d.evite ? 'Évité : '+d.evite : ''].filter(Boolean).join(' / ') || '—')}
           ${recapBloc('🙌 Intervention', (d.interventions||[]).map((iv, i) => {
               if (!iv.texte && !iv.effet) return null;
-              const detail = iv.effet === 'Aggravation'
+              const detail = effetNeedsCdPost(iv.effet)
                 ? (iv.cdPostIntervention ? ' (nouveau CD : '+iv.cdPostIntervention+')' : '')
                 : (iv.precision ? ' ('+iv.precision+')' : '');
               return (i === 0 ? '' : 'puis : ') + (iv.texte||'—') + (iv.effet ? ' → '+iv.effet : '') + detail;
@@ -3301,6 +3365,17 @@ function radioVal(name) {
   const el = document.querySelector(`input[name="${name}"]:checked`);
   return el ? el.value : '';
 }
+// Permet de décocher un bouton radio en recliquant dessus (comportement natif
+// des radios : impossible de revenir à "aucune réponse" sans ce hack).
+function radioClearOnReclick(el) {
+  if (el._wasChecked) {
+    el.checked = false;
+    el._wasChecked = false;
+  } else {
+    document.getElementsByName(el.name).forEach(r => { r._wasChecked = false; });
+    el._wasChecked = true;
+  }
+}
 function onRoleChange() {
   const r = document.querySelector('#f-role input:checked');
   const v = r ? r.value : '';
@@ -3318,9 +3393,17 @@ function onRoleProChange() {
 }
 
 // ── Interventions de l'entourage (liste dynamique, étape "intervention") ──
+// Échelle d'effet dans l'ordre de l'efficacité, pour qualifier la montée ou
+// la descente de la tension provoquée par l'intervention.
+const EFFET_INTERVENTION_OPTIONS = ['Disparition de la tension','Diminution de la tension','Aucun effet visible','Augmentation de la tension'];
+// Un nouveau CD apparaît après l'intervention aussi bien en cas d'augmentation
+// de la tension qu'en l'absence d'effet visible (pas seulement en aggravation).
+function effetNeedsCdPost(effet) {
+  return effet === 'Augmentation de la tension' || effet === 'Aucun effet visible';
+}
 function renderInterventionBlock(iv, i, total) {
   const ordinal = i === 0 ? 'Première intervention' : `Intervention suivante (n°${i+1})`;
-  const isAggrav = iv.effet === 'Aggravation';
+  const needsCdPost = effetNeedsCdPost(iv.effet);
   return `
     <div class="card" style="margin-bottom:14px;background:var(--paper);" id="inter-block-${i}">
       <div class="field">
@@ -3330,30 +3413,31 @@ function renderInterventionBlock(iv, i, total) {
       <div class="field">
         <label>Ça a eu quel effet ?</label>
         <div class="choice-row" id="f-inter-eff-${i}">
-          ${['Apaisement','Aggravation','Aucun effet visible','NSP (non statué)'].map(v =>
+          ${EFFET_INTERVENTION_OPTIONS.map(v =>
             `<label><input type="radio" name="finter-eff-${i}" value="${v}" ${iv.effet===v?'checked':''} onchange="onInterEffetChange(${i},this.value)"> ${v}</label>`
           ).join('')}
         </div>
       </div>
-      <div class="field" id="f-inter-precision-wrap-${i}" style="display:${isAggrav?'none':''};">
+      <div class="field" id="f-inter-precision-wrap-${i}" style="display:${needsCdPost?'none':''};">
         <label for="f-inter-precision-${i}">Précision sur l'effet (facultatif)</label>
         <div class="help">Dans quelles circonstances ? Avec quel délai ? Y a-t-il eu un rebond ?</div>
         <textarea id="f-inter-precision-${i}" style="min-height:56px;" placeholder="ex : apaisement progressif sur 15 min, puis rebond verbal.">${esc(iv.precision||'')}</textarea>
       </div>
-      <div class="field" id="f-inter-cdpost-wrap-${i}" style="display:${isAggrav?'':'none'};">
+      <div class="field" id="f-inter-cdpost-wrap-${i}" style="display:${needsCdPost?'':'none'};">
         <label for="f-inter-cdpost-${i}">Décrivez le nouveau comportement observé après cette intervention</label>
         <div class="help">Ce comportement sera repéré comme un CD distinct (« post-intervention ») dans le module Organiser — la réponse a elle-même produit un nouveau comportement-défi à analyser.</div>
         <textarea id="f-inter-cdpost-${i}" style="min-height:56px;" placeholder="ex : est passé des cris à des coups contre le mur.">${esc(iv.cdPostIntervention||'')}</textarea>
       </div>
-      ${total > 1 ? `<button type="button" class="grad-item-del" onclick="retirerInterventionEvt(${i})" title="Retirer cette intervention" style="margin-top:4px;">✕ Retirer cette intervention</button>` : ''}
+      ${total > 1 ? `<button type="button" class="grad-item-del" onclick="retirerInterventionEvt(${i})" title="Supprimer cette intervention" style="margin-top:4px;">✕ Supprimer cette intervention</button>` : ''}
     </div>`;
 }
 
 function onInterEffetChange(i, value) {
   const precWrap = document.getElementById('f-inter-precision-wrap-'+i);
   const cdWrap = document.getElementById('f-inter-cdpost-wrap-'+i);
-  if (precWrap) precWrap.style.display = value === 'Aggravation' ? 'none' : '';
-  if (cdWrap) cdWrap.style.display = value === 'Aggravation' ? '' : 'none';
+  const needsCdPost = effetNeedsCdPost(value);
+  if (precWrap) precWrap.style.display = needsCdPost ? 'none' : '';
+  if (cdWrap) cdWrap.style.display = needsCdPost ? '' : 'none';
 }
 
 function ajouterInterventionEvt() {
@@ -3599,10 +3683,11 @@ function refreshM2List(){
     const dateStr = e.date ? formatDate(e.date) : (e.date || 'Date non précisée');
     const heureStr = e.heure ? ' — ' + e.heure : '';
     const brouillonTag = (brouillonIdx === i) ? '<span class="event-brouillon-tag" title="Modifications non validées">brouillon</span>' : '';
+    const indirectTag = (e.temoin && e.temoin !== 'Témoin direct') ? `<span class="event-indirect-tag" title="${esc(e.temoin)}">${e.temoin === 'Rapporté par un tiers' ? 'rapporté' : 'après coup'}</span>` : '';
     return `<div class="event-item" onclick="ouvrirFormulaireEvenement(${i})">
       <div class="ev-num">${i+1}</div>
       <div class="ev-info">
-        <div class="ev-date">${esc(dateStr)}${esc(heureStr)}${e.moment ? ' · '+esc(e.moment) : ''} ${brouillonTag}</div>
+        <div class="ev-date">${esc(dateStr)}${esc(heureStr)}${e.moment ? ' · '+esc(e.moment) : ''} ${brouillonTag}${indirectTag}</div>
         <div class="ev-desc">${esc(desc)}</div>
       </div>
       <button class="btn btn-ghost btn-sm no-print" onclick="supprimerEvt(${i},event)" style="flex-shrink:0;padding:6px 10px;font-size:12px;border-color:transparent;" title="Supprimer">🗑</button>
@@ -3692,8 +3777,8 @@ function refreshSynthese(){
   }
   const profilEl = document.getElementById('synth-profil');
   if(state.m1.prenom){
-    const lieuxLabels = {famille:'famille',institution:'institution',ecole:'école',travail:'travail / ESAT',autre:'autre contexte'};
-    const lieuxTxt = (state.m1.lieux||[]).map(l=>lieuxLabels[l]||l).join(', ');
+    const lieuxLabels = {famille:'famille',institution:'institution',ecole:'école',travail:'travail / ESAT'};
+    const lieuxTxt = (state.m1.lieux||[]).map(l=>lieuxLabels[l]||l).concat(state.m1.lieuxCustom||[]).join(', ');
     profilEl.innerHTML = `<b>${esc(state.m1.prenom)}</b>${state.m1.age? ', '+state.m1.age+' ans':''}${state.m1.diag? ' — '+esc(state.m1.diag):''}.`+
       (lieuxTxt? ' Accueilli·e en '+lieuxTxt+'.' : '');
   } else {
@@ -3845,6 +3930,7 @@ function computeIndice() {
     (e.etatAvant && e.etatAvant.trim())
   ).length;
   const nbDeclencheur = evts.filter(e => e.declencheur && e.declencheur.trim()).length;
+  const nbTemoinDirect = evts.filter(e => e.temoin === 'Témoin direct').length;
 
   // Déclarants uniques (par prénom/initiales)
   const declarantsSet = new Set(
@@ -3872,13 +3958,8 @@ function computeIndice() {
     evts.map(e => e.date).filter(Boolean)
   ).size;
 
-  // Taux de catégorisation (items dans m3)
-  let totalItems = 0;
-  Object.values(cats).forEach(scat => {
-    Object.values(scat).forEach(cat => { totalItems += (cat.items||[]).length; });
-  });
-  const nbItemsPossibles = n * 4; // antécédent, déclencheur, CD, conséquence
-  const tauxCateg = nbItemsPossibles > 0 ? totalItems / nbItemsPossibles : 0;
+  // Taux de catégorisation (part des items distincts catégorisés au moins une fois)
+  const tauxCateg = computeM3Categorisation().pct / 100;
 
   // ── 8 Critères ─────────────────────────────────────────────
   const criteres = [
@@ -3982,6 +4063,21 @@ function computeIndice() {
       conseils: {
         0: 'Très peu d\'items catégorisés. Sans le module Organiser, les corrélations ne peuvent pas être calculées et la synthèse reste superficielle.',
         0.5: '30-59% des items catégorisés. Encouragez l\'équipe à utiliser davantage le module Organiser.',
+        1: null
+      }
+    },
+    {
+      id: 'observation_directe',
+      label: 'Part d\'évènements en observation directe',
+      valeur: n > 0 ? Math.round((nbTemoinDirect/n)*100) : 0,
+      score: n === 0 ? 0 : (() => {
+        const taux = nbTemoinDirect / n;
+        return taux >= 0.8 ? 1 : taux >= 0.5 ? 0.5 : 0;
+      })(),
+      affichage: n > 0 ? Math.round((nbTemoinDirect/n)*100) + '% des évènements vus directement par le déclarant' : 'Aucun évènement',
+      conseils: {
+        0: 'Moins de la moitié des évènements sont vus directement par la personne qui les décrit. Le récit de seconde main perd en précision — croisez ces évènements avec un témoin direct si possible.',
+        0.5: '50-79% en observation directe. Le reste est rapporté ou constaté après coup — à garder en tête au moment d\'interpréter.',
         1: null
       }
     }
@@ -4172,6 +4268,27 @@ function refreshAccueilBadges(){
   const badge = document.getElementById('count-m2');
   if(n>0){ badge.style.display='inline-block'; badge.textContent = n+' évènement'+(n>1?'s':''); }
   else{ badge.style.display='none'; }
+
+  const b1 = document.getElementById('count-m1');
+  if (b1) {
+    const pct1 = computeM1Pct();
+    if (pct1>0) { b1.style.display='inline-block'; b1.textContent = pct1+'% complété'; }
+    else { b1.style.display='none'; }
+  }
+
+  const b3 = document.getElementById('count-m3');
+  if (b3) {
+    const cat3 = computeM3Categorisation();
+    if (cat3.total>0) { b3.style.display='inline-block'; b3.textContent = cat3.pct+'% catégorisé'; }
+    else { b3.style.display='none'; }
+  }
+
+  const b4 = document.getElementById('count-m4');
+  if (b4) {
+    const pct4 = computeM4Pct();
+    if (pct4>0) { b4.style.display='inline-block'; b4.textContent = pct4+'% rempli'; }
+    else { b4.style.display='none'; }
+  }
 }
 
 // (ancienne refreshSynthese supprimée — voir la version complète plus haut)
@@ -4581,6 +4698,20 @@ function showToast(msg){
    MODULE 3 (M3) — ORGANISER LES DONNÉES
    ============================================================ */
 
+// CD apparus après une intervention (effet nul ou aggravant). Extrait une fois,
+// réutilisé par plusieurs sous-modules : ce nouveau CD est à la fois un
+// comportement, un antécédent, un déclencheur potentiel et une conséquence de
+// l'intervention — il appartient donc à la même "crise" sous plusieurs angles.
+function extraireCDPostIntervention(evt) {
+  const out = [];
+  (evt.interventions || []).forEach(iv => {
+    if (effetNeedsCdPost(iv.effet) && iv.cdPostIntervention && iv.cdPostIntervention.trim()) {
+      out.push(iv.cdPostIntervention.trim());
+    }
+  });
+  return out;
+}
+
 // Configuration des 5 sous-modules
 const M3_SOUS = [
   {
@@ -4592,18 +4723,14 @@ const M3_SOUS = [
       const parts = [];
       if (evt.comportement) parts.push(evt.comportement);
       if (evt.gradation) parts.push('(gradation) ' + evt.gradation);
-      (evt.interventions || []).forEach(iv => {
-        if (iv.effet === 'Aggravation' && iv.cdPostIntervention && iv.cdPostIntervention.trim()) {
-          parts.push('§POST§' + iv.cdPostIntervention.trim());
-        }
-      });
+      extraireCDPostIntervention(evt).forEach(t => parts.push('§POST§' + t));
       return parts;
     }
   },
   {
     id: 'antecedents',
     label: 'Antécédents', icon: '⏮',
-    help: 'Tout ce qui précède le comportement : antécédents lointains (setting events) et antécédents immédiats. Cherchez des récurrences.',
+    help: 'Tout ce qui précède le comportement : antécédents lointains (setting events) et antécédents immédiats. Cherchez des récurrences. Un CD apparu après une intervention (badge « post-intervention ») est aussi affiché ici : il devient le contexte de la suite de la crise.',
     placeholder: 'ex : Transition, Fin d\'activité appréciée, Changement de routine, Fatigue…',
     extract: (evt) => {
       const parts = [];
@@ -4612,13 +4739,14 @@ const M3_SOUS = [
       if (evt.finTerminee) parts.push('Fin de : ' + evt.finTerminee);
       if (evt.absencePrevue) parts.push('Absent·e : ' + evt.absencePrevue);
       if (evt.etatAvant) parts.push('État avant : ' + evt.etatAvant);
+      extraireCDPostIntervention(evt).forEach(t => parts.push('§POST§' + t));
       return parts;
     }
   },
   {
     id: 'declencheurs',
     label: 'Déclencheurs', icon: '⚡',
-    help: 'Le dernier maillon — ce qui s\'est passé dans les 10-30 secondes avant le comportement. Cherchez ce qui revient : même consigne, même stimulus, même transition ?',
+    help: 'Le dernier maillon — ce qui s\'est passé dans les 10-30 secondes avant le comportement. Cherchez ce qui revient : même consigne, même stimulus, même transition ? Un CD apparu après une intervention (badge « post-intervention ») est aussi affiché ici, au cas où il aurait lui-même déclenché la suite.',
     placeholder: 'ex : Mot "piscine" prononcé, Extinction des lumières, Contact physique, Ordinateur habituel absent…',
     extract: (evt) => {
       const parts = [];
@@ -4629,19 +4757,21 @@ const M3_SOUS = [
       if (evt.declencheurRecurrent && evt.declencheurRecurrent !== 'Je ne sais pas' && evt.declencheurRecurrent !== 'Non / premier fois') {
         parts.push('Récurrent : ' + evt.declencheurRecurrent);
       }
+      extraireCDPostIntervention(evt).forEach(t => parts.push('§POST§' + t));
       return parts.filter(Boolean);
     }
   },
   {
     id: 'consequences',
     label: 'Conséquences', icon: '🔄',
-    help: 'Ce que la personne a obtenu ou évité suite au comportement. C\'est souvent là que la fonction du comportement se lit.',
+    help: 'Ce que la personne a obtenu ou évité suite au comportement. C\'est souvent là que la fonction du comportement se lit. Un CD apparu après une intervention (badge « post-intervention ») est aussi affiché ici : il est la conséquence directe de cette intervention.',
     placeholder: 'ex : Obtient attention, Évite consigne, Accès à un objet, Sortie de la situation…',
     extract: (evt) => {
       const parts = [];
       if (evt.obtenu) parts.push('Obtenu : ' + evt.obtenu);
       if (evt.evite) parts.push('Évité : ' + evt.evite);
       if (evt.finPersonne) parts.push('Fin : ' + evt.finPersonne);
+      extraireCDPostIntervention(evt).forEach(t => parts.push('§POST§' + t));
       return parts;
     }
   },
@@ -4652,9 +4782,9 @@ const M3_SOUS = [
     placeholder: 'ex : Contenance physique, Verbalisation, Retrait, Relais de pro, Ne rien faire…',
     extract: (evt) => {
       const parts = [];
-      if (evt.inter1) parts.push(evt.inter1 + (evt.inter1Eff ? ' → ' + evt.inter1Eff : ''));
-      if (evt.inter2) parts.push(evt.inter2 + (evt.inter2Eff ? ' → ' + evt.inter2Eff : ''));
-      if (evt.interAutre) parts.push(evt.interAutre);
+      (evt.interventions || []).forEach(iv => {
+        if (iv.texte && iv.texte.trim()) parts.push(iv.texte.trim() + (iv.effet ? ' → ' + iv.effet : ''));
+      });
       return parts;
     }
   }
@@ -4707,11 +4837,64 @@ function extraireItems(sousId) {
   return items;
 }
 
+// Regroupe les CD d'une même journée en "crise" : CP1, CP2... pour des
+// évènements distincts le même jour, CP1, CP1.2, CP1.3... quand ce sont des CD
+// post-intervention rattachés au même évènement (même crise, causalité directe).
+function computeCPLabels() {
+  const items = extraireItems('cp');
+  const byDate = {};
+  items.forEach(it => {
+    const date = it.date || '';
+    if (!byDate[date]) byDate[date] = [];
+    byDate[date].push(it);
+  });
+  const labels = {};
+  Object.keys(byDate).forEach(date => {
+    const byEvt = {};
+    const evtOrder = [];
+    byDate[date].forEach(it => {
+      const m = /^(.*)_(\d+)$/.exec(it.id);
+      const evtKey = m ? m[1] : it.id;
+      if (!byEvt[evtKey]) { byEvt[evtKey] = []; evtOrder.push(evtKey); }
+      byEvt[evtKey].push(it);
+    });
+    evtOrder.sort((a, b) => (byEvt[a][0].heure||'').localeCompare(byEvt[b][0].heure||''));
+    evtOrder.forEach((evtKey, ci) => {
+      const cpNum = ci + 1;
+      const group = byEvt[evtKey];
+      const primary = group.find(it => it.tag !== 'post-intervention') || group[0];
+      labels[primary.id] = 'CP' + cpNum;
+      // Seuls les CD post-intervention reçoivent un sous-numéro (CP1.2, CP1.3…).
+      // Les autres items du même évènement (ex. gradation) n'ont pas de label.
+      let subIdx = 2;
+      group.filter(it => it.tag === 'post-intervention').forEach(it => {
+        labels[it.id] = 'CP' + cpNum + '.' + subIdx;
+        subIdx++;
+      });
+    });
+  });
+  return labels;
+}
+
 // Trouver les catégories d\'un item (un item peut appartenir à plusieurs catégories)
 function catDunItem(sousId, itemId) {
   ensureM3();
   const cats = state.m3.categories[sousId];
   return Object.keys(cats).filter(catId => (cats[catId].items || []).includes(itemId));
+}
+
+// Taux de catégorisation global : part des items DISTINCTS catégorisés au moins
+// une fois (un item assigné à 2 catégories ne compte qu'une fois — évite les % > 100).
+function computeM3Categorisation() {
+  ensureM3();
+  let total = 0, assignes = 0;
+  M3_SOUS.forEach(s => {
+    const items = extraireItems(s.id);
+    total += items.length;
+    assignes += items.filter(it => catDunItem(s.id, it.id).length > 0).length;
+  });
+  const pct = total > 0 ? Math.round(assignes / total * 100) : 0;
+  return {total, assignes, pct};
 }
 
 // Rendu du module M3 (appelé depuis route() quand on va sur 'm3')
@@ -4770,6 +4953,8 @@ function renderM3Sous(sousId) {
   // ── Colonne gauche : items ──────────────────────────────────────
   const listEl = document.getElementById('m3-items-list');
 
+  const cpLabels = sousId === 'cp' ? computeCPLabels() : null;
+
   if (items.length === 0) {
     listEl.innerHTML = '<div class="event-empty">Aucun élément extrait des évènements du module 1 pour ce sous-module.</div>';
   } else {
@@ -4786,8 +4971,10 @@ function renderM3Sous(sousId) {
         : `<span style="font-size:11.5px;color:var(--ink-soft);font-style:italic;">Non catégorisé — cliquez pour assigner</span>`;
       const dateStr = item.date ? formatDate(item.date) : '';
       const src = [dateStr, item.moment].filter(Boolean).join(' · ');
+      const cpLabel = cpLabels && cpLabels[item.id] ? `<span class="m3-item-tag-post" style="background:var(--slate);">${cpLabels[item.id]}</span>` : '';
       return `<div class="m3-item${catIds.length>0?' categorise':''}" onclick="ouvrirAssign('${sousId}','${item.id}',event)">
         <div style="flex:1">
+          ${cpLabel}
           ${item.tag==='post-intervention' ? `<span class="m3-item-tag-post">post-intervention</span>` : ''}
           <div class="m3-item-text">${esc(item.texte)}</div>
           ${src ? `<div class="m3-item-source">Évt. ${item.evtIdx+1}${src?' — '+src:''}</div>` : ''}
@@ -4802,7 +4989,7 @@ function renderM3Sous(sousId) {
   const catKeys = Object.keys(cats);
 
   if (catKeys.length === 0) {
-    catsEl.innerHTML = `<div class="event-empty">Aucune catégorie créée. Cliquez sur "Nouvelle catégorie" pour commencer.</div>`;
+    catsEl.innerHTML = `<div class="event-empty">Aucune catégorie créée. Cliquez sur "Ajouter une catégorie" pour commencer.</div>`;
   } else {
     catsEl.innerHTML = catKeys.map((catId, idx) => {
       const cat = cats[catId];
