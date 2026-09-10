@@ -546,6 +546,17 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
 .event-item .ev-desc{font-size:12.5px;color:var(--ink-soft);margin-top:2px;}
 .event-item .ev-arrow{color:var(--ink-soft);font-size:18px;}
 .event-brouillon-tag{display:inline-block;background:var(--amber-pale);color:var(--coral-deep);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 7px;border-radius:999px;margin-left:4px;}
+/* Repères chronologiques dans la liste des évènements */
+.ev-groupe-mois{
+  font-size:13px;font-weight:700;color:var(--ink);
+  text-transform:capitalize;letter-spacing:.01em;
+  padding:14px 0 4px;border-bottom:1.5px solid var(--line);margin-bottom:6px;
+}
+.ev-groupe-mois:first-child{padding-top:0;}
+.ev-groupe-semaine{
+  font-size:11.5px;font-weight:600;color:var(--ink-soft);
+  padding:8px 0 4px;
+}
 .event-indirect-tag{display:inline-block;background:var(--paper-deep);color:var(--ink-soft);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 7px;border-radius:999px;margin-left:4px;border:1px solid var(--line);}
 .event-empty{
   text-align:center;padding:32px;color:var(--ink-soft);
@@ -2363,7 +2374,7 @@ function setMode(moduleId, mode){
 let state = {
   version: 1,
   m1: {prenom:'', age:'', diag:'', lieux:[], lieuxCustom:[], jours:[], heures:'', coucher:'', lever:'', journeeCreneaux:[], semaineCreneaux:{}, libre:''},
-  m2: {evenements: []},
+  m2: {evenements: [], brouillons: []},
   m3: {sous:'cp', categories:{cp:{},antecedents:{},declencheurs:{},consequences:{},interventions:{}}},
   m4: {patterns: [], gradations: [], vase: {monte:[], descend:[], texte:''}}
 };
@@ -2504,11 +2515,14 @@ function loadPersisted(){
 
 function route(name, fromHistory){
   // Si on quitte le formulaire d\'évènement sans valider, conserver la
-  // saisie en cours comme brouillon (rien n\'est perdu).
+  // saisie en cours comme brouillon (rien n\'est perdu). Sauf si on le quitte
+  // volontairement (validation, annulation, enregistrer-et-fermer) : sinon
+  // chaque sortie recrée un brouillon fantôme, vide, dans la liste.
   const formView = document.getElementById('view-m2-form');
-  if (name !== 'm2-form' && formView && formView.classList.contains('show') && typeof ETAPES !== 'undefined' && ETAPES[currentEtapeIdx]) {
+  if (!fermetureVolontaire && name !== 'm2-form' && formView && formView.classList.contains('show') && typeof ETAPES !== 'undefined' && ETAPES[currentEtapeIdx]) {
     try { Object.assign(formDraft, ETAPES[currentEtapeIdx].collect()); saveBrouillon(); } catch(e) {}
   }
+  fermetureVolontaire = false;
   document.querySelectorAll('section.view').forEach(s=>s.classList.remove('show'));
   const target = document.getElementById('view-'+name);
   if(target) target.classList.add('show');
@@ -3525,38 +3539,108 @@ let currentEtapeIdx = 0;
 // Brouillon : si on quitte le formulaire sans valider (navigation, retour
 // arrière...), la saisie en cours n\'est pas perdue — on la retrouve en
 // rouvrant le même évènement (ou "nouvel évènement").
-function saveBrouillon() {
-  state.m2.brouillon = { draft: Object.assign({}, formDraft), editIdx: formEditIdx, etape: currentEtapeIdx };
-  persist();
-}
-function chargerBrouillonSiPresent(idx) {
-  const b = state.m2.brouillon;
-  if (b && b.editIdx === idx) {
-    formDraft = Object.assign({}, b.draft);
-    currentEtapeIdx = b.etape || 0;
-    return true;
+// Brouillons multiples. Un brouillon retient soit une saisie nouvelle
+// (editId null), soit des modifications non validées sur un évènement existant
+// (editId = l'id stable de l'évènement, jamais sa position : trierEvenements()
+// réordonne le tableau à chaque enregistrement).
+let currentBrouillonId = null;
+// Vrai le temps d'une sortie délibérée du formulaire : empêche route() de
+// re-sauver un brouillon qu'on vient justement de valider ou de supprimer.
+let fermetureVolontaire = false;
+
+function ensureBrouillons() {
+  if (!Array.isArray(state.m2.brouillons)) state.m2.brouillons = [];
+  // Compat : ancien format à brouillon unique
+  if (state.m2.brouillon) {
+    const b = state.m2.brouillon;
+    const evt = (b.editIdx !== null && b.editIdx !== undefined) ? state.m2.evenements[b.editIdx] : null;
+    state.m2.brouillons.push({
+      id: 'br_' + Date.now(), editId: evt ? evt.id : null,
+      draft: b.draft || {}, etape: b.etape || 0, maj: Date.now()
+    });
+    state.m2.brouillon = null;
   }
-  return false;
+  return state.m2.brouillons;
 }
-function effacerBrouillon() {
-  state.m2.brouillon = null;
+
+function saveBrouillon() {
+  const brs = ensureBrouillons();
+  const evt = (formEditIdx !== null) ? state.m2.evenements[formEditIdx] : null;
+  const entree = {
+    id: currentBrouillonId || ('br_' + Date.now() + '_' + Math.random().toString(36).slice(2,6)),
+    editId: evt ? evt.id : null,
+    draft: Object.assign({}, formDraft),
+    etape: currentEtapeIdx,
+    maj: Date.now()
+  };
+  currentBrouillonId = entree.id;
+  const i = brs.findIndex(b => b.id === entree.id);
+  if (i >= 0) brs[i] = entree; else brs.push(entree);
   persist();
+}
+
+function effacerBrouillon() {
+  const brs = ensureBrouillons();
+  if (currentBrouillonId) {
+    const i = brs.findIndex(b => b.id === currentBrouillonId);
+    if (i >= 0) brs.splice(i, 1);
+  }
+  currentBrouillonId = null;
+  persist();
+}
+
+function supprimerBrouillon(id) {
+  if (!confirm('Supprimer ce brouillon ? La saisie non validée sera perdue.')) return;
+  const brs = ensureBrouillons();
+  const i = brs.findIndex(b => b.id === id);
+  if (i >= 0) brs.splice(i, 1);
+  if (currentBrouillonId === id) currentBrouillonId = null;
+  persist();
+  refreshM2List();
+  showToast('Brouillon supprimé.');
+}
+
+// Reprendre un brouillon précis depuis la liste
+function reprendreBrouillon(id) {
+  const brs = ensureBrouillons();
+  const b = brs.find(x => x.id === id);
+  if (!b) return;
+  currentBrouillonId = b.id;
+  formDraft = Object.assign({}, b.draft);
+  currentEtapeIdx = b.etape || 0;
+  formEditIdx = (b.editId !== null && b.editId !== undefined)
+    ? state.m2.evenements.findIndex(e => e.id === b.editId)
+    : null;
+  if (formEditIdx === -1) formEditIdx = null; // l'évènement a été supprimé entre-temps
+  document.getElementById('m2form-titre').textContent =
+    (formEditIdx !== null ? 'Modifier un évènement' : 'Décrire un évènement') + ' (brouillon repris)';
+  renderEtape(currentEtapeIdx);
+  route('m2-form');
 }
 
 function ouvrirFormulaireEvenement(idx) {
   const targetIdx = (idx !== undefined) ? idx : null;
+  const brs = ensureBrouillons();
+  // Un brouillon existe-t-il déjà pour cet évènement précis ?
+  const evt = (targetIdx !== null) ? state.m2.evenements[targetIdx] : null;
+  const existant = evt
+    ? brs.find(b => b.editId === evt.id)
+    : null;
+  if (existant) { reprendreBrouillon(existant.id); return; }
+
   formEditIdx = targetIdx;
-  const repris = chargerBrouillonSiPresent(targetIdx);
-  if (!repris) {
-    if (formEditIdx !== null && state.m2.evenements[formEditIdx]) {
-      formDraft = Object.assign({}, state.m2.evenements[formEditIdx]);
-    } else {
-      formDraft = {};
-    }
-    currentEtapeIdx = 0;
+  currentBrouillonId = null;
+  if (formEditIdx !== null && state.m2.evenements[formEditIdx]) {
+    formDraft = Object.assign({}, state.m2.evenements[formEditIdx]);
+  } else {
+    formDraft = {};
+    // Le pro pressé note souvent l'évènement le jour même : on pré-remplit,
+    // la date reste évidemment modifiable.
+    formDraft.date = new Date().toISOString().slice(0,10);
   }
+  currentEtapeIdx = 0;
   document.getElementById('m2form-titre').textContent =
-    (formEditIdx !== null ? 'Modifier un évènement' : 'Décrire un évènement') + (repris ? ' (brouillon repris)' : '');
+    (formEditIdx !== null ? 'Modifier un évènement' : 'Décrire un évènement');
   renderEtape(currentEtapeIdx);
   route('m2-form');
 }
@@ -3586,7 +3670,8 @@ function renderEtape(idx) {
     <button class="btn btn-ghost btn-sm" onclick="annulerFormulaireEvt()">Annuler</button>
     ${idx > 0 ? `<button class="btn btn-secondary btn-sm" onclick="aller(${idx-1})">← Précédent</button>` : ''}
     ${!isLast
-      ? `<button class="btn btn-primary" onclick="aller(${idx+1})">Suivant →</button>`
+      ? `<button class="btn btn-ghost btn-sm" onclick="enregistrerEtFermerEvt()" title="Enregistrer en l'état, sans dérouler les étapes suivantes">✓ Enregistrer et fermer</button>
+         <button class="btn btn-primary" onclick="aller(${idx+1})">Suivant →</button>`
       : `<button class="btn btn-gold" onclick="validerFormulaireEvt()">✓ Enregistrer cet évènement</button>`
     }
   `;
@@ -3633,8 +3718,15 @@ function validerFormulaireEvt() {
   persist();
   refreshM2List();
   refreshAccueilBadges();
+  fermetureVolontaire = true;
   route('m2');
   showToast('Évènement enregistré.');
+}
+
+// Enregistrer sans avoir à dérouler toutes les étapes restantes — le cas
+// courant étant de rouvrir un évènement juste pour corriger un détail.
+function enregistrerEtFermerEvt() {
+  validerFormulaireEvt();
 }
 
 function annulerFormulaireEvt() {
@@ -3642,6 +3734,7 @@ function annulerFormulaireEvt() {
   formDraft = {};
   formEditIdx = null;
   currentEtapeIdx = 0;
+  fermetureVolontaire = true;
   route('m2');
 }
 
@@ -3685,13 +3778,26 @@ function refreshM2List(){
     }
   }
 
-  // Brouillon non validé (saisie en cours quittée sans valider)
+  // Brouillons non validés (saisies quittées sans valider)
   const brouillonEl = document.getElementById('m2-brouillon-banner');
   if (brouillonEl) {
-    const b = state.m2.brouillon;
-    if (b && b.editIdx === null) {
+    const brs = ensureBrouillons();
+    if (brs.length > 0) {
       brouillonEl.style.display = '';
-      brouillonEl.innerHTML = `⏳ Vous avez un nouvel évènement en cours de saisie (non validé). <button class="btn btn-ghost btn-sm" onclick="ouvrirFormulaireEvenement()">Reprendre le brouillon →</button>`;
+      const lignes = brs.slice().sort((a,b) => (b.maj||0) - (a.maj||0)).map(b => {
+        const evt = (b.editId !== null && b.editId !== undefined)
+          ? evts.find(e => e.id === b.editId) : null;
+        const quoi = evt
+          ? 'Modifications sur « ' + esc((evt.comportement || 'évènement sans description').substring(0,40)) + ' »'
+          : 'Nouvel évènement' + (b.draft && b.draft.date ? ' du ' + esc(formatDate(b.draft.date)) : '');
+        const etape = (b.etape || 0) + 1;
+        return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;">
+          <span style="flex:1;min-width:0;">${quoi} <span style="color:var(--ink-soft);">— étape ${etape} / ${ETAPES.length}</span></span>
+          <button class="btn btn-ghost btn-sm" onclick="reprendreBrouillon('${b.id}')">Reprendre →</button>
+          <button class="btn btn-ghost btn-sm" onclick="supprimerBrouillon('${b.id}')" title="Supprimer ce brouillon" style="border-color:transparent;padding:6px 9px;">🗑</button>
+        </div>`;
+      }).join('');
+      brouillonEl.innerHTML = `<div style="font-weight:700;margin-bottom:4px;">⏳ ${brs.length} saisie${brs.length>1?'s':''} en cours, non validée${brs.length>1?'s':''}</div>${lignes}`;
     } else {
       brouillonEl.style.display = 'none';
     }
@@ -3701,16 +3807,35 @@ function refreshM2List(){
     list.innerHTML = '<div class="event-empty">Aucun évènement déclaré pour le moment.</div>';
     return;
   }
-  const brouillonIdx = state.m2.brouillon ? state.m2.brouillon.editIdx : undefined;
-  list.innerHTML = evts.map((e,i) => {
+
+  const brs = ensureBrouillons();
+  const idsAvecBrouillon = new Set(brs.map(b => b.editId).filter(Boolean));
+
+  // Regroupement par mois puis par semaine : au-delà de quelques dizaines
+  // d'évènements, une liste plate n'est plus lisible.
+  let html = '';
+  let moisCourant = null, semaineCourante = null;
+  evts.forEach((e, i) => {
+    const d = e.date ? new Date(e.date) : null;
+    const dateValide = d && !isNaN(d);
+    const mois = dateValide ? d.toLocaleDateString('fr-FR', {month:'long', year:'numeric'}) : 'Date non précisée';
+    const semaine = dateValide ? libelleSemaine(d) : null;
+    if (mois !== moisCourant) {
+      moisCourant = mois; semaineCourante = null;
+      html += `<div class="ev-groupe-mois">${esc(mois)}</div>`;
+    }
+    if (semaine && semaine !== semaineCourante) {
+      semaineCourante = semaine;
+      html += `<div class="ev-groupe-semaine">${esc(semaine)}</div>`;
+    }
     const desc = e.comportement
       ? e.comportement.substring(0,80) + (e.comportement.length > 80 ? '…' : '')
       : (e.description ? e.description.substring(0,80) : 'Évènement sans description');
     const dateStr = e.date ? formatDate(e.date) : (e.date || 'Date non précisée');
     const heureStr = e.heure ? ' — ' + e.heure : '';
-    const brouillonTag = (brouillonIdx === i) ? '<span class="event-brouillon-tag" title="Modifications non validées">brouillon</span>' : '';
+    const brouillonTag = idsAvecBrouillon.has(e.id) ? '<span class="event-brouillon-tag" title="Modifications non validées">brouillon</span>' : '';
     const indirectTag = (e.temoin && e.temoin !== 'Témoin direct') ? `<span class="event-indirect-tag" title="${esc(e.temoin)}">${e.temoin === 'Rapporté par un tiers' ? 'rapporté' : 'après coup'}</span>` : '';
-    return `<div class="event-item" onclick="ouvrirFormulaireEvenement(${i})">
+    html += `<div class="event-item" onclick="ouvrirFormulaireEvenement(${i})">
       <div class="ev-num">${i+1}</div>
       <div class="ev-info">
         <div class="ev-date">${esc(dateStr)}${esc(heureStr)}${e.moment ? ' · '+esc(e.moment) : ''} ${brouillonTag}${indirectTag}</div>
@@ -3719,7 +3844,20 @@ function refreshM2List(){
       <button class="btn btn-ghost btn-sm no-print" onclick="supprimerEvt(${i},event)" style="flex-shrink:0;padding:6px 10px;font-size:12px;border-color:transparent;" title="Supprimer">🗑</button>
       <div class="ev-arrow">→</div>
     </div>`;
-  }).join('');
+  });
+  list.innerHTML = html;
+}
+
+// "Semaine du 7 au 13 septembre" — semaine calendaire, lundi comme premier jour.
+function libelleSemaine(d) {
+  const lundi = new Date(d);
+  const jour = (lundi.getDay() + 6) % 7; // lundi = 0
+  lundi.setDate(lundi.getDate() - jour);
+  const dimanche = new Date(lundi);
+  dimanche.setDate(lundi.getDate() + 6);
+  const memeMois = lundi.getMonth() === dimanche.getMonth();
+  const jourMois = (x, avecMois) => x.getDate() + (avecMois ? ' ' + x.toLocaleDateString('fr-FR', {month:'long'}) : '');
+  return 'Semaine du ' + jourMois(lundi, !memeMois) + ' au ' + jourMois(dimanche, true);
 }
 
 /* ── Mise à jour des stats en synthèse ─────────────────────── */
