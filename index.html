@@ -1591,6 +1591,40 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
 .qual-body .empty{font-style:italic;color:var(--line);}
 .cot-label-banner{font-size:13px;font-weight:700;color:var(--slate);margin:14px 0 8px;padding:6px 10px;background:var(--coral-pale);border-radius:5px;}
 
+/* ── Explorer : fiche de contexte ── */
+.explorer-fiche{
+  font-family:'Source Serif 4',serif;
+  font-size:14.5px;line-height:1.7;color:var(--ink-soft);
+  text-align:justify;text-justify:inter-word;
+}
+.explorer-fiche p{margin:0 0 8px;}
+.explorer-fiche b{color:var(--ink);}
+.explorer-avert{
+  margin-top:10px;padding:8px 12px;
+  background:var(--paper-deep);border-radius:var(--radius-sm);
+  font-size:12px;font-style:italic;color:var(--ink-soft);
+}
+#explorer-terme{
+  width:100%;padding:10px 13px;
+  border:1.5px solid var(--line);border-radius:var(--radius-sm);
+  background:var(--paper);color:var(--ink);
+}
+
+/* ── Patterns : antécédents et conséquences multiples ── */
+.abc-multi-ligne{display:flex;align-items:center;gap:5px;margin-bottom:5px;}
+.abc-multi-ligne .abc-slot-select{flex:1;min-width:0;}
+.abc-multi-del{
+  background:none;border:none;cursor:pointer;flex-shrink:0;
+  color:var(--ink-soft);font-size:15px;line-height:1;padding:2px 5px;
+}
+.abc-multi-del:hover{color:var(--coral-deep);}
+.abc-multi-add{
+  background:none;border:1px dashed var(--line);border-radius:6px;
+  color:var(--ink-soft);font-size:11.5px;font-weight:600;
+  padding:4px 9px;cursor:pointer;width:100%;
+}
+.abc-multi-add:hover{border-color:var(--coral-deep);color:var(--coral-deep);}
+
 /* ── Ce que les données suggèrent : deux statuts distincts ── */
 .suggestion-section{
   border-top:1px solid var(--line-soft);
@@ -2357,6 +2391,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
       <button class="m4-tab on" onclick="changerSousM4('pattern')" id="m4-tab-pattern">🔗 Patterns ABC</button>
       <button class="m4-tab" onclick="changerSousM4('gradation')" id="m4-tab-gradation">📈 Gradation</button>
       <button class="m4-tab" onclick="changerSousM4('vase')" id="m4-tab-vase">💧 Vase de tension</button>
+      <button class="m4-tab" onclick="changerSousM4('explorer')" id="m4-tab-explorer">🔍 Explorer</button>
     </div>
 
     <!-- PATTERN ABC -->
@@ -2420,6 +2455,20 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
             placeholder="ex : la tension semble s'accumuler en début de semaine et se relâcher après les activités physiques..."></textarea>
         </div>
       </div>
+    </div>
+
+    <!-- EXPLORER -->
+    <div id="m4-sous-explorer" style="display:none;">
+      <div class="abc-intro">
+        <b>Se promener dans les données.</b> Choisissez un élément — un comportement, un antécédent, un jour, un moment — et l'outil recalcule tout ce qu'il sait autour de lui : ce qui l'accompagne, quand il arrive, ce qui suit. Rien n'est enregistré ici, c'est un tableau de bord de lecture.
+      </div>
+      <div class="card">
+        <div class="field" style="margin-bottom:0;">
+          <label for="explorer-terme">Explorer autour de…</label>
+          <select id="explorer-terme" onchange="renderExploration()"></select>
+        </div>
+      </div>
+      <div id="explorer-resultat"></div>
     </div>
 
     </div><!-- fin rapide-content -->
@@ -4560,16 +4609,20 @@ function refreshSynthese(){
             const c = (cats3[sousId] || {})[catId];
             return c ? c.nom : '?';
           };
-          const a = getLabel('antecedents', p.a);
-          const b = getLabel('cp', p.b);
-          const c = getLabel('consequences', p.c);
+          const pastille = (txt, fond, encre) => `<span style="background:${fond};color:${encre};border-radius:6px;padding:3px 9px;font-size:13px;">${esc(txt)}</span>`;
+          const asIds = (p.as && p.as.length) ? p.as : (p.a ? [p.a] : []);
+          const csIds = (p.cs && p.cs.length) ? p.cs : (p.c ? [p.c] : []);
+          const groupe = (ids, sousId, fond, encre) => ids.filter(Boolean).length
+            ? ids.filter(Boolean).map(id => pastille(getLabel(sousId, id), fond, encre)).join('<span style="color:var(--ink-soft);font-size:11px;"> + </span>')
+            : pastille('?', fond, encre);
           html += `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;font-size:13.5px;">
             <span style="font-weight:700;color:var(--ink-soft);font-size:12px;">Pattern ${i+1}</span>
-            <span style="background:var(--teal-pale);color:var(--teal-deep);border-radius:6px;padding:3px 9px;font-size:13px;">${esc(a)}</span>
+            ${groupe(asIds, 'antecedents', 'var(--teal-pale)', 'var(--teal-deep)')}
             <span style="color:var(--ink-soft);">→</span>
-            <span style="background:var(--coral-pale);color:var(--coral-deep);border-radius:6px;padding:3px 9px;font-size:13px;">${esc(b)}</span>
+            ${pastille(getLabel('cp', p.b), 'var(--coral-pale)', 'var(--coral-deep)')}
             <span style="color:var(--ink-soft);">→</span>
-            <span style="background:var(--amber-pale);color:var(--amber);border-radius:6px;padding:3px 9px;font-size:13px;">${esc(c)}</span>
+            ${groupe(csIds, 'consequences', 'var(--amber-pale)', 'var(--amber)')}
+            ${p.b2 ? `<span style="color:var(--ink-soft);">↳</span>${pastille(getLabel('cp', p.b2), 'var(--amber-pale)', 'var(--coral-deep)')}<span style="font-size:10.5px;color:var(--ink-soft);">post-intervention</span>` : ''}
           </div>`;
         });
         html += '</div>';
@@ -6068,6 +6121,14 @@ function ensureM4() {
   if (!Array.isArray(state.m4.vase.monte)) state.m4.vase.monte = [];
   if (!Array.isArray(state.m4.vase.descend)) state.m4.vase.descend = [];
   if (!state.m4.sous) state.m4.sous = 'pattern';
+  // Un pattern ne se réduit pas toujours à un antécédent et une conséquence :
+  // plusieurs antécédents peuvent converger, plusieurs conséquences suivre.
+  // Migration idempotente depuis l'ancien format {a, b, c}.
+  state.m4.patterns.forEach(p => {
+    if (!Array.isArray(p.as)) p.as = p.a ? [p.a] : [];
+    if (!Array.isArray(p.cs)) p.cs = p.c ? [p.c] : [];
+    if (typeof p.b2 !== 'string') p.b2 = '';
+  });
 }
 
 function renderM4() {
@@ -6082,12 +6143,162 @@ function changerSousM4(sous) {
   ensureM4();
   state.m4.sous = sous;
   persist();
-  ['pattern','gradation','vase'].forEach(s => {
+  ['pattern','gradation','vase','explorer'].forEach(s => {
     const el = document.getElementById('m4-sous-'+s);
     const tab = document.getElementById('m4-tab-'+s);
     if (el) el.style.display = s === sous ? '' : 'none';
     if (tab) tab.classList.toggle('on', s === sous);
   });
+  if (sous === 'explorer') remplirTermesExploration();
+}
+
+/* ── Explorer : le contexte autour d'un terme ────────────────────────
+   On choisit un élément et tout se recalcule autour de lui. Rien n'est
+   enregistré : c'est une lecture, pas une saisie. */
+function termesExploration() {
+  ensureM3();
+  const termes = [];
+  M3_SOUS.forEach(s => {
+    Object.keys(state.m3.categories[s.id] || {}).forEach(catId => {
+      const cat = state.m3.categories[s.id][catId];
+      if (!cat || !(cat.items||[]).length) return;
+      termes.push({cle: `cat:${s.id}:${catId}`, groupe: s.label, libelle: cheminCat(s.id, catId)});
+    });
+  });
+  const evts = state.m2.evenements || [];
+  const NOMS = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+  const joursVus = new Set();
+  const momentsVus = new Set();
+  evts.forEach(e => {
+    if (e.date) { const d = new Date(e.date); if (!isNaN(d)) joursVus.add(NOMS[d.getDay()]); }
+    if (e.moment) momentsVus.add(e.moment);
+  });
+  [...joursVus].forEach(j => termes.push({cle:`jour:${j}`, groupe:'Jour de la semaine', libelle:j}));
+  [...momentsVus].forEach(m => termes.push({cle:`moment:${m}`, groupe:'Moment de la journée', libelle:m}));
+  return termes;
+}
+
+function remplirTermesExploration() {
+  const sel = document.getElementById('explorer-terme');
+  if (!sel) return;
+  const termes = termesExploration();
+  const choix = sel.value;
+  if (!termes.length) {
+    sel.innerHTML = '<option value="">— catégorisez d\'abord des éléments dans Organiser —</option>';
+    document.getElementById('explorer-resultat').innerHTML = '';
+    return;
+  }
+  const groupes = {};
+  termes.forEach(t => { (groupes[t.groupe] = groupes[t.groupe] || []).push(t); });
+  sel.innerHTML = '<option value="">— choisir un élément —</option>' +
+    Object.entries(groupes).map(([g, liste]) =>
+      `<optgroup label="${esc(g)}">${liste.map(t => `<option value="${esc(t.cle)}" ${t.cle===choix?'selected':''}>${esc(t.libelle)}</option>`).join('')}</optgroup>`
+    ).join('');
+  if (choix) renderExploration();
+}
+
+// Les évènements concernés par un terme
+function evenementsPourTerme(cle) {
+  const evts = state.m2.evenements || [];
+  if (!cle) return [];
+  const [type, a, b] = cle.split(':');
+  if (type === 'jour') {
+    const NOMS = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+    return evts.filter(e => { if (!e.date) return false; const d = new Date(e.date); return !isNaN(d) && NOMS[d.getDay()] === a; });
+  }
+  if (type === 'moment') return evts.filter(e => e.moment === cle.slice('moment:'.length));
+  if (type === 'cat') {
+    const cat = (state.m3.categories[a] || {})[b];
+    if (!cat) return [];
+    const ids = cat.items || [];
+    return evts.filter(e => ids.some(id => id.startsWith(`e${e.id}_`)));
+  }
+  return [];
+}
+
+// Ce qui accompagne le plus souvent ces évènements, volet par volet
+function voisinagePourTerme(sousEnsemble, cleExclue) {
+  ensureM3();
+  const compte = {};
+  M3_SOUS.forEach(s => {
+    Object.keys(state.m3.categories[s.id] || {}).forEach(catId => {
+      if (`cat:${s.id}:${catId}` === cleExclue) return;
+      const cat = state.m3.categories[s.id][catId];
+      const ids = cat.items || [];
+      const n = sousEnsemble.filter(e => ids.some(id => id.startsWith(`e${e.id}_`))).length;
+      if (n > 0) {
+        (compte[s.label] = compte[s.label] || []).push({nom: cheminCat(s.id, catId), n, icon: s.icon});
+      }
+    });
+  });
+  Object.values(compte).forEach(liste => liste.sort((x,y) => y.n - x.n));
+  return compte;
+}
+
+function renderExploration() {
+  const sel = document.getElementById('explorer-terme');
+  const el = document.getElementById('explorer-resultat');
+  if (!sel || !el) return;
+  const cle = sel.value;
+  if (!cle) { el.innerHTML = ''; return; }
+
+  const tous = state.m2.evenements || [];
+  const sousEns = evenementsPourTerme(cle);
+  const libelle = sel.options[sel.selectedIndex].text;
+  if (!sousEns.length) {
+    el.innerHTML = `<div class="card"><div style="font-style:italic;color:var(--ink-soft);">Aucun évènement ne correspond à « ${esc(libelle)} ».</div></div>`;
+    return;
+  }
+
+  const pct = Math.round(sousEns.length / tous.length * 100);
+  const voisins = voisinagePourTerme(sousEns, cle);
+  const NOMS = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+  const joursSous = {};
+  sousEns.forEach(e => { if (!e.date) return; const d = new Date(e.date); if (!isNaN(d)) { const j = NOMS[d.getDay()]; joursSous[j] = (joursSous[j]||0)+1; } });
+  const jourTop = Object.entries(joursSous).sort((a,b)=>b[1]-a[1])[0];
+  const momentsSous = {};
+  sousEns.forEach(e => { if (e.moment) momentsSous[e.moment] = (momentsSous[e.moment]||0)+1; });
+  const momentTop = Object.entries(momentsSous).sort((a,b)=>b[1]-a[1])[0];
+
+  // Fiche rédigée : des décomptes mis en phrases, jamais une conclusion.
+  const phrases = [];
+  phrases.push(`<b>${sousEns.length}</b> évènement${sousEns.length>1?'s':''} sur ${tous.length} (${pct}%) ${sousEns.length>1?'concernent':'concerne'} « ${esc(libelle)} ».`);
+  if (jourTop) phrases.push(`Le jour le plus représenté est <b>${esc(jourTop[0])}</b> (${jourTop[1]} fois).`);
+  if (momentTop) phrases.push(`Le moment le plus représenté est <b>${esc(momentTop[0])}</b> (${momentTop[1]} fois).`);
+  Object.entries(voisins).forEach(([label, liste]) => {
+    const t = liste[0];
+    if (t && t.n > 1) phrases.push(`Côté ${label.toLowerCase()}, ce qui revient le plus est <b>${esc(t.nom)}</b> (${t.n} fois sur ${sousEns.length}).`);
+  });
+
+  el.innerHTML = `
+    <div class="card">
+      <h4 style="font-size:15px;margin-bottom:10px;">Autour de « ${esc(libelle)} »</h4>
+      <div class="explorer-fiche">${phrases.map(p=>`<p>${p}</p>`).join('')}</div>
+      <div class="explorer-avert">Ce sont des décomptes sur vos catégorisations, pas des liens de cause à effet.</div>
+    </div>
+    ${Object.entries(voisins).map(([label, liste]) => `
+      <div class="card">
+        <div class="volet-histo-titre">${liste[0].icon} ${esc(label)} — ce qui accompagne</div>
+        ${liste.slice(0,8).map(t => {
+          const max = liste[0].n;
+          return `<div class="volet-ligne">
+            <div class="volet-nom" title="${esc(t.nom)}">${esc(t.nom)}</div>
+            <div class="volet-piste"><div class="volet-barre" style="width:${Math.round(t.n/max*100)}%;background:var(--coral-deep);"></div></div>
+            <div class="volet-compte">${t.n} / ${sousEns.length}</div>
+          </div>`;
+        }).join('')}
+      </div>`).join('')}
+    <div class="card">
+      <div class="volet-histo-titre">Quand ces évènements arrivent</div>
+      <div class="synth-niveau" style="border:none;padding:0;margin:0 0 14px;">
+        <div class="synth-niveau-tete"><h5>À la semaine, par jour</h5></div>
+        ${buildBarChart(repartitionJours(sousEns), 'nombre')}
+      </div>
+      <div class="synth-niveau" style="border:none;padding:0;margin:0;">
+        <div class="synth-niveau-tete"><h5>À la journée, par heure</h5></div>
+        ${buildBarChart(repartitionHeures(sousEns), 'nombre')}
+      </div>
+    </div>`;
 }
 
 /* ─── Récupérer les catégories disponibles ─────────────────── */
@@ -6161,10 +6372,15 @@ function renderPatterns() {
       </div>
       <div class="abc-sequence">
         <div class="abc-slot">
-          <span class="abc-slot-letter a">A — Antécédent</span>
-          <select class="abc-slot-select" onchange="updatePattern('${esc(p.id)}','a',this.value)">
-            ${buildCatOptions('antecedents', p.a, 'Catégorie antécédent…')}
-          </select>
+          <span class="abc-slot-letter a">A — Antécédent${(p.as||[]).length>1?'s':''}</span>
+          ${((p.as||[]).length ? p.as : ['']).map((catId, k) => `
+            <div class="abc-multi-ligne">
+              <select class="abc-slot-select" onchange="updatePatternListe('${esc(p.id)}','as',${k},this.value)">
+                ${buildCatOptions('antecedents', catId, 'Catégorie antécédent…')}
+              </select>
+              ${(p.as||[]).length > 1 ? `<button class="abc-multi-del" onclick="retirerDePattern('${esc(p.id)}','as',${k})" title="Retirer">×</button>` : ''}
+            </div>`).join('')}
+          <button class="abc-multi-add" onclick="ajouterAPattern('${esc(p.id)}','as')">＋ antécédent</button>
         </div>
         <span class="abc-arrow">→</span>
         <div class="abc-slot">
@@ -6175,12 +6391,27 @@ function renderPatterns() {
         </div>
         <span class="abc-arrow">→</span>
         <div class="abc-slot">
-          <span class="abc-slot-letter c">C — Conséquence</span>
-          <select class="abc-slot-select" onchange="updatePattern('${esc(p.id)}','c',this.value)">
-            ${buildCatOptions('consequences', p.c, 'Catégorie conséquence…')}
-          </select>
+          <span class="abc-slot-letter c">C — Conséquence${(p.cs||[]).length>1?'s':''}</span>
+          ${((p.cs||[]).length ? p.cs : ['']).map((catId, k) => `
+            <div class="abc-multi-ligne">
+              <select class="abc-slot-select" onchange="updatePatternListe('${esc(p.id)}','cs',${k},this.value)">
+                ${buildCatOptions('consequences', catId, 'Catégorie conséquence…')}
+              </select>
+              ${(p.cs||[]).length > 1 ? `<button class="abc-multi-del" onclick="retirerDePattern('${esc(p.id)}','cs',${k})" title="Retirer">×</button>` : ''}
+            </div>`).join('')}
+          <button class="abc-multi-add" onclick="ajouterAPattern('${esc(p.id)}','cs')">＋ conséquence</button>
         </div>
+        ${p.b2 ? `
+          <span class="abc-arrow">↳</span>
+          <div class="abc-slot">
+            <span class="abc-slot-letter b" style="background:var(--amber-pale);color:var(--coral-deep);">CD suivant</span>
+            <select class="abc-slot-select" onchange="updatePattern('${esc(p.id)}','b2',this.value)">
+              ${buildCatOptions('cp', p.b2, 'Catégorie CD…')}
+            </select>
+            <button class="abc-multi-del" onclick="updatePattern('${esc(p.id)}','b2','')" title="Retirer ce maillon">× retirer</button>
+          </div>` : ''}
       </div>
+      ${p.b2 ? '' : `<button class="abc-multi-add" style="margin-top:2px;" onclick="amorcerCDSuivant('${esc(p.id)}')" title="Quand la réponse de l'entourage produit elle-même un nouveau comportement">＋ prolonger vers un CD post-intervention</button>`}
       <textarea class="abc-pattern-note"
         onchange="updatePattern('${esc(p.id)}','note',this.value)"
         placeholder="Notes sur ce pattern : dans quels évènements le voyez-vous ? Quelle est votre intuition sur la fonction ?"
@@ -6193,6 +6424,48 @@ function updatePattern(id, key, value) {
   ensureM4();
   const p = state.m4.patterns.find(x => x.id === id);
   if (p) { p[key] = value; persist(); renderPatterns(); }
+}
+
+// Antécédents et conséquences multiples : plusieurs facteurs peuvent converger
+// vers un même comportement, et un comportement produire plusieurs effets.
+function updatePatternListe(id, cle, index, value) {
+  ensureM4();
+  const p = state.m4.patterns.find(x => x.id === id);
+  if (!p) return;
+  if (!Array.isArray(p[cle])) p[cle] = [];
+  while (p[cle].length <= index) p[cle].push('');
+  p[cle][index] = value;
+  persist();
+  renderPatterns();
+}
+function ajouterAPattern(id, cle) {
+  ensureM4();
+  const p = state.m4.patterns.find(x => x.id === id);
+  if (!p) return;
+  if (!Array.isArray(p[cle])) p[cle] = [];
+  if (p[cle].length === 0) p[cle].push('');
+  p[cle].push('');
+  persist();
+  renderPatterns();
+}
+function retirerDePattern(id, cle, index) {
+  ensureM4();
+  const p = state.m4.patterns.find(x => x.id === id);
+  if (!p || !Array.isArray(p[cle])) return;
+  p[cle].splice(index, 1);
+  persist();
+  renderPatterns();
+}
+// Prolonger la séquence : la conséquence appelle une réponse de l'entourage,
+// qui produit à son tour un comportement. C'est le CD post-intervention.
+function amorcerCDSuivant(id) {
+  ensureM4();
+  const p = state.m4.patterns.find(x => x.id === id);
+  if (!p) return;
+  const cps = getCatsForSlot('cp');
+  p.b2 = cps.length ? cps[0].id : ' ';
+  persist();
+  renderPatterns();
 }
 
 function supprimerPattern(id) {
