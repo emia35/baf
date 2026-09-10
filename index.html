@@ -1591,6 +1591,21 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
 .qual-body .empty{font-style:italic;color:var(--line);}
 .cot-label-banner{font-size:13px;font-weight:700;color:var(--slate);margin:14px 0 8px;padding:6px 10px;background:var(--coral-pale);border-radius:5px;}
 
+/* Volet laissé vide par le déclarant : visible mais visiblement creux */
+.m3-item.item-vide{
+  border-style:dashed;
+  background:transparent;
+}
+.m3-item.item-vide .m3-item-text{color:var(--ink-soft);font-style:italic;}
+
+/* Signalement passager d'un item qu'on vient de rejoindre depuis une catégorie */
+@keyframes viser{
+  0%{box-shadow:0 0 0 0 var(--teal);}
+  25%{box-shadow:0 0 0 4px var(--teal-pale);}
+  100%{box-shadow:0 0 0 0 rgba(0,0,0,0);}
+}
+.m3-item.item-vise{animation:viser 1.6s ease-out;border-color:var(--teal);}
+
 /* ── REPÈRES : questions/réponses repliées ── */
 .repere-q{
   border-bottom:1px solid var(--line-soft);
@@ -3379,15 +3394,16 @@ const ETAPES = [
         </div>
         <div class="field">
           <label for="f-heure">Heure approximative</label>
-          <input type="time" id="f-heure" value="${esc(d.heure||'')}">
+          <input type="time" id="f-heure" value="${esc(d.heure||'')}" onchange="verifierCoherenceHeureMoment()">
         </div>
         <div class="field">
           <label>Moment de la journée</label>
-          <div class="choice-row" id="f-moment">
+          <div class="choice-row" id="f-moment" onchange="verifierCoherenceHeureMoment()">
             ${momentOptions().map(m =>
               `<label><input type="radio" name="fmoment" value="${esc(m)}" ${d.moment===m?'checked':''}> ${esc(m)}</label>`
             ).join('')}
           </div>
+          <div id="f-moment-alerte" class="ethique" style="display:none;background:var(--amber-pale);border-left:3px solid var(--coral-deep);margin-top:10px;padding:10px 14px;font-size:13px;"></div>
           <div class="field" style="margin-top:8px;">
             <label for="f-moment-precision">Précision sur le moment (facultatif)</label>
             <input type="text" id="f-moment-precision" value="${esc(d.momentPrecision||'')}" placeholder="ex : tout début de l'activité, juste avant le brossage de dents...">
@@ -3803,6 +3819,49 @@ function momentOptions() {
   }
   return opts;
 }
+// Cohérence entre l'heure saisie et le moment coché. Purement indicatif : on
+// signale, on ne bloque pas — l'exception (un évènement hors du créneau
+// habituel) est fréquente et parfaitement légitime.
+function creneauDuMoment(momentLabel) {
+  if (!momentLabel) return null;
+  if (/^Nuit \(/.test(momentLabel)) {
+    const m = momentLabel.match(/\((\d{1,2}h\d{2})[–-](\d{1,2}h\d{2})\)/);
+    return m ? {debut: m[1], fin: m[2], nuit: true} : null;
+  }
+  const base = momentLabel.replace(/\s*\([^)]*\)\s*$/, '').trim();
+  const horaire = momentLabel.match(/\((\d{1,2}h\d{2})[–-](\d{1,2}h\d{2})\)/);
+  const candidats = (state.m1.journeeCreneaux || []).filter(c => c.nom === base);
+  if (!candidats.length) return null;
+  // Créneaux homonymes : le libellé porte les heures, on prend celui-là.
+  if (horaire) {
+    const exact = candidats.find(c => c.debut === horaire[1] && c.fin === horaire[2]);
+    if (exact) return exact;
+  }
+  return candidats[0];
+}
+
+function verifierCoherenceHeureMoment() {
+  const box = document.getElementById('f-moment-alerte');
+  if (!box) return;
+  const heure = val('f-heure');
+  const moment = radioVal('fmoment');
+  const creneau = creneauDuMoment(moment);
+  if (!heure || !moment || !creneau) { box.style.display = 'none'; return; }
+
+  const enMinutes = (s) => {
+    const m = (s||'').match(/(\d{1,2})[h:](\d{2})/);
+    return m ? parseInt(m[1],10)*60 + parseInt(m[2],10) : null;
+  };
+  const h = enMinutes(heure), d = enMinutes(creneau.debut), f = enMinutes(creneau.fin);
+  if (h === null || d === null || f === null) { box.style.display = 'none'; return; }
+
+  // Un créneau de nuit enjambe minuit : la fin est "avant" le début.
+  const dedans = (d <= f) ? (h >= d && h <= f) : (h >= d || h <= f);
+  if (dedans) { box.style.display = 'none'; return; }
+  box.style.display = '';
+  box.innerHTML = `⚠ Vous avez indiqué <b>${esc(heure.replace(':','h'))}</b>, mais le moment « ${esc(moment)} » correspond à <b>${esc(creneau.debut)}–${esc(creneau.fin)}</b> dans la journée type. Ce n'est pas bloquant — si l'évènement a bien eu lieu hors du créneau habituel, laissez tel quel.`;
+}
+
 function checkVals(name) {
   return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(el=>el.value);
 }
@@ -5257,7 +5316,7 @@ const M3_SOUS = [
   },
   {
     id: 'consequences',
-    label: 'Conséquences', icon: '🔄',
+    label: 'Conséquences', icon: '⏭',
     help: 'Ce que la personne a obtenu ou évité suite au comportement. C\'est souvent là que la fonction du comportement se lit. Un CD apparu après une intervention (badge « post-intervention ») est aussi affiché ici : il est la conséquence directe de cette intervention.',
     placeholder: 'ex : Obtient attention, Évite consigne, Accès à un objet, Sortie de la situation…',
     extract: (evt) => {
@@ -5313,8 +5372,10 @@ function extraireItems(sousId) {
   (state.m2.evenements || []).forEach((evt, evtIdx) => {
     if (!evt.id) evt.id = 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
     const extraits = sous.extract(evt);
+    let produits = 0;
     extraits.forEach((texte, i) => {
       if (texte && texte.trim()) {
+        produits++;
         const isPost = texte.startsWith('§POST§');
         const isDecl = texte.startsWith('§DECL§');
         items.push({
@@ -5328,6 +5389,23 @@ function extraireItems(sousId) {
         });
       }
     });
+    // Un volet laissé vide reste visible : c'est un manque à voir, pas un
+    // évènement à faire disparaître. Il est catégorisable si l'analyse veut le
+    // qualifier, mais il ne compte pas dans le taux de catégorisation — sinon
+    // un dossier peu rempli afficherait un taux bas alors qu'il n'y a rien à
+    // catégoriser. Rien n'est écrit dans l'évènement : c'est calculé à la lecture.
+    if (produits === 0) {
+      items.push({
+        id: `e${evt.id}_vide`,
+        evtIdx,
+        texte: 'Non renseigné',
+        tag: 'non-renseigne',
+        vide: true,
+        date: evt.date || '',
+        heure: evt.heure || '',
+        moment: evt.moment || '',
+      });
+    }
   });
   return items;
 }
@@ -5384,7 +5462,8 @@ function computeM3Categorisation() {
   ensureM3();
   let total = 0, assignes = 0;
   M3_SOUS.forEach(s => {
-    const items = extraireItems(s.id);
+    // Les volets non renseignés sont exclus : il n'y a rien à catégoriser.
+    const items = extraireItems(s.id).filter(it => !it.vide);
     total += items.length;
     assignes += items.filter(it => catDunItem(s.id, it.id).length > 0).length;
   });
@@ -5412,9 +5491,7 @@ function renderM3() {
   // Onglets
   const tabsEl = document.getElementById('m3-tabs');
   tabsEl.innerHTML = M3_SOUS.map(s => {
-    const items = extraireItems(s.id);
-    const cats = state.m3.categories[s.id] || {};
-    const nCat = Object.keys(cats).length;
+    const items = extraireItems(s.id).filter(it => !it.vide);
     const nAssignes = items.filter(it => catDunItem(s.id, it.id).length > 0).length;
     const isOn = state.m3.sous === s.id;
     return `<button class="m3-tab${isOn?' on':''}" onclick="changerSous('${s.id}')">
@@ -5442,7 +5519,11 @@ function renderM3Sous(sousId) {
 
   // Titre et help colonne gauche
   document.getElementById('m3-items-title').textContent = sous.icon + ' ' + sous.label + ' décrits';
-  document.getElementById('m3-items-count').textContent = items.length + ' élément' + (items.length > 1 ? 's' : '');
+  const nVides = items.filter(it => it.vide).length;
+  const nReels = items.length - nVides;
+  document.getElementById('m3-items-count').innerHTML =
+    nReels + ' élément' + (nReels > 1 ? 's' : '') +
+    (nVides > 0 ? ` <span style="color:var(--coral-deep);">· ${nVides} non renseigné${nVides>1?'s':''}</span>` : '');
   document.getElementById('m3-items-help').textContent = sous.help;
 
   // ── Colonne gauche : items ──────────────────────────────────────
@@ -5467,11 +5548,12 @@ function renderM3Sous(sousId) {
       const dateStr = item.date ? formatDate(item.date) : '';
       const src = [dateStr, item.moment].filter(Boolean).join(' · ');
       const cpLabel = cpLabels && cpLabels[item.id] ? `<span class="m3-item-tag-post" style="background:var(--slate);">${cpLabels[item.id]}</span>` : '';
-      return `<div class="m3-item${catIds.length>0?' categorise':''}" onclick="ouvrirAssign('${sousId}','${item.id}',event)">
+      return `<div class="m3-item${catIds.length>0?' categorise':''}${item.vide?' item-vide':''}" data-item-id="${esc(item.id)}" onclick="ouvrirAssign('${sousId}','${item.id}',event)">
         <div style="flex:1">
           ${cpLabel}
           ${item.tag==='post-intervention' ? `<span class="m3-item-tag-post">post-intervention</span>` : ''}
           ${item.tag==='presume-declencheur' ? `<span class="m3-item-tag-post" style="background:var(--teal-deep);" title="Le déclarant pense que c'est ce qui a déclenché — à vous d'en juger">présumé déclencheur</span>` : ''}
+          ${item.vide ? `<span class="m3-item-tag-post" style="background:var(--line);color:var(--ink-soft);" title="Ce volet n'a pas été rempli par le déclarant">non renseigné</span>` : ''}
           <div class="m3-item-text">${esc(item.texte)}</div>
           ${src ? `<div class="m3-item-source">Évt. ${item.evtIdx+1}${src?' — '+src:''}</div>` : ''}
           <div style="margin-top:5px;">${catBadge}</div>
@@ -5504,7 +5586,7 @@ function renderM3Sous(sousId) {
           ${catItems.length === 0
             ? `<div class="m3-cat-empty">Cliquez sur un élément à gauche pour l\'assigner ici.</div>`
             : catItems.map(it => `
-              <span class="m3-cat-item-chip">
+              <span class="m3-cat-item-chip" onclick="allerVersItem('${it.id}')" title="Voir cet élément dans la colonne de gauche" style="cursor:pointer;">
                 ${esc(it.texte.length > 50 ? it.texte.substring(0,50)+'…' : it.texte)}
                 <button onclick="retirerDeUneCat('${sousId}','${it.id}','${catId}',event)" title="Retirer">×</button>
               </span>`).join('')
@@ -5625,6 +5707,19 @@ function retirerDeUneCat(sousId, itemId, catId, event) {
   renderM3Tabs();
 }
 
+// Depuis une catégorie, retrouver l'élément d'origine dans la colonne de
+// gauche : quand une catégorie contient vingt items, les relire un par un dans
+// la liste complète est fastidieux.
+function allerVersItem(itemId) {
+  const el = document.querySelector(`.m3-item[data-item-id="${itemId}"]`);
+  if (!el) return;
+  el.scrollIntoView({block:'center', behavior:'smooth'});
+  el.classList.remove('item-vise');
+  void el.offsetWidth; // relancer l'animation si on reclique sur le même item
+  el.classList.add('item-vise');
+  setTimeout(() => el.classList.remove('item-vise'), 1600);
+}
+
 function ajouterCategorie() {
   ensureM3();
   const sousId = state.m3.sous;
@@ -5645,6 +5740,9 @@ function ajouterCategorie() {
 function renommerCat(sousId, catId, nom) {
   ensureM3();
   if (state.m3.categories[sousId] && state.m3.categories[sousId][catId]) {
+    // Majuscule d'office : une liste de catégories mi-capitalisées se lit mal,
+    // et personne n'a envie d'y penser en pleine catégorisation.
+    nom = (nom || '').replace(/^\s*(\p{Ll})/u, (m, c) => m.replace(c, c.toUpperCase()));
     state.m3.categories[sousId][catId].nom = nom;
     persist();
     renderM3Tabs(); // mettre à jour les badges
@@ -5669,7 +5767,9 @@ function renderM3Tabs() {
   const tabsEl = document.getElementById('m3-tabs');
   if (!tabsEl) return;
   tabsEl.innerHTML = M3_SOUS.map(s => {
-    const items = extraireItems(s.id);
+    // Le compteur porte sur les items réels : un volet non renseigné n'a rien
+    // à catégoriser et gonflerait le dénominateur sans raison.
+    const items = extraireItems(s.id).filter(it => !it.vide);
     const nAssignes = items.filter(it => catDunItem(s.id, it.id).length > 0).length;
     const isOn = state.m3.sous === s.id;
     return `<button class="m3-tab${isOn?' on':''}" onclick="changerSous('${s.id}')">
