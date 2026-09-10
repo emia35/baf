@@ -1939,24 +1939,30 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
         </div>
       </div>
 
-      <div class="field">
-        <label>Jours d'accueil habituels <button type="button" id="btn-cocher-jours" class="btn-link" onclick="toggleTousJours()" style="font-size:12px;font-weight:600;color:var(--coral-deep);background:none;border:none;cursor:pointer;margin-left:8px;padding:0;">Tout cocher</button></label>
-        <div class="choice-row" id="m1-jours">
-          <label><input type="checkbox" value="lundi" onchange="saveM1()"> Lundi</label>
-          <label><input type="checkbox" value="mardi" onchange="saveM1()"> Mardi</label>
-          <label><input type="checkbox" value="mercredi" onchange="saveM1()"> Mercredi</label>
-          <label><input type="checkbox" value="jeudi" onchange="saveM1()"> Jeudi</label>
-          <label><input type="checkbox" value="vendredi" onchange="saveM1()"> Vendredi</label>
-          <label><input type="checkbox" value="samedi" onchange="saveM1()"> Samedi</label>
-          <label><input type="checkbox" value="dimanche" onchange="saveM1()"> Dimanche</label>
+      <!-- Un seul lieu : présentation inchangée. Deux lieux ou plus : un bloc
+           jours/heures par lieu, rendu dans #m1-jours-heures-multi. -->
+      <div id="m1-jours-heures-simple">
+        <div class="field">
+          <label>Jours d'accueil habituels <button type="button" id="btn-cocher-jours" class="btn-link" onclick="toggleTousJours()" style="font-size:12px;font-weight:600;color:var(--coral-deep);background:none;border:none;cursor:pointer;margin-left:8px;padding:0;">Tout cocher</button></label>
+          <div class="choice-row" id="m1-jours">
+            <label><input type="checkbox" value="lundi" onchange="saveM1()"> Lundi</label>
+            <label><input type="checkbox" value="mardi" onchange="saveM1()"> Mardi</label>
+            <label><input type="checkbox" value="mercredi" onchange="saveM1()"> Mercredi</label>
+            <label><input type="checkbox" value="jeudi" onchange="saveM1()"> Jeudi</label>
+            <label><input type="checkbox" value="vendredi" onchange="saveM1()"> Vendredi</label>
+            <label><input type="checkbox" value="samedi" onchange="saveM1()"> Samedi</label>
+            <label><input type="checkbox" value="dimanche" onchange="saveM1()"> Dimanche</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="m1-heures">Heures d'accueil habituelles</label>
+          <div class="help">La famille indique les heures où la personne est chez elle ; l'institution ses heures d'ouverture.</div>
+          <input type="text" id="m1-heures" placeholder="ex : 9h-17h, ou 7h-8h30 et 17h-21h..." oninput="saveM1()">
         </div>
       </div>
 
-      <div class="field">
-        <label for="m1-heures">Heures d'accueil habituelles</label>
-        <div class="help">La famille indique les heures où la personne est chez elle ; l'institution ses heures d'ouverture.</div>
-        <input type="text" id="m1-heures" placeholder="ex : 9h-17h, ou 7h-8h30 et 17h-21h..." oninput="saveM1()">
-      </div>
+      <div id="m1-jours-heures-multi" style="display:none;"></div>
 
       <div class="field">
         <label>Heures de coucher / lever <span style="font-weight:400;color:var(--ink-soft);">(facultatif)</span></label>
@@ -2892,9 +2898,21 @@ function saveM1(){
   state.m1.prenom = document.getElementById('m1-prenom').value;
   state.m1.age = document.getElementById('m1-age').value;
   state.m1.diag = document.getElementById('m1-diag').value;
+  const lieuxAvant = lieuxDeclares();
   state.m1.lieux = Array.from(document.querySelectorAll('#m1-lieux input:checked')).map(i=>i.value);
-  state.m1.jours = Array.from(document.querySelectorAll('#m1-jours input:checked')).map(i=>i.value);
-  state.m1.heures = document.getElementById('m1-heures').value;
+  const lieuxApres = lieuxDeclares();
+  // Les jours/heures globaux ne sont saisis directement qu'en mono-lieu ;
+  // au-delà, ils sont dérivés des blocs par lieu (voir saveLieuDetail).
+  if (lieuxApres.length < 2) {
+    state.m1.jours = Array.from(document.querySelectorAll('#m1-jours input:checked')).map(i=>i.value);
+    state.m1.heures = document.getElementById('m1-heures').value;
+  }
+  // En passant de un à plusieurs lieux, c'est le lieu déjà déclaré qui hérite
+  // des jours et heures saisis jusque-là.
+  const amorce = (lieuxAvant.length === 1 && lieuxApres.length > 1) ? lieuxAvant[0].cle : undefined;
+  ensureLieuxDetail(amorce);
+  synchroniserJoursHeuresGlobaux();
+  if (lieuxAvant.length !== lieuxApres.length) renderJoursHeures();
   state.m1.coucher = document.getElementById('m1-coucher').value;
   state.m1.lever = document.getElementById('m1-lever').value;
   // journeeCreneaux est mis à jour directement par updateCreneau/ajouterCreneau
@@ -2937,22 +2955,141 @@ function computeM1Pct() {
   return Math.round(remplis / champs.length * 100);
 }
 
+/* ── Jours et heures d'accueil, par lieu ─────────────────────────────
+   Tant qu'il n'y a qu'un seul lieu, l'écran reste celui d'avant : une liste de
+   jours et un champ d'heures. Dès qu'il y en a deux, chaque lieu reçoit ses
+   propres jours et heures — un jeune peut être en institution du lundi au
+   vendredi et en famille le week-end.
+   state.m1.jours / state.m1.heures restent maintenus comme résumé de
+   l'ensemble, pour que tout ce qui les lit déjà continue de fonctionner. */
+const LIEUX_LABELS = {famille:'Famille', institution:'Institution', ecole:'École', travail:'Travail / ESAT'};
+
+function lieuxDeclares() {
+  const out = (state.m1.lieux || []).map(cle => ({cle, label: LIEUX_LABELS[cle] || cle}));
+  (state.m1.lieuxCustom || []).forEach(nom => out.push({cle: nom, label: nom}));
+  return out;
+}
+
+// cleAAmorcer : le lieu qui doit récupérer les jours/heures déjà saisis, quand
+// on passe de un à plusieurs lieux. C'est le lieu qui était là AVANT, pas le
+// premier de la liste — state.m1.lieux suit l'ordre des cases à cocher, pas
+// l'ordre dans lequel les lieux ont été déclarés.
+function ensureLieuxDetail(cleAAmorcer) {
+  if (!state.m1.lieuxDetail || typeof state.m1.lieuxDetail !== 'object') state.m1.lieuxDetail = {};
+  const lieux = lieuxDeclares();
+  const vierge = Object.keys(state.m1.lieuxDetail).length === 0;
+  // Données déjà multi-lieux mais sans détail (import d'un ancien fichier) :
+  // à défaut de mieux, le premier lieu récupère les jours/heures globaux.
+  if (cleAAmorcer === undefined && vierge && lieux.length >= 2) cleAAmorcer = lieux[0].cle;
+  lieux.forEach(l => {
+    if (!state.m1.lieuxDetail[l.cle]) {
+      state.m1.lieuxDetail[l.cle] = (l.cle === cleAAmorcer)
+        ? {jours: (state.m1.jours || []).slice(), heures: state.m1.heures || ''}
+        : {jours: [], heures: ''};
+    }
+  });
+  // Nettoyer les lieux retirés
+  Object.keys(state.m1.lieuxDetail).forEach(cle => {
+    if (!lieux.some(l => l.cle === cle)) delete state.m1.lieuxDetail[cle];
+  });
+  return state.m1.lieuxDetail;
+}
+
+// Résumé tous lieux confondus, pour tout ce qui raisonne sur "les jours où la
+// personne est accueillie quelque part".
+function synchroniserJoursHeuresGlobaux() {
+  const lieux = lieuxDeclares();
+  if (lieux.length < 2) return;
+  const detail = ensureLieuxDetail();
+  const ORDRE = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'];
+  const jours = new Set();
+  const heures = [];
+  lieux.forEach(l => {
+    (detail[l.cle].jours || []).forEach(j => jours.add(j));
+    const h = (detail[l.cle].heures || '').trim();
+    if (h) heures.push(l.label + ' : ' + h);
+  });
+  state.m1.jours = ORDRE.filter(j => jours.has(j));
+  state.m1.heures = heures.join(' · ');
+}
+
+function renderJoursHeures() {
+  const simple = document.getElementById('m1-jours-heures-simple');
+  const multi = document.getElementById('m1-jours-heures-multi');
+  if (!simple || !multi) return;
+  const lieux = lieuxDeclares();
+
+  if (lieux.length < 2) {
+    simple.style.display = '';
+    multi.style.display = 'none';
+    multi.innerHTML = '';
+    return;
+  }
+
+  const detail = ensureLieuxDetail();
+  simple.style.display = 'none';
+  multi.style.display = '';
+  const JOURS = [['lundi','Lundi'],['mardi','Mardi'],['mercredi','Mercredi'],['jeudi','Jeudi'],['vendredi','Vendredi'],['samedi','Samedi'],['dimanche','Dimanche']];
+  multi.innerHTML = `
+    <div class="field">
+      <label>Jours et heures d'accueil, par lieu</label>
+      <div class="help">La personne est accueillie sur plusieurs lieux : précisez pour chacun quand elle s'y trouve. C'est ce qui permettra, plus tard, de savoir où elle était au moment d'un évènement.</div>
+    </div>
+    ${lieux.map((l, i) => `
+      <div class="card" style="background:var(--paper);margin-bottom:12px;">
+        <div style="font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:10px;">${esc(l.label)}</div>
+        <div class="field">
+          <label style="font-size:12px;color:var(--ink-soft);">Jours</label>
+          <div class="choice-row" id="m1-jours-lieu-${i}">
+            ${JOURS.map(([v, lab]) => `<label><input type="checkbox" value="${v}" ${(detail[l.cle].jours||[]).includes(v)?'checked':''} onchange="saveLieuDetail(${i})"> ${lab}</label>`).join('')}
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label for="m1-heures-lieu-${i}" style="font-size:12px;color:var(--ink-soft);">Heures</label>
+          <input type="text" id="m1-heures-lieu-${i}" value="${esc(detail[l.cle].heures||'')}" placeholder="ex : 9h-17h, ou 17h-21h et week-end complet..." oninput="saveLieuDetail(${i})">
+        </div>
+      </div>`).join('')}
+  `;
+}
+
+function saveLieuDetail(i) {
+  const lieux = lieuxDeclares();
+  const l = lieux[i];
+  if (!l) return;
+  const detail = ensureLieuxDetail();
+  detail[l.cle].jours = Array.from(document.querySelectorAll(`#m1-jours-lieu-${i} input:checked`)).map(x => x.value);
+  const h = document.getElementById(`m1-heures-lieu-${i}`);
+  detail[l.cle].heures = h ? h.value : '';
+  synchroniserJoursHeuresGlobaux();
+  persist();
+  renderGrilleSemaine();
+  verifierCouvertureHoraire();
+  refreshM1Progress();
+}
+
 function ajouterLieuCustom() {
   const input = document.getElementById('m1-lieu-custom-input');
   const val = (input.value||'').trim();
   if (!val) return;
   if (!Array.isArray(state.m1.lieuxCustom)) state.m1.lieuxCustom = [];
+  const avant = lieuxDeclares();
   state.m1.lieuxCustom.push(val);
   input.value = '';
+  ensureLieuxDetail(avant.length === 1 ? avant[0].cle : undefined);
+  synchroniserJoursHeuresGlobaux();
   persist();
   renderLieuxCustom();
+  renderJoursHeures();
   refreshM1Progress();
 }
 function retirerLieuCustom(idx) {
   if (!Array.isArray(state.m1.lieuxCustom)) return;
   state.m1.lieuxCustom.splice(idx,1);
+  ensureLieuxDetail();
+  synchroniserJoursHeuresGlobaux();
   persist();
   renderLieuxCustom();
+  renderJoursHeures();
   refreshM1Progress();
 }
 function renderLieuxCustom() {
@@ -3020,6 +3157,7 @@ function loadM1FromState(){
   document.getElementById('m1-diag').value = state.m1.diag || '';
   document.querySelectorAll('#m1-lieux input').forEach(i=>{ i.checked = (state.m1.lieux||[]).includes(i.value); });
   renderLieuxCustom();
+  renderJoursHeures();
   document.querySelectorAll('#m1-jours input').forEach(i=>{ i.checked = (state.m1.jours||[]).includes(i.value); });
   updateBtnTousJours();
   document.getElementById('m1-heures').value = state.m1.heures || '';
