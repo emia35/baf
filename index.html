@@ -1591,6 +1591,15 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
 .qual-body .empty{font-style:italic;color:var(--line);}
 .cot-label-banner{font-size:13px;font-weight:700;color:var(--slate);margin:14px 0 8px;padding:6px 10px;background:var(--coral-pale);border-radius:5px;}
 
+/* Sous-catégorie : rattachée visuellement à sa catégorie parente */
+.m3-cat-enfant{
+  margin:8px 0 0 18px;
+  border-left:2px solid var(--line);
+  border-radius:0 var(--radius-sm) var(--radius-sm) 0;
+  background:var(--paper);
+}
+.m3-cat-enfant .m3-cat-name{font-size:13px;}
+
 /* Volet laissé vide par le déclarant : visible mais visiblement creux */
 .m3-item.item-vide{
   border-style:dashed;
@@ -4658,7 +4667,9 @@ function catsDeEvt(sousId, evtId) {
     const items = cat.items || [];
     // L'item ID est de la forme "e{evtId}_partIdx"
     const match = items.some(itemId => itemId.startsWith(`e${evtId}_`));
-    if (match && cat.nom) result.push(cat.nom);
+    // Une sous-catégorie est nommée par son chemin complet ("Taper › Contre un
+    // pair") : c'est la distinction fine qui a de la valeur dans les croisements.
+    if (match && cat.nom) result.push(cheminCat(sousId, catId));
   });
   return result;
 }
@@ -5541,7 +5552,7 @@ function renderM3Sous(sousId) {
             const cat = cats[cid];
             if (!cat) return '';
             return `<span class="m3-item-cat-badge" style="background:${cat.color||'var(--teal)'};" onclick="retirerDeUneCat('${sousId}','${item.id}','${cid}',event)">
-             ${esc(cat.nom)} ×
+             ${esc(cheminCat(sousId, cid))} ×
            </span>`;
           }).join(' ')
         : `<span style="font-size:11.5px;color:var(--ink-soft);font-style:italic;">Non catégorisé — cliquez pour assigner</span>`;
@@ -5564,22 +5575,25 @@ function renderM3Sous(sousId) {
 
   // ── Colonne droite : catégories ─────────────────────────────────
   const catsEl = document.getElementById('m3-cats-list');
-  const catKeys = Object.keys(cats);
+  const racines = catsRacines(sousId);
 
-  if (catKeys.length === 0) {
+  if (Object.keys(cats).length === 0) {
     catsEl.innerHTML = `<div class="event-empty">Aucune catégorie créée. Cliquez sur "Ajouter une catégorie" pour commencer.</div>`;
   } else {
-    catsEl.innerHTML = catKeys.map((catId, idx) => {
+    const blocCat = (catId, idx, estEnfant) => {
       const cat = cats[catId];
+      if (!cat) return '';
       const catItems = (cat.items || []).map(itemId => items.find(it => it.id === itemId)).filter(Boolean);
       const color = cat.color || catColorFor(idx);
-      return `<div class="m3-cat" id="mcat-${catId}">
+      const enfants = estEnfant ? [] : catsEnfants(sousId, catId);
+      return `<div class="m3-cat${estEnfant?' m3-cat-enfant':''}" id="mcat-${catId}">
         <div class="m3-cat-header">
           <div class="m3-cat-color" style="background:${color};"></div>
           <input class="m3-cat-name" value="${esc(cat.nom)}"
             onchange="renommerCat('${sousId}','${catId}',this.value)"
-            placeholder="Nom de la catégorie">
+            placeholder="${estEnfant ? 'Nom de la sous-catégorie' : 'Nom de la catégorie'}">
           <span class="m3-cat-count">${catItems.length} élément${catItems.length>1?'s':''}</span>
+          ${estEnfant ? '' : `<button class="m3-cat-del" onclick="ajouterSousCategorie('${sousId}','${catId}')" title="Ajouter une sous-catégorie" style="color:var(--coral-deep);">＋</button>`}
           <button class="m3-cat-del" onclick="supprimerCat('${sousId}','${catId}')" title="Supprimer cette catégorie">✕</button>
         </div>
         <div class="m3-cat-items">
@@ -5592,9 +5606,51 @@ function renderM3Sous(sousId) {
               </span>`).join('')
           }
         </div>
+        ${enfants.map((e, j) => blocCat(e, idx + j + 1, true)).join('')}
       </div>`;
-    }).join('');
+    };
+    catsEl.innerHTML = racines.map((catId, idx) => blocCat(catId, idx, false)).join('');
   }
+}
+
+/* ── Sous-catégories : un seul niveau ────────────────────────────────
+   « Taper » peut se décliner en « contre un pro » et « contre un pair ».
+   La distinction sert à l'analyse (histogrammes, patterns, exploration), donc
+   une sous-catégorie est une catégorie à part entière, simplement rattachée à
+   une autre. On s'arrête à un niveau : au-delà, la lecture des graphiques
+   devient illisible pour un gain discutable. */
+function catsRacines(sousId) {
+  const cats = state.m3.categories[sousId] || {};
+  return Object.keys(cats).filter(id => !cats[id].parent || !cats[cats[id].parent]);
+}
+function catsEnfants(sousId, parentId) {
+  const cats = state.m3.categories[sousId] || {};
+  return Object.keys(cats).filter(id => cats[id].parent === parentId);
+}
+// "Taper › Contre un pair" — le chemin complet, pour les badges et les stats.
+function cheminCat(sousId, catId) {
+  const cats = state.m3.categories[sousId] || {};
+  const cat = cats[catId];
+  if (!cat) return '';
+  const parent = cat.parent && cats[cat.parent];
+  return parent ? `${parent.nom} › ${cat.nom}` : cat.nom;
+}
+
+function ajouterSousCategorie(sousId, parentId) {
+  ensureM3();
+  const cats = state.m3.categories[sousId];
+  const parent = cats[parentId];
+  if (!parent) return;
+  const idx = Object.keys(cats).length;
+  const catId = 'cat_' + Date.now() + '_' + Math.random().toString(36).slice(2,5);
+  cats[catId] = {nom: 'Sous-catégorie', color: parent.color || catColorFor(idx), items: [], parent: parentId};
+  persist();
+  renderM3Sous(sousId);
+  renderM3Tabs();
+  setTimeout(() => {
+    const input = document.querySelector(`#mcat-${catId} .m3-cat-name`);
+    if (input) { input.focus(); input.select(); }
+  }, 50);
 }
 
 // Ouvrir le popup d\'assignation au clic sur un item
@@ -5619,14 +5675,18 @@ function assignPopupContent(sousId, itemId) {
     <div class="m3-assign-list">
     ${catKeys.length === 0
       ? `<div style="font-size:12.5px;color:var(--ink-soft);font-style:italic;margin-bottom:8px;">Créez d\'abord une catégorie.</div>`
-      : catKeys.map(catId => {
-          const cat = cats[catId];
-          const isActive = activeCatIds.includes(catId);
-          return `<button class="m3-assign-opt" style="${isActive?'background:var(--teal-pale);color:var(--teal-deep);':''}"
-            onclick="assignerItem('${sousId}','${itemId}','${catId}')">
-            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${cat.color||'var(--teal)'};margin-right:6px;vertical-align:middle;"></span>
-            ${esc(cat.nom)}${isActive?' ✓':''}
-          </button>`;
+      : catsRacines(sousId).map(catId => {
+          const ligne = (id, estEnfant) => {
+            const cat = cats[id];
+            if (!cat) return '';
+            const isActive = activeCatIds.includes(id);
+            return `<button class="m3-assign-opt" style="${isActive?'background:var(--teal-pale);color:var(--teal-deep);':''}${estEnfant?'padding-left:26px;font-weight:500;':''}"
+              onclick="assignerItem('${sousId}','${itemId}','${id}')">
+              <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${cat.color||'var(--teal)'};margin-right:6px;vertical-align:middle;${estEnfant?'opacity:.55;':''}"></span>
+              ${estEnfant ? '<span style="color:var(--ink-soft);">↳ </span>' : ''}${esc(cat.nom)}${isActive?' ✓':''}
+            </button>`;
+          };
+          return ligne(catId, false) + catsEnfants(sousId, catId).map(e => ligne(e, true)).join('');
         }).join('')
     }
     </div>
@@ -5752,7 +5812,12 @@ function renommerCat(sousId, catId, nom) {
 
 function supprimerCat(sousId, catId) {
   ensureM3();
-  if (!confirm('Supprimer cette catégorie ? Les assignations seront perdues.')) return;
+  const enfants = catsEnfants(sousId, catId);
+  const message = enfants.length > 0
+    ? `Supprimer cette catégorie et ses ${enfants.length} sous-catégorie${enfants.length>1?'s':''} ? Les assignations seront perdues.`
+    : 'Supprimer cette catégorie ? Les assignations seront perdues.';
+  if (!confirm(message)) return;
+  enfants.forEach(id => delete state.m3.categories[sousId][id]);
   delete state.m3.categories[sousId][catId];
   persist();
   renderM3Sous(sousId);
@@ -5819,7 +5884,16 @@ function changerSousM4(sous) {
 function getCatsForSlot(sousM3Id) {
   ensureM3();
   const cats = state.m3.categories[sousM3Id] || {};
-  return Object.entries(cats).map(([id, cat]) => ({id, nom: cat.nom, color: cat.color || '#1F7A6C'}));
+  // Parents et sous-catégories sont proposés côte à côte, les secondes
+  // désignées par leur chemin complet pour rester compréhensibles hors contexte.
+  const out = [];
+  catsRacines(sousM3Id).forEach(id => {
+    out.push({id, nom: cats[id].nom, color: cats[id].color || '#1F7A6C'});
+    catsEnfants(sousM3Id, id).forEach(e => {
+      out.push({id: e, nom: '   ↳ ' + cats[e].nom, color: cats[e].color || '#1F7A6C'});
+    });
+  });
+  return out;
 }
 
 function buildCatOptions(sousM3Id, selectedId, placeholder) {
