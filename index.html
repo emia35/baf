@@ -2415,6 +2415,19 @@ function migrerVocabulaireEffet() {
   });
 }
 
+// La case à cocher "Autre" des lieux d'accueil a été remplacée par une liste de
+// lieux nommés librement. Sans cette bascule, un "autre" coché avant ce
+// changement n'a plus de case correspondante : il s'affiche brut en synthèse et
+// disparaît silencieusement à la première modification du préambule.
+function migrerLieuAutre() {
+  if (!state.m1) return;
+  if (!Array.isArray(state.m1.lieuxCustom)) state.m1.lieuxCustom = [];
+  if (!Array.isArray(state.m1.lieux)) { state.m1.lieux = []; return; }
+  if (!state.m1.lieux.includes('autre')) return;
+  state.m1.lieux = state.m1.lieux.filter(l => l !== 'autre');
+  if (!state.m1.lieuxCustom.includes('Autre lieu')) state.m1.lieuxCustom.push('Autre lieu');
+}
+
 function migrerIdsCategorisation() {
   (state.m2.evenements || []).forEach(evt => {
     if (!evt.id) evt.id = 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
@@ -2461,6 +2474,7 @@ function migrerIdsCategorisation() {
     if (state.m3) state.m3._idsMigratedV2 = true;
   }
   migrerVocabulaireEffet();
+  migrerLieuAutre();
 }
 
 const STORAGE_KEY = 'baf_emia35_state_v1';
