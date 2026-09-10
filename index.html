@@ -2319,10 +2319,27 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
     </div>
 
     <div class="actions-row">
-      <button class="btn btn-gold" onclick="exporterJSON()">💾 Exporter cette analyse</button>
-      <button class="btn btn-secondary" onclick="exporterWord()">📄 Exporter en Word</button>
+      <button class="btn btn-gold" onclick="exporterJSON()" title="Fichier de travail, à réimporter dans la BAF">💾 Exporter .json</button>
+      <button class="btn btn-secondary" onclick="ouvrirExportModal()" title="Document Word, à intégrer dans un bilan">📄 Exporter les données</button>
     </div>
   </section>
+
+<!-- Modale de choix des sections à exporter -->
+<div id="export-modal-overlay" class="sim-modal-overlay" style="display:none;" onclick="fermerExportModal(event)">
+  <div class="sim-modal" role="dialog" aria-modal="true" aria-label="Choisir les sections à exporter">
+    <h3>📄 Exporter les données</h3>
+    <p class="sim-modal-sub">Choisissez ce qui doit figurer dans le document Word. Les onglets d'Organiser et d'Interpréter sont tous repris, pas seulement celui affiché à l'écran.</p>
+    <div style="text-align:left;margin:16px 0;display:flex;flex-direction:column;gap:10px;">
+      <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;cursor:pointer;"><input type="checkbox" id="exp-m1" checked> Préambule — apprenons à se connaître</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;cursor:pointer;"><input type="checkbox" id="exp-m2" checked> Recueil des évènements</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;cursor:pointer;"><input type="checkbox" id="exp-m3" checked> Organisation des données</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;cursor:pointer;"><input type="checkbox" id="exp-m4" checked> Interprétation</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;cursor:pointer;"><input type="checkbox" id="exp-synthese" checked> Synthèse</label>
+    </div>
+    <button class="btn btn-gold" style="width:100%;justify-content:center;" onclick="lancerExportWord()">Générer le document Word</button>
+    <button class="sim-modal-close" onclick="fermerExportModal()">Annuler</button>
+  </div>
+</div>
 
 <!-- Modale de choix de simulation -->
 <div id="sim-modal-overlay" class="sim-modal-overlay" style="display:none;" onclick="fermerSimModal(event)">
@@ -4678,52 +4695,131 @@ function exporterJSON(){
 // par Word) reprenant le même contenu que l'impression — pas de dépendance
 // externe, pas de vrai .docx (zip OOXML), mais éditable et intégrable
 // directement dans un bilan.
-function exporterWord(){
-  const main = document.querySelector('main');
-  const clone = main.cloneNode(true);
+// Sections proposées à l'export. La vue est clonée telle qu'elle est rendue.
+const SECTIONS_EXPORT = [
+  {cle:'m1',       label:'Préambule — apprenons à se connaître', vue:'view-m1'},
+  {cle:'m2',       label:'Recueil des évènements',               vue:'view-m2'},
+  {cle:'m3',       label:'Organisation des données',             vue:'view-m3'},
+  {cle:'m4',       label:'Interprétation',                       vue:'view-m4'},
+  {cle:'synthese', label:'Synthèse',                             vue:'view-synthese'},
+];
 
-  // Ne garder que les vues de contenu (pas les pages d'accueil)
-  const exclude = ['view-accueil','view-baf-accueil','view-idc-accueil'];
-  clone.querySelectorAll('section.view').forEach(sec => {
-    if (exclude.includes(sec.id)) { sec.remove(); return; }
-    sec.style.display = 'block';
-  });
+function ouvrirExportModal() {
+  document.getElementById('export-modal-overlay').style.display = 'flex';
+}
+function fermerExportModal(ev) {
+  if (ev && ev.target !== ev.currentTarget) return;
+  document.getElementById('export-modal-overlay').style.display = 'none';
+}
 
-  // Retirer les éléments interactifs / non pertinents pour un rapport
+// Retire l'interactif et fige les valeurs saisies : un input cloné ne conserve
+// pas la valeur affectée en JS (.value), seulement l'attribut d'origine.
+function preparerPourExport(racine) {
   ['.no-print','.accueil-actions','.multiposte-info','.mode-toggle-bar',
    '.mode-approfondi-panel','.m3-tabs','.m4-tabs','.actions-row',
    '#btn-details-toggle','.abc-add-btn','.grad-add-btn','.vase-input-row',
    '.abc-pattern-del','.creneau-del','.creneau-add','.m3-cat-del','.col-del',
    'button','nav','.crumb','.semaine-toolbar','.semaine-tabs','.m3-cat-color',
    '.m3-item-cat-badge'
-  ].forEach(sel => clone.querySelectorAll(sel).forEach(el => el.remove()));
+  ].forEach(sel => racine.querySelectorAll(sel).forEach(el => el.remove()));
 
-  // Geler les valeurs des champs de saisie en texte statique : un input/textarea
-  // cloné ne reflète pas la valeur affectée en JS (.value), seulement l'attribut
-  // d'origine — il faut donc les remplacer par leur valeur affichée actuelle.
-  clone.querySelectorAll('textarea').forEach(el => {
+  racine.querySelectorAll('textarea').forEach(el => {
     const div = document.createElement('div');
     div.textContent = el.value || '';
     el.replaceWith(div);
   });
-  clone.querySelectorAll('select').forEach(el => {
+  racine.querySelectorAll('select').forEach(el => {
     const span = document.createElement('span');
     span.textContent = el.options[el.selectedIndex] ? el.options[el.selectedIndex].text : '';
     el.replaceWith(span);
   });
-  clone.querySelectorAll('input[type=checkbox], input[type=radio]').forEach(el => {
+  racine.querySelectorAll('input[type=checkbox], input[type=radio]').forEach(el => {
     const label = el.closest('label');
     if (!el.checked) { if (label) label.remove(); else el.remove(); return; }
     const span = document.createElement('span');
     span.textContent = (label ? label.textContent : (el.value || '')).trim();
     if (label) label.replaceWith(span); else el.replaceWith(span);
   });
-  clone.querySelectorAll('input').forEach(el => {
+  racine.querySelectorAll('input').forEach(el => {
     const span = document.createElement('span');
     span.textContent = el.value || '';
     el.replaceWith(span);
   });
+  return racine;
+}
 
+// Organiser et Interpréter n'affichent qu'un onglet à la fois : sans ce
+// parcours, l'export ne contenait que l'onglet ouvert et perdait le reste
+// sans le signaler.
+function capturerTousLesOnglets(vueId) {
+  const conteneur = document.createElement('div');
+  if (vueId === 'view-m3') {
+    const avant = state.m3.sous;
+    M3_SOUS.forEach(s => {
+      renderM3Sous(s.id);
+      const ws = document.getElementById('m3-workspace');
+      if (!ws) return;
+      const titre = document.createElement('h3');
+      titre.textContent = s.label;
+      conteneur.appendChild(titre);
+      conteneur.appendChild(ws.cloneNode(true));
+    });
+    renderM3Sous(avant);
+    return conteneur;
+  }
+  if (vueId === 'view-m4') {
+    const avant = state.m4.sous || 'pattern';
+    ['pattern','gradation','vase'].forEach(id => {
+      changerSousM4(id);
+      const bloc = document.getElementById('m4-sous-' + id);
+      if (!bloc) return;
+      const c = bloc.cloneNode(true);
+      c.style.display = 'block';
+      conteneur.appendChild(c);
+    });
+    changerSousM4(avant);
+    return conteneur;
+  }
+  return null;
+}
+
+function lancerExportWord(){
+  const choisies = SECTIONS_EXPORT.filter(s => {
+    const cb = document.getElementById('exp-' + s.cle);
+    return cb && cb.checked;
+  });
+  if (choisies.length === 0) { showToast('Choisissez au moins une section.'); return; }
+  fermerExportModal();
+
+  const clone = document.createElement('div');
+  choisies.forEach(s => {
+    const vue = document.getElementById(s.vue);
+    if (!vue) return;
+    const sec = vue.cloneNode(true);
+    sec.style.display = 'block';
+    // Remplacer le contenu à onglets par la capture de tous les onglets
+    const complet = capturerTousLesOnglets(s.vue);
+    if (complet) {
+      const cible = sec.querySelector('#m3-rapide-content') || sec.querySelector('#m4-rapide-content');
+      if (cible) { cible.innerHTML = ''; cible.appendChild(complet); }
+    }
+    clone.appendChild(sec);
+  });
+  preparerPourExport(clone);
+  construireFichierWord(clone);
+}
+
+function exporterWord(){
+  const clone = preparerPourExport(document.querySelector('main').cloneNode(true));
+  const exclude = ['view-accueil','view-baf-accueil','view-idc-accueil'];
+  clone.querySelectorAll('section.view').forEach(sec => {
+    if (exclude.includes(sec.id)) { sec.remove(); return; }
+    sec.style.display = 'block';
+  });
+  construireFichierWord(clone);
+}
+
+function construireFichierWord(clone){
   const prenom = state.m1.prenom || 'sans nom';
   const dateAffichee = new Date().toLocaleDateString('fr-FR');
   const css = `
