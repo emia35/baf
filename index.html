@@ -1591,6 +1591,62 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
 .qual-body .empty{font-style:italic;color:var(--line);}
 .cot-label-banner{font-size:13px;font-weight:700;color:var(--slate);margin:14px 0 8px;padding:6px 10px;background:var(--coral-pale);border-radius:5px;}
 
+/* ── Ce que les données suggèrent : deux statuts distincts ── */
+.suggestion-section{
+  border-top:1px solid var(--line-soft);
+  padding-top:14px;margin-top:16px;
+}
+.suggestion-section:first-of-type{border-top:none;padding-top:4px;margin-top:8px;}
+.suggestion-tete{margin-bottom:12px;}
+.suggestion-etiquette{
+  display:inline-block;
+  font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+  padding:3px 10px;border-radius:999px;margin-bottom:6px;
+}
+.suggestion-etiquette.compte{background:var(--teal-pale);color:var(--teal-deep);}
+.suggestion-etiquette.main{background:var(--coral-pale);color:var(--coral-deep);}
+.suggestion-note{
+  display:block;
+  font-family:'Source Serif 4',serif;
+  font-size:12.5px;font-style:italic;color:var(--ink-soft);line-height:1.55;
+}
+
+/* ── Histogramme par volet (Organisation des données) ── */
+.volet-histo{margin-bottom:20px;}
+.volet-histo-titre{
+  font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+  color:var(--ink-soft);margin-bottom:8px;
+}
+.volet-ligne{
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:5px;font-size:12.5px;
+}
+.volet-ligne.enfant .volet-nom{padding-left:14px;font-weight:500;color:var(--ink-soft);}
+.volet-ligne.enfant .volet-nom::before{content:'↳ ';}
+.volet-nom{
+  flex:0 0 180px;font-weight:600;color:var(--ink);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.volet-piste{
+  flex:1;min-width:60px;height:16px;
+  background:var(--paper-deep);border-radius:4px;
+  display:flex;overflow:hidden;
+}
+.volet-barre{height:100%;transition:width .25s;}
+.volet-barre.post{
+  background:repeating-linear-gradient(45deg,var(--coral-deep),var(--coral-deep) 3px,var(--amber-pale) 3px,var(--amber-pale) 6px);
+}
+.volet-compte{flex:0 0 auto;font-size:11.5px;color:var(--ink-soft);font-weight:600;white-space:nowrap;}
+.volet-legende{
+  font-size:11px;color:var(--ink-soft);margin-top:6px;
+  display:flex;align-items:center;gap:6px;
+}
+.volet-legende .pastille{
+  display:inline-block;width:22px;height:9px;border-radius:2px;
+  background:repeating-linear-gradient(45deg,var(--coral-deep),var(--coral-deep) 3px,var(--amber-pale) 3px,var(--amber-pale) 6px);
+}
+@media(max-width:640px){.volet-nom{flex:0 0 110px;}}
+
 /* ── Répartition temporelle : niveaux, histogrammes ── */
 .synth-niveau{
   border:1px solid var(--line);
@@ -2416,14 +2472,24 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
       <div id="synth-m3"></div>
     </div>
 
-    <div class="card synth-block" id="synth-correlations-card" style="display:none;">
+    <div class="card synth-block" id="synth-suggestions-card">
       <h4>Ce que les données suggèrent <span style="font-size:11px;font-weight:400;color:var(--ink-soft);margin-left:6px;">— matériau à examiner avec un clinicien</span></h4>
-      <div id="synth-correlations"></div>
-    </div>
 
-    <div class="card synth-block">
-      <h4>Interprétation (module 3)</h4>
-      <div id="synth-m4"></div>
+      <div class="suggestion-section" id="synth-correlations-card">
+        <div class="suggestion-tete">
+          <span class="suggestion-etiquette compte">Ce que les chiffres montrent</span>
+          <span class="suggestion-note">Calculé à partir de vos catégorisations. Ce sont des co-occurrences, pas des causes — l'outil ne conclut pas à votre place.</span>
+        </div>
+        <div id="synth-correlations"></div>
+      </div>
+
+      <div class="suggestion-section">
+        <div class="suggestion-tete">
+          <span class="suggestion-etiquette main">Ce que vous avez repéré</span>
+          <span class="suggestion-note">Saisi à la main dans Interpréter. Une intuition clinique peut être juste sans être encore visible dans les chiffres — et l'inverse.</span>
+        </div>
+        <div id="synth-m4"></div>
+      </div>
     </div>
 
     <div class="card synth-block" id="synth-indice-card">
@@ -4317,6 +4383,58 @@ function normaliseMomentDetail(m) {
   return m;
 }
 
+/* ── Histogramme par volet ───────────────────────────────────────────
+   Une barre par catégorie, avec le détail primaire / post-intervention pour
+   les comportements. Un CD qui n'apparaît QUE comme comportement secondaire se
+   repère alors d'un coup d'œil : c'est une information clinique en soi, elle
+   dit que ce comportement naît de nos réponses et pas de la situation. */
+function histogrammeVolet(sous) {
+  ensureM3();
+  const cats = state.m3.categories[sous.id] || {};
+  const items = extraireItems(sous.id);
+  const parId = {};
+  items.forEach(it => { parId[it.id] = it; });
+
+  const lignes = [];
+  catsRacines(sous.id).forEach(catId => {
+    [catId].concat(catsEnfants(sous.id, catId)).forEach((id, rang) => {
+      const cat = cats[id];
+      if (!cat) return;
+      const assignes = (cat.items || []).map(i => parId[i]).filter(Boolean);
+      if (!assignes.length) return;
+      const post = assignes.filter(it => it.tag === 'post-intervention').length;
+      lignes.push({
+        nom: cheminCat(sous.id, id),
+        enfant: rang > 0,
+        color: cat.color || 'var(--teal)',
+        total: assignes.length,
+        primaire: assignes.length - post,
+        post
+      });
+    });
+  });
+  if (!lignes.length) return '';
+
+  const max = Math.max(...lignes.map(l => l.total));
+  const aDesPost = lignes.some(l => l.post > 0);
+  return `<div class="volet-histo">
+    <div class="volet-histo-titre">${sous.icon} ${esc(sous.label)}</div>
+    ${lignes.map(l => {
+      const largeurPrim = Math.round(l.primaire / max * 100);
+      const largeurPost = Math.round(l.post / max * 100);
+      return `<div class="volet-ligne${l.enfant?' enfant':''}">
+        <div class="volet-nom" title="${esc(l.nom)}">${esc(l.nom)}</div>
+        <div class="volet-piste">
+          <div class="volet-barre" style="width:${largeurPrim}%;background:${l.color};" title="${l.primaire} en comportement primaire"></div>
+          ${l.post > 0 ? `<div class="volet-barre post" style="width:${largeurPost}%;" title="${l.post} apparu après une intervention"></div>` : ''}
+        </div>
+        <div class="volet-compte">${l.total}${l.post > 0 ? ` <span style="color:var(--coral-deep);font-weight:600;">(dont ${l.post} post-int.)</span>` : ''}</div>
+      </div>`;
+    }).join('')}
+    ${aDesPost ? `<div class="volet-legende"><span class="pastille"></span> apparu après une intervention</div>` : ''}
+  </div>`;
+}
+
 // Fréquence des évènements : nombre de CD rapporté aux jours d'accueil
 // RÉELLEMENT ÉCOULÉS sur la période de recueil — pas aux jours où quelqu'un a
 // noté quelque chose, sinon la mesure tourne en rond et vaut toujours 1.
@@ -4412,18 +4530,7 @@ function refreshSynthese(){
     if (nonVides.length === 0) {
       synthM3El.innerHTML = '<span style="color:var(--ink-soft);font-style:italic;">Le module 2 (Organiser) n\u2019a pas encore été rempli.</span>';
     } else {
-      synthM3El.innerHTML = nonVides.map(({sous, cats: catsListe}) =>
-        `<div style="margin-bottom:12px;">
-          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin-bottom:6px;">${sous.icon} ${sous.label}</div>
-          <div style="display:flex;flex-wrap:wrap;gap:6px;">
-            ${catsListe.map(c =>
-              `<span style="display:inline-flex;align-items:center;gap:5px;background:${c.color||'var(--teal)'};color:#fff;border-radius:999px;font-size:12px;font-weight:700;padding:3px 11px;">
-                ${esc(c.nom)} <span style="opacity:.75;font-weight:400;">${c.items.length}</span>
-              </span>`
-            ).join('')}
-          </div>
-        </div>`
-      ).join('');
+      synthM3El.innerHTML = M3_SOUS.map(s => histogrammeVolet(s)).filter(Boolean).join('');
     }
   }
 
@@ -4760,6 +4867,7 @@ function computeCorrelations() {
   // maintenant un antécédent, donc déjà compté dans antécédent × conséquence.
   const pairsAnteCons = {};
   const pairsCpCons = {};
+  const triplets = {};
 
   evts.forEach((evt, idx) => {
     if (!evt.id) evt.id = 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
@@ -4777,6 +4885,12 @@ function computeCorrelations() {
       const k = b + ' ‣ ' + c;
       pairsCpCons[k] = (pairsCpCons[k] || 0) + 1;
     }));
+    // Triplet complet A → B → C observé dans le même évènement. On le compte,
+    // on ne l'interprète pas : c'est au professionnel d'en faire un pattern.
+    antes.forEach(a => cps.forEach(b => conss.forEach(c => {
+      const k = a + ' ‣ ' + b + ' ‣ ' + c;
+      triplets[k] = (triplets[k] || 0) + 1;
+    })));
   });
 
   const toSorted = (obj) => Object.entries(obj)
@@ -4790,6 +4904,11 @@ function computeCorrelations() {
   return {
     ante_cons: toSorted(pairsAnteCons),
     cp_cons: toSorted(pairsCpCons),
+    triplets: Object.entries(triplets)
+      .map(([k, n]) => { const [a,b,c] = k.split(' ‣ '); return {a,b,c,n}; })
+      .filter(t => t.n >= CORR_MIN)
+      .sort((x,y) => y.n - x.n)
+      .slice(0, 6),
   };
 }
 
@@ -4799,8 +4918,8 @@ function renderCorrelations() {
   if (!card || !el) return;
 
   const evts = state.m2.evenements || [];
-  const {ante_cons, cp_cons} = computeCorrelations();
-  const hasAny = ante_cons.length > 0 || cp_cons.length > 0;
+  const {ante_cons, cp_cons, triplets} = computeCorrelations();
+  const hasAny = ante_cons.length > 0 || cp_cons.length > 0 || triplets.length > 0;
 
   if (evts.length < CORR_MIN || !hasAny) {
     card.style.display = 'none';
@@ -4825,15 +4944,30 @@ function renderCorrelations() {
 
   if (ante_cons.length > 0) {
     html += `<div class="corr-section">
-      <div class="corr-section-title">⏮ Antécédent → 🔄 Conséquence</div>
+      <div class="corr-section-title">⏮ Antécédent → ⏭ Conséquence</div>
       <div class="corr-note">Quand cet antécédent est présent, cette conséquence apparaît dans X% des évènements où l'antécédent est catégorisé.</div>
       ${ante_cons.map(p => corrLine(p, 'var(--teal-pale)', 'var(--amber-pale)', '→')).join('')}
     </div>`;
   }
 
+  if (triplets.length > 0) {
+    html += `<div class="corr-section">
+      <div class="corr-section-title">⏮ 🎥 ⏭ Séquences complètes qui reviennent</div>
+      <div class="corr-note">Ces trois éléments ont été catégorisés ensemble sur un même évènement, ce nombre de fois. C'est un décompte, pas une hypothèse : à vous d'en faire un pattern dans Interpréter, ou non.</div>
+      ${triplets.map(t => `<div class="corr-row">
+        <span class="corr-tag" style="background:var(--teal-pale);">${esc(t.a)}</span>
+        <span class="corr-arrow">→</span>
+        <span class="corr-tag" style="background:var(--coral-pale);">${esc(t.b)}</span>
+        <span class="corr-arrow">→</span>
+        <span class="corr-tag" style="background:var(--amber-pale);">${esc(t.c)}</span>
+        <span class="corr-count">${t.n} fois sur ${evts.length}</span>
+      </div>`).join('')}
+    </div>`;
+  }
+
   if (cp_cons.length > 0) {
     html += `<div class="corr-section">
-      <div class="corr-section-title">🎥 Comportement → 🔄 Conséquence</div>
+      <div class="corr-section-title">🎥 Comportement → ⏭ Conséquence</div>
       <div class="corr-note">Le comportement et la conséquence co-apparaissent dans ces évènements. C'est souvent là que la fonction du comportement se lit.</div>
       ${cp_cons.map(p => corrLine(p, 'var(--coral-pale)', 'var(--amber-pale)', '→')).join('')}
     </div>`;
