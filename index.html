@@ -1591,6 +1591,57 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
 .qual-body .empty{font-style:italic;color:var(--line);}
 .cot-label-banner{font-size:13px;font-weight:700;color:var(--slate);margin:14px 0 8px;padding:6px 10px;background:var(--coral-pale);border-radius:5px;}
 
+/* ── Répartition temporelle : niveaux, histogrammes ── */
+.synth-niveau{
+  border:1px solid var(--line);
+  border-radius:var(--radius-sm);
+  padding:14px 16px;margin-bottom:14px;
+  background:var(--card);
+}
+.synth-niveau-tete{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  margin-bottom:12px;
+}
+.synth-niveau-tete h5{
+  margin:0;flex:1;min-width:150px;
+  font-size:13.5px;font-weight:700;color:var(--ink);
+}
+.bloc-controles{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.bloc-controles select{
+  font-size:11.5px;padding:4px 7px;
+  border:1px solid var(--line);border-radius:6px;
+  background:var(--paper);color:var(--ink-soft);font-weight:600;
+}
+.bloc-controles .btn{font-size:11.5px;padding:4px 10px;}
+
+.bar-chart{
+  display:flex;align-items:flex-end;justify-content:flex-start;gap:5px;
+  overflow-x:auto;padding-bottom:4px;
+  min-height:150px;
+}
+.bar-col{
+  /* Bornée : avec un seul mois, une colonne élastique donnait un pavé plein
+     écran plutôt qu'une barre. */
+  flex:1 1 0;min-width:34px;max-width:88px;
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+}
+.bar-val{font-size:11px;font-weight:700;color:var(--ink);height:14px;}
+.bar-val.zero{color:var(--line);}
+.bar-piste{
+  width:100%;height:110px;
+  background:var(--paper-deep);border-radius:4px 4px 0 0;
+  display:flex;align-items:flex-end;
+}
+.bar-remplissage{
+  width:100%;background:var(--coral-deep);
+  border-radius:4px 4px 0 0;transition:height .25s;
+  min-height:0;
+}
+.bar-lbl{
+  font-size:10.5px;color:var(--ink-soft);font-weight:600;
+  white-space:nowrap;text-align:center;
+}
+
 /* Sous-catégorie : rattachée visuellement à sa catégorie parente */
 .m3-cat-enfant{
   margin:8px 0 0 18px;
@@ -2345,7 +2396,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
       <h4>Chiffres clés</h4>
       <div class="kpi-row">
         <div class="kpi"><div class="val" id="kpi-nb-evt">0</div><div class="lbl">Évènements</div></div>
-        <div class="kpi"><div class="val" id="kpi-jour">—</div><div class="lbl">Jour dominant</div></div>
+        <div class="kpi"><div class="val" id="kpi-frequence">—</div><div class="lbl">Fréquence</div><div class="kpi-sub" id="kpi-frequence-detail"></div></div>
         <div class="kpi"><div class="val" id="kpi-moment">—</div><div class="lbl">Moment dominant</div><div class="kpi-sub" id="kpi-moment-heures"></div></div>
       </div>
       <div style="margin-top:14px;">
@@ -2354,11 +2405,8 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
         </button>
       </div>
       <div id="synth-details" style="display:none;margin-top:18px;">
-        <div class="synth-chart-block scatter-wrap" id="synth-scatter" style="margin-bottom:18px;">
-          <!-- Scatterplot rempli dynamiquement -->
-        </div>
-        <div class="synth-charts-grid" id="synth-charts-grid">
-          <!-- Camemberts remplis dynamiquement -->
+        <div id="synth-charts-grid">
+          <!-- Niveaux de répartition remplis dynamiquement -->
         </div>
       </div>
     </div>
@@ -4269,6 +4317,37 @@ function normaliseMomentDetail(m) {
   return m;
 }
 
+// Fréquence des évènements : nombre de CD rapporté aux jours d'accueil
+// RÉELLEMENT ÉCOULÉS sur la période de recueil — pas aux jours où quelqu'un a
+// noté quelque chose, sinon la mesure tourne en rond et vaut toujours 1.
+function computeFrequence() {
+  const evts = (state.m2.evenements || []).filter(e => e.date);
+  if (evts.length < 2) return {libelle: '—', detail: 'Pas assez de dates'};
+  const dates = evts.map(e => new Date(e.date)).filter(d => !isNaN(d)).sort((a,b) => a-b);
+  if (dates.length < 2) return {libelle: '—', detail: 'Pas assez de dates'};
+
+  const joursAccueil = state.m1.jours || [];
+  const NOMS = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+  const debut = dates[0], fin = dates[dates.length-1];
+
+  // On compte les jours d'accueil du calendrier entre le premier et le dernier
+  // évènement. Sans jours d'accueil déclarés, on retombe sur les jours calendaires.
+  let denominateur = 0;
+  const curseur = new Date(debut);
+  while (curseur <= fin) {
+    if (joursAccueil.length === 0 || joursAccueil.includes(NOMS[curseur.getDay()])) denominateur++;
+    curseur.setDate(curseur.getDate() + 1);
+  }
+  if (denominateur === 0) return {libelle: '—', detail: 'Aucun jour d\'accueil sur la période'};
+
+  const parJour = evts.length / denominateur;
+  const libelle = parJour >= 1
+    ? parJour.toFixed(1).replace('.', ',') + ' / jour'
+    : '1 tous les ' + Math.round(1 / parJour) + ' j';
+  const base = joursAccueil.length === 0 ? 'jours' : 'jours d\'accueil';
+  return {libelle, detail: `${evts.length} CD sur ${denominateur} ${base}`};
+}
+
 function modeArray(arr) {
   if (!arr.length) return null;
   const freq = {};
@@ -4300,18 +4379,15 @@ function refreshSynthese(){
   const evts = state.m2.evenements || [];
   document.getElementById('kpi-nb-evt').textContent = evts.length;
 
-  // Jour dominant
-  const jours = evts.map(e => {
-    if (!e.date) return null;
-    try {
-      const d = new Date(e.date);
-      return ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'][d.getDay()];
-    } catch(err) { return null; }
-  }).filter(Boolean);
-  const jourVal = modeArray(jours) || '—';
-  const jourEl = document.getElementById('kpi-jour');
-  jourEl.textContent = jourVal;
-  fitKpiText(jourEl);
+  // Fréquence : combien de CD par jour d'accueil réellement écoulé
+  const freq = computeFrequence();
+  const freqEl = document.getElementById('kpi-frequence');
+  const freqDetailEl = document.getElementById('kpi-frequence-detail');
+  if (freqEl) {
+    freqEl.textContent = freq.libelle;
+    fitKpiText(freqEl);
+  }
+  if (freqDetailEl) freqDetailEl.textContent = freq.detail;
 
   // Moment dominant — via utilitaire centralisé
   const moments = evts.map(e => normaliseMoment(e.moment)).filter(Boolean);
@@ -6405,49 +6481,171 @@ function toggleDetailsStats() {
   if (detailsVisible) renderCharts();
 }
 
+/* ── Répartition temporelle, à quatre échelles ───────────────────────
+   Les périodes sans aucun évènement sont affichées à zéro et non omises :
+   un mois vide, un dimanche vide, une plage horaire vide sont des résultats,
+   pas des trous. C'est souvent là que se lit ce qui protège la personne. */
+const NIVEAUX_TEMPS = [
+  {cle:'mois',    titre:'À l\'année, par mois'},
+  {cle:'jours',   titre:'À la semaine, par jour'},
+  {cle:'heures',  titre:'À la journée, par heure'},
+  {cle:'carte',   titre:'Carte jour × moment'},
+];
+
+function ensureSynthesePrefs() {
+  if (!state.synthese || typeof state.synthese !== 'object') state.synthese = {};
+  if (!state.synthese.blocs || typeof state.synthese.blocs !== 'object') state.synthese.blocs = {};
+  NIVEAUX_TEMPS.forEach(n => {
+    if (!state.synthese.blocs[n.cle]) state.synthese.blocs[n.cle] = {visible:true, type:'barres', mode:'nombre'};
+  });
+  return state.synthese.blocs;
+}
+
+function setBlocPref(cle, champ, valeur) {
+  const blocs = ensureSynthesePrefs();
+  if (!blocs[cle]) blocs[cle] = {visible:true, type:'barres', mode:'nombre'};
+  blocs[cle][champ] = (champ === 'visible') ? !!valeur : valeur;
+  persist();
+  renderCharts();
+}
+
+// Tous les mois entre le premier et le dernier évènement, y compris les vides.
+function repartitionMois(evts) {
+  const dates = evts.map(e => e.date ? new Date(e.date) : null).filter(d => d && !isNaN(d)).sort((a,b)=>a-b);
+  if (!dates.length) return [];
+  const compte = {};
+  dates.forEach(d => {
+    const cle = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    compte[cle] = (compte[cle]||0) + 1;
+  });
+  const out = [];
+  const curseur = new Date(dates[0].getFullYear(), dates[0].getMonth(), 1);
+  const fin = new Date(dates[dates.length-1].getFullYear(), dates[dates.length-1].getMonth(), 1);
+  while (curseur <= fin) {
+    const cle = curseur.getFullYear() + '-' + String(curseur.getMonth()+1).padStart(2,'0');
+    out.push({label: curseur.toLocaleDateString('fr-FR',{month:'short'}) + ' ' + String(curseur.getFullYear()).slice(2), count: compte[cle]||0});
+    curseur.setMonth(curseur.getMonth()+1);
+  }
+  return out;
+}
+
+// Les sept jours, y compris ceux où rien n'arrive jamais.
+function repartitionJours(evts) {
+  const NOMS = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+  const compte = {};
+  evts.forEach(e => {
+    if (!e.date) return;
+    const d = new Date(e.date);
+    if (isNaN(d)) return;
+    const nom = NOMS[(d.getDay()+6)%7];
+    compte[nom] = (compte[nom]||0) + 1;
+  });
+  return NOMS.map(n => ({label:n, count: compte[n]||0}));
+}
+
+// Plages horaires bornées par la journée type quand elle existe, sinon 6h–22h.
+function repartitionHeures(evts) {
+  const heures = evts.map(e => {
+    const m = (e.heure||'').match(/^(\d{1,2}):(\d{2})/);
+    return m ? parseInt(m[1],10) : null;
+  }).filter(h => h !== null);
+  if (!heures.length) return [];
+  const creneaux = (state.m1.journeeCreneaux||[]).filter(c=>c.debut);
+  let min = 6, max = 22;
+  if (creneaux.length) {
+    const h = creneaux.map(c => parseInt((c.debut||'').slice(0,2),10)).filter(n=>!isNaN(n));
+    const f = creneaux.map(c => parseInt((c.fin||'').slice(0,2),10)).filter(n=>!isNaN(n));
+    if (h.length) min = Math.min(...h);
+    if (f.length) max = Math.max(...f);
+  }
+  min = Math.min(min, ...heures);
+  max = Math.max(max, ...heures);
+  const compte = {};
+  heures.forEach(h => { compte[h] = (compte[h]||0)+1; });
+  const out = [];
+  for (let h = min; h <= max; h++) out.push({label: String(h).padStart(2,'0')+'h', count: compte[h]||0});
+  return out;
+}
+
+// Histogramme : contrairement au camembert, il sait montrer un zéro.
+function buildBarChart(data, mode) {
+  const total = data.reduce((s,d)=>s+d.count,0);
+  const max = Math.max(1, ...data.map(d=>d.count));
+  const pcts = mode === 'pourcentage' ? pourcentagesEntiers(data.map(d=>d.count)) : null;
+  return `<div class="bar-chart">
+    ${data.map((d,i) => {
+      const h = Math.round(d.count / max * 100);
+      const valeur = mode === 'pourcentage' ? (pcts[i] + '%') : d.count;
+      return `<div class="bar-col" title="${esc(d.label)} : ${d.count} évènement${d.count>1?'s':''}${total?' ('+Math.round(d.count/total*100)+'%)':''}">
+        <div class="bar-val${d.count===0?' zero':''}">${d.count===0 ? '' : valeur}</div>
+        <div class="bar-piste"><div class="bar-remplissage" style="height:${h}%;"></div></div>
+        <div class="bar-lbl">${esc(d.label)}</div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function blocTemporel(niveau, data, contenuSpecial) {
+  const blocs = ensureSynthesePrefs();
+  const pref = blocs[niveau.cle];
+  const controles = `
+    <div class="bloc-controles no-print">
+      ${contenuSpecial ? '' : `
+        <select onchange="setBlocPref('${niveau.cle}','type',this.value)" title="Type de graphique">
+          <option value="barres" ${pref.type==='barres'?'selected':''}>Histogramme</option>
+          <option value="camembert" ${pref.type==='camembert'?'selected':''}>Camembert</option>
+        </select>
+        <select onchange="setBlocPref('${niveau.cle}','mode',this.value)" title="Données affichées">
+          <option value="nombre" ${pref.mode==='nombre'?'selected':''}>Nombres</option>
+          <option value="pourcentage" ${pref.mode==='pourcentage'?'selected':''}>Pourcentages</option>
+        </select>`}
+      <button class="btn btn-ghost btn-sm" onclick="setBlocPref('${niveau.cle}','visible',false)" title="Masquer ce niveau — il ne figurera pas non plus dans l'export">Masquer</button>
+    </div>`;
+  let corps;
+  if (contenuSpecial) corps = contenuSpecial;
+  else if (!data.length) corps = `<div style="color:var(--ink-soft);font-style:italic;font-size:13px;">Pas de donnée pour ce niveau.</div>`;
+  else if (pref.type === 'camembert') corps = buildChartBlock('', data);
+  else corps = buildBarChart(data, pref.mode);
+  return `<div class="synth-niveau">
+    <div class="synth-niveau-tete"><h5>${esc(niveau.titre)}</h5>${controles}</div>
+    ${corps}
+  </div>`;
+}
+
 function renderCharts() {
   const el = document.getElementById('synth-charts-grid');
   if (!el) return;
   const evts = state.m2.evenements || [];
   if (evts.length === 0) {
-    el.innerHTML = '<div style="color:var(--ink-soft);font-style:italic;font-size:13.5px;grid-column:1/-1;">Aucun évènement saisi dans le module 1.</div>';
+    el.innerHTML = '<div style="color:var(--ink-soft);font-style:italic;font-size:13.5px;">Aucun évènement saisi dans le module 1.</div>';
     return;
   }
-
-  const JOURS_ORDER = ['lun','mar','mer','jeu','ven','sam','dim'];
-  const MOMENTS_ORDER = ['Matin (avant)','Matin (activité)','Transition','Repas','Après-midi','Après-midi (fin)','Soir'];
-
-  // Jours
-  const joursRaw = evts.map(e => {
-    if (!e.date) return null;
-    try { return ['dim','lun','mar','mer','jeu','ven','sam'][new Date(e.date).getDay()]; }
-    catch(e){ return null; }
-  }).filter(Boolean);
-  const joursFreq = countFrequencies(joursRaw)
-    .sort((a,b) => JOURS_ORDER.indexOf(a.label) - JOURS_ORDER.indexOf(b.label));
-
-  // Moments
-  const momentsRaw = evts.map(e => {
-    if (!e.moment) return null;
-    const m = e.moment;
-    return normaliseMomentDetail(m);
-  }).filter(Boolean);
-  const momentsFreq = countFrequencies(momentsRaw)
-    .sort((a,b) => MOMENTS_ORDER.indexOf(a.label) - MOMENTS_ORDER.indexOf(b.label));
-
-  // Intensités
-  const intensRaw = evts.map(e => e.intensite).filter(Boolean);
-  const intensFreq = countFrequencies(intensRaw);
-
-  // Scatterplot jour × moment (avant les camemberts)
-  buildScatterplot(evts);
+  const blocs = ensureSynthesePrefs();
+  const donnees = {
+    mois: repartitionMois(evts),
+    jours: repartitionJours(evts),
+    heures: repartitionHeures(evts),
+  };
 
   let html = '';
-  if (joursFreq.length > 0) html += buildChartBlock('Jours de la semaine', joursFreq);
-  if (momentsFreq.length > 0) html += buildChartBlock('Moment de la journée', momentsFreq);
-  if (intensFreq.length > 0) html += buildChartBlock('Intensité ressentie', intensFreq);
+  NIVEAUX_TEMPS.forEach(n => {
+    if (!blocs[n.cle].visible) return;
+    // La carte est dessinée après l'insertion du HTML, dans son propre
+    // conteneur : la générer avant reviendrait à l'écraser au rendu suivant.
+    if (n.cle === 'carte') html += blocTemporel(n, null, '<div class="scatter-wrap" id="synth-scatter"></div>');
+    else html += blocTemporel(n, donnees[n.cle], null);
+  });
 
-  el.innerHTML = html || '<div style="color:var(--ink-soft);font-style:italic;font-size:13.5px;">Données insuffisantes pour les graphiques (complétez les champs Jour, Moment et Heure dans les évènements).</div>';
+  // Rappel des niveaux masqués, pour pouvoir les remettre
+  const masques = NIVEAUX_TEMPS.filter(n => !blocs[n.cle].visible);
+  if (masques.length) {
+    html += `<div class="synth-niveau no-print" style="border-style:dashed;">
+      <div style="font-size:12.5px;color:var(--ink-soft);margin-bottom:8px;">Niveaux masqués (absents de l'export) :</div>
+      ${masques.map(n => `<button class="btn btn-ghost btn-sm" style="margin:0 6px 6px 0;" onclick="setBlocPref('${n.cle}','visible',true)">↺ ${esc(n.titre)}</button>`).join('')}
+    </div>`;
+  }
+  el.innerHTML = html;
+  if (blocs.carte.visible) buildScatterplot(evts);
 }
 
 loadPersisted();
