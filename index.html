@@ -3113,7 +3113,7 @@ const ETAPES = [
     render: (d) => `
       <div class="card">
         <div style="background:var(--teal-pale);border-left:3px solid var(--teal);padding:13px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;">
-          <b>Antécédents lointains (setting events)</b> — Ce qui précède de loin, pas juste la seconde d'avant. C'est souvent là que les clés se cachent.
+          <b>Contexte (setting events)</b> — Ce qui précède de loin, pas juste la seconde d'avant. C'est souvent là que les clés se cachent.
         </div>
         <div class="field">
           <label for="f-lieu">Où se passe l'évènement ?</label>
@@ -3174,7 +3174,7 @@ const ETAPES = [
   },
   {
     id: 'antecedent',
-    label: 'Antécédent immédiat (A)',
+    label: 'Antécédent (A)',
     render: (d) => `
       <div class="card">
         <div style="background:var(--teal-pale);border-left:3px solid var(--teal);padding:13px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;">
@@ -3214,7 +3214,7 @@ const ETAPES = [
     render: (d) => `
       <div class="card">
         <div style="background:var(--coral-pale);border-left:3px solid var(--coral);padding:13px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;">
-          <b>Le dernier maillon.</b> Ce n'est plus "avant" au sens large — c'est ce qui s'est passé dans les <em>10 à 30 secondes précédant</em> le comportement. La différence avec l'antécédent immédiat : l'antécédent pose le contexte, le déclencheur appuie sur le bouton.
+          <b>Le dernier maillon.</b> Ce n'est plus "avant" au sens large — c'est ce qui s'est passé dans les <em>10 à 30 secondes précédant</em> le comportement. La différence avec l'antécédent : l'antécédent pose le terrain, le déclencheur appuie sur le bouton.
         </div>
 
         <div class="field">
@@ -3315,8 +3315,8 @@ const ETAPES = [
           ${recapBloc('👤 Déclarant', `${d.declarant||'—'} (${d.role||'—'})` + (d.temoin ? ' · '+d.temoin : ''))}
           ${recapBloc('📅 Quand', `${formatDate(d.date)} ${d.heure?'à '+d.heure:''} — ${d.moment||'moment non précisé'}`)}
           ${recapBloc('📍 Où / Qui présent', [d.lieu, d.presences].filter(Boolean).join(' — ') || '—')}
-          ${recapBloc('⏮ Avant (lointain)', d.avantLoin||'—')}
-          ${recapBloc('⚡ Antécédent immédiat', [d.demande, d.finTerminee, d.absencePrevue, d.etatAvant].filter(Boolean).join(' · ') || '—')}
+          ${recapBloc('⏮ Contexte', d.avantLoin||'—')}
+          ${recapBloc('⚡ Antécédent', [d.demande, d.finTerminee, d.absencePrevue, d.etatAvant].filter(Boolean).join(' · ') || '—')}
           ${d.declencheur ? recapBloc('🔴 Déclencheur', d.declencheur + (d.declencheurRecurrent && d.declencheurRecurrent !== 'Je ne sais pas' ? ` · Récurrent : ${d.declencheurRecurrent}` : '') + ((d.declencheurTypes||[]).length ? ` · Type(s) : ${d.declencheurTypes.join(', ')}` : '')) : ''}
           ${recapBloc('🎥 Comportement', d.comportement||'—', d.duree ? `Durée : ${d.duree}` + (d.intensite ? ` · Intensité : ${d.intensite}` : '') : '')}
           ${d.gradation ? recapBloc('📈 Gradation', d.gradation) : ''}
@@ -4730,11 +4730,11 @@ const M3_SOUS = [
   {
     id: 'antecedents',
     label: 'Antécédents', icon: '⏮',
-    help: 'Tout ce qui précède le comportement : antécédents lointains (setting events) et antécédents immédiats. Cherchez des récurrences. Un CD apparu après une intervention (badge « post-intervention ») est aussi affiché ici : il devient le contexte de la suite de la crise.',
+    help: 'Tout ce qui précède le comportement : le contexte (setting events) et l\'antécédent. Cherchez des récurrences. Un CD apparu après une intervention (badge « post-intervention ») est aussi affiché ici : il devient le contexte de la suite de la crise.',
     placeholder: 'ex : Transition, Fin d\'activité appréciée, Changement de routine, Fatigue…',
     extract: (evt) => {
       const parts = [];
-      if (evt.avantLoin && evt.avantLoin.toLowerCase() !== 'ras' && evt.avantLoin.trim()) parts.push('(avant) ' + evt.avantLoin);
+      if (evt.avantLoin && evt.avantLoin.toLowerCase() !== 'ras' && evt.avantLoin.trim()) parts.push('(contexte) ' + evt.avantLoin);
       if (evt.demande) parts.push('Demande : ' + evt.demande);
       if (evt.finTerminee) parts.push('Fin de : ' + evt.finTerminee);
       if (evt.absencePrevue) parts.push('Absent·e : ' + evt.absencePrevue);
