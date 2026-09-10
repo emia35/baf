@@ -2457,37 +2457,92 @@ function migrerLieuAutre() {
   if (!state.m1.lieuxCustom.includes('Autre lieu')) state.m1.lieuxCustom.push('Autre lieu');
 }
 
+// L'antécédent immédiat et le déclencheur ne font plus qu'un volet : une liste
+// d'antécédents dont le déclarant peut cocher celui qu'il croit déclencheur.
+// Les anciens champs figés deviennent des entrées de cette liste, dans le même
+// ordre qu'avant pour que les catégorisations déjà faites restent alignées.
+// Les catégories de l'ancien onglet "Déclencheurs" sont reportées sur le volet
+// Antécédents plutôt que perdues.
+function migrerAntecedents() {
+  if (state.m3 && state.m3._antecedentsFusionnes) return;
+  // Le déclencheur vient s'insérer dans la liste des antécédents, juste avant
+  // "état avant". Tout ce qui suivait se décale donc d'un cran : sans ce
+  // remappage, une catégorisation déjà faite pointerait vers l'item voisin.
+  const remapAnte = {};  // ancien id (volet antécédents) → nouvel id
+  const remapDecl = {};  // ancien id (volet déclencheurs) → nouvel id antécédent
+  (state.m2.evenements || []).forEach(evt => {
+    if (Array.isArray(evt.antecedents)) return;
+    const liste = [];
+    if (evt.demande)       liste.push({id:'ant_'+evt.id+'_d', texte: evt.demande,       declencheurPresume:false});
+    if (evt.finTerminee)   liste.push({id:'ant_'+evt.id+'_f', texte: evt.finTerminee,   declencheurPresume:false});
+    if (evt.absencePrevue) liste.push({id:'ant_'+evt.id+'_a', texte: evt.absencePrevue, declencheurPresume:false});
+    if (evt.declencheur && evt.declencheur.trim()) {
+      const avantLoinPresent = (evt.avantLoin && evt.avantLoin.toLowerCase() !== 'ras' && evt.avantLoin.trim()) ? 1 : 0;
+      const insertion = avantLoinPresent + liste.length;
+      remapDecl[`e${evt.id}_0`] = `e${evt.id}_${insertion}`;
+      // Tout item d'antécédent situé à partir de l'insertion recule d'un cran.
+      // 12 couvre largement le nombre d'items extraits pour un évènement.
+      for (let k = insertion; k < insertion + 12; k++) remapAnte[`e${evt.id}_${k}`] = `e${evt.id}_${k+1}`;
+      liste.push({id:'ant_'+evt.id+'_t', texte: evt.declencheur, declencheurPresume:true});
+    }
+    evt.antecedents = liste;
+  });
+
+  const cats = (state.m3 && state.m3.categories) || {};
+  // Décaler les catégorisations existantes du volet Antécédents
+  Object.values(cats.antecedents || {}).forEach(cat => {
+    if (Array.isArray(cat.items)) cat.items = cat.items.map(id => remapAnte[id] || id);
+  });
+  // Reporter les catégories de l'ancien onglet Déclencheurs sur les antécédents
+  const decl = cats.declencheurs || {};
+  if (Object.keys(decl).length > 0) {
+    if (!cats.antecedents) cats.antecedents = {};
+    Object.entries(decl).forEach(([catId, cat]) => {
+      const items = (cat.items || []).map(id => remapDecl[id]).filter(Boolean);
+      const nouvelId = cats.antecedents[catId] ? catId + '_decl' : catId;
+      cats.antecedents[nouvelId] = {
+        nom: cat.nom, color: cat.color,
+        items: items.concat((cats.antecedents[nouvelId] || {}).items || [])
+      };
+    });
+  }
+  if (state.m3) state.m3._antecedentsFusionnes = true;
+}
+
 function migrerIdsCategorisation() {
   (state.m2.evenements || []).forEach(evt => {
     if (!evt.id) evt.id = 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
   });
-  if (!(state.m3 && state.m3._idsMigratedV2)) {
-    (state.m2.evenements || []).forEach(evt => {
-      // Ancien format : interventions figées (inter1/inter2/interAutre). On les
-      // bascule une fois vers le tableau dynamique d'interventions.
-      if (!Array.isArray(evt.interventions) && (evt.inter1 || evt.inter2 || evt.interAutre)) {
-        evt.interventions = [];
-        if (evt.inter1) {
-          evt.interventions.push({
-            id: 'iv_' + evt.id + '_0', texte: evt.inter1, effet: evt.inter1Eff || '',
-            precision: evt.inter1Eff === 'Aggravation' ? '' : (evt.inter1EffComment || ''),
-            cdPostIntervention: evt.inter1Eff === 'Aggravation' ? (evt.inter1EffComment || '') : '',
-          });
-        }
-        if (evt.inter2) {
-          evt.interventions.push({
-            id: 'iv_' + evt.id + '_1', texte: evt.inter2, effet: evt.inter2Eff || '',
-            precision: evt.inter2Eff === 'Aggravation' ? '' : (evt.inter2EffComment || ''),
-            cdPostIntervention: evt.inter2Eff === 'Aggravation' ? (evt.inter2EffComment || '') : '',
-          });
-        }
-        if (evt.interAutre) {
-          evt.interventions.push({
-            id: 'iv_' + evt.id + '_2', texte: evt.interAutre, effet: '', precision: '', cdPostIntervention: '',
-          });
-        }
+  // Ancien format : interventions figées (inter1/inter2/interAutre) basculées
+  // vers le tableau dynamique. Déjà auto-gardée par évènement (on ne convertit
+  // que si le tableau n'existe pas), donc volontairement hors du garde-fou des
+  // ids : un drapeau global qui couvre deux migrations sans rapport finit
+  // toujours par en sauter une.
+  (state.m2.evenements || []).forEach(evt => {
+    if (!Array.isArray(evt.interventions) && (evt.inter1 || evt.inter2 || evt.interAutre)) {
+      evt.interventions = [];
+      if (evt.inter1) {
+        evt.interventions.push({
+          id: 'iv_' + evt.id + '_0', texte: evt.inter1, effet: evt.inter1Eff || '',
+          precision: evt.inter1Eff === 'Aggravation' ? '' : (evt.inter1EffComment || ''),
+          cdPostIntervention: evt.inter1Eff === 'Aggravation' ? (evt.inter1EffComment || '') : '',
+        });
       }
-    });
+      if (evt.inter2) {
+        evt.interventions.push({
+          id: 'iv_' + evt.id + '_1', texte: evt.inter2, effet: evt.inter2Eff || '',
+          precision: evt.inter2Eff === 'Aggravation' ? '' : (evt.inter2EffComment || ''),
+          cdPostIntervention: evt.inter2Eff === 'Aggravation' ? (evt.inter2EffComment || '') : '',
+        });
+      }
+      if (evt.interAutre) {
+        evt.interventions.push({
+          id: 'iv_' + evt.id + '_2', texte: evt.interAutre, effet: '', precision: '', cdPostIntervention: '',
+        });
+      }
+    }
+  });
+  if (!(state.m3 && state.m3._idsMigratedV2)) {
     const reOld = /^(\d+)_(\d+)$/;
     Object.values((state.m3 && state.m3.categories) || {}).forEach(sousCats => {
       Object.values(sousCats).forEach(cat => {
@@ -2504,6 +2559,7 @@ function migrerIdsCategorisation() {
   }
   migrerVocabulaireEffet();
   migrerLieuAutre();
+  migrerAntecedents();
 }
 
 const STORAGE_KEY = 'baf_emia35_state_v1';
@@ -3353,66 +3409,32 @@ const ETAPES = [
   {
     id: 'antecedent',
     label: 'Antécédent (A)',
-    render: (d) => `
+    render: (d) => {
+      const antecedents = (d.antecedents && d.antecedents.length)
+        ? d.antecedents
+        : [{id:'ant_'+Date.now(), texte:'', declencheurPresume:false}];
+      return `
       <div class="card">
         <div style="background:var(--teal-pale);border-left:3px solid var(--teal);padding:13px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;">
-          <b>Ce qui s'est passé juste avant le comportement.</b> Pas une interprétation ("il était énervé"), pas un résumé ("RAS") — mais ce qui s'est concrètement passé dans les secondes ou minutes précédentes.
+          <b>Ce qui s'est passé juste avant le comportement.</b> Pas une interprétation ("il était énervé"), pas un résumé ("RAS") — mais ce qui s'est concrètement passé dans les secondes ou minutes précédentes. Il y en a souvent <b>plusieurs</b> : ajoutez-en autant que nécessaire.
         </div>
         <div class="field">
-          <label for="f-demande">Qu'est-ce qui venait d'être demandé à la personne ?</label>
-          <div class="help">Une consigne ? Un déplacement ? Un changement d'activité ? Si rien n'a été demandé, dites-le.</div>
-          <input type="text" id="f-demande" placeholder="ex : on lui a demandé de ranger ses affaires pour aller en activité piscine. Ou : rien n'avait été demandé." value="${esc(d.demande||'')}">
+          <div class="help" style="margin-bottom:12px;">Des exemples de ce qui compte comme antécédent : une consigne ou une demande · une activité qui se termine ou qui change · quelque chose d'attendu qui n'a pas eu lieu · un geste, un mot, un bruit · quelqu'un qui s'approche ou qui part · un objet qu'on retire. Si l'un d'eux vous semble avoir <em>déclenché</em> le comportement, cochez-le — vous n'êtes pas obligé·e d'en désigner un.</div>
         </div>
-        <div class="field">
-          <label for="f-finterminee">Qu'est-ce qui venait de se terminer ou de changer ?</label>
-          <div class="help">Fin d'une activité qu'il/elle appréciait ? Arrivée ou départ de quelqu'un ? Changement dans la routine ?</div>
-          <input type="text" id="f-finterminee" placeholder="ex : fin d'une séance de sport. Ou : un collègue venait de partir en pause." value="${esc(d.finTerminee||'')}">
+        <div id="antecedents-list">
+          ${antecedents.map((a, i) => renderAntecedentBlock(a, i, antecedents.length)).join('')}
         </div>
-        <div class="field">
-          <label for="f-absence">Y a-t-il quelque chose qui n'a PAS eu lieu et qui était attendu ?</label>
-          <div class="help">Un rendez-vous annulé ? Une personne habituelle absente ? Une activité prévue supprimée ?</div>
-          <input type="text" id="f-absence" placeholder="ex : le sortie en ville prévue a été annulée. Ou : rien de particulier." value="${esc(d.absencePrevue||'')}">
-        </div>
-        <div class="field">
+        <button type="button" class="creneau-add" onclick="ajouterAntecedentEvt()">＋ Ajouter un antécédent</button>
+        <div class="field" style="margin-top:20px;">
           <label for="f-etatavant">Comment décririez-vous l'état général de la personne juste avant ?</label>
           <div class="help">⚠ Décrivez ce que vous avez <em>observé</em>, pas ce que vous avez <em>conclu</em>. "Il tournait en rond depuis 10 min" est une observation. "Il était anxieux" est une interprétation.</div>
           <textarea id="f-etatavant" placeholder="ex : il tournait en rond dans le couloir depuis une dizaine de minutes, regardait souvent vers la porte.">${esc(d.etatAvant||'')}</textarea>
         </div>
-      </div>`,
+      </div>`;
+    },
     collect: () => ({
-      demande: val('f-demande'),
-      finTerminee: val('f-finterminee'),
-      absencePrevue: val('f-absence'),
+      antecedents: collecterAntecedents(),
       etatAvant: val('f-etatavant'),
-    })
-  },
-  {
-    id: 'declencheur',
-    label: 'Déclencheur (A→B)',
-    render: (d) => `
-      <div class="card">
-        <div style="background:var(--coral-pale);border-left:3px solid var(--coral);padding:13px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;">
-          <b>Le dernier maillon.</b> Ce n'est plus "avant" au sens large — c'est ce qui s'est passé dans les <em>10 à 30 secondes précédant</em> le comportement. La différence avec l'antécédent : l'antécédent pose le terrain, le déclencheur appuie sur le bouton.
-        </div>
-
-        <div class="field">
-          <label for="f-declencheur-desc">Qu'est-ce qui s'est passé dans les secondes juste avant que ça démarre ?</label>
-          <div class="help">Un geste ? Un mot précis ? Un bruit ? Un changement soudain ? Quelqu'un qui s'est approché ? Quelque chose qu'on a touché ou retiré ? Essayez d'être aussi précis que possible — "on lui a dit de ranger" est différent de "on a posé la main sur son bras pour le guider vers la table".</div>
-          <textarea id="f-declencheur-desc" style="min-height:80px;" placeholder="ex : l'éducatrice a prononcé le mot 'piscine'. Ou : on a éteint la musique sans prévenir. Ou : un pair s'est approché par derrière. Ou : rien de perceptible.">${esc(d.declencheur||'')}</textarea>
-        </div>
-
-        <div class="field">
-          <label>Est-ce que ce déclencheur revient d'un évènement à l'autre ?</label>
-          <div class="choice-row" id="f-declencheur-recurrent">
-            ${['Oui, souvent', 'Parfois', 'Pas sûr·e', 'Non / premier fois', 'Je ne sais pas'].map(v =>
-              `<label><input type="radio" name="fdeclrec" value="${v}" ${d.declencheurRecurrent===v?'checked':''}> ${v}</label>`
-            ).join('')}
-          </div>
-        </div>
-      </div>`,
-    collect: () => ({
-      declencheur: val('f-declencheur-desc'),
-      declencheurRecurrent: radioVal('fdeclrec'),
     })
   },
   {
@@ -3494,8 +3516,10 @@ const ETAPES = [
           ${recapBloc('📅 Quand', `${formatDate(d.date)} ${d.heure?'à '+d.heure:''} — ${d.moment||'moment non précisé'}`)}
           ${recapBloc('📍 Où / Qui présent', [d.lieu, d.presences].filter(Boolean).join(' — ') || '—')}
           ${recapBloc('⏮ Contexte', d.avantLoin||'—')}
-          ${recapBloc('⚡ Antécédent', [d.demande, d.finTerminee, d.absencePrevue, d.etatAvant].filter(Boolean).join(' · ') || '—')}
-          ${d.declencheur ? recapBloc('🔴 Déclencheur', d.declencheur + (d.declencheurRecurrent && d.declencheurRecurrent !== 'Je ne sais pas' ? ` · Récurrent : ${d.declencheurRecurrent}` : '') + ((d.declencheurTypes||[]).length ? ` · Type(s) : ${d.declencheurTypes.join(', ')}` : '')) : ''}
+          ${recapBloc('⚡ Antécédent', ((d.antecedents||[]).filter(a=>a.texte && a.texte.trim())
+              .map(a => a.texte.trim() + (a.declencheurPresume ? ' (présumé déclencheur)' : ''))
+              .concat(d.etatAvant ? ['État avant : ' + d.etatAvant] : [])
+              .join(' · ')) || '—')}
           ${recapBloc('🎥 Comportement', d.comportement||'—', d.duree ? `Durée : ${d.duree}` + (d.intensite ? ` · Intensité : ${d.intensite}` : '') : '')}
           ${d.gradation ? recapBloc('📈 Gradation', d.gradation) : ''}
           ${recapBloc(`🔄 Conséquence pour ${prenom}`, [d.obtenu ? 'Obtenu : '+d.obtenu : '', d.evite ? 'Évité : '+d.evite : ''].filter(Boolean).join(' / ') || '—')}
@@ -3568,6 +3592,57 @@ function onRoleProChange() {
   const sel = document.getElementById('f-role-pro');
   const autre = document.getElementById('f-role-pro-autre');
   if (sel && autre) autre.style.display = sel.value === 'Autre fonction' ? '' : 'none';
+}
+
+// ── Antécédents (liste dynamique, étape "antécédent") ──────────────────
+// Le déclarant énumère ce qui s'est passé juste avant et peut cocher celui qui
+// lui semble avoir déclenché. Ce n'est qu'un avis : dans Organiser, l'analyse
+// peut qualifier tout autrement — c'est pour ça qu'il n'y a plus de volet
+// "déclencheur" séparé côté déclaratif.
+function renderAntecedentBlock(a, i, total) {
+  return `
+    <div class="card" style="margin-bottom:12px;background:var(--paper);" id="ant-block-${i}">
+      <div class="field" style="margin-bottom:10px;">
+        <label for="f-ant-texte-${i}">${i === 0 ? 'Antécédent' : 'Antécédent suivant (n°' + (i+1) + ')'}</label>
+        <input type="text" id="f-ant-texte-${i}" placeholder="ex : on lui a demandé de ranger ses affaires. Ou : l'éducatrice a prononcé le mot « piscine »." value="${esc(a.texte||'')}">
+      </div>
+      <label style="display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--ink-soft);cursor:pointer;">
+        <input type="checkbox" id="f-ant-decl-${i}" ${a.declencheurPresume?'checked':''}> Je pense que c'est ça qui a déclenché
+      </label>
+      ${total > 1 ? `<button type="button" class="grad-item-del" onclick="retirerAntecedentEvt(${i})" title="Supprimer cet antécédent" style="margin-top:8px;">✕ Supprimer cet antécédent</button>` : ''}
+    </div>`;
+}
+
+function collecterAntecedents() {
+  const out = [];
+  document.querySelectorAll('#antecedents-list [id^="ant-block-"]').forEach((bloc, i) => {
+    const t = document.getElementById('f-ant-texte-' + i);
+    const c = document.getElementById('f-ant-decl-' + i);
+    if (!t) return;
+    out.push({
+      id: 'ant_' + i + '_' + Date.now(),
+      texte: (t.value || '').trim(),
+      declencheurPresume: c ? c.checked : false
+    });
+  });
+  return out;
+}
+
+function ajouterAntecedentEvt() {
+  Object.assign(formDraft, ETAPES[currentEtapeIdx].collect());
+  if (!formDraft.antecedents || !formDraft.antecedents.length) {
+    formDraft.antecedents = [{id:'ant_'+Date.now(), texte:'', declencheurPresume:false}];
+  }
+  formDraft.antecedents.push({id:'ant_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), texte:'', declencheurPresume:false});
+  renderEtape(currentEtapeIdx);
+}
+
+function retirerAntecedentEvt(i) {
+  Object.assign(formDraft, ETAPES[currentEtapeIdx].collect());
+  if (formDraft.antecedents && formDraft.antecedents.length > 1) {
+    formDraft.antecedents.splice(i, 1);
+  }
+  renderEtape(currentEtapeIdx);
 }
 
 // ── Interventions de l'entourage (liste dynamique, étape "intervention") ──
@@ -4227,11 +4302,13 @@ function computeIndice() {
   const nbComportement = evts.filter(e => e.comportement && e.comportement.trim()).length;
   const nbConsequence = evts.filter(e => (e.obtenu && e.obtenu.trim()) || (e.evite && e.evite.trim())).length;
   const nbAntecedent = evts.filter(e =>
-    (e.demande && e.demande.trim()) ||
-    (e.finTerminee && e.finTerminee.trim()) ||
+    (e.antecedents || []).some(a => a.texte && a.texte.trim()) ||
     (e.etatAvant && e.etatAvant.trim())
   ).length;
-  const nbDeclencheur = evts.filter(e => e.declencheur && e.declencheur.trim()).length;
+  // Un antécédent explicitement désigné comme déclencheur par le déclarant.
+  const nbDeclencheur = evts.filter(e =>
+    (e.antecedents || []).some(a => a.declencheurPresume && a.texte && a.texte.trim())
+  ).length;
   const nbTemoinDirect = evts.filter(e => e.temoin === 'Témoin direct').length;
 
   // Déclarants uniques (par prénom/initiales)
@@ -4463,17 +4540,18 @@ function catsDeEvt(sousId, evtId) {
 function computeCorrelations() {
   ensureM3();
   const evts = state.m2.evenements || [];
-  if (evts.length === 0) return {ante_cons:[], decl_cons:[], ante_decl:[]};
+  if (evts.length === 0) return {ante_cons:[], cp_cons:[]};
 
-  // Compter les paires
+  // Compter les paires. Les anciennes paires impliquant un volet "déclencheur"
+  // distinct ont disparu avec la fusion : ce qui était un déclencheur est
+  // maintenant un antécédent, donc déjà compté dans antécédent × conséquence.
   const pairsAnteCons = {};
-  const pairsDeclCons = {};
-  const pairsAnteDecl = {};
+  const pairsCpCons = {};
 
   evts.forEach((evt, idx) => {
     if (!evt.id) evt.id = 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
     const antes = catsDeEvt('antecedents', evt.id);
-    const decls = catsDeEvt('declencheurs', evt.id);
+    const cps   = catsDeEvt('cp', evt.id);
     const conss = catsDeEvt('consequences', evt.id);
 
     // antécédent × conséquence
@@ -4481,15 +4559,10 @@ function computeCorrelations() {
       const k = a + ' ‣ ' + c;
       pairsAnteCons[k] = (pairsAnteCons[k] || 0) + 1;
     }));
-    // déclencheur × conséquence
-    decls.forEach(d => conss.forEach(c => {
-      const k = d + ' ‣ ' + c;
-      pairsDeclCons[k] = (pairsDeclCons[k] || 0) + 1;
-    }));
-    // antécédent × déclencheur
-    antes.forEach(a => decls.forEach(d => {
-      const k = a + ' ‣ ' + d;
-      pairsAnteDecl[k] = (pairsAnteDecl[k] || 0) + 1;
+    // comportement × conséquence
+    cps.forEach(b => conss.forEach(c => {
+      const k = b + ' ‣ ' + c;
+      pairsCpCons[k] = (pairsCpCons[k] || 0) + 1;
     }));
   });
 
@@ -4503,8 +4576,7 @@ function computeCorrelations() {
 
   return {
     ante_cons: toSorted(pairsAnteCons),
-    decl_cons: toSorted(pairsDeclCons),
-    ante_decl: toSorted(pairsAnteDecl),
+    cp_cons: toSorted(pairsCpCons),
   };
 }
 
@@ -4514,8 +4586,8 @@ function renderCorrelations() {
   if (!card || !el) return;
 
   const evts = state.m2.evenements || [];
-  const {ante_cons, decl_cons, ante_decl} = computeCorrelations();
-  const hasAny = ante_cons.length > 0 || decl_cons.length > 0 || ante_decl.length > 0;
+  const {ante_cons, cp_cons} = computeCorrelations();
+  const hasAny = ante_cons.length > 0 || cp_cons.length > 0;
 
   if (evts.length < CORR_MIN || !hasAny) {
     card.style.display = 'none';
@@ -4546,19 +4618,11 @@ function renderCorrelations() {
     </div>`;
   }
 
-  if (decl_cons.length > 0) {
+  if (cp_cons.length > 0) {
     html += `<div class="corr-section">
-      <div class="corr-section-title">🔴 Déclencheur → 🔄 Conséquence</div>
-      <div class="corr-note">Le déclencheur et la conséquence co-apparaissent dans ces évènements. C'est souvent là que la fonction du comportement se lit.</div>
-      ${decl_cons.map(p => corrLine(p, 'var(--coral-pale)', 'var(--amber-pale)', '→')).join('')}
-    </div>`;
-  }
-
-  if (ante_decl.length > 0) {
-    html += `<div class="corr-section">
-      <div class="corr-section-title">⏮ Antécédent → 🔴 Déclencheur</div>
-      <div class="corr-note">Ces antécédents semblent préparer le terrain pour ces déclencheurs spécifiques.</div>
-      ${ante_decl.map(p => corrLine(p, 'var(--teal-pale)', 'var(--coral-pale)', '⟶')).join('')}
+      <div class="corr-section-title">🎥 Comportement → 🔄 Conséquence</div>
+      <div class="corr-note">Le comportement et la conséquence co-apparaissent dans ces évènements. C'est souvent là que la fonction du comportement se lit.</div>
+      ${cp_cons.map(p => corrLine(p, 'var(--coral-pale)', 'var(--amber-pale)', '→')).join('')}
     </div>`;
   }
 
@@ -5032,35 +5096,17 @@ const M3_SOUS = [
   {
     id: 'antecedents',
     label: 'Antécédents', icon: '⏮',
-    help: 'Tout ce qui précède le comportement : le contexte (setting events) et l\'antécédent. Cherchez des récurrences. Un CD apparu après une intervention (badge « post-intervention ») est aussi affiché ici : il devient le contexte de la suite de la crise.',
+    help: 'Tout ce qui précède le comportement : le contexte (setting events) et les antécédents. Le badge « présumé déclencheur » signale ce que le déclarant a coché — c\'est son avis, vous restez libre d\'en juger autrement. Un CD apparu après une intervention (badge « post-intervention ») est aussi affiché ici : il devient le contexte de la suite de la crise.',
     placeholder: 'ex : Transition, Fin d\'activité appréciée, Changement de routine, Fatigue…',
     extract: (evt) => {
       const parts = [];
       if (evt.avantLoin && evt.avantLoin.toLowerCase() !== 'ras' && evt.avantLoin.trim()) parts.push('(contexte) ' + evt.avantLoin);
-      if (evt.demande) parts.push('Demande : ' + evt.demande);
-      if (evt.finTerminee) parts.push('Fin de : ' + evt.finTerminee);
-      if (evt.absencePrevue) parts.push('Absent·e : ' + evt.absencePrevue);
+      (evt.antecedents || []).forEach(a => {
+        if (a.texte && a.texte.trim()) parts.push((a.declencheurPresume ? '§DECL§' : '') + a.texte.trim());
+      });
       if (evt.etatAvant) parts.push('État avant : ' + evt.etatAvant);
       extraireCDPostIntervention(evt).forEach(t => parts.push('§POST§' + t));
       return parts;
-    }
-  },
-  {
-    id: 'declencheurs',
-    label: 'Déclencheurs', icon: '⚡',
-    help: 'Le dernier maillon — ce qui s\'est passé dans les 10-30 secondes avant le comportement. Cherchez ce qui revient : même consigne, même stimulus, même transition ? Un CD apparu après une intervention (badge « post-intervention ») est aussi affiché ici, au cas où il aurait lui-même déclenché la suite.',
-    placeholder: 'ex : Mot "piscine" prononcé, Extinction des lumières, Contact physique, Ordinateur habituel absent…',
-    extract: (evt) => {
-      const parts = [];
-      if (evt.declencheur) parts.push(evt.declencheur);
-      if ((evt.declencheurTypes||[]).length) {
-        parts.push('Type : ' + evt.declencheurTypes.join(', '));
-      }
-      if (evt.declencheurRecurrent && evt.declencheurRecurrent !== 'Je ne sais pas' && evt.declencheurRecurrent !== 'Non / premier fois') {
-        parts.push('Récurrent : ' + evt.declencheurRecurrent);
-      }
-      extraireCDPostIntervention(evt).forEach(t => parts.push('§POST§' + t));
-      return parts.filter(Boolean);
     }
   },
   {
@@ -5124,11 +5170,12 @@ function extraireItems(sousId) {
     extraits.forEach((texte, i) => {
       if (texte && texte.trim()) {
         const isPost = texte.startsWith('§POST§');
+        const isDecl = texte.startsWith('§DECL§');
         items.push({
           id: `e${evt.id}_${i}`,
           evtIdx,
-          texte: (isPost ? texte.slice(6) : texte).trim(),
-          tag: isPost ? 'post-intervention' : '',
+          texte: ((isPost || isDecl) ? texte.slice(6) : texte).trim(),
+          tag: isPost ? 'post-intervention' : (isDecl ? 'presume-declencheur' : ''),
           date: evt.date || '',
           heure: evt.heure || '',
           moment: evt.moment || '',
@@ -5278,6 +5325,7 @@ function renderM3Sous(sousId) {
         <div style="flex:1">
           ${cpLabel}
           ${item.tag==='post-intervention' ? `<span class="m3-item-tag-post">post-intervention</span>` : ''}
+          ${item.tag==='presume-declencheur' ? `<span class="m3-item-tag-post" style="background:var(--teal-deep);" title="Le déclarant pense que c'est ce qui a déclenché — à vous d'en juger">présumé déclencheur</span>` : ''}
           <div class="m3-item-text">${esc(item.texte)}</div>
           ${src ? `<div class="m3-item-source">Évt. ${item.evtIdx+1}${src?' — '+src:''}</div>` : ''}
           <div style="margin-top:5px;">${catBadge}</div>
