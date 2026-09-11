@@ -2086,10 +2086,16 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
         </div>
       </div>
       <div class="entrees">
-        <button class="entree-card primary" onclick="demarrerBAF()">
+        <button class="entree-card primary" onclick="demarrerDepuisDossierOuvert()">
           <div class="entree-icon">🧭</div>
-          <h3>Coter une AF issue du Recueil des données</h3>
-          <p>Vous avez produit l'analyse fonctionnelle avec le Recueil des données. Importez le fichier <code>.json</code> exporté — l'outil affichera les données correspondantes à côté des sous-items concernés.</p>
+          <h3>Coter le dossier ouvert</h3>
+          <p id="entree-dossier-ouvert">Les deux outils partagent la même page : le recueil en cours est lu directement, sans passer par un fichier.</p>
+          <div class="entree-cta">Coter ce dossier →</div>
+        </button>
+        <button class="entree-card primary" onclick="demarrerBAF()">
+          <div class="entree-icon">📂</div>
+          <h3>Coter une AF depuis un fichier</h3>
+          <p>L'analyse a été produite ailleurs, ou sur un autre poste. Importez le fichier <code>.json</code> exporté du Recueil des données.</p>
           <div class="entree-cta">Importer un fichier →</div>
         </button>
         <button class="entree-card secondary" onclick="demarrerSansBAF()">
@@ -2929,6 +2935,7 @@ function route(name, fromHistory){
   if(name==='m3') renderM3();
   if(name==='m4') renderM4();
   if(name==='idc-main') { setNavActive('cotation'); renderMain(); }
+  if(name==='idc-accueil') { try { majEntreeDossierOuvert(); } catch(e) {} }
   setTimeout(autoGrowAllTextareas, 30);
 }
 
@@ -8199,12 +8206,116 @@ function computeBafMeta(baf){
   // Gradation renseignée
   const gradRens = evts.filter(e=>e.gradation&&e.gradation.trim()).length;
 
+  // ── Indicateurs issus du modèle enrichi ───────────────────────────────
+  // computeBafMeta ne lisait que six indicateurs bruts de m2 et ignorait tout
+  // ce que le recueil sait désormais produire : observation directe,
+  // antécédents structurés, CD post-intervention, catégorisation à plusieurs
+  // niveaux, multi-lieu, couverture temporelle.
+  const temoinDirect = evts.filter(e=>e.temoin==='Témoin direct').length;
+  const temoinRens   = evts.filter(e=>e.temoin).length;
+  const anteRens     = evts.filter(e=>(e.antecedents||[]).some(a=>a.texte&&a.texte.trim())).length;
+  const declPresume  = evts.filter(e=>(e.antecedents||[]).some(a=>a.declencheurPresume)).length;
+  const consRens     = evts.filter(e=>(e.obtenu&&e.obtenu.trim())||(e.evite&&e.evite.trim())).length;
+  const interRens    = evts.filter(e=>(e.interventions||[]).some(iv=>iv.texte&&iv.texte.trim())).length;
+  const cdPostInt    = evts.filter(e=>(e.interventions||[]).some(iv=>iv.cdPostIntervention&&iv.cdPostIntervention.trim())).length;
+  const contexteRens = evts.filter(e=>e.avantLoin&&e.avantLoin.trim()&&e.avantLoin.toLowerCase()!=='ras').length;
+
+  // Jours réellement couverts et durée du recueil
+  const joursDistincts = [...new Set(evts.map(e=>e.date).filter(Boolean))].length;
+  let dureeJours = 0;
+  if (dateMin && dateMax) {
+    const a = new Date(dateMin), b = new Date(dateMax);
+    if (!isNaN(a) && !isNaN(b)) dureeJours = Math.round((b-a)/86400000) + 1;
+  }
+
+  // Espaces de vie déclarés dans le préambule
+  const LIB = {famille:'Famille', institution:'Institution', ecole:'École', travail:'Travail / ESAT'};
+  const espaces = ((baf?.m1?.lieux)||[]).map(l=>LIB[l]||l).concat((baf?.m1?.lieuxCustom)||[]);
+
+  // Catégorisation : profondeur et couverture, sous-catégories comprises
+  const cats = (baf?.m3?.categories)||{};
+  let nbCategories = 0, nbSousCategories = 0;
+  Object.keys(cats).forEach(volet => {
+    Object.values(cats[volet]||{}).forEach(c => { if (c.parent) nbSousCategories++; else nbCategories++; });
+  });
+
+  // Interprétation : patterns, chaînages, gradations
+  const patterns = (baf?.m4?.patterns)||[];
+  const patternsChaines = patterns.filter(p=>p.b2).length;
+  const patternsMulti = patterns.filter(p=>((p.as||[]).length>1)||((p.cs||[]).length>1)).length;
+
   return {
     n, decls, roles, ctxComplet, intensRens, intensMoy,
     dateMin:fmtDate(dateMin), dateMax:fmtDate(dateMax),
     gradRens,
-    prenom: baf?.m1?.prenom||''
+    prenom: baf?.m1?.prenom||'',
+    temoinDirect, temoinRens, anteRens, declPresume, consRens, interRens,
+    cdPostInt, contexteRens, joursDistincts, dureeJours, espaces,
+    nbCategories, nbSousCategories,
+    nbPatterns: patterns.length, patternsChaines, patternsMulti,
+    nbGradations: ((baf?.m4?.gradations)||[]).length
   };}
+
+/* ── Pré-cotation des critères objectivables ─────────────────────────
+   Seuls les sous-items dont la réponse se lit dans les données sont
+   pré-cotés : volume, durée, déclarants, espaces, complétude, observation
+   directe. Tout ce qui relève du jugement clinique reste vierge. Une
+   pré-cotation est toujours modifiable et signalée comme automatique — c'est
+   une aide à la saisie, pas un verdict.
+   Le tri sous-item par sous-item reste à faire avec Arthur et Émilie :
+   cette table est délibérément courte et conservatrice. */
+// Correspondance par texte EXACT du sous-item, jamais par mot-clé : « vécu
+// subjectif du déclarant » contient le mot « déclarant » sans rien avoir à
+// voir avec leur nombre. Une règle approximative produirait justement la
+// fausse précision qu'on cherche à éviter.
+const PRECOTATION_OBJECTIVABLE = {
+  "Au moins deux déclarants différents":
+    m => (m.decls||[]).length >= 2 ? 2 : ((m.decls||[]).length === 1 ? 1 : 0),
+  "Un déclarant pour chaque espace ou justification de sa non-sollicitation":
+    m => {
+      const espaces = (m.espaces||[]).length;
+      if (!espaces) return null;
+      return (m.decls||[]).length >= espaces ? 2 : 1;
+    },
+  "Le volume et la période des sources sont détaillés":
+    m => (m.n >= 20 && m.dureeJours >= 30) ? 2 : ((m.n >= 10 || m.dureeJours >= 14) ? 1 : 0),
+  "La distinction entre données observées et rapportées est explicite":
+    m => {
+      if (!m.n) return null;
+      const renseigne = (m.temoinRens||0) / m.n;
+      return renseigne >= 0.9 ? 2 : (renseigne >= 0.5 ? 1 : 0);
+    },
+  "Le contexte d'apparition est précisé : date, heure, lieu, moment, durée, personnes présentes":
+    m => {
+      if (!m.n) return null;
+      const t = (m.ctxComplet||0) / m.n;
+      return t >= 0.8 ? 2 : (t >= 0.5 ? 1 : 0);
+    },
+};
+
+function preCoterObjectivables(){
+  const m = S.bafMeta;
+  if (!m || !m.n || !S.raters.length) return;
+  const cot = S.raters[0];
+  if (!cot.autoCotes) cot.autoCotes = {};
+  let n = 0;
+  (cot.dims||[]).forEach((dim, di) => {
+    (dim.items||[]).forEach((item, ii) => {
+      (item.subItems||[]).forEach((sub, si) => {
+        const regle = PRECOTATION_OBJECTIVABLE[String(sub || '').trim()];
+        if (!regle) return;
+        const valeur = regle(m);
+        if (valeur === null || valeur === undefined) return;
+        // Ne jamais écraser une cotation déjà posée par un humain.
+        if (item.scores[si] !== null && item.scores[si] !== undefined) return;
+        item.scores[si] = valeur;
+        cot.autoCotes[di + '-' + ii + '-' + si] = true;
+        n++;
+      });
+    });
+  });
+  if (n) showToast(n + ' sous-item' + (n>1?'s':'') + ' pré-coté' + (n>1?'s':'') + ' à partir des données — modifiable.');
+}
 
 // Génère le texte d'un encart BAF pour un type de référence donné
 function bafRefText(refKey, bafMeta){
@@ -8295,6 +8406,42 @@ function demarrerBAF(){
     rd.readAsText(f);
   };
   inp.click();
+}
+
+/* Les deux outils vivent dans la même page et partagent le même `state` : rien
+   n'obligeait à passer par un fichier pour coter le dossier en cours. */
+function demarrerDepuisDossierOuvert(){
+  const nbEvts = (state.m2.evenements || []).length;
+  if (!nbEvts && !(state.m1.prenom || '').trim()) {
+    alert("Aucun dossier n'est ouvert dans le Recueil des données.\n\nRemplissez un dossier, lancez une simulation, ou importez un fichier.");
+    return;
+  }
+  S.mode = 'baf';
+  S.baf = JSON.parse(JSON.stringify(state));
+  S.bafMeta = computeBafMeta(S.baf);
+  const prenom = state.m1.prenom || '';
+  if (!S.raters.length) {
+    S.raters = [{id:1, label:'Cotation 1', dims:initDims(), meta:{id:prenom, rater:'', date:new Date().toISOString().slice(0,10)}, coll:DIMS.map(()=>false)}];
+  } else if (prenom && !S.raters[0].meta.id) {
+    S.raters[0].meta.id = prenom;
+  }
+  S.tab = 0;
+  preCoterObjectivables();
+  updateBafBadge();
+  goMain();
+}
+
+// Sur l'accueil de l'outil 2, dire ce qu'on s'apprête à coter.
+function majEntreeDossierOuvert(){
+  const el = document.getElementById('entree-dossier-ouvert');
+  if (!el) return;
+  const n = (state.m2.evenements || []).length;
+  const prenom = (state.m1.prenom || '').trim();
+  if (!n && !prenom) {
+    el.textContent = "Aucun dossier ouvert pour l'instant. Remplissez le Recueil des données, lancez une simulation, ou importez un fichier.";
+    return;
+  }
+  el.innerHTML = `Dossier en cours : <b>${esc(prenom || 'sans prénom')}</b>, ${n} évènement${n>1?'s':''}. Les deux outils partagent la même page : il est lu directement, sans passer par un fichier.`;
 }
 
 function demarrerSansBAF(){
