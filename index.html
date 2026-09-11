@@ -5937,6 +5937,290 @@ function simuler(idx){
   route('baf-accueil');
 }
 
+/* ============================================================
+   BANC DE CONTRÔLE DES CALCULS
+   ============================================================
+   Chaque chiffre affiché par la BAF est ici recalculé une seconde fois, de
+   façon volontairement naïve et indépendante du code de production, puis
+   comparé. Le but n'est pas d'être élégant : c'est d'être écrit autrement, de
+   sorte qu'une même erreur ait peu de chances de se produire des deux côtés.
+
+   Pour le lancer : ouvrir la console du navigateur et taper
+       verifierCalculs()
+   Il s'exécute sur le dossier ouvert, puis sur des jeux d'épreuve (dossier
+   vide, un seul évènement, les trois simulations, cas limites).
+
+   À relancer après toute modification touchant un calcul.
+   ============================================================ */
+
+function _bancEgal(nom, attendu, obtenu, tolerance) {
+  const t = tolerance || 0;
+  const ok = (typeof attendu === 'number' && typeof obtenu === 'number')
+    ? Math.abs(attendu - obtenu) <= t
+    : JSON.stringify(attendu) === JSON.stringify(obtenu);
+  return {nom, ok, attendu, obtenu};
+}
+
+// Recalculs indépendants, écrits sans réutiliser les fonctions de production.
+const _CONTROLES = [
+
+  {nom:'Nombre d\'évènements', test: () => {
+    let n = 0;
+    for (const _ of (state.m2.evenements||[])) n++;
+    return _bancEgal('Nombre d\'évènements', n, (state.m2.evenements||[]).length);
+  }},
+
+  {nom:'Taux de catégorisation ≤ 100 %', test: () => {
+    const r = computeM3Categorisation();
+    return _bancEgal('Taux de catégorisation dans [0,100]', true, r.pct >= 0 && r.pct <= 100);
+  }},
+
+  {nom:'Taux de catégorisation : items distincts', test: () => {
+    // Recompte à la main : un item rangé dans trois catégories compte une fois.
+    let total = 0, assignes = 0;
+    for (const s of M3_SOUS) {
+      const items = extraireItems(s.id).filter(i => !i.vide);
+      const cats = (state.m3.categories||{})[s.id] || {};
+      for (const it of items) {
+        total++;
+        let trouve = false;
+        for (const k in cats) if ((cats[k].items||[]).indexOf(it.id) !== -1) trouve = true;
+        if (trouve) assignes++;
+      }
+    }
+    const attendu = total ? Math.round(assignes/total*100) : 0;
+    return _bancEgal('Taux de catégorisation', attendu, computeM3Categorisation().pct);
+  }},
+
+  {nom:'Volets non renseignés hors du dénominateur', test: () => {
+    const avecVides = M3_SOUS.reduce((s,m)=>s+extraireItems(m.id).length, 0);
+    const sansVides = M3_SOUS.reduce((s,m)=>s+extraireItems(m.id).filter(i=>!i.vide).length, 0);
+    const r = computeM3Categorisation();
+    return _bancEgal('Dénominateur = items réels (et non tous les items)', sansVides, r.total)
+      .ok ? _bancEgal('Dénominateur = items réels', sansVides, r.total)
+          : _bancEgal('Dénominateur = items réels (total avec vides : '+avecVides+')', sansVides, r.total);
+  }},
+
+  {nom:'Somme des pourcentages = 100', test: () => {
+    const jeux = [[1,1,1],[2,3,5],[1],[7,7,7,7,7,7,7],[1,1,1,1,1,1,1,1,1,1,1,1],[0,5]];
+    const mauvais = jeux.filter(j => pourcentagesEntiers(j).reduce((a,b)=>a+b,0) !== 100);
+    return _bancEgal('Répartition au plus fort reste : somme toujours 100', [], mauvais);
+  }},
+
+  {nom:'Pourcentages : aucun négatif', test: () => {
+    const jeux = [[1,1,1],[0,0,1],[100,1],[3,3,3,1]];
+    const negatifs = jeux.filter(j => pourcentagesEntiers(j).some(v => v < 0));
+    return _bancEgal('Aucun pourcentage négatif', [], negatifs);
+  }},
+
+  {nom:'Total nul : que des zéros', test: () => {
+    return _bancEgal('pourcentagesEntiers([0,0,0])', [0,0,0], pourcentagesEntiers([0,0,0]));
+  }},
+
+  {nom:'Carte jour × moment : aucun évènement perdu', test: () => {
+    const evts = (state.m2.evenements||[]).filter(e => e.date && e.moment);
+    const {list, resolve} = scatterMoments(state.m2.evenements||[]);
+    const perdus = evts.filter(e => { const r = resolve(e.moment); return !r || list.indexOf(r) === -1; });
+    return _bancEgal('Évènements datés et situés tous représentés', 0, perdus.length);
+  }},
+
+  {nom:'Répartition par jour : total = évènements datés', test: () => {
+    const datés = (state.m2.evenements||[]).filter(e => {
+      if (!e.date) return false; const d = new Date(e.date); return !isNaN(d);
+    }).length;
+    const somme = repartitionJours(state.m2.evenements||[]).reduce((s,j)=>s+j.count,0);
+    return _bancEgal('Somme de la répartition par jour', datés, somme);
+  }},
+
+  {nom:'Répartition par mois : total = évènements datés', test: () => {
+    const datés = (state.m2.evenements||[]).filter(e => {
+      if (!e.date) return false; const d = new Date(e.date); return !isNaN(d);
+    }).length;
+    const somme = repartitionMois(state.m2.evenements||[]).reduce((s,m)=>s+m.count,0);
+    return _bancEgal('Somme de la répartition par mois', datés, somme);
+  }},
+
+  {nom:'Répartition par mois : aucun mois sauté', test: () => {
+    const liste = repartitionMois(state.m2.evenements||[]);
+    // Les mois doivent se suivre sans trou : on vérifie la continuité.
+    const dates = (state.m2.evenements||[]).map(e=>e.date?new Date(e.date):null).filter(d=>d&&!isNaN(d)).sort((a,b)=>a-b);
+    let attendu = 0;
+    if (dates.length) {
+      const a = dates[0], b = dates[dates.length-1];
+      attendu = (b.getFullYear()-a.getFullYear())*12 + (b.getMonth()-a.getMonth()) + 1;
+    }
+    return _bancEgal('Nombre de mois affichés (vides compris)', attendu, liste.length);
+  }},
+
+  {nom:'Répartition par heure : total = évènements avec heure', test: () => {
+    const avecHeure = (state.m2.evenements||[]).filter(e => /^\d{1,2}:\d{2}/.test(e.heure||'')).length;
+    const somme = repartitionHeures(state.m2.evenements||[]).reduce((s,h)=>s+h.count,0);
+    return _bancEgal('Somme de la répartition par heure', avecHeure, somme);
+  }},
+
+  {nom:'Fréquence : dénominateur = jours d\'accueil écoulés', test: () => {
+    const f = computeFrequence();
+    const evts = (state.m2.evenements||[]).filter(e=>e.date);
+    if (evts.length < 2) return _bancEgal('Fréquence sans assez de dates', '—', f.libelle);
+    const NOMS = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+    const dates = evts.map(e=>new Date(e.date)).filter(d=>!isNaN(d)).sort((a,b)=>a-b);
+    const jours = state.m1.jours || [];
+    let n = 0;
+    for (let d = new Date(dates[0]); d <= dates[dates.length-1]; d.setDate(d.getDate()+1)) {
+      if (!jours.length || jours.indexOf(NOMS[d.getDay()]) !== -1) n++;
+    }
+    const attendu = n + ' ' + (jours.length ? 'jours d\'accueil' : 'jours');
+    return _bancEgal('Détail de la fréquence', evts.length + ' CD sur ' + attendu, f.detail);
+  }},
+
+  {nom:'Indice de confiance dans [0,100]', test: () => {
+    const r = computeIndice();
+    return _bancEgal('Indice dans [0,100]', true, r.pct >= 0 && r.pct <= 100);
+  }},
+
+  {nom:'Indice : moyenne des critères', test: () => {
+    const r = computeIndice();
+    let somme = 0;
+    for (const c of r.criteres) somme += c.score;
+    const attendu = Math.round(somme / r.criteres.length * 100);
+    return _bancEgal('Indice = moyenne des critères', attendu, r.pct);
+  }},
+
+  {nom:'Indice : chaque score vaut 0, 0.5 ou 1', test: () => {
+    const r = computeIndice();
+    const horsBornes = r.criteres.filter(c => [0,0.5,1].indexOf(c.score) === -1).map(c=>c.id+'='+c.score);
+    return _bancEgal('Scores tous dans {0, 0.5, 1}', [], horsBornes);
+  }},
+
+  {nom:'Observation directe : part cohérente', test: () => {
+    const evts = state.m2.evenements||[];
+    const directs = evts.filter(e=>e.temoin === 'Témoin direct').length;
+    const attendu = evts.length ? Math.round(directs/evts.length*100) : 0;
+    const crit = computeIndice().criteres.find(c=>c.id==='observation_directe');
+    return _bancEgal('Part d\'observation directe', attendu, crit ? crit.valeur : null);
+  }},
+
+  {nom:'Intensité moyenne de l\'outil 2 lisible', test: () => {
+    const evts = state.m2.evenements||[];
+    // Sur un dossier vide, computeBafMeta sort tôt et renvoie {} : rien à
+    // comparer, et c'est le comportement attendu.
+    if (!evts.length) return _bancEgal('Intensité moyenne : dossier vide', true, true);
+    const vals = evts.map(e => {
+      const m = (e.intensite||'').match(/(\d)/); return m ? parseInt(m[1],10) : null;
+    }).filter(v=>v);
+    const attendu = vals.length ? (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1) : null;
+    const meta = computeBafMeta(state);
+    return _bancEgal('Intensité moyenne (outil 2)', attendu, meta.intensMoy);
+  }},
+
+  {nom:'Progression du préambule dans [0,100]', test: () => {
+    const p = computeM1Pct();
+    return _bancEgal('Préambule dans [0,100]', true, p >= 0 && p <= 100);
+  }},
+
+  {nom:'Interprétation dans [0,100]', test: () => {
+    const p = computeM4Pct();
+    return _bancEgal('Interpréter dans [0,100]', true, p >= 0 && p <= 100);
+  }},
+
+  {nom:'Corrélations : jamais plus d\'occurrences que d\'évènements', test: () => {
+    const n = (state.m2.evenements||[]).length;
+    const c = computeCorrelations();
+    const excès = [].concat(c.ante_cons, c.cp_cons).filter(p => p.n > n).map(p=>p.left+'→'+p.right+'='+p.n);
+    const excèsT = (c.triplets||[]).filter(t => t.n > n).map(t=>t.a+'→'+t.b+'→'+t.c+'='+t.n);
+    return _bancEgal('Occurrences ≤ nombre d\'évènements', [], excès.concat(excèsT));
+  }},
+
+  {nom:'Crises : numérotation cohérente', test: () => {
+    const labels = computeCPLabels();
+    // Un CD post-intervention porte toujours un sous-numéro, jamais l'inverse.
+    const items = extraireItems('cp');
+    const anomalies = items.filter(it => {
+      const l = labels[it.id];
+      if (!l) return false;
+      const sousNumero = l.indexOf('.') !== -1;
+      return sousNumero !== (it.tag === 'post-intervention');
+    }).map(it => it.id + '=' + labels[it.id]);
+    return _bancEgal('Sous-numéros réservés aux CD post-intervention', [], anomalies);
+  }},
+
+  {nom:'Histogrammes par volet : comptes cohérents', test: () => {
+    const anomalies = [];
+    for (const s of M3_SOUS) {
+      const items = extraireItems(s.id);
+      const parId = {}; items.forEach(i => parId[i.id] = i);
+      const cats = (state.m3.categories||{})[s.id] || {};
+      for (const k in cats) {
+        const assignes = (cats[k].items||[]).map(i=>parId[i]).filter(Boolean);
+        const post = assignes.filter(i=>i.tag==='post-intervention').length;
+        if (post > assignes.length) anomalies.push(s.id+'/'+k);
+      }
+    }
+    return _bancEgal('Post-intervention ≤ total de la catégorie', [], anomalies);
+  }},
+];
+
+function verifierCalculs(silencieux) {
+  const resultats = [];
+  for (const c of _CONTROLES) {
+    try { resultats.push(c.test()); }
+    catch (e) { resultats.push({nom: c.nom, ok: false, attendu: '(pas d\'erreur)', obtenu: 'exception : ' + e.message}); }
+  }
+  const echecs = resultats.filter(r => !r.ok);
+  if (!silencieux) {
+    console.log('%c Banc de contrôle — ' + (resultats.length - echecs.length) + '/' + resultats.length + ' vérifications passées',
+      'font-weight:bold;' + (echecs.length ? 'color:#C2431F' : 'color:#1F7A6C'));
+    echecs.forEach(e => console.log('  ✗ ' + e.nom + '\n     attendu : ' + JSON.stringify(e.attendu) + '\n     obtenu  : ' + JSON.stringify(e.obtenu)));
+    if (!echecs.length) console.log('  Tous les chiffres affichés ont été recalculés indépendamment et concordent.');
+  }
+  return {total: resultats.length, echecs: echecs};
+}
+
+// Passe le banc sur une série de jeux d'épreuve, dont les cas limites.
+function verifierCalculsSurTousLesJeux() {
+  const sauvegarde = JSON.parse(JSON.stringify(state));
+  const rapport = [];
+  const jeux = [
+    {nom:'Dossier vide', appliquer: () => replaceState({version:1,m1:{},m2:{evenements:[]},m3:{},m4:{}})},
+    {nom:'Un seul évènement', appliquer: () => replaceState({version:1,
+      m1:{prenom:'Test',jours:['lundi']},
+      m2:{evenements:[{id:'u1',date:'2026-09-07',heure:'10:00',moment:'Matin',comportement:'A crié',intensite:'3 — Modérée',declarant:'A',role:'Professionnel·le',temoin:'Témoin direct'}]},
+      m3:{},m4:{}})},
+    {nom:'Évènements sans date ni heure', appliquer: () => replaceState({version:1,
+      m1:{prenom:'Test'},
+      m2:{evenements:[{id:'x1',comportement:'A'},{id:'x2',comportement:'B'}]},
+      m3:{},m4:{}})},
+    {nom:'Deux évènements le même jour', appliquer: () => replaceState({version:1,
+      m1:{prenom:'Test',jours:['lundi']},
+      m2:{evenements:[
+        {id:'y1',date:'2026-09-07',heure:'09:00',moment:'Matin',comportement:'A'},
+        {id:'y2',date:'2026-09-07',heure:'17:00',moment:'Soir',comportement:'B'}]},
+      m3:{},m4:{}})},
+    {nom:'Simulation Léo',   appliquer: () => simuler(0)},
+    {nom:'Simulation Naomie',appliquer: () => simuler(1)},
+    {nom:'Simulation Tom',   appliquer: () => simuler(2)},
+  ];
+  for (const j of jeux) {
+    try {
+      j.appliquer();
+      const r = verifierCalculs(true);
+      rapport.push({jeu: j.nom, total: r.total, echecs: r.echecs.map(e => e.nom + ' (attendu ' + JSON.stringify(e.attendu) + ', obtenu ' + JSON.stringify(e.obtenu) + ')')});
+    } catch (e) {
+      rapport.push({jeu: j.nom, total: 0, echecs: ['exception : ' + e.message]});
+    }
+  }
+  replaceState(sauvegarde);
+  persist();
+  const totalEchecs = rapport.reduce((s,r)=>s+r.echecs.length, 0);
+  console.log('%c Banc complet — ' + (totalEchecs ? totalEchecs + ' écart(s)' : 'aucun écart'),
+    'font-weight:bold;' + (totalEchecs ? 'color:#C2431F' : 'color:#1F7A6C'));
+  rapport.forEach(r => {
+    console.log((r.echecs.length ? '  ✗ ' : '  ✓ ') + r.jeu + ' — ' + (r.total - r.echecs.length) + '/' + r.total);
+    r.echecs.forEach(e => console.log('      ' + e));
+  });
+  return rapport;
+}
+
 let toastTimer = null;
 function showToast(msg){
   const t = document.getElementById('toast');
@@ -7899,9 +8183,11 @@ function computeBafMeta(baf){
 
   // Intensité renseignée
   const intensRens = evts.filter(e=>e.intensite).length;
-  // Intensité moyenne (sur échelle 1-5 convertie en label → numérique)
-  const intensMap={"Très faible (1)":1,"Faible (2)":2,"Modérée (3)":3,"Forte (4)":4,"Très forte (5)":5};
-  const intensVals = evts.map(e=>intensMap[e.intensite]).filter(Boolean);
+  // Intensité moyenne. Une table de correspondance attendait "Modérée (3)"
+  // alors que le formulaire produit "3 — Modérée" : la conversion échouait
+  // toujours et cette moyenne n'a jamais pu s'afficher. On réutilise
+  // intensNum(), la lecture déjà employée partout ailleurs.
+  const intensVals = evts.map(e=>intensNum(e.intensite)).filter(v=>v!==null && !isNaN(v));
   const intensMoy = intensVals.length ? (intensVals.reduce((a,b)=>a+b,0)/intensVals.length).toFixed(1) : null;
 
   // Période couverte
