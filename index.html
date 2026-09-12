@@ -258,6 +258,26 @@ header.top{
    lisible — « Dossier » — plutôt que trois pictogrammes seuls : sur un écran
    étroit, deviner ce que fait une icône coûte plus cher que la place gagnée. */
 .subbar-compact{display:none;}
+.contrib-liste{margin-top:14px;display:flex;flex-direction:column;gap:6px;}
+.contrib-item{
+  display:flex;flex-direction:column;gap:2px;
+  padding:8px 12px;border-left:3px solid var(--sauge);background:var(--paper);
+  border-radius:0 7px 7px 0;
+}
+.contrib-prov{font-size:13.5px;font-weight:700;color:var(--ink);}
+.contrib-detail{font-size:12px;color:var(--ink-soft);}
+.event-source-tag{
+  display:inline-block;background:var(--sauge-pale);color:var(--sauge-deep);
+  font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:10px;margin-left:6px;
+}
+.remarque-recue{margin:0 0 16px;}
+.rr-titre{font-size:13px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.rr-ligne{font-size:14px;line-height:1.6;padding:7px 0;border-top:1px solid var(--line-soft);}
+.rr-prov{
+  display:inline-block;background:var(--sauge-pale);color:var(--sauge-deep);
+  font-size:11px;font-weight:700;padding:1px 7px;border-radius:10px;margin-right:8px;
+}
+
 /* ── Mode déclarant ────────────────────────────────────────────────────
    Même gabarit que la barre dossier, teinte différente : le déclarant doit
    voir d'un coup d'œil qu'il n'est pas dans l'outil ordinaire. */
@@ -3040,6 +3060,19 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
         Vous la fusionnerez ici, chaque évènement gardant la trace de sa provenance.
       </p>
       <button class="btn btn-secondary" onclick="exporterKitDeclarant()">✉ Exporter un kit déclarant</button>
+    </div>
+
+    <div class="card" id="m2-recevoir-card">
+      <h4 style="font-size:16px;color:var(--ink);margin-bottom:6px;">Recevoir une contribution</h4>
+      <p style="font-size:14px;color:var(--ink-soft);line-height:1.65;margin:0 0 12px;">
+        Le fichier que vous renvoie un déclarant vient se verser ici, dans la même chronologie.
+        Chaque évènement garde la trace de sa provenance, et les envois successifs d'une même
+        personne ne se dupliquent pas. Seul le déclaratif remonte : l'organisation et
+        l'interprétation restent les vôtres.
+      </p>
+      <button class="btn btn-secondary" onclick="document.getElementById('import-contribution').click()">📥 Ajouter une contribution</button>
+      <input type="file" id="import-contribution" accept=".json" style="display:none;" onchange="importerContribution(event)">
+      <div id="m2-contributions-liste"></div>
     </div>
 
     <div class="card">
@@ -5988,10 +6021,12 @@ function refreshM2List(){
     const heureStr = e.heure ? ' — ' + e.heure : '';
     const brouillonTag = idsAvecBrouillon.has(e.id) ? '<span class="event-brouillon-tag" title="Modifications non validées">brouillon</span>' : '';
     const indirectTag = (e.temoin && e.temoin !== 'Témoin direct') ? `<span class="event-indirect-tag" title="${esc(e.temoin)}">${e.temoin === 'Rapporté par un tiers' ? 'rapporté' : 'après coup'}</span>` : '';
+    const prov = provenanceEvt(e);
+    const sourceTag = prov ? `<span class="event-source-tag" title="Déclaré depuis : ${esc(prov)}">${esc(prov)}</span>` : '';
     html += `<div class="event-item" onclick="ouvrirFormulaireEvenement(${i})">
       <div class="ev-num">${i+1}</div>
       <div class="ev-info">
-        <div class="ev-date">${esc(dateStr)}${esc(heureStr)}${e.moment ? ' · '+esc(e.moment) : ''} ${brouillonTag}${indirectTag}</div>
+        <div class="ev-date">${esc(dateStr)}${esc(heureStr)}${e.moment ? ' · '+esc(e.moment) : ''} ${brouillonTag}${indirectTag}${sourceTag}</div>
         <div class="ev-desc">${esc(desc)}</div>
       </div>
       <button class="btn btn-ghost btn-sm no-print" onclick="supprimerEvt(${i},event)" style="flex-shrink:0;padding:6px 10px;font-size:12px;border-color:transparent;" title="Supprimer">🗑</button>
@@ -5999,6 +6034,7 @@ function refreshM2List(){
     </div>`;
   });
   list.innerHTML = html;
+  renderContributions();
 }
 
 // "Semaine du 7 au 13 septembre" — semaine calendaire, lundi comme premier jour.
@@ -7774,7 +7810,68 @@ function _bancEgal(nom, attendu, obtenu, tolerance) {
 // Recalculs indépendants, écrits sans réutiliser les fonctions de production.
 const _CONTROLES = [
 
-{nom:'Le kit déclarant ne transporte que le préambule', test: () => {
+  {nom:'Fusionner deux fois le même envoi ne duplique rien', test: () => {
+    const sauve = JSON.parse(JSON.stringify({m2: state.m2, contributions: state.contributions || {}}));
+    const vraiAlert = window.alert, vraiConfirm = window.confirm;
+    window.alert = () => {}; window.confirm = () => true;
+    const envoi = {
+      baf: {schema: SCHEMA_DOSSIER, type: 'contribution'},
+      contribution: {idContribution: 'ctr_banc', idDossier: state.idDossier || null, provenance: 'banc', remarques: {}},
+      m2: {evenements: [
+        {id: 'evt_banc_1', date: '2026-01-05', heure: '09:00', cp: 'Un'},
+        {id: 'evt_banc_2', date: '2026-01-06', heure: '10:00', cp: 'Deux'}
+      ]}
+    };
+    const n0 = (state.m2.evenements || []).length;
+    fusionnerContribution(lireFichierBAF(envoi, ['contribution']), 'banc.json');
+    const n1 = (state.m2.evenements || []).length;
+    fusionnerContribution(lireFichierBAF(envoi, ['contribution']), 'banc.json');
+    const n2 = (state.m2.evenements || []).length;
+    window.alert = vraiAlert; window.confirm = vraiConfirm;
+    state.m2 = sauve.m2; state.contributions = sauve.contributions;
+    return _bancEgal('Évènements après une puis deux fusions', (n0 + 2) + '|' + (n0 + 2), n1 + '|' + n2);
+  }},
+
+  {nom:'La provenance suit chaque évènement fusionné', test: () => {
+    const sauve = JSON.parse(JSON.stringify({m2: state.m2, contributions: state.contributions || {}}));
+    const vraiAlert = window.alert, vraiConfirm = window.confirm;
+    window.alert = () => {}; window.confirm = () => true;
+    const envoi = {
+      baf: {schema: SCHEMA_DOSSIER, type: 'contribution'},
+      contribution: {idContribution: 'ctr_prov', idDossier: state.idDossier || null, provenance: 'domicile', remarques: {}},
+      m2: {evenements: [{id: 'evt_prov_1', date: '2026-02-02', cp: 'Trois'}]}
+    };
+    fusionnerContribution(lireFichierBAF(envoi, ['contribution']), 'banc.json');
+    const e = (state.m2.evenements || []).find(x => x.id === 'evt_prov_1');
+    const lue = e ? provenanceEvt(e) : 'ÉVÈNEMENT ABSENT';
+    window.alert = vraiAlert; window.confirm = vraiConfirm;
+    state.m2 = sauve.m2; state.contributions = sauve.contributions;
+    return _bancEgal('Provenance relue depuis l\'évènement', 'domicile', lue);
+  }},
+
+  {nom:'La fusion ne remonte que le déclaratif', test: () => {
+    /* Une contribution qui porterait de l'organisation ne doit pas l'imposer :
+       l'action de l'équipe commence dans Organiser, et personne d'autre n'y
+       touche. */
+    const sauve = JSON.parse(JSON.stringify({m2: state.m2, m3: state.m3, m4: state.m4, contributions: state.contributions || {}}));
+    const vraiAlert = window.alert, vraiConfirm = window.confirm;
+    window.alert = () => {}; window.confirm = () => true;
+    const empreinteAvant = JSON.stringify(state.m3) + '|' + JSON.stringify(state.m4);
+    const envoi = {
+      baf: {schema: SCHEMA_DOSSIER, type: 'contribution'},
+      contribution: {idContribution: 'ctr_sale', idDossier: state.idDossier || null, provenance: 'x', remarques: {}},
+      m2: {evenements: [{id: 'evt_sale_1', date: '2026-03-03', cp: 'Quatre'}]},
+      m3: {categories: {cp: {pirate: {nom: 'Pirate', items: ['evt_sale_1_0']}}}},
+      m4: {patterns: [{a: 'pirate'}]}
+    };
+    fusionnerContribution(lireFichierBAF(envoi, ['contribution']), 'banc.json');
+    const empreinteApres = JSON.stringify(state.m3) + '|' + JSON.stringify(state.m4);
+    window.alert = vraiAlert; window.confirm = vraiConfirm;
+    state.m2 = sauve.m2; state.m3 = sauve.m3; state.m4 = sauve.m4; state.contributions = sauve.contributions;
+    return _bancEgal('Organisation et interprétation inchangées', empreinteAvant, empreinteApres);
+  }},
+
+  {nom:'Le kit déclarant ne transporte que le préambule', test: () => {
     /* Un kit qui emporterait des évènements ferait déclarer les gens par-dessus
        ceux des autres ; un kit qui emporterait l'organisation livrerait le
        travail clinique de l'équipe à des tiers. Il ne porte que m1. */
@@ -9339,6 +9436,11 @@ function termesExploration() {
   });
   [...joursVus].forEach(j => termes.push({cle:`jour:${j}`, groupe:'Jour de la semaine', libelle:j}));
   [...momentsVus].forEach(m => termes.push({cle:`moment:${m}`, groupe:'Moment de la journée', libelle:m}));
+  // D'où vient l'observation est un axe de lecture à part entière : un même
+  // comportement ne se lit pas pareil selon le lieu qui le décrit.
+  const provsVues = new Set();
+  evts.forEach(e => { const p = provenanceEvt(e); if (p) provsVues.add(p); });
+  [...provsVues].forEach(p => termes.push({cle:`prov:${p}`, groupe:'Provenance', libelle:p}));
   return termes;
 }
 
@@ -9394,6 +9496,7 @@ function evenementsPourTerme(cle) {
     return evts.filter(e => { if (!e.date) return false; const d = new Date(e.date); return !isNaN(d) && NOMS[d.getDay()] === a; });
   }
   if (type === 'moment') return evts.filter(e => e.moment === cle.slice('moment:'.length));
+  if (type === 'prov') return evts.filter(e => provenanceEvt(e) === cle.slice('prov:'.length));
   if (type === 'cat') {
     const cat = (state.m3.categories[a] || {})[b];
     if (!cat) return [];
@@ -11534,7 +11637,14 @@ function appliquerModeDeclarantSurM1() {
     else if (el.dataset.figeDeclarant) { el.removeAttribute('disabled'); delete el.dataset.figeDeclarant; }
   });
 
-  if (!actif) { bloc.innerHTML = ''; bloc.hidden = true; return; }
+  if (!actif) {
+    // Côté équipe : ce que les déclarants ont dit du préambule, à côté du
+    // préambule. Présenté, jamais appliqué.
+    const recues = renderRemarquesRecues();
+    bloc.innerHTML = recues;
+    bloc.hidden = !recues;
+    return;
+  }
   bloc.hidden = false;
   const r = (state.declarant && state.declarant.remarques) || {};
   bloc.innerHTML =
@@ -11655,6 +11765,159 @@ function appliquerModeDeclarant() {
   const carte = document.getElementById('m2-partager-card');
   if (carte) carte.style.display = actif ? 'none' : '';
   document.body.classList.toggle('mode-declarant', actif);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   RECEVOIR ET FUSIONNER LES CONTRIBUTIONS
+   ══════════════════════════════════════════════════════════════════════
+   Ce qui revient d'un déclarant ne contient que du déclaratif. On le verse
+   dans la chronologie du dossier, chaque évènement gardant la trace d'où il
+   vient — « ce que dit le domicile » et « ce que dit le foyer » ne se lisent
+   pas de la même façon, et c'est précisément ce qu'on cherche à comparer.
+
+   Trois règles :
+   · Les identifiants d'évènement sont uniques par construction (horodatage +
+     six caractères tirés au sort). Une famille qui renvoie chaque semaine un
+     cumul ne duplique donc rien : on reconnaît ce qui est déjà là.
+   · Seul m2 remonte. Une contribution qui porterait de l'organisation ou de
+     l'interprétation les verrait ignorées — et on le dit.
+   · Les remarques sur le préambule ne s'appliquent jamais toutes seules. On
+     les présente à côté du préambule ; c'est l'équipe qui corrige. */
+
+function provenanceEvt(e) {
+  if (!e || !e.source) return '';
+  const c = (state.contributions || {})[e.source];
+  return (c && c.provenance) || '';
+}
+
+function importerContribution(ev) {
+  const f = ev.target.files && ev.target.files[0];
+  ev.target.value = '';
+  if (!f) return;
+  const lecteur = new FileReader();
+  lecteur.onload = (e) => {
+    let objet;
+    try { objet = JSON.parse(e.target.result); }
+    catch (err) { alert("Le fichier n'a pas pu être lu : il n'est pas au format JSON, ou il est abîmé."); return; }
+    const lu = lireFichierBAF(objet, ['contribution']);
+    if (!lu.ok) { alert(lu.raison); return; }
+    fusionnerContribution(lu, f.name);
+  };
+  lecteur.readAsText(f);
+}
+
+function fusionnerContribution(lu, nomFichier) {
+  const meta = (lu.dossier && lu.dossier.contribution) || {};
+  const entrants = ((lu.dossier && lu.dossier.m2 && lu.dossier.m2.evenements) || []);
+  const idC = meta.idContribution || nouvelIdentifiant('ctr');
+
+  if (meta.idDossier && state.idDossier && meta.idDossier !== state.idDossier) {
+    if (!confirm(
+      "Cette contribution a été produite à partir d'un AUTRE dossier que celui qui est ouvert.\n\n" +
+      "Cela arrive si le kit venait d'un dossier recréé depuis. Les évènements s'ajouteront quand même, " +
+      "mais vérifiez qu'il s'agit bien de la même personne.\n\nAjouter quand même ?")) return;
+  }
+
+  if (!state.m2) state.m2 = {evenements: []};
+  if (!Array.isArray(state.m2.evenements)) state.m2.evenements = [];
+  const parId = new Map(state.m2.evenements.map((e, i) => [e.id, i]));
+
+  let ajoutes = 0, remplaces = 0;
+  entrants.forEach(brut => {
+    const e = JSON.parse(JSON.stringify(brut));
+    if (!e.id) e.id = nouvelIdentifiant('evt');
+    e.source = idC;
+    if (parId.has(e.id)) { state.m2.evenements[parId.get(e.id)] = e; remplaces++; }
+    else { parId.set(e.id, state.m2.evenements.length); state.m2.evenements.push(e); ajoutes++; }
+  });
+
+  // Chronologie : la liste groupe par mois et par semaine, elle suppose l'ordre.
+  state.m2.evenements.sort((a, b) =>
+    ((a.date || '') + (a.heure || '')).localeCompare((b.date || '') + (b.heure || '')));
+
+  state.contributions = state.contributions || {};
+  const dejaVue = !!state.contributions[idC];
+  state.contributions[idC] = {
+    provenance: (meta.provenance || '').trim(),
+    remarques: meta.remarques || {},
+    envoye: meta.envoye || '',
+    recu: new Date().toISOString(),
+    fichier: nomFichier || '',
+    nbEvenements: entrants.length
+  };
+
+  const ignorees = ['m1', 'm3', 'm4'].filter(k => lu.dossier && lu.dossier[k]);
+  const nbRemarques = Object.keys(state.contributions[idC].remarques || {}).length;
+
+  migrerIdsCategorisation();
+  persist();
+  loadM1FromState();
+  refreshM2List();
+  refreshAccueilBadges();
+  refreshSynthese();
+  route('m2');
+
+  let msg = 'Contribution' + (state.contributions[idC].provenance ? ' — ' + state.contributions[idC].provenance : '') + '\n\n';
+  msg += '· ' + ajoutes + ' évènement' + (ajoutes > 1 ? 's' : '') + ' ajouté' + (ajoutes > 1 ? 's' : '') + '\n';
+  if (remplaces) {
+    msg += '· ' + remplaces + ' déjà présent' + (remplaces > 1 ? 's' : '') + ', remplacé' + (remplaces > 1 ? 's' : '') +
+           ' par la version la plus récente\n  ⚠ Si vous les aviez déjà catégorisés, vérifiez que les catégories correspondent toujours au texte.\n';
+  }
+  if (dejaVue && !remplaces) msg += '· Cet envoi avait déjà été reçu.\n';
+  if (nbRemarques) msg += '· ' + nbRemarques + ' remarque' + (nbRemarques > 1 ? 's' : '') + ' sur le préambule, à relire dans « Se connaître ».\n';
+  if (ignorees.length) msg += '· Ignoré : ' + ignorees.join(', ') + ' — une contribution ne remonte que le déclaratif.\n';
+  alert(msg);
+}
+
+/* La liste de ce qui a été reçu, sous le bouton. */
+function renderContributions() {
+  const el = document.getElementById('m2-contributions-liste');
+  if (!el) return;
+  const c = state.contributions || {};
+  const cles = Object.keys(c);
+  if (!cles.length) { el.innerHTML = ''; return; }
+  const compte = {};
+  (state.m2.evenements || []).forEach(e => { if (e.source) compte[e.source] = (compte[e.source] || 0) + 1; });
+  el.innerHTML = '<div class="contrib-liste">' +
+    cles.sort((a, b) => (c[b].recu || '').localeCompare(c[a].recu || '')).map(k => {
+      const x = c[k];
+      const n = compte[k] || 0;
+      const quand = x.recu ? new Date(x.recu).toLocaleDateString('fr-FR') : '';
+      const nbR = Object.keys(x.remarques || {}).length;
+      return '<div class="contrib-item">' +
+        '<span class="contrib-prov">' + esc(x.provenance || 'provenance non précisée') + '</span>' +
+        '<span class="contrib-detail">' + n + ' évènement' + (n > 1 ? 's' : '') +
+          (quand ? ' · reçu le ' + esc(quand) : '') +
+          (nbR ? ' · ' + nbR + ' remarque' + (nbR > 1 ? 's' : '') + ' sur le préambule' : '') +
+        '</span></div>';
+    }).join('') + '</div>';
+}
+
+/* Ce que les déclarants disent du préambule, présenté à côté — jamais appliqué. */
+function renderRemarquesRecues() {
+  const c = state.contributions || {};
+  const parSection = {};
+  Object.keys(c).forEach(k => {
+    const prov = (c[k].provenance || 'provenance non précisée');
+    Object.entries(c[k].remarques || {}).forEach(([sec, txt]) => {
+      if (!txt) return;
+      (parSection[sec] = parSection[sec] || []).push({prov, txt});
+    });
+  });
+  if (!Object.keys(parSection).length) return '';
+  return '<div class="card">' +
+    '<h3 style="font-size:17px;margin-bottom:6px;">Ce que les déclarants disent de ce préambule</h3>' +
+    '<p style="font-size:14px;color:var(--ink-soft);margin:0 0 16px;line-height:1.6;">' +
+      'Leurs remarques sont présentées ici, pas appliquées : <b>c\'est vous qui corrigez</b>. ' +
+      'Une contradiction entre deux lieux n\'est pas forcément une erreur — c\'est souvent une information.' +
+    '</p>' +
+    SECTIONS_PREAMBULE.filter(s => parSection[s.cle]).map(s =>
+      '<div class="remarque-recue"><div class="rr-titre">' + esc(s.titre) + '</div>' +
+      parSection[s.cle].map(r =>
+        '<div class="rr-ligne"><span class="rr-prov">' + esc(r.prov) + '</span>' + esc(r.txt) + '</div>'
+      ).join('') + '</div>'
+    ).join('') +
+  '</div>';
 }
 
 /* ══════════════════════════════════════════════════════════════════════
