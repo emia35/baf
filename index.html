@@ -1077,6 +1077,49 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
 }
 .m3-item-cat-badge:hover{background:var(--teal-deep);}
 
+/* Bouton « détail » d'un item : rappelle l'évènement entier sans quitter la
+   catégorisation. Il est dans le flux (et non posé en absolu) pour ne jamais
+   recouvrir les badges de catégorie. */
+.m3-item-detail{
+  flex-shrink:0;align-self:flex-start;
+  background:var(--paper-deep);
+  border:1px solid var(--line);
+  color:var(--ink-soft);
+  font-size:11px;font-weight:700;
+  padding:3px 9px;border-radius:999px;
+  cursor:pointer;font-family:inherit;
+  transition:color .14s, border-color .14s, background .14s;
+}
+.m3-item-detail:hover{color:var(--teal-deep);border-color:var(--teal);background:var(--card);}
+
+/* Fenêtre « détail » : l'évènement complet, en lecture seule. Plus large que la
+   modale de simulation — c'est du texte long à lire, pas des boutons à cliquer. */
+.evt-detail{
+  max-width:720px;
+  max-height:86vh;
+  display:flex;flex-direction:column;
+  padding:24px 26px 16px;
+}
+.evt-detail-head{flex-shrink:0;}
+.evt-detail-body{
+  overflow-y:auto;overscroll-behavior:contain;
+  display:grid;gap:13px;
+  padding:2px 2px 8px;min-height:0;
+}
+.evt-detail-bloc.actif{
+  background:var(--teal-pale);
+  border-left:3px solid var(--teal);
+  margin-left:-11px;padding:7px 10px;
+  border-radius:0 6px 6px 0;
+}
+.evt-detail-label{
+  font-size:11.5px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.05em;color:var(--ink-soft);margin-bottom:3px;
+}
+.evt-detail-val{font-size:14px;color:var(--ink);line-height:1.5;white-space:pre-wrap;}
+.evt-detail-extra{font-size:12px;color:var(--ink-soft);margin-top:3px;}
+.evt-detail-bloc.vide{opacity:.45;font-size:13px;}
+
 /* Catégorie */
 .m3-cat{
   border:1.5px solid var(--line);
@@ -2632,6 +2675,17 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
 </div>
 
 <!-- Modale de choix de simulation -->
+<div id="evt-detail-overlay" class="sim-modal-overlay" style="display:none;" onclick="fermerDetailEvt(event)">
+  <div class="sim-modal evt-detail" role="dialog" aria-modal="true" aria-label="Détail de l'évènement">
+    <div class="evt-detail-head">
+      <h3 id="evt-detail-titre">Évènement</h3>
+      <p class="sim-modal-sub" id="evt-detail-sous"></p>
+    </div>
+    <div class="evt-detail-body" id="evt-detail-body"></div>
+    <button class="sim-modal-close" onclick="fermerDetailEvt()">Fermer</button>
+  </div>
+</div>
+
 <div id="sim-modal-overlay" class="sim-modal-overlay" style="display:none;" onclick="fermerSimModal(event)">
   <div class="sim-modal" role="dialog" aria-modal="true" aria-label="Choisir un profil de simulation">
     <h3>🧪 Choisir un profil de simulation</h3>
@@ -6532,6 +6586,7 @@ function renderM3Sous(sousId) {
           ${src ? `<div class="m3-item-source">Évt. ${item.evtIdx+1}${src?' — '+src:''}</div>` : ''}
           <div style="margin-top:5px;">${catBadge}</div>
         </div>
+        <button type="button" class="m3-item-detail" title="Revoir l'évènement complet" onclick="ouvrirDetailEvt(${item.evtIdx},'${sousId}',event)">détail</button>
       </div>`;
     }).join('');
   }
@@ -6700,6 +6755,96 @@ function fermerPopup() {
   if (currentPopup) { currentPopup.remove(); currentPopup = null; }
   popupSousId = null;
   popupItemId = null;
+}
+
+// ── Fenêtre « détail » ─────────────────────────────────────────────────────
+// Rappel de l'évènement entier pendant qu'on catégorise. Rien n'y est
+// modifiable : c'est une relecture, pas une deuxième saisie — on ne retouche
+// jamais le déclaratif. Le volet en cours de catégorisation est surligné pour
+// situer l'élément dans son évènement sans avoir à le chercher.
+let detailEchapHandler = null;
+
+function detailBloc(label, valeur, extra, volet, sousId) {
+  const actif = volet && volet === sousId ? ' actif' : '';
+  if (!valeur || valeur === '—') {
+    return `<div class="evt-detail-bloc vide${actif}">${label} : —</div>`;
+  }
+  return `<div class="evt-detail-bloc${actif}">
+    <div class="evt-detail-label">${label}</div>
+    <div class="evt-detail-val">${esc(valeur)}</div>
+    ${extra ? `<div class="evt-detail-extra">${esc(extra)}</div>` : ''}
+  </div>`;
+}
+
+function ouvrirDetailEvt(evtIdx, sousId, event) {
+  // Sans cela, le clic remonterait à l'item et ouvrirait l'assignation derrière.
+  if (event) { event.stopPropagation(); }
+  // Le popup d'assignation n'a plus lieu d'être : son gestionnaire de clic
+  // extérieur ne se déclenche pas puisqu'on vient d'arrêter la propagation.
+  fermerPopup();
+
+  const d = (state.m2.evenements || [])[evtIdx];
+  const overlay = document.getElementById('evt-detail-overlay');
+  if (!d || !overlay) return;
+  const prenom = state.m1.prenom || 'la personne';
+
+  document.getElementById('evt-detail-titre').textContent = 'Évènement ' + (evtIdx + 1);
+  document.getElementById('evt-detail-sous').textContent =
+    [formatDate(d.date), d.heure ? 'à ' + d.heure : '', d.moment, d.lieu].filter(Boolean).join(' · ');
+
+  const antecedents = (d.antecedents || [])
+    .filter(a => a.texte && a.texte.trim())
+    .map(a => a.texte.trim() + (a.declencheurPresume ? ' (présumé déclencheur)' : ''))
+    .join('\n');
+
+  const consequences = [
+    d.obtenu ? 'Obtenu : ' + d.obtenu : '',
+    d.evite ? 'Évité : ' + d.evite : '',
+    // finPersonne alimente un item d'Organiser : ne pas l'afficher ici
+    // reviendrait à cacher au lecteur ce qu'il est en train de catégoriser.
+    d.finPersonne ? 'Fin : ' + d.finPersonne : ''
+  ].filter(Boolean).join('\n');
+
+  const interventions = (d.interventions || []).map((iv, i) => {
+    if (!iv.texte && !iv.effet) return null;
+    const precision = effetNeedsCdPost(iv.effet)
+      ? (iv.cdPostIntervention ? ' (nouveau CD : ' + iv.cdPostIntervention + ')' : '')
+      : (iv.precision ? ' (' + iv.precision + ')' : '');
+    return (i === 0 ? '' : 'puis : ') + (iv.texte || '—') + (iv.effet ? ' → ' + iv.effet : '') + precision;
+  }).filter(Boolean).join('\n');
+
+  const dureeIntens = [
+    d.duree ? 'Durée : ' + d.duree : '',
+    d.intensite ? 'Intensité : ' + d.intensite : ''
+  ].filter(Boolean).join(' · ');
+
+  document.getElementById('evt-detail-body').innerHTML = [
+    detailBloc('👤 Déclarant', (d.declarant || '—') + ' (' + (d.role || '—') + ')' + (d.temoin ? ' · ' + d.temoin : '')),
+    detailBloc('📍 Où / qui était présent', [d.lieu, d.presences].filter(Boolean).join(' — ')),
+    detailBloc('⏮ Contexte', d.avantLoin, '', 'antecedents', sousId),
+    detailBloc('⚡ Antécédent', antecedents, d.etatAvant ? 'État avant : ' + d.etatAvant : '', 'antecedents', sousId),
+    detailBloc('🎥 Comportement', d.comportement, dureeIntens, 'cp', sousId),
+    d.gradation ? detailBloc('📈 Gradation', d.gradation, '', 'cp', sousId) : '',
+    detailBloc('🔄 Conséquence pour ' + prenom, consequences, '', 'consequences', sousId),
+    detailBloc('🙌 Intervention de l’entourage', interventions, '', 'interventions', sousId),
+    d.commentaire ? detailBloc('💬 Commentaire libre', d.commentaire) : ''
+  ].filter(Boolean).join('');
+
+  overlay.style.display = 'flex';
+  document.getElementById('evt-detail-body').scrollTop = 0;
+  detailEchapHandler = (e) => { if (e.key === 'Escape') fermerDetailEvt(); };
+  document.addEventListener('keydown', detailEchapHandler);
+}
+
+function fermerDetailEvt(evt) {
+  // Clic sur le voile seulement : un clic dans la fenêtre ne la ferme pas.
+  if (evt && evt.target !== document.getElementById('evt-detail-overlay')) return;
+  const overlay = document.getElementById('evt-detail-overlay');
+  if (overlay) overlay.style.display = 'none';
+  if (detailEchapHandler) {
+    document.removeEventListener('keydown', detailEchapHandler);
+    detailEchapHandler = null;
+  }
 }
 
 function assignerItem(sousId, itemId, catId) {
