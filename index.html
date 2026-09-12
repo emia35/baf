@@ -1168,6 +1168,48 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
 .m3-cat-item-chip button:hover{color:var(--coral);}
 .m3-cat-empty{font-size:12px;color:var(--ink-soft);font-style:italic;padding:4px 2px;}
 
+/* ── Le vase de tension : la mesure ──────────────────────────────────
+   Un seul objet dans tout l'outil. On le remplit ici, on écrit dans
+   Interpréter à quoi ressemblent ses paliers chez cette personne. */
+.vase-mesure{
+  border:1.5px solid var(--line);border-radius:var(--radius-sm);
+  background:var(--paper);padding:15px 17px;margin-top:8px;
+}
+.vase-mesure.compact{padding:11px 13px;background:none;border-style:dashed;}
+.vase-question{font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:4px;}
+.vase-aide{font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin-bottom:10px;}
+.vase-corps{display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+.vase-dessin{width:200px;height:190px;flex-shrink:0;touch-action:none;}
+.vase-mesure.compact .vase-dessin{width:158px;height:150px;}
+.vase-cote{display:flex;flex-direction:column;gap:7px;align-items:flex-start;}
+.vase-chiffre{display:flex;align-items:baseline;gap:6px;}
+.vase-cote input{
+  width:78px;font-family:inherit;font-size:20px;font-weight:700;
+  text-align:center;padding:6px;border:1.5px solid var(--line);
+  border-radius:6px;background:var(--card);color:var(--ink);
+}
+.vase-cote input:focus{outline:none;border-color:var(--teal);}
+.vase-unite{font-size:12.5px;color:var(--ink-soft);}
+.vase-palier{font-size:13.5px;font-weight:700;color:var(--ink);}
+.vase-palier.vide{color:var(--ink-soft);font-weight:400;font-style:italic;}
+.vase-effacer{
+  background:none;border:1px solid var(--line);border-radius:999px;
+  font-family:inherit;font-size:11.5px;color:var(--ink-soft);
+  padding:3px 11px;cursor:pointer;
+}
+.vase-effacer:hover{color:var(--coral-deep);border-color:var(--coral);}
+.vase-note-field{margin-top:13px;margin-bottom:0;}
+.vase-note-field textarea{min-height:56px;}
+.vase-ancienne{
+  background:var(--amber-pale);border-left:3px solid var(--amber);
+  padding:11px 15px;border-radius:8px;font-size:13px;
+  margin-bottom:16px;line-height:1.55;
+}
+.vase-alerte{
+  background:var(--amber-pale);border-left:3px solid var(--coral-deep);
+  margin-top:10px;padding:10px 14px;font-size:13px;border-radius:6px;
+}
+
 /* Popup d'assignation */
 .m3-assign-popup{
   position:fixed;
@@ -1311,6 +1353,12 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   text-align:justify;text-justify:inter-word;
 }
 .grad-intro b{color:var(--coral-deep);}
+.vase-connu-grille{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:10px;
+}
+@media(max-width:760px){.vase-connu-grille{grid-template-columns:1fr;}}
+.vase-connu-titre{font-size:13px;font-weight:700;color:var(--ink);display:block;margin-bottom:2px;}
+.vase-connu-grille textarea{min-height:76px;}
 .vase-svg-wrap{text-align:center;margin:10px 0 20px;}
 .grad-list{display:flex;flex-direction:column;gap:14px;margin-bottom:18px;}
 .grad-item{
@@ -2316,6 +2364,28 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
             <option value="autre">Autre</option>
           </select>
           <input type="text" id="m1-trajet-apres-precision" placeholder="Durée, précisions..." oninput="saveM1()">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>💧 Son vase de tension, ce qu'on en sait déjà</label>
+        <div class="help">Avant même de regarder les évènements : d'après ce que vous connaissez de cette personne, qu'est-ce qui fait monter la tension, qu'est-ce qui la fait redescendre ? Ce sont des hypothèses de départ — le module Interpréter les remettra plus tard face à ce que les données auront montré.</div>
+        <div class="vase-connu-grille">
+          <div>
+            <label for="m1-vase-interieur" class="vase-connu-titre">🔺 Ce qui vient d'elle</label>
+            <div class="help">Son fonctionnement, ses angoisses, son histoire, sa santé — ce qui remplit le vase de l'intérieur.</div>
+            <textarea id="m1-vase-interieur" placeholder="ex : supporte mal l'imprévu, angoisse montante en fin de semaine, douleurs dentaires récurrentes..." oninput="saveM1()"></textarea>
+          </div>
+          <div>
+            <label for="m1-vase-exterieur" class="vase-connu-titre">🔺 Ce qui vient du dehors</label>
+            <div class="help">L'environnement, les évènements qui lui tombent dessus — ce qui remplit le vase de l'extérieur.</div>
+            <textarea id="m1-vase-exterieur" placeholder="ex : bruit du réfectoire, changement d'éducateur, absence de sa mère, travaux dans le bâtiment..." oninput="saveM1()"></textarea>
+          </div>
+          <div>
+            <label for="m1-vase-descend" class="vase-connu-titre">🔻 Ce qui le fait redescendre</label>
+            <div class="help">Ce qui apaise, même partiellement, même provisoirement.</div>
+            <textarea id="m1-vase-descend" placeholder="ex : musique au casque, marcher dehors, retrouver sa routine, présence d'une personne précise..." oninput="saveM1()"></textarea>
+          </div>
         </div>
       </div>
 
@@ -3457,6 +3527,11 @@ function saveM1(){
     mode: document.getElementById('m1-trajet-apres-mode').value,
     precision: document.getElementById('m1-trajet-apres-precision').value
   };
+  state.m1.vaseConnu = {
+    interieur: document.getElementById('m1-vase-interieur').value,
+    exterieur: document.getElementById('m1-vase-exterieur').value,
+    descend:   document.getElementById('m1-vase-descend').value
+  };
   state.m1.libre = document.getElementById('m1-libre').value;
   persist();
   verifierCouvertureHoraire();
@@ -3713,6 +3788,10 @@ function loadM1FromState(){
   renderGrilleSemaine();
   loadTrajetsFromState();
   loadApprofondiAccueilFromState();
+  const vc = state.m1.vaseConnu || {};
+  document.getElementById('m1-vase-interieur').value = vc.interieur || '';
+  document.getElementById('m1-vase-exterieur').value = vc.exterieur || '';
+  document.getElementById('m1-vase-descend').value = vc.descend || '';
   document.getElementById('m1-libre').value = state.m1.libre || '';
   refreshM1Progress();
   verifierCouvertureHoraire();
@@ -3747,6 +3826,273 @@ function refreshM2List(){
 // L'état temporaire du formulaire en cours de remplissage
 let formDraft = {};
 let formEditIdx = null; // null = nouveau, int = modification
+
+/* ── LE VASE DE TENSION ────────────────────────────────────────────────
+   Tout le monde a un vase qui se remplit de ce qu'il vit : ce qui vient de
+   l'intérieur (fonctionnement, angoisse, histoire) et ce qui vient du dehors
+   (environnement, évènements qui tombent). Ici on mesure où il en est, de 0 à
+   100, en valeur libre. Les paliers sont des repères de lecture, pas des
+   crans : 52 et 68 sont des valeurs parfaitement légitimes.
+
+   C'est une hétéro-évaluation : le déclarant dit ce qu'il a perçu. D'où la
+   note attachée à chaque mesure — à quoi ça se voyait. Ces notes sont la
+   matière que le module Interpréter récolte et range par palier. */
+const PALIERS_VASE = [
+  {min:0,  nom:'tranquille', couleur:'#A8D5CD'},
+  {min:20, nom:'normal',     couleur:'#9AB5A8'},
+  {min:40, nom:'tendu',      couleur:'#C9A84C'},
+  {min:60, nom:'angoissé',   couleur:'#E2562F'},
+  {min:80, nom:'débordé',    couleur:'#7B4EA0'}
+];
+
+// Borne basse incluse : 40 est « tendu », pas « normal ».
+function palierDe(v) {
+  if (v === null || v === undefined || v === '') return null;
+  const n = Number(v);
+  if (isNaN(n)) return null;
+  const c = Math.max(0, Math.min(100, n));
+  let res = PALIERS_VASE[0];
+  PALIERS_VASE.forEach(p => { if (c >= p.min) res = p; });
+  return res;
+}
+function nomPalier(v) { const p = palierDe(v); return p ? p.nom : null; }
+function couleurTension(v) { const p = palierDe(v); return p ? p.couleur : null; }
+
+// Les trois mesures portées par l'évènement lui-même, dans l'ordre
+// chronologique. Cet ordre n'est pas celui des étapes du formulaire, qui fait
+// décrire le comportement avant d'en chercher les causes — garde volontaire
+// contre l'interprétation. Les mesures d'après intervention vivent dans
+// chaque intervention, puisqu'il peut y en avoir plusieurs.
+const POINTS_TENSION = [
+  {cle:'contexte',   label:'au moment du contexte'},
+  {cle:'antecedent', label:'juste avant le comportement'},
+  {cle:'pic',        label:'au plus fort du comportement'}
+];
+
+function mesureTension(evt, cle) {
+  const t = evt && evt.tension;
+  const m = t && t[cle];
+  if (!m) return null;
+  const v = (m.v === null || m.v === undefined || m.v === '') ? null : Number(m.v);
+  return {v: (v === null || isNaN(v)) ? null : v, note: m.note || ''};
+}
+
+// La montée : contexte, antécédent, pic. Les niveaux d'après intervention en
+// sont exclus à dessein — sinon un évènement bien désamorcé redescend à 20 et
+// ressort « moins grave » qu'un évènement où personne n'est intervenu. La
+// statistique récompenserait l'intervention au lieu de mesurer la sévérité.
+function niveauxMontee(evt) {
+  return POINTS_TENSION.map(p => mesureTension(evt, p.cle))
+    .filter(m => m && m.v !== null).map(m => m.v);
+}
+function tensionMoyenneEvt(evt) {
+  const vs = niveauxMontee(evt);
+  if (!vs.length) return null;
+  return vs.reduce((a, b) => a + b, 0) / vs.length;
+}
+function tensionPicEvt(evt) {
+  const vs = niveauxMontee(evt);
+  return vs.length ? Math.max.apply(null, vs) : null;
+}
+function evtEstCote(evt) {
+  if (niveauxMontee(evt).length) return true;
+  return (evt.interventions || []).some(iv => iv.tension && iv.tension.v !== null && iv.tension.v !== undefined);
+}
+
+// Tous les points d'un évènement, dans l'ordre, pour la courbe et la relecture.
+function pointsTensionEvt(evt) {
+  const pts = [];
+  POINTS_TENSION.forEach(p => {
+    const m = mesureTension(evt, p.cle);
+    if (m && (m.v !== null || m.note)) pts.push({cle:p.cle, label:p.label, v:m.v, note:m.note});
+  });
+  (evt.interventions || []).forEach((iv, i) => {
+    const t = iv.tension;
+    if (!t) return;
+    const brut = (t.v === null || t.v === undefined || t.v === '') ? null : Number(t.v);
+    const v = (brut === null || isNaN(brut)) ? null : brut;
+    if (v === null && !t.note) return;
+    pts.push({
+      cle: 'iv' + i,
+      label: 'après « ' + (iv.texte || 'intervention ' + (i + 1)) + ' »',
+      v: v, note: t.note || '', intervention: iv
+    });
+  });
+  return pts;
+}
+
+/* ── Le dessin du vase ─────────────────────────────────────────────────
+   Un vase qui se remplit par le bas. Les cinq paliers sont marqués par des
+   traits fins et leur nom à côté : repères visuels, pas crans magnétiques.
+   Le chiffre reste saisissable au clavier pour qui préfère écrire 65 que viser. */
+const VASE_PATH = 'M34 14 L20 150 Q20 170 40 170 L82 170 Q102 170 102 150 L88 14 Z';
+const VASE_HAUT = 14, VASE_BAS = 170, VASE_H = 156;
+function vaseY(v) { return VASE_BAS - (v / 100) * VASE_H; }
+
+function vaseSVG(id) {
+  const bandes = PALIERS_VASE.map(p => {
+    const y1 = vaseY(p.min + 20), y2 = vaseY(p.min);
+    return '<rect x="18" y="' + y1.toFixed(1) + '" width="86" height="' + (y2 - y1).toFixed(1) +
+           '" fill="' + p.couleur + '" fill-opacity="0.16" clip-path="url(#vclip-' + id + ')"/>';
+  }).join('');
+  const reperes = PALIERS_VASE.map(p => {
+    const sep = p.min === 0 ? '' :
+      '<line x1="18" y1="' + vaseY(p.min).toFixed(1) + '" x2="106" y2="' + vaseY(p.min).toFixed(1) +
+      '" stroke="var(--ink-soft)" stroke-width="0.6" stroke-dasharray="2,2" opacity="0.6"/>';
+    return sep + '<text x="112" y="' + (vaseY(p.min + 10) + 3.5).toFixed(1) +
+      '" font-size="10.5" fill="var(--ink-soft)">' + p.nom + '</text>';
+  }).join('');
+  return '<svg class="vase-dessin" viewBox="0 0 200 190" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+    '<defs><clipPath id="vclip-' + id + '"><path d="' + VASE_PATH + '"/></clipPath></defs>' +
+    '<rect x="18" y="12" width="86" height="160" fill="var(--paper-deep)" clip-path="url(#vclip-' + id + ')"/>' +
+    bandes +
+    '<rect id="vfill-' + id + '" x="18" y="' + VASE_BAS + '" width="86" height="0" clip-path="url(#vclip-' + id + ')" fill="var(--line)" fill-opacity="0.82"/>' +
+    '<line id="vligne-' + id + '" x1="18" y1="' + VASE_BAS + '" x2="104" y2="' + VASE_BAS + '" stroke="var(--ink)" stroke-width="2" clip-path="url(#vclip-' + id + ')" opacity="0"/>' +
+    reperes +
+    '<path id="vtrait-' + id + '" d="' + VASE_PATH + '" fill="none" stroke="var(--ink-soft)" stroke-width="2" stroke-dasharray="4,3"/>' +
+    '<rect id="vzone-' + id + '" x="18" y="' + VASE_HAUT + '" width="86" height="' + VASE_H +
+      '" fill="transparent" style="cursor:ns-resize;" onpointerdown="vasePointer(\'' + id + '\',event)"/>' +
+    '</svg>';
+}
+
+function vaseWidget(id, mesure, question, aide, compact) {
+  const v = (mesure && mesure.v !== null && mesure.v !== undefined) ? mesure.v : '';
+  const note = (mesure && mesure.note) || '';
+  return '<div class="vase-mesure' + (compact ? ' compact' : '') + '">' +
+    '<div class="vase-question">💧 ' + question + '</div>' +
+    (aide ? '<div class="vase-aide">' + aide + '</div>' : '') +
+    '<div class="vase-corps">' + vaseSVG(id) +
+      '<div class="vase-cote">' +
+        '<div class="vase-chiffre">' +
+          '<input type="number" id="vase-val-' + id + '" min="0" max="100" step="1" value="' + v +
+            '" placeholder="—" oninput="majVase(\'' + id + '\');vaseChange(\'' + id + '\')">' +
+          '<span class="vase-unite">/ 100</span>' +
+        '</div>' +
+        '<div class="vase-palier vide" id="vpalier-' + id + '">pas encore coté</div>' +
+        '<button type="button" class="vase-effacer" onclick="vaseEffacer(\'' + id + '\')">je ne sais pas</button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="field vase-note-field">' +
+      '<label for="vase-note-' + id + '">À quoi ça se voyait ?</label>' +
+      '<div class="help">Les signes que vous avez observés à ce moment-là. C\'est cette matière que l\'analyse fonctionnelle récoltera ensuite pour décrire les paliers du vase chez cette personne.</div>' +
+      '<textarea id="vase-note-' + id + '" placeholder="ex : se balance d\'un pied sur l\'autre, parle plus fort, regarde souvent vers la porte...">' + esc(note) + '</textarea>' +
+    '</div>' +
+  '</div>';
+}
+
+function majVase(id) {
+  const vEl = document.getElementById('vase-val-' + id);
+  if (!vEl) return;
+  const brut = String(vEl.value).trim();
+  let v = null;
+  if (brut !== '') {
+    const n = Number(brut);
+    if (!isNaN(n)) {
+      v = Math.max(0, Math.min(100, Math.round(n)));
+      if (String(v) !== brut) vEl.value = v;
+    }
+  }
+  const pal = palierDe(v);
+  const fill = document.getElementById('vfill-' + id);
+  if (fill) {
+    const h = v === null ? 0 : (v / 100) * VASE_H;
+    fill.setAttribute('y', (VASE_BAS - h).toFixed(1));
+    fill.setAttribute('height', h.toFixed(1));
+    fill.setAttribute('fill', pal ? pal.couleur : 'var(--line)');
+  }
+  const ligne = document.getElementById('vligne-' + id);
+  if (ligne) {
+    const y = v === null ? VASE_BAS : vaseY(v);
+    ligne.setAttribute('y1', y.toFixed(1));
+    ligne.setAttribute('y2', y.toFixed(1));
+    ligne.setAttribute('opacity', v === null ? '0' : '0.75');
+  }
+  const trait = document.getElementById('vtrait-' + id);
+  if (trait) {
+    trait.setAttribute('stroke', v === null ? 'var(--ink-soft)' : 'var(--ink)');
+    if (v === null) trait.setAttribute('stroke-dasharray', '4,3');
+    else trait.removeAttribute('stroke-dasharray');
+  }
+  const pEl = document.getElementById('vpalier-' + id);
+  if (pEl) {
+    pEl.textContent = v === null ? 'pas encore coté' : (pal.nom + ' — ' + v + '/100');
+    pEl.className = 'vase-palier' + (v === null ? ' vide' : '');
+  }
+}
+
+// Le vase ne devient jamais 0 tout seul : 0 est une cotation, l'absence en est
+// une autre. Ce bouton permet de revenir à « non coté » après un clic malheureux.
+function vaseEffacer(id) {
+  const vEl = document.getElementById('vase-val-' + id);
+  if (vEl) vEl.value = '';
+  majVase(id);
+  vaseChange(id);
+}
+
+let vaseDrag = null;
+function vasePointer(id, ev) {
+  ev.preventDefault();
+  vaseDrag = id;
+  vaseDepuisPointeur(id, ev);
+  const move = (e) => { if (vaseDrag) vaseDepuisPointeur(vaseDrag, e); };
+  const up = () => {
+    vaseDrag = null;
+    document.removeEventListener('pointermove', move);
+    document.removeEventListener('pointerup', up);
+  };
+  document.addEventListener('pointermove', move);
+  document.addEventListener('pointerup', up);
+}
+function vaseDepuisPointeur(id, ev) {
+  const zone = document.getElementById('vzone-' + id);
+  if (!zone) return;
+  const r = zone.getBoundingClientRect();
+  if (!r.height) return;
+  const v = Math.max(0, Math.min(100, Math.round((r.bottom - ev.clientY) / r.height * 100)));
+  const vEl = document.getElementById('vase-val-' + id);
+  if (vEl) vEl.value = v;
+  majVase(id);
+  vaseChange(id);
+}
+
+function vaseChange(id) {
+  const m = /^iv(\d+)$/.exec(id);
+  if (m) verifierCoherenceTension(parseInt(m[1], 10));
+}
+
+// Après chaque rendu d'étape : repeindre les vases présents et rejouer les
+// contrôles de cohérence.
+function majTousLesVases() {
+  document.querySelectorAll('[id^="vase-val-"]').forEach(el => {
+    const id = el.id.replace('vase-val-', '');
+    majVase(id);
+    vaseChange(id);
+  });
+}
+
+// Lecture d'un vase affiché. Renvoie undefined si le widget n'est pas à
+// l'écran — il ne faut alors surtout rien effacer dans le brouillon.
+function lireVase(id) {
+  const vEl = document.getElementById('vase-val-' + id);
+  if (!vEl) return undefined;
+  const brut = String(vEl.value).trim();
+  const nEl = document.getElementById('vase-note-' + id);
+  const note = nEl ? nEl.value.trim() : '';
+  let v = null;
+  if (brut !== '') {
+    const n = Number(brut);
+    if (!isNaN(n)) v = Math.max(0, Math.min(100, Math.round(n)));
+  }
+  if (v === null && !note) return null;
+  return {v: v, note: note};
+}
+function majTension(actuel, cle) {
+  const t = Object.assign({}, actuel || {});
+  const lu = lireVase(cle);
+  if (lu === undefined) return t;
+  if (lu === null) delete t[cle]; else t[cle] = lu;
+  return t;
+}
 
 const ETAPES = [
   {
@@ -3853,11 +4199,15 @@ const ETAPES = [
           <div class="help">Nuit agitée ? Retour de week-end famille ? Changement d'emploi du temps ? Médicament modifié ? Maladie ? Douleur signalée ? "RAS" est une réponse valide si vous êtes sûr·e — mais vérifiez deux fois.</div>
           <textarea id="f-avantloin" placeholder="ex : retour de week-end famille ce matin. Ou : rien de particulier signalé.">${esc(d.avantLoin||'')}</textarea>
         </div>
+        ${vaseWidget('contexte', mesureTension(d, 'contexte'),
+          'Où en était le vase avant tout ça ?',
+          "Le niveau de fond, avant que la séquence ne commence : ce que vous avez perçu de son état général ce jour-là. Les paliers sont des repères, pas des crans — 52 et 68 sont des valeurs légitimes.")}
       </div>`,
     collect: () => ({
       lieu: val('f-lieu'),
       presences: val('f-presences'),
       avantLoin: val('f-avantloin'),
+      tension: majTension(formDraft.tension, 'contexte'),
     })
   },
   {
@@ -3881,19 +4231,15 @@ const ETAPES = [
             ).join('')}
           </div>
         </div>
-        <div class="field">
-          <label>Intensité ressentie (votre impression globale) <span style="font-weight:400;color:var(--ink-soft);">(cliquez à nouveau pour décocher)</span></label>
-          <div class="choice-row" id="f-intensite">
-            ${['1 — Très faible','2 — Faible','3 — Modérée','4 — Forte','5 — Très forte'].map(v =>
-              `<label><input type="radio" name="fintens" value="${v}" ${d.intensite===v?'checked':''} onmousedown="this._wasChecked=this.checked" onclick="radioClearOnReclick(this)"> ${v}</label>`
-            ).join('')}
-          </div>
-        </div>
+        ${d.intensite ? `<div class="vase-ancienne">Cet évènement porte une <b>intensité déclarée avec l'ancienne échelle</b> : « ${esc(d.intensite)} ». Cette échelle a été remplacée par le vase de tension — merci de coter le vase ci-dessous. L'ancienne valeur est conservée telle quelle : elle n'est pas convertie, personne n'a jamais dit « 70 ».</div>` : ''}
+        ${vaseWidget('pic', mesureTension(d, 'pic'),
+          'Où en était le vase au plus fort du comportement ?',
+          "Votre impression, pas une mesure d'appareil : vous dites ce que vous avez perçu.")}
       </div>`,
     collect: () => ({
       comportement: val('f-comportement'),
       duree: radioVal('fduree'),
-      intensite: radioVal('fintens'),
+      tension: majTension(formDraft.tension, 'pic'),
     })
   },
   {
@@ -3920,11 +4266,15 @@ const ETAPES = [
           <div class="help">⚠ Décrivez ce que vous avez <em>observé</em>, pas ce que vous avez <em>conclu</em>. "Il tournait en rond depuis 10 min" est une observation. "Il était anxieux" est une interprétation.</div>
           <textarea id="f-etatavant" placeholder="ex : il tournait en rond dans le couloir depuis une dizaine de minutes, regardait souvent vers la porte.">${esc(d.etatAvant||'')}</textarea>
         </div>
+        ${vaseWidget('antecedent', mesureTension(d, 'antecedent'),
+          'Où en était le vase juste avant le comportement ?',
+          "Entre le niveau de fond et le plus fort du comportement : où en était-il dans les minutes qui ont précédé ?")}
       </div>`;
     },
     collect: () => ({
       antecedents: collecterAntecedents(),
       etatAvant: val('f-etatavant'),
+      tension: majTension(formDraft.tension, 'antecedent'),
     })
   },
   {
@@ -3958,6 +4308,7 @@ const ETAPES = [
         effet: radioVal(`finter-eff-${i}`),
         precision: val(`f-inter-precision-${i}`),
         cdPostIntervention: val(`f-inter-cdpost-${i}`),
+        tension: lireVase('iv' + i) || null,
       }));
       return {
         interventions,
@@ -4010,7 +4361,8 @@ const ETAPES = [
               .map(a => a.texte.trim() + (a.declencheurPresume ? ' (présumé déclencheur)' : ''))
               .concat(d.etatAvant ? ['État avant : ' + d.etatAvant] : [])
               .join(' · ')) || '—')}
-          ${recapBloc('🎥 Comportement', d.comportement||'—', d.duree ? `Durée : ${d.duree}` + (d.intensite ? ` · Intensité : ${d.intensite}` : '') : '')}
+          ${recapBloc('🎥 Comportement', d.comportement||'—', d.duree ? `Durée : ${d.duree}` : '')}
+          ${recapBloc('💧 Vase de tension', resumeTensionTexte(d) || '—', d.intensite ? 'Ancienne échelle conservée : ' + d.intensite : '')}
           ${d.gradation ? recapBloc('📈 Gradation', d.gradation) : ''}
           ${recapBloc(`🔄 Conséquence pour ${prenom}`, [d.obtenu ? 'Obtenu : '+d.obtenu : '', d.evite ? 'Évité : '+d.evite : ''].filter(Boolean).join(' / ') || '—')}
           ${recapBloc('🙌 Intervention', (d.interventions||[]).map((iv, i) => {
@@ -4035,6 +4387,13 @@ const ETAPES = [
     })
   }
 ];
+
+// Les points cotés d'un évènement, en une ligne lisible.
+function resumeTensionTexte(evt) {
+  const pts = pointsTensionEvt(evt).filter(p => p.v !== null);
+  if (!pts.length) return '';
+  return pts.map(p => p.label + ' : ' + p.v + ' (' + nomPalier(p.v) + ')').join('  →  ');
+}
 
 function recapBloc(label, val, extra) {
   if (!val || val === '—') return `<div style="opacity:.5;font-size:13px;">${label} : —</div>`;
@@ -4171,8 +4530,51 @@ function renderInterventionBlock(iv, i, total) {
         <div class="help">Ce comportement sera repéré comme un CD distinct (« post-intervention ») dans le module Organiser — la réponse a elle-même produit un nouveau comportement-défi à analyser.</div>
         <textarea id="f-inter-cdpost-${i}" style="min-height:56px;" placeholder="ex : est passé des cris à des coups contre le mur.">${esc(iv.cdPostIntervention||'')}</textarea>
       </div>
+      ${vaseWidget('iv' + i, iv.tension,
+        'Où en était le vase après cette intervention ?',
+        "C'est ce point qui donne à la courbe sa branche descendante — ou qui montre qu'elle ne descend pas.", true)}
+      <div id="f-inter-tension-alerte-${i}" class="vase-alerte" style="display:none;"></div>
       ${total > 1 ? `<button type="button" class="grad-item-del" onclick="retirerInterventionEvt(${i})" title="Supprimer cette intervention" style="margin-top:4px;">✕ Supprimer cette intervention</button>` : ''}
     </div>`;
+}
+
+/* Le champ « effet » dit une direction (ça monte, ça descend), le vase dit un
+   niveau. Les deux peuvent se contredire. On ne tranche pas à la place du
+   déclarant : on le signale, comme pour l'heure et le moment de la journée. */
+function niveauAvantIntervention(i) {
+  for (let k = i - 1; k >= 0; k--) {
+    const el = document.getElementById('vase-val-iv' + k);
+    if (el && String(el.value).trim() !== '') {
+      const n = Number(el.value);
+      if (!isNaN(n)) return n;
+    }
+  }
+  const pic = (formDraft.tension || {}).pic;
+  if (pic && pic.v !== null && pic.v !== undefined) return Number(pic.v);
+  return null;
+}
+
+function verifierCoherenceTension(i) {
+  const box = document.getElementById('f-inter-tension-alerte-' + i);
+  if (!box) return;
+  const effet = radioVal('finter-eff-' + i);
+  const el = document.getElementById('vase-val-iv' + i);
+  const brut = el ? String(el.value).trim() : '';
+  const apres = brut === '' ? null : Number(brut);
+  const avant = niveauAvantIntervention(i);
+  if (!effet || apres === null || isNaN(apres) || avant === null) { box.style.display = 'none'; return; }
+  const delta = apres - avant;
+  let souci = '';
+  if ((effet === 'Diminution de la tension' || effet === 'Disparition de la tension') && delta >= 0) {
+    souci = 'vous indiquez « ' + effet.toLowerCase() + ' », mais le niveau passe de ' + avant + ' à ' + apres;
+  } else if (effet === 'Augmentation de la tension' && delta <= 0) {
+    souci = 'vous indiquez une augmentation de la tension, mais le niveau passe de ' + avant + ' à ' + apres;
+  } else if (effet === 'Aucun effet visible' && Math.abs(delta) > 15) {
+    souci = 'vous indiquez « aucun effet visible », mais le niveau passe de ' + avant + ' à ' + apres;
+  }
+  if (!souci) { box.style.display = 'none'; return; }
+  box.style.display = '';
+  box.innerHTML = '⚠ ' + souci + '. Ce n\'est pas bloquant — les deux peuvent être vrais en même temps. Vérifiez seulement que c\'est bien ce que vous vouliez dire.';
 }
 
 function onInterEffetChange(i, value) {
@@ -4181,6 +4583,7 @@ function onInterEffetChange(i, value) {
   const needsCdPost = effetNeedsCdPost(value);
   if (precWrap) precWrap.style.display = needsCdPost ? 'none' : '';
   if (cdWrap) cdWrap.style.display = needsCdPost ? '' : 'none';
+  verifierCoherenceTension(i);
 }
 
 function ajouterInterventionEvt() {
@@ -4189,7 +4592,7 @@ function ajouterInterventionEvt() {
   if (!formDraft.interventions || !formDraft.interventions.length) {
     formDraft.interventions = [{id:'iv_'+Date.now(), texte:'', effet:'', precision:'', cdPostIntervention:''}];
   }
-  formDraft.interventions.push({id:'iv_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), texte:'', effet:'', precision:'', cdPostIntervention:''});
+  formDraft.interventions.push({id:'iv_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), texte:'', effet:'', precision:'', cdPostIntervention:'', tension:null});
   renderEtape(currentEtapeIdx);
 }
 
@@ -4408,6 +4811,8 @@ function renderEtape(idx) {
 
   // Contenu
   document.getElementById('form-etapes').innerHTML = ETAPES[idx].render(formDraft);
+  // Les vases se dessinent en JS : le HTML ne porte que le gabarit vide.
+  majTousLesVases();
 
   // Navigation
   const nav = document.getElementById('form-nav');
@@ -5591,6 +5996,11 @@ const PROFILS_SIM = [
     poidsJours:{lundi:3, mardi:1, mercredi:1, jeudi:1, vendredi:2},
     poidsMoments:{'Accueil':2,'Activité du matin':2,'Transition':4,'Repas':2,'Temps libre':1,'Activité après-midi':2,'Départ':3},
     libre:'Sensible au bruit. Apprécie les routines stables. Difficultés importantes aux transitions.',
+    vaseConnu:{
+      interieur:"Supporte mal l'imprévu. Anticipe beaucoup, se met la pression tout seul. Dort mal quand un changement approche.",
+      exterieur:"Niveau sonore du foyer en fin de journée. Changements d'emploi du temps annoncés au dernier moment. Retours de week-end.",
+      descend:"Savoir ce qui va se passer et quand. Un préavis avant les transitions. Son magazine, son fauteuil habituel."
+    },
     lieuxConcrets:["Salle d'activité",'Couloir','Réfectoire','Gymnase','Vestiaires','Salle informatique','Hall'],
     declarants:[
       {nom:'Sophie', role:'Professionnel·le', rolePro:'Éducateur·rice spécialisé·e'},
@@ -5603,6 +6013,15 @@ const PROFILS_SIM = [
     catContexte:'Contexte de départ dégradé',
     contextes:['Nuit agitée signalée par la famille.','Retour de week-end famille.','Transport agité ce matin selon le chauffeur.','Semble fatigué depuis le réveil.','Changement de planning annoncé la veille.'],
     etatsAvant:['Tournait en rond dans le couloir depuis dix minutes.','Regardait souvent vers la porte.','Très excité, difficile à canaliser.','Semblait calme, absorbé par son activité.','Baillait, se frottait les yeux.'],
+    // Ce que le déclarant dit avoir vu à chaque palier du vase. C'est la
+    // matière que le module Interpréter récolte et range.
+    signes:{
+      tranquille:["Installé dans son fauteuil, feuillette son magazine.","Répond aux questions, sourit."],
+      normal:["Va et vient tranquillement, rien de particulier.","Parle de ses sujets habituels."],
+      tendu:["Répète la même question plusieurs fois d'affilée.","Parle plus fort, débit plus rapide."],
+      angoissé:["Tourne en rond, regarde souvent vers la porte.","Se tord les mains, ne tient plus en place."],
+      débordé:["Ne répond plus quand on lui parle.","Crie, ne supporte plus qu'on s'approche."]
+    },
     antecedents:[
       {texte:"On lui a demandé de ranger ses affaires pour changer d'activité.", cat:'Consigne ou demande'},
       {texte:"L'activité qu'il appréciait vient de se terminer.", cat:'Transition / fin activité'},
@@ -5673,6 +6092,11 @@ const PROFILS_SIM = [
     poidsJours:{lundi:4, mardi:1, jeudi:1, vendredi:2, samedi:2, dimanche:2},
     poidsMoments:{'Arrivée':4,'Atelier cuisine':2,'Temps libre':1,'Repas':3,'Sieste libre':1,'Atelier créatif':2,'Départ':3},
     libre:"Communique par pictogrammes et quelques mots. Aime beaucoup la musique. Très sensible aux changements imprévus.",
+    vaseConnu:{
+      interieur:"Douleurs dentaires récurrentes, pas toujours repérées à temps. Périodes de sommeil très courtes.",
+      exterieur:"Bruit du réfectoire. Absences de sa mère. Remplacements de professionnels qu'elle ne connaît pas.",
+      descend:"Le casque et la musique. Sa peluche. Un espace calme, sans sollicitation, aussi longtemps qu'il faut."
+    },
     lieuxConcrets:['Couloir','Cuisine pédagogique','Réfectoire','Salle créative','Hall','Vestiaires','Salle snoezelen','Domicile familial'],
     declarants:[
       {nom:'Fatou', role:'Professionnel·le', rolePro:'Éducateur·rice spécialisé·e'},
@@ -5685,6 +6109,13 @@ const PROFILS_SIM = [
     catContexte:'Contexte de départ dégradé',
     contextes:["Week-end chez la famille, retour le matin.","Nuit difficile signalée.","Éducatrice habituelle absente cette semaine.","Changement de traitement la semaine dernière.","Matinée déjà chargée."],
     etatsAvant:["Restait près de la porte d'entrée, cherchait du regard.","Serrait sa peluche très fort.","Assise en retrait, se bouchait les oreilles.","Balancement régulier depuis plusieurs minutes.","Semblait détendue et souriante."],
+    signes:{
+      tranquille:["Assise, détendue, sa peluche posée à côté d'elle.","Sourit quand on passe près d'elle."],
+      normal:["Balancement léger, régulier, sans tension apparente.","Suit l'activité sans participer beaucoup."],
+      tendu:["Serre sa peluche plus fort, balancement plus ample.","Regarde souvent vers la porte d'entrée."],
+      angoissé:["Se bouche les oreilles, se met en retrait.","Émet des sons répétés, de plus en plus forts."],
+      débordé:["Se mord l'avant-bras, ne répond plus.","Se laisse tomber au sol, refuse tout contact."]
+    },
     antecedents:[
       {texte:"Sa mère venait de partir.", cat:'Séparation'},
       {texte:"Le passage devant la porte d'entrée, en partant vers l'atelier.", cat:'Séparation'},
@@ -5759,6 +6190,11 @@ const PROFILS_SIM = [
     poidsJours:{lundi:2, mardi:1, jeudi:1, vendredi:2},
     poidsMoments:{'Arrivée':2,'Cours du matin':1,'Récréation':4,'Fin de matinée':1,'Déjeuner':4,'Cours après-midi':1,'Fin de journée':2},
     libre:"Scolarisé avec AESH. Très à l'aise en mathématiques. Difficultés majeures en récréation et aux changements de salle.",
+    vaseConnu:{
+      interieur:"Anxiété anticipatoire forte : pense à la récréation dès le début du cours précédent.",
+      exterieur:"La cour de récréation. Les changements de salle. Le bruit du hall aux intercours.",
+      descend:"Rester en classe pendant la récréation. Travailler seul sur un exercice. Savoir à l'avance le déroulé de la journée."
+    },
     lieuxConcrets:['Cour de récréation','Couloir','Salle de classe','Cantine','Gymnase','Sortie de l\'école'],
     declarants:[
       {nom:'Marion', role:'Professionnel·le', rolePro:'Enseignant·e'},
@@ -5769,6 +6205,13 @@ const PROFILS_SIM = [
     catContexte:'Contexte de départ dégradé',
     contextes:["Contrôle de mathématiques ce matin.","Bus en retard, arrivé à la dernière minute.","AESH absent aujourd'hui.","Nuit courte d'après la famille."],
     etatsAvant:["Tendu, avait demandé à rester en classe.","Respirait vite, marchait de long en large.","Se bouchait les oreilles dès le hall.","Tête posée sur le bureau."],
+    signes:{
+      tranquille:["Travaille seul à sa table, concentré.","Discute avec un camarade, voix posée."],
+      normal:["Suit le cours, prend des notes par moments.","Un peu en retrait mais présent."],
+      tendu:["Jambe qui tressaute, regarde l'horloge.","Demande plusieurs fois combien de temps il reste."],
+      angoissé:["Respire vite, marche de long en large.","Demande à sortir, se bouche les oreilles."],
+      débordé:["Quitte la pièce sans prévenir.","Se recroqueville, ne répond plus du tout."]
+    },
     antecedents:[
       {texte:"La sonnerie de la récréation a retenti.", cat:'Transition imposée'},
       {texte:"Le changement de salle a été annoncé au dernier moment.", cat:'Transition imposée'},
@@ -5909,6 +6352,41 @@ function simuler(idx){
       });
     }
 
+    /* ── Le vase de tension ──────────────────────────────────────────
+       Une montée cohérente : niveau de fond, puis avant le comportement, puis
+       au plus fort. Chaque point n'est coté que parfois — un déclarant réel ne
+       remplit pas tout, et l'outil doit savoir lire un dossier troué.
+       La note reprend un signe du palier atteint : c'est ce que le module
+       Interpréter récoltera ensuite. */
+    const noteDuPalier = (v) => {
+      const pal = nomPalier(v);
+      const bank = (P.signes || {})[pal] || [];
+      return bank.length && alea() < 0.65 ? piocher(bank) : '';
+    };
+    const mesure = (v) => ({v: Math.max(0, Math.min(100, Math.round(v))), note: noteDuPalier(v)});
+
+    const vContexte = 12 + Math.round(alea() * 40);
+    const vAntecedent = Math.min(96, vContexte + 8 + Math.round(alea() * 28));
+    const vPic = Math.min(100, vAntecedent + 10 + Math.round(alea() * 32));
+    const tension = {};
+    if (alea() < 0.72) tension.contexte = mesure(vContexte);
+    if (alea() < 0.84) tension.antecedent = mesure(vAntecedent);
+    if (alea() < 0.94) tension.pic = mesure(vPic);
+
+    // Après chaque intervention : le niveau suit l'effet déclaré, pour que la
+    // courbe et le contrôle de cohérence aient quelque chose de sensé à lire.
+    let courant = vPic;
+    interventions.forEach(iv => {
+      if (alea() > 0.78) return;
+      let apres = courant;
+      if (iv.effet === 'Disparition de la tension') apres = 5 + Math.round(alea() * 18);
+      else if (iv.effet === 'Diminution de la tension') apres = Math.max(8, courant - 18 - Math.round(alea() * 22));
+      else if (iv.effet === 'Aucun effet visible') apres = Math.max(0, Math.min(100, courant + Math.round((alea() - 0.5) * 12)));
+      else apres = Math.min(100, courant + 6 + Math.round(alea() * 14));
+      iv.tension = mesure(apres);
+      courant = apres;
+    });
+
     const temoin = pondere([['Témoin direct', 8], ['Rapporté par un tiers', 2], ['Constaté après coup', 1]]);
     evts.push({
       id: 'sim_' + idx + '_' + i,
@@ -5926,7 +6404,7 @@ function simuler(idx){
       etatAvant: piocher(P.etatsAvant),
       comportement: cp.texte,
       duree: pondere([['< 1 min',2],['1 à 5 min',4],['5 à 15 min',3],['15 à 30 min',1],['> 30 min',1]]),
-      intensite: pondere([['1 — Très faible',1],['2 — Faible',3],['3 — Modérée',4],['4 — Forte',3],['5 — Très forte',1]]),
+      tension,
       obtenu: cons.texte,
       evite: alea() < 0.4 ? piocher(P.evitements) : '',
       finPersonne: piocher(P.finsEpisode),
@@ -5945,7 +6423,8 @@ function simuler(idx){
     jours: P.jours, heures: P.heures,
     coucher: P.coucher || '', lever: P.lever || '',
     journeeCreneaux: P.journeeCreneaux.map(c => Object.assign({}, c)),
-    semaineCreneaux: {}, joursExtras: [], libre: P.libre
+    semaineCreneaux: {}, joursExtras: [], libre: P.libre,
+    vaseConnu: P.vaseConnu ? Object.assign({}, P.vaseConnu) : {interieur:'', exterieur:'', descend:''}
   };
   state.m2.evenements = evts;
   state.m2.brouillons = [];
@@ -6161,17 +6640,42 @@ const _CONTROLES = [
     return _bancEgal('Part d\'observation directe', attendu, crit ? crit.valeur : null);
   }},
 
-  {nom:'Intensité moyenne de l\'outil 2 lisible', test: () => {
+  {nom:'Niveau de tension moyen de l\'outil 2 lisible', test: () => {
     const evts = state.m2.evenements||[];
     // Sur un dossier vide, computeBafMeta sort tôt et renvoie {} : rien à
     // comparer, et c'est le comportement attendu.
-    if (!evts.length) return _bancEgal('Intensité moyenne : dossier vide', true, true);
-    const vals = evts.map(e => {
-      const m = (e.intensite||'').match(/(\d)/); return m ? parseInt(m[1],10) : null;
-    }).filter(v=>v);
+    if (!evts.length) return _bancEgal('Tension moyenne : dossier vide', true, true);
+    // Recalcul indépendant : on relit les trois points de la montée à la main,
+    // sans passer par niveauxMontee().
+    const vals = [];
+    evts.forEach(e => {
+      const t = e.tension || {};
+      const pts = [];
+      ['contexte','antecedent','pic'].forEach(k => {
+        const m = t[k];
+        if (m && m.v !== null && m.v !== undefined && m.v !== '' && !isNaN(Number(m.v))) pts.push(Number(m.v));
+      });
+      if (pts.length) vals.push(pts.reduce((a,b)=>a+b,0)/pts.length);
+    });
     const attendu = vals.length ? (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1) : null;
     const meta = computeBafMeta(state);
-    return _bancEgal('Intensité moyenne (outil 2)', attendu, meta.intensMoy);
+    return _bancEgal('Tension moyenne (outil 2)', attendu, meta.intensMoy);
+  }},
+
+  {nom:'Paliers du vase : bornes basses incluses', test: () => {
+    const attendu = ['tranquille','tranquille','normal','normal','tendu','tendu','angoissé','angoissé','débordé','débordé'];
+    const obtenu = [0, 19, 20, 39, 40, 59, 60, 79, 80, 100].map(v => nomPalier(v));
+    return _bancEgal('Paliers du vase', attendu.join('|'), obtenu.join('|'));
+  }},
+
+  {nom:'Le pic ignore les niveaux d\'après intervention', test: () => {
+    // Un évènement qui monte à 90 puis redescend à 10 après intervention doit
+    // sortir un pic de 90 et une moyenne calculée sur la seule montée.
+    const faux = {tension:{contexte:{v:30,note:''}, antecedent:{v:60,note:''}, pic:{v:90,note:''}},
+                  interventions:[{texte:'x', tension:{v:10,note:''}}]};
+    const moyAttendue = ((30+60+90)/3).toFixed(2);
+    return _bancEgal('Pic et moyenne de montée', '90|' + moyAttendue,
+      tensionPicEvt(faux) + '|' + tensionMoyenneEvt(faux).toFixed(2));
   }},
 
   {nom:'Progression du préambule dans [0,100]', test: () => {
@@ -6764,6 +7268,14 @@ function fermerPopup() {
 // situer l'élément dans son évènement sans avoir à le chercher.
 let detailEchapHandler = null;
 
+// Les signes observés à chaque palier, tels que le déclarant les a écrits.
+function notesTension(evt) {
+  return pointsTensionEvt(evt)
+    .filter(p => p.note)
+    .map(p => p.label + ' — ' + p.note)
+    .join('  ·  ');
+}
+
 function detailBloc(label, valeur, extra, volet, sousId) {
   const actif = volet && volet === sousId ? ' actif' : '';
   if (!valeur || valeur === '—') {
@@ -6815,7 +7327,8 @@ function ouvrirDetailEvt(evtIdx, sousId, event) {
 
   const dureeIntens = [
     d.duree ? 'Durée : ' + d.duree : '',
-    d.intensite ? 'Intensité : ' + d.intensite : ''
+    // L'ancienne échelle 1-5 reste affichée telle quelle là où elle existe.
+    d.intensite ? 'Intensité (ancienne échelle) : ' + d.intensite : ''
   ].filter(Boolean).join(' · ');
 
   document.getElementById('evt-detail-body').innerHTML = [
@@ -6824,6 +7337,7 @@ function ouvrirDetailEvt(evtIdx, sousId, event) {
     detailBloc('⏮ Contexte', d.avantLoin, '', 'antecedents', sousId),
     detailBloc('⚡ Antécédent', antecedents, d.etatAvant ? 'État avant : ' + d.etatAvant : '', 'antecedents', sousId),
     detailBloc('🎥 Comportement', d.comportement, dureeIntens, 'cp', sousId),
+    detailBloc('💧 Vase de tension', resumeTensionTexte(d), notesTension(d), 'cp', sousId),
     d.gradation ? detailBloc('📈 Gradation', d.gradation, '', 'cp', sousId) : '',
     detailBloc('🔄 Conséquence pour ' + prenom, consequences, '', 'consequences', sousId),
     detailBloc('🙌 Intervention de l’entourage', interventions, '', 'interventions', sousId),
@@ -7522,21 +8036,23 @@ function scatterFond(count, maxCount) {
   return `rgb(${melange(237,122)},${melange(231,154)},${melange(217,137)})`;
 }
 
-// Le rond garde l'intensité moyenne ressentie. Quand elle n'est pas
-// renseignée, il devient un contour creux plutôt qu'un rond gris qui se
-// confondait avec une intensité faible.
-function scatterColor(intensMoy) {
-  if (!intensMoy) return 'none';
-  if (intensMoy < 1.8) return '#A8D5CD';   // très faible — vert pâle
-  if (intensMoy < 2.6) return '#9AB5A8';   // faible — sage
-  if (intensMoy < 3.4) return '#C9A84C';   // modérée — ocre
-  if (intensMoy < 4.2) return '#E2562F';   // forte — brique
-  return '#7B4EA0';                         // très forte — mauve
+// Le rond porte le niveau de tension (0-100), lu au choix en moyenne de la
+// montée ou en pic. Quand rien n'est coté il devient un contour creux, pour ne
+// pas se confondre avec une tension faible. La couleur vient des paliers du
+// vase : c'est la même échelle partout dans l'outil.
+//
+// Moyenne ou pic ne disent pas la même chose : un évènement qui monte à 95 puis
+// retombe fait la même moyenne qu'un évènement plat à 60. Le choix est donc
+// laissé à la lecture, et l'infobulle donne toujours les deux.
+function modeScatterTension() {
+  if (!state.synthese || typeof state.synthese !== 'object') state.synthese = {};
+  return state.synthese.scatterTension === 'pic' ? 'pic' : 'moyenne';
 }
-function intensNum(str) {
-  if (!str) return null;
-  const n = parseInt(str);
-  return isNaN(n) ? null : n;
+function setModeScatterTension(mode) {
+  if (!state.synthese || typeof state.synthese !== 'object') state.synthese = {};
+  state.synthese.scatterTension = (mode === 'pic') ? 'pic' : 'moyenne';
+  persist();
+  buildScatterplot(state.m2.evenements || []);
 }
 
 // Les moments affichés viennent de la journée type du préambule, pas d'une liste
@@ -7565,7 +8081,7 @@ function buildScatterplot(evts) {
   const matrix = {};
   SCATTER_JOURS.forEach(j => {
     matrix[j] = {};
-    MOMENTS.forEach(m => { matrix[j][m] = {count:0, sumIntens:0}; });
+    MOMENTS.forEach(m => { matrix[j][m] = {count:0, moys:[], pics:[]}; });
   });
 
   let hasData = false;
@@ -7579,8 +8095,10 @@ function buildScatterplot(evts) {
     const m = resolveMoment(e.moment);
     if (!j || !m || !matrix[j][m]) return;
     matrix[j][m].count++;
-    const n = intensNum(e.intensite);
-    if (n) matrix[j][m].sumIntens += n;
+    const moy = tensionMoyenneEvt(e);
+    if (moy !== null) matrix[j][m].moys.push(moy);
+    const pic = tensionPicEvt(e);
+    if (pic !== null) matrix[j][m].pics.push(pic);
     hasData = true;
   });
 
@@ -7590,6 +8108,8 @@ function buildScatterplot(evts) {
     el.innerHTML = '<div class="scatter-title">Carte jour × moment</div><div class="scatter-sub">Données insuffisantes — renseignez les champs Date et Moment dans les évènements.</div>';
     return;
   }
+
+  const modeTension = modeScatterTension();
 
   // Calcul du max pour normaliser les rayons
   let maxCount = 0;
@@ -7633,20 +8153,25 @@ function buildScatterplot(evts) {
       const cx = LEFT_MARGIN + ji * CELL_W + CELL_W / 2;
       const cell = matrix[j][m];
       const r = cell.count > 0 ? Math.max(4, Math.round(R_MAX * Math.sqrt(cell.count / maxCount))) : 0;
-      const intensMoy = cell.count > 0 ? cell.sumIntens / cell.count : null;
-      const color = scatterColor(intensMoy);
+      const moyCell = cell.moys.length ? cell.moys.reduce((a, v) => a + v, 0) / cell.moys.length : null;
+      const picCell = cell.pics.length ? Math.max.apply(null, cell.pics) : null;
+      const valeur = modeTension === 'pic' ? picCell : moyCell;
+      const color = couleurTension(valeur) || 'none';
       const label = SCATTER_JOURS_LONG[ji];
+      const chiffres = moyCell === null
+        ? ' · tension non cotée'
+        : ' · moyenne ' + Math.round(moyCell) + ' (' + nomPalier(moyCell) + ') · pic ' + Math.round(picCell) + ' (' + nomPalier(picCell) + ')';
       const tooltip = cell.count > 0
-        ? `${label} · ${m} : ${cell.count} évt${cell.count > 1 ? 's' : ''}${intensMoy ? ' · intensité moy. ' + intensMoy.toFixed(1) : ''}`
+        ? `${label} · ${m} : ${cell.count} évt${cell.count > 1 ? 's' : ''}${chiffres}`
         : `${label} · ${m} : aucun évènement`;
 
       // Fond de cellule en dégradé selon le nombre : la carte thermique.
       svg += `<rect x="${LEFT_MARGIN + ji * CELL_W}" y="${TOP_MARGIN + mi * CELL_H}" width="${CELL_W}" height="${CELL_H}" fill="${scatterFond(cell.count, maxCount)}" stroke="var(--line)" stroke-width="0.5"><title>${tooltip}</title></rect>`;
 
       if (r > 0) {
-        // Rond au centre : l'intensité moyenne. Creux quand elle est inconnue,
-        // pour ne pas la confondre avec une intensité faible.
-        const sansIntensite = !intensMoy;
+        // Rond au centre : le niveau de tension. Creux quand rien n'est coté,
+        // pour ne pas le confondre avec une tension faible.
+        const sansIntensite = valeur === null;
         svg += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${sansIntensite ? 'none' : color}" fill-opacity="${sansIntensite ? 1 : 0.9}" stroke="${sansIntensite ? 'var(--ink-soft)' : 'white'}" stroke-width="${sansIntensite ? 1.4 : 1}" ${sansIntensite ? 'stroke-dasharray="2,2"' : ''}>`;
         svg += `<title>${tooltip}</title>`;
         svg += `</circle>`;
@@ -7666,22 +8191,22 @@ function buildScatterplot(evts) {
 
   svg += '</svg>';
 
-  // Légende intensité
-  const legendItems = [
-    {color:'#A8D5CD', label:'Très faible (1)'},
-    {color:'#9AB5A8', label:'Faible (2)'},
-    {color:'#C9A84C', label:'Modérée (3)'},
-    {color:'#E2562F', label:'Forte (4)'},
-    {color:'#7B4EA0', label:'Très forte (5)'},
-  ];
-  const legend = legendItems.map(l =>
-    `<div class="scatter-legend-item"><div class="scatter-legend-swatch" style="background:${l.color}"></div>${l.label}</div>`
+  // Légende : les paliers du vase, la même échelle que partout ailleurs.
+  const legend = PALIERS_VASE.map(p =>
+    `<div class="scatter-legend-item"><div class="scatter-legend-swatch" style="background:${p.couleur}"></div>${p.nom} (${p.min}-${p.min + 20})</div>`
   ).join('') +
-  `<div class="scatter-legend-item" style="margin-left:10px;"><div class="scatter-legend-swatch" style="background:none;border:1.4px dashed var(--ink-soft);"></div>intensité non renseignée</div>`;
+  `<div class="scatter-legend-item" style="margin-left:10px;"><div class="scatter-legend-swatch" style="background:none;border:1.4px dashed var(--ink-soft);"></div>tension non cotée</div>`;
+
+  const choixMode = `<div class="bloc-controles no-print">
+      <select onchange="setModeScatterTension(this.value)" title="Ce que le rond représente">
+        <option value="moyenne" ${modeTension === 'moyenne' ? 'selected' : ''}>Moyenne de la montée</option>
+        <option value="pic" ${modeTension === 'pic' ? 'selected' : ''}>Pic</option>
+      </select>
+    </div>`;
 
   el.innerHTML = `
-    <div class="scatter-title">Carte jour × moment</div>
-    <div class="scatter-sub">Fond de la case = nombre d'évènements · rond = intensité moyenne ressentie · survolez pour le détail</div>
+    <div class="synth-niveau-tete"><h5 class="scatter-title" style="margin:0;">Carte jour × moment</h5>${choixMode}</div>
+    <div class="scatter-sub">Fond de la case = nombre d'évènements · rond = niveau de tension, ${modeTension === 'pic' ? 'au pic' : 'en moyenne sur la montée'} · survolez pour le détail.<br>La moyenne porte sur le contexte, l'antécédent et le pic — pas sur les niveaux d'après intervention, qui feraient passer pour calme un évènement bien désamorcé. C'est une hétéro-évaluation déclarative, pas une mesure.</div>
     <div class="scatter-svg-outer">${svg}</div>
     <div class="scatter-legend">${legend}</div>`;
 }
@@ -8334,12 +8859,12 @@ function computeBafMeta(baf){
   const ctxComplet = evts.filter(e=>e.date&&e.heure&&e.lieu&&e.moment&&e.presences).length;
 
   // Intensité renseignée
-  const intensRens = evts.filter(e=>e.intensite).length;
+  const intensRens = evts.filter(e => evtEstCote(e)).length;
   // Intensité moyenne. Une table de correspondance attendait "Modérée (3)"
   // alors que le formulaire produit "3 — Modérée" : la conversion échouait
   // toujours et cette moyenne n'a jamais pu s'afficher. On réutilise
   // intensNum(), la lecture déjà employée partout ailleurs.
-  const intensVals = evts.map(e=>intensNum(e.intensite)).filter(v=>v!==null && !isNaN(v));
+  const intensVals = evts.map(e => tensionMoyenneEvt(e)).filter(v => v !== null);
   const intensMoy = intensVals.length ? (intensVals.reduce((a,b)=>a+b,0)/intensVals.length).toFixed(1) : null;
 
   // Période couverte
@@ -8476,7 +9001,7 @@ function bafRefText(refKey, bafMeta){
     case'contexte':
       return 'Contexte complet (date+heure+lieu+moment+présences) sur <strong>'+m.ctxComplet+'/'+m.n+'</strong>';
     case'intensite':
-      return 'Intensité renseignée sur <strong>'+m.intensRens+'/'+m.n+'</strong>';
+      return 'Niveau de tension coté sur <strong>'+m.intensRens+'/'+m.n+'</strong> évènements';
     case'volume':
       let txt='<strong>'+m.n+' évènement'+(m.n>1?'s':'')+'</strong>';
       if(m.dateMin&&m.dateMax&&m.dateMin!==m.dateMax) txt+=' · du <strong>'+m.dateMin+'</strong> au <strong>'+m.dateMax+'</strong>';
@@ -8485,7 +9010,7 @@ function bafRefText(refKey, bafMeta){
     case'frequence':
       return '<strong>'+m.n+' évènement'+(m.n>1?'s':'')+'</strong> documentés dans le BAF';
     case'intensiteMoy':
-      return m.intensMoy ? 'Intensité moyenne BAF : <strong>'+m.intensMoy+'/5</strong> ('+m.intensRens+' mesures)' : null;
+      return m.intensMoy ? 'Niveau de tension moyen : <strong>'+m.intensMoy+'/100</strong> — moyenne des montées de '+m.intensRens+' évènements cotés' : null;
     case'scatterplot':
       return 'Carte jour × moment disponible dans le BAF (<strong>'+m.n+' évènements</strong>)';
     case'gradation':
