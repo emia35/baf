@@ -258,6 +258,38 @@ header.top{
    lisible — « Dossier » — plutôt que trois pictogrammes seuls : sur un écran
    étroit, deviner ce que fait une icône coûte plus cher que la place gagnée. */
 .subbar-compact{display:none;}
+/* ── Mode déclarant ────────────────────────────────────────────────────
+   Même gabarit que la barre dossier, teinte différente : le déclarant doit
+   voir d'un coup d'œil qu'il n'est pas dans l'outil ordinaire. */
+#declarant-subbar{
+  position:sticky;top:var(--header-h,60px);z-index:98;
+  background:var(--sauge-pale);
+  border-bottom:1px solid var(--sauge);
+}
+#declarant-subbar .subbar-back{color:var(--sauge-deep);}
+#declarant-subbar .subbar-btn{border-color:var(--sauge);}
+#declarant-subbar .subbar-btn.declarant-envoi{
+  background:var(--sauge-deep);border-color:var(--sauge-deep);color:#FFFFFF;font-weight:700;
+}
+#declarant-subbar .subbar-btn.declarant-envoi:hover{background:var(--sauge);border-color:var(--sauge);color:#FFFFFF;}
+.decl-etape{
+  display:flex;gap:14px;align-items:flex-start;
+  padding:14px 0;border-top:1px solid var(--line-soft);
+  font-size:14.5px;line-height:1.65;
+}
+.decl-etape:first-of-type{border-top:none;padding-top:0;}
+.decl-num{
+  flex:0 0 26px;width:26px;height:26px;border-radius:50%;
+  background:var(--sauge-deep);color:#FFFFFF;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;
+}
+#view-m1 [data-fige-declarant]{opacity:.72;cursor:not-allowed;}
+#preambule-remarques[hidden]{display:none;}
+@media(max-width:620px){
+  #declarant-subbar .subbar-dossier{display:none;}
+  #declarant-subbar .subbar-btn{font-size:11px;padding:5px 8px;}
+}
 .subbar-menu-etat{
   display:block;padding:7px 10px 9px;margin:0 0 3px;
   border-bottom:1px solid var(--line-soft);
@@ -2462,6 +2494,23 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
 </div>
 
 
+<!-- Barre du déclarant : remplace la barre dossier, qui porte Exporter,
+     Importer et Effacer — trois actions qu'un déclarant n'a aucune raison
+     d'atteindre, la dernière étant franchement dangereuse pour lui. -->
+<div id="declarant-subbar" style="display:none;">
+  <div class="subbar-inner">
+    <button class="subbar-back" onclick="route('declarant')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+      <span>Ma page</span>
+    </button>
+    <div class="subbar-dossier" id="declarant-etat"></div>
+    <div class="subbar-actions">
+      <button class="subbar-btn declarant-envoi" onclick="exporterContribution()" title="Produire le fichier à renvoyer">✉ Renvoyer ma contribution</button>
+      <button class="subbar-btn" onclick="quitterModeDeclarant()" title="Revenir à l'outil complet">Quitter</button>
+    </div>
+  </div>
+</div>
+
 <main class="wrap">
 
   <section id="view-accueil" class="view show">
@@ -2554,6 +2603,25 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
     </div>
   </section>
 
+
+<section id="view-declarant" class="view">
+    <div class="mod-header">
+      <span class="temps-tag tag-m2">Vous participez</span>
+      <h2>Bienvenue</h2>
+      <div class="sub">Vous avez été sollicité pour décrire ce que vous observez. Voici ce qu'on vous demande, et ce qu'on ne vous demande pas.</div>
+    </div>
+    <div id="declarant-contenu"></div>
+  </section>
+
+  <section id="view-reserve" class="view">
+    <div class="mod-header">
+      <div class="crumb"><button onclick="route('declarant')">← Ma page</button></div>
+      <span class="temps-tag tag-m4">Réservé à l'équipe</span>
+      <h2>Cette partie ne vous est pas demandée</h2>
+      <div class="sub">Vous pouvez la voir — elle fait partie du même outil — mais c'est l'équipe qui s'en charge.</div>
+    </div>
+    <div id="reserve-contenu"></div>
+  </section>
 
   <section id="view-notes" class="view">
     <div class="mod-header">
@@ -2942,6 +3010,8 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
 
     </div><!-- fin m1-rapide-content -->
 
+    <div id="preambule-remarques" hidden></div>
+
     <div class="actions-row">
       <button class="btn btn-secondary" onclick="route('synthese')">Voir la synthèse</button>
       <button class="btn btn-primary" onclick="route('m2')">Passer au module 1 — Recueillir →</button>
@@ -2959,6 +3029,17 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
     <div class="card" id="m2-intro-card">
       <p style="font-size:14px;color:var(--ink-soft);">Pour chaque évènement, on vous guide pas à pas — un peu comme si l'équipe de l'EMIA était face à vous et vous posait les questions, une à la fois. Le but : rester factuel, décrire ce qui s'est passé comme une caméra l'aurait filmé, sans chercher à interpréter ou analyser tout de suite. Ça viendra après.</p>
       <button class="btn btn-primary" onclick="ouvrirFormulaireEvenement()">+ Ajouter un évènement</button>
+    </div>
+
+    <div class="card" id="m2-partager-card">
+      <h4 style="font-size:16px;color:var(--ink);margin-bottom:6px;">Faire participer d'autres personnes</h4>
+      <p style="font-size:14px;color:var(--ink-soft);line-height:1.65;margin:0 0 12px;">
+        Une famille, un foyer, un accueil de jour voient des choses que vous ne voyez pas. Exportez un <b>kit déclarant</b> :
+        il contient le préambule, aucun évènement, et rien du travail d'analyse. La personne qui le reçoit ouvre la BAF,
+        charge ce fichier, relit le préambule, décrit ce qu'elle a observé, puis vous renvoie sa contribution.
+        Vous la fusionnerez ici, chaque évènement gardant la trace de sa provenance.
+      </p>
+      <button class="btn btn-secondary" onclick="exporterKitDeclarant()">✉ Exporter un kit déclarant</button>
     </div>
 
     <div class="card">
@@ -3666,6 +3747,11 @@ function route(name, fromHistory){
     try { Object.assign(formDraft, collecterEtape(ETAPES[currentEtapeIdx])); saveBrouillon(); } catch(e) {}
   }
   fermetureVolontaire = false;
+  /* Un déclarant ne se fait pas refouler : la vue s'ouvre et dit ce qu'elle
+     fait, et qui s'en charge. Et hors mode déclarant, ses deux pages à lui
+     n'ont aucun sens : elles renvoient à l'accueil. */
+  if (modeDeclarantActif() && VUES_RESERVEES[name]) { renderReserve(name); name = 'reserve'; }
+  else if (!modeDeclarantActif() && (name === 'declarant' || name === 'reserve')) name = 'accueil';
   document.querySelectorAll('section.view').forEach(s=>s.classList.remove('show'));
   const target = document.getElementById('view-'+name);
   if(target) target.classList.add('show');
@@ -3673,7 +3759,7 @@ function route(name, fromHistory){
   const navBtn = document.querySelector('.nav-btn[data-go="'+name+'"]');
   if(navBtn) navBtn.classList.add('on');
 
-  const isBaf = ['baf-accueil','m1','m2','m2-form','m3','m4','synthese'].includes(name);
+  const isBaf = ['baf-accueil','m1','m2','m2-form','m3','m4','synthese','declarant','reserve'].includes(name);
   const isIdc = ['idc-accueil','idc-main'].includes(name);
   const isGlobal = ['accueil','reperes','ressources','apropos','notes'].includes(name);
   const bafNavGroup = document.getElementById('baf-nav-group');
@@ -3684,6 +3770,8 @@ function route(name, fromHistory){
   if(globalNavGroup) globalNavGroup.style.display = isGlobal ? 'flex' : 'none';
   if(name === 'reperes') renderReperes();
   if(name === 'notes') renderNotes();
+  if(name === 'declarant') renderDeclarant();
+  appliquerModeDeclarant();
 
   // Identité visuelle par outil (couleur d\'accent du header/nav)
   document.body.classList.toggle('tool-baf', isBaf);
@@ -3694,8 +3782,15 @@ function route(name, fromHistory){
   const dansOutil2 = ['idc-accueil','idc-main'].includes(name);
   const surAccueilOutil = (name === 'baf-accueil' || name === 'idc-accueil');
   const subbar = document.getElementById('tool-subbar');
-  if(subbar) subbar.style.display = (dansOutil1 || dansOutil2) ? '' : 'none';
-  if(dansOutil1 || dansOutil2) majBarreDossier(dansOutil2 ? 'idc' : 'baf', surAccueilOutil);
+  const declarant = modeDeclarantActif();
+  /* En mode déclarant la barre suit partout : le bouton qui produit le
+     fichier à renvoyer ne doit jamais être à plus d'un écran de distance. */
+  const barreUtile = declarant || dansOutil1 || dansOutil2;
+  if(subbar) subbar.style.display = (!declarant && (dansOutil1 || dansOutil2)) ? '' : 'none';
+  const barreDecl = document.getElementById('declarant-subbar');
+  if(barreDecl) barreDecl.style.display = (declarant && barreUtile) ? '' : 'none';
+  if(declarant) majBarreDeclarant();
+  else if(dansOutil1 || dansOutil2) majBarreDossier(dansOutil2 ? 'idc' : 'baf', surAccueilOutil);
   syncHeaderHeight();
 
   // Historique navigateur : le bouton "précédent" doit naviguer dans l\'outil,
@@ -3863,6 +3958,8 @@ const ADRESSES_VUES = {
   'ressources':   'ressources',
   'apropos':      'a-propos',
   'notes':        'notes-de-version',
+  'declarant':    'participer',
+  'reserve':      'reserve-a-l-equipe',
   'baf-accueil':  'recueil-des-donnees',
   'm1':           'se-connaitre',
   'm2':           'recueillir',
@@ -6954,8 +7051,9 @@ function importerJSON(event, versOutil2){
   const reader = new FileReader();
   reader.onload = function(e){
     try{
-      const lu = lireFichierBAF(JSON.parse(e.target.result), ['dossier']);
+      const lu = lireFichierBAF(JSON.parse(e.target.result), ['dossier','kit']);
       if (!lu.ok) { alert(lu.raison); return; }
+      if (lu.type === 'kit') { ouvrirKitDeclarant(lu); return; }
       replaceState(lu.dossier);
       // On retient d'où vient le dossier, pour que la barre puisse le dire.
       state.fichierDossier = file.name;
@@ -7675,6 +7773,52 @@ function _bancEgal(nom, attendu, obtenu, tolerance) {
 
 // Recalculs indépendants, écrits sans réutiliser les fonctions de production.
 const _CONTROLES = [
+
+{nom:'Le kit déclarant ne transporte que le préambule', test: () => {
+    /* Un kit qui emporterait des évènements ferait déclarer les gens par-dessus
+       ceux des autres ; un kit qui emporterait l'organisation livrerait le
+       travail clinique de l'équipe à des tiers. Il ne porte que m1. */
+    const kit = {baf: enveloppeBAF('kit'), m1: JSON.parse(JSON.stringify(state.m1 || {}))};
+    const cles = Object.keys(kit).sort().join(',');
+    return _bancEgal('Clés du kit', 'baf,m1', cles);
+  }},
+
+  {nom:'Un kit est reconnu comme kit, et refusé là où on attend un dossier', test: () => {
+    const kit = {baf: enveloppeBAF('kit'), m1: {}};
+    const commeKit = lireFichierBAF(kit, ['dossier','kit']);
+    const commeDossier = lireFichierBAF(kit, ['dossier']);
+    return _bancEgal('Kit : accepté comme kit, refusé comme dossier',
+      'kit|refusé', (commeKit.ok ? commeKit.type : 'REFUSÉ') + '|' + (commeDossier.ok ? 'ACCEPTÉ' : 'refusé'));
+  }},
+
+  {nom:'La contribution ne remonte que le déclaratif', test: () => {
+    /* L'action de l'équipe commence dans Organiser : ce qu'un déclarant
+       renvoie ne doit contenir ni catégorisation ni interprétation. */
+    const contribution = {
+      baf: enveloppeBAF('contribution'),
+      contribution: {idContribution:'ctr_x', idDossier: state.idDossier || null, provenance:'', remarques:{}, nbEvenements:0, envoye:''},
+      m2: {evenements: []}
+    };
+    const cles = Object.keys(contribution).sort().join(',');
+    const lu = lireFichierBAF(contribution, ['contribution']);
+    return _bancEgal('Contribution : forme et type', 'baf,contribution,m2|contribution',
+      cles + '|' + (lu.ok ? lu.type : 'REFUSÉ'));
+  }},
+
+  {nom:'Le mode déclarant verrouille les vues réservées', test: () => {
+    const sauve = state.declarant;
+    const vueAvant = (document.querySelector('section.view.show') || {}).id;
+    state.declarant = {actif:true, idContribution:'ctr_test', provenance:'', remarques:{}};
+    let atteintes = [];
+    Object.keys(VUES_RESERVEES).forEach(v => {
+      route(v);
+      const affichee = (document.querySelector('section.view.show') || {}).id;
+      if (affichee !== 'view-reserve') atteintes.push(v + '→' + affichee);
+    });
+    state.declarant = sauve;
+    if (vueAvant) route(vueAvant.replace(/^view-/, ''));
+    return _bancEgal('Vues réservées atteintes en mode déclarant', '', atteintes.join(','));
+  }},
 
   {nom:'Le dossier porte une identité stable', test: () => {
     /* Premier appel : pose l'identité si elle manque — c'est le cas des jeux
@@ -11202,6 +11346,317 @@ refreshM2List();
 refreshAccueilBadges();
 // Le hash d'arrivée fait foi : écraser systématiquement par #accueil rendait
 // tout lien partagé inopérant, il ouvrait toujours la page d'accueil.
+/* ══════════════════════════════════════════════════════════════════════
+   LE MODE DÉCLARANT
+   ══════════════════════════════════════════════════════════════════════
+   Une famille, un foyer, une institution ne font pas l'analyse fonctionnelle :
+   ils décrivent ce qu'ils ont vu. L'EMIA leur envoie un KIT — le préambule
+   consolidé, sans aucun évènement — ils déclarent de leur côté, et renvoient
+   une CONTRIBUTION que l'EMIA fusionne.
+
+   Deux règles qui commandent tout le reste :
+
+   1. Le préambule du destinataire fait foi. Le déclarant peut le contester,
+      section par section, jamais le réécrire. Sans ça, quatre personnes
+      déclareraient des évènements sur la base de quatre journées types
+      différentes, et la carte jour × moment perdrait sans rien dire les
+      évènements dont le moment n'existe pas chez le receveur.
+
+   2. Un déclarant ne voit pas l'outil amputé, il le voit entier. Les modules
+      réservés s'ouvrent et disent ce qu'ils font et qui s'en occupe. Cacher
+      la moitié de l'outil derrière une « simplicité » de façade serait moins
+      honnête que de montrer le chemin complet.
+
+   Ce bloc est déclaré AVANT le routage initial : route() interroge
+   VUES_RESERVEES dès l'ouverture d'un lien direct. Un const déclaré plus bas
+   serait en zone morte temporelle. Ne pas le déplacer. */
+
+const SECTIONS_PREAMBULE = [
+  {cle:'personne', titre:'La personne',
+   aide:"Prénom, âge, ce qui est dit de son fonctionnement, de sa communication."},
+  {cle:'espaces', titre:'Les espaces de vie',
+   aide:"Les lieux où elle vit et où elle est accueillie, et lesquels vous connaissez."},
+  {cle:'journee', titre:'La journée type',
+   aide:"Les moments de la journée et leurs horaires, tels qu'ils sont décrits ici."},
+  {cle:'nuit', titre:'La nuit et les trajets',
+   aide:"Coucher, lever, déplacements."},
+  {cle:'vase', titre:'Le vase de tension',
+   aide:"Ce qui la fait monter en tension, ce qui la fait redescendre."},
+  {cle:'autre', titre:'Autre chose',
+   aide:"Ce qui manque, ce qui vous paraît faux, ce que vous diriez autrement."}
+];
+
+/* Ce qu'un déclarant ne fait pas — et ce qu'on lui répond quand il y va. */
+const VUES_RESERVEES = {
+  m3: {
+    titre: 'Organiser les données',
+    quoi: "Regrouper en catégories tout ce qui a été décrit — les comportements, ce qui les précède, ce qui les suit — pour faire apparaître ce qui se répète.",
+    qui: "C'est l'équipe de l'EMIA qui s'en charge, à partir de vos observations et de celles des autres personnes sollicitées."
+  },
+  m4: {
+    titre: 'Interpréter',
+    quoi: "Formuler des hypothèses sur ce que le comportement cherche à obtenir ou à éviter, et décrire à quoi ressemblent les paliers de tension de la personne.",
+    qui: "C'est un travail clinique, mené par l'équipe de l'EMIA une fois toutes les observations réunies."
+  },
+  synthese: {
+    titre: 'La synthèse',
+    quoi: "La vue d'ensemble : les chiffres, les graphiques, les régularités repérées sur l'ensemble des évènements déclarés.",
+    qui: "Elle se construit à partir de l'ensemble des contributions. L'EMIA vous en restituera ce qui vous concerne."
+  },
+  'idc-accueil': {
+    titre: "L'indice de confiance",
+    quoi: "Une grille qui évalue la qualité méthodologique de l'analyse fonctionnelle elle-même — pas la personne, pas vous : le travail produit.",
+    qui: "C'est un outil interne à l'équipe."
+  },
+  'idc-main': {
+    titre: "L'indice de confiance",
+    quoi: "Une grille qui évalue la qualité méthodologique de l'analyse fonctionnelle elle-même — pas la personne, pas vous : le travail produit.",
+    qui: "C'est un outil interne à l'équipe."
+  }
+};
+
+function modeDeclarantActif() {
+  return !!(state && state.declarant && state.declarant.actif);
+}
+
+/* ── Côté EMIA : fabriquer le kit ──────────────────────────────────── */
+function exporterKitDeclarant() {
+  if (!state.m1 || !(state.m1.prenom || '').trim()) {
+    if (!confirm("Le préambule n'a pas de prénom. Le kit partira quand même, mais la personne qui le recevra ne saura pas de qui il s'agit. Continuer ?")) return;
+  }
+  migrerIdentiteDossier();
+  const kit = {
+    baf: enveloppeBAF('kit'),
+    m1: JSON.parse(JSON.stringify(state.m1 || {}))
+  };
+  const prenom = (state.m1.prenom || 'sans_nom').replace(/[^a-zA-Z0-9]/g, '_');
+  telechargerTexte(JSON.stringify(kit, null, 2),
+    'RDAF-kit_' + prenom + '_' + new Date().toISOString().slice(0, 10) + '.json');
+  showToast('Kit déclarant exporté.');
+}
+
+function telechargerTexte(texte, nom) {
+  const blob = new Blob([texte], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = nom;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ── Côté déclarant : ouvrir le kit ────────────────────────────────── */
+function ouvrirKitDeclarant(lu) {
+  const kit = lu.dossier || {};
+  const env = lu.enveloppe || {};
+  const dejaDesEvenements = (state.m2 && (state.m2.evenements || []).length) > 0;
+  if (dejaDesEvenements && !confirm(
+      "Un dossier est déjà ouvert dans cet outil (" +
+      (state.m2.evenements || []).length + " évènement(s)). Ouvrir ce kit le remplacera. Continuer ?")) return;
+
+  replaceState({ m1: kit.m1 || {} });
+  state.idDossier = env.idDossier || nouvelIdentifiant('dos');
+  state.cree = new Date().toISOString();
+  state.schema = SCHEMA_DOSSIER;
+  state.fichierDossier = null;
+  state.origineDossier = 'kit';
+  state.declarant = {
+    actif: true,
+    idContribution: nouvelIdentifiant('ctr'),
+    provenance: '',
+    ouvert: new Date().toISOString(),
+    remarques: {}
+  };
+  persist();
+  loadM1FromState();
+  refreshM2List();
+  refreshAccueilBadges();
+  route('declarant');
+  showToast('Kit ouvert. Bienvenue.');
+}
+
+function quitterModeDeclarant() {
+  if (!confirm("Quitter le mode déclarant ?\n\nVos évènements restent dans l'outil, mais l'outil redeviendra complet. Si vous n'avez pas encore renvoyé votre contribution, faites-le avant.")) return;
+  if (state.declarant) state.declarant.actif = false;
+  persist();
+  route('baf-accueil');
+  showToast('Mode déclarant quitté.');
+}
+
+/* ── Côté déclarant : renvoyer sa contribution ─────────────────────── */
+function exporterContribution() {
+  const d = state.declarant || {};
+  const evts = (state.m2 && state.m2.evenements) || [];
+  if (!evts.length && !confirm("Aucun évènement n'est décrit pour l'instant. Envoyer quand même vos remarques sur le préambule ?")) return;
+  const prov = (document.getElementById('declarant-provenance') || {}).value;
+  if (typeof prov === 'string') d.provenance = prov.trim();
+  collecterRemarquesPreambule();
+  persist();
+
+  const contribution = {
+    baf: enveloppeBAF('contribution'),
+    contribution: {
+      idContribution: d.idContribution || nouvelIdentifiant('ctr'),
+      idDossier: state.idDossier || null,
+      provenance: d.provenance || '',
+      remarques: d.remarques || {},
+      nbEvenements: evts.length,
+      envoye: new Date().toISOString()
+    },
+    m2: { evenements: JSON.parse(JSON.stringify(evts)) }
+  };
+  const qui = (d.provenance || 'contribution').replace(/[^a-zA-Z0-9]/g, '_').slice(0, 24) || 'contribution';
+  telechargerTexte(JSON.stringify(contribution, null, 2),
+    'RDAF-contribution_' + qui + '_' + new Date().toISOString().slice(0, 10) + '.json');
+  showToast('Contribution exportée. Renvoyez ce fichier à la personne qui vous a sollicité.');
+}
+
+/* ── Le préambule, en lecture seule, avec des remarques ────────────── */
+function collecterRemarquesPreambule() {
+  if (!state.declarant) return;
+  const r = state.declarant.remarques || {};
+  SECTIONS_PREAMBULE.forEach(s => {
+    const el = document.getElementById('remarque-' + s.cle);
+    if (el) r[s.cle] = el.value.trim();
+  });
+  Object.keys(r).forEach(k => { if (!r[k]) delete r[k]; });
+  state.declarant.remarques = r;
+}
+
+function appliquerModeDeclarantSurM1() {
+  const vue = document.getElementById('view-m1');
+  const bloc = document.getElementById('preambule-remarques');
+  if (!vue || !bloc) return;
+  const actif = modeDeclarantActif();
+
+  vue.querySelectorAll('input, textarea, select, button').forEach(el => {
+    if (el.closest('#preambule-remarques')) return;
+    if (actif) { el.setAttribute('disabled', 'disabled'); el.dataset.figeDeclarant = '1'; }
+    else if (el.dataset.figeDeclarant) { el.removeAttribute('disabled'); delete el.dataset.figeDeclarant; }
+  });
+
+  if (!actif) { bloc.innerHTML = ''; bloc.hidden = true; return; }
+  bloc.hidden = false;
+  const r = (state.declarant && state.declarant.remarques) || {};
+  bloc.innerHTML =
+    '<div class="card">' +
+      '<h3 style="font-size:17px;margin-bottom:6px;">Ce préambule vous semble-t-il juste ?</h3>' +
+      '<p style="font-size:14px;color:var(--ink-soft);margin:0 0 16px;line-height:1.6;">' +
+        'Il a été rempli par l\'équipe qui vous a sollicité. Vous ne pouvez pas le modifier — c\'est volontaire : ' +
+        'si chacun le réécrivait de son côté, les observations ne se compareraient plus. ' +
+        'En revanche, <b>dites ce qui vous paraît faux, incomplet ou mal dit</b>. La personne qui vous a sollicité ' +
+        'recevra vos remarques et corrigera.' +
+      '</p>' +
+      SECTIONS_PREAMBULE.map(s =>
+        '<div class="field" style="margin-bottom:14px;">' +
+          '<label for="remarque-' + s.cle + '">' + esc(s.titre) + '</label>' +
+          '<div class="help" style="margin:0 0 6px;">' + esc(s.aide) + '</div>' +
+          '<textarea id="remarque-' + s.cle + '" rows="2" placeholder="Rien à signaler, ou dites-le ici…" ' +
+            'oninput="collecterRemarquesPreambule(); persist();">' + esc(r[s.cle] || '') + '</textarea>' +
+        '</div>'
+      ).join('') +
+    '</div>';
+}
+
+/* ── La barre du déclarant, à la place de la barre dossier ─────────── */
+function majBarreDeclarant() {
+  const barre = document.getElementById('declarant-subbar');
+  if (!barre) return;
+  if (!modeDeclarantActif()) { barre.style.display = 'none'; return; }
+  barre.style.display = '';
+  const n = ((state.m2 && state.m2.evenements) || []).length;
+  const prenom = (state.m1 && state.m1.prenom) || 'cette personne';
+  const zone = document.getElementById('declarant-etat');
+  if (zone) {
+    zone.innerHTML = 'Observations sur <b>' + esc(prenom) + '</b> · ' +
+      '<b>' + n + '</b> évènement' + (n > 1 ? 's' : '') + ' décrit' + (n > 1 ? 's' : '');
+  }
+}
+
+/* ── La page d'accueil du déclarant ────────────────────────────────── */
+function renderDeclarant() {
+  const el = document.getElementById('declarant-contenu');
+  if (!el) return;
+  const prenom = (state.m1 && state.m1.prenom) || 'la personne concernée';
+  const d = state.declarant || {};
+  const n = ((state.m2 && state.m2.evenements) || []).length;
+  el.innerHTML =
+    '<div class="card">' +
+      '<p style="font-size:15px;line-height:1.7;margin:0 0 12px;">' +
+        'Une équipe cherche à comprendre les comportements qui mettent <b>' + esc(prenom) + '</b> en difficulté. ' +
+        'Pour ça, elle a besoin de ce que <b>vous</b> voyez, là où vous l\'accompagnez — et que personne d\'autre ne voit à votre place.' +
+      '</p>' +
+      '<p style="font-size:15px;line-height:1.7;margin:0;">' +
+        'On ne vous demande pas d\'analyser ni d\'expliquer. On vous demande de <b>décrire</b> : ce qui s\'est passé, ' +
+        'dans quel ordre, comme une caméra l\'aurait filmé. L\'analyse viendra après, et ce n\'est pas votre travail.' +
+      '</p>' +
+    '</div>' +
+    '<div class="card">' +
+      '<h3 style="font-size:17px;margin-bottom:14px;">Ce qu\'on vous demande, dans l\'ordre</h3>' +
+      '<div class="decl-etape"><span class="decl-num">1</span><div>' +
+        '<b>Relisez le préambule</b> — ce que l\'équipe sait déjà de ' + esc(prenom) + '. ' +
+        'Vous ne pouvez pas le modifier, mais vous pouvez signaler ce qui vous paraît faux ou incomplet. ' +
+        '<button class="btn btn-secondary btn-sm" style="margin-top:8px;" onclick="route(\'m1\')">Ouvrir le préambule</button>' +
+      '</div></div>' +
+      '<div class="decl-etape"><span class="decl-num">2</span><div>' +
+        '<b>Décrivez les évènements</b> que vous avez observés. Un évènement par situation. ' +
+        'Prenez le temps : il n\'y a pas de nombre attendu, et une description précise vaut mieux que dix approximatives. ' +
+        '<button class="btn btn-primary btn-sm" style="margin-top:8px;" onclick="route(\'m2\')">' +
+          (n ? 'Continuer (' + n + ' décrit' + (n > 1 ? 's' : '') + ')' : 'Commencer') + '</button>' +
+      '</div></div>' +
+      '<div class="decl-etape"><span class="decl-num">3</span><div>' +
+        '<b>Renvoyez votre contribution</b> quand vous avez terminé. L\'outil produit un fichier ; ' +
+        'vous le renvoyez à la personne qui vous a sollicité, comme une pièce jointe. ' +
+        '<button class="btn btn-secondary btn-sm" style="margin-top:8px;" onclick="exporterContribution()">Renvoyer ma contribution</button>' +
+      '</div></div>' +
+    '</div>' +
+    '<div class="card">' +
+      '<div class="field">' +
+        '<label for="declarant-provenance">D\'où déclarez-vous ?</label>' +
+        '<div class="help">Un mot pour situer vos observations — « domicile », « foyer », « IME », « accueil de jour ». ' +
+        'L\'équipe saura ainsi d\'où vient chaque observation, ce qui compte beaucoup : un même comportement ne se lit pas pareil selon le lieu.</div>' +
+        '<input type="text" id="declarant-provenance" placeholder="ex : domicile" value="' + esc(d.provenance || '') + '" ' +
+          'oninput="if(state.declarant){state.declarant.provenance=this.value.trim();persist();}">' +
+      '</div>' +
+    '</div>' +
+    '<div class="ethique">' +
+      '<b>Rien de ce que vous écrivez ne quitte cet appareil.</b> L\'outil fonctionne entièrement dans votre navigateur : ' +
+      'aucune donnée n\'est envoyée nulle part. Le seul transfert, c\'est le fichier que vous renverrez vous-même. ' +
+      'N\'inscrivez ni nom de famille, ni ville, ni structure.' +
+    '</div>';
+}
+
+/* ── La page « réservé » ───────────────────────────────────────────── */
+function renderReserve(nomVue) {
+  const el = document.getElementById('reserve-contenu');
+  const info = VUES_RESERVEES[nomVue];
+  if (!el || !info) return;
+  el.innerHTML =
+    '<div class="card">' +
+      '<h3 style="font-size:18px;margin-bottom:10px;">' + esc(info.titre) + '</h3>' +
+      '<p style="font-size:14.5px;line-height:1.7;margin:0 0 12px;">' + esc(info.quoi) + '</p>' +
+      '<p style="font-size:14.5px;line-height:1.7;margin:0;color:var(--ink-soft);">' + esc(info.qui) + '</p>' +
+    '</div>' +
+    '<div class="ethique">' +
+      'Cette partie existe et vous la voyez : l\'outil ne vous cache rien, il vous montre où s\'arrête votre part du travail. ' +
+      '<b>Votre part — décrire ce que vous avez vu — est celle que personne ne peut faire à votre place.</b>' +
+    '</div>' +
+    '<div class="actions-row">' +
+      '<button class="btn btn-secondary" onclick="route(\'declarant\')">← Revenir à ma page</button>' +
+      '<button class="btn btn-primary" onclick="route(\'m2\')">Décrire un évènement</button>' +
+    '</div>';
+}
+
+/* Appliquée à chaque routage : le préambule se fige, et la carte qui invite
+   à faire participer d'autres personnes disparaît — un déclarant n'invite
+   personne. Idempotente, elle se rejoue sans effet de bord. */
+function appliquerModeDeclarant() {
+  const actif = modeDeclarantActif();
+  appliquerModeDeclarantSurM1();
+  const carte = document.getElementById('m2-partager-card');
+  if (carte) carte.style.display = actif ? 'none' : '';
+  document.body.classList.toggle('mode-declarant', actif);
+}
+
 /* ══════════════════════════════════════════════════════════════════════
    LES NOTES DE VERSION
    ══════════════════════════════════════════════════════════════════════
