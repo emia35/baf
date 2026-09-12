@@ -346,15 +346,15 @@ nav.main button.on{background:var(--hdr-accent);color:var(--hdr-accent-text);bor
 .nav-btn-ressource:hover{background:rgba(0,0,0,.06);color:var(--hdr-text);}
 .nav-btn-ressource.on{background:var(--hdr-accent);color:var(--hdr-accent-text);border-color:var(--hdr-accent);}
 
-.emia-mark{
+/* .top-actions button encadre les boutons de la barre du haut ; la marque
+   EMIA n en veut pas. Selecteur plus specifique pour la laisser tranquille. */
+.top-actions button.emia-mark, .emia-mark{
   display:flex;flex-direction:column;align-items:flex-start;
   line-height:1;margin-left:14px;
   flex-shrink:0;
-  background:none;border:1px solid transparent;border-radius:8px;
-  padding:3px 5px;cursor:pointer;font-family:inherit;
-  transition:border-color .15s, background .15s;
+  background:none;border:none;padding:0;
+  cursor:pointer;font-family:inherit;
 }
-.emia-mark:hover{border-color:var(--hdr-outline);background:var(--hdr-fill);}
 .emia-mark .by{font-size:9px;font-weight:600;color:var(--hdr-text-faint);letter-spacing:.1em;text-transform:lowercase;margin-bottom:3px;}
 .emia-mark img{height:20px;width:auto;display:block;}
 
@@ -2420,7 +2420,7 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
     </div>
 
     <div class="card">
-      <p>L'EMIA35 est une équipe de l'Adapei 35. Son travail se fait au plus près des situations : là où un comportement met en difficulté celui qui le vit autant que celles et ceux qui l'accompagnent.</p>
+      <p>L'EMIA35 — l'<b>Équipe Mobile d'Intervention Autisme</b> — est une équipe de l'Adapei 35. Son travail se fait au plus près des situations : là où un comportement met en difficulté celui qui le vit autant que celles et ceux qui l'accompagnent.</p>
       <p>La posture qui nous tient est simple à énoncer et difficile à tenir : <b>comprendre avant de répondre</b>, outiller les équipes plutôt que se substituer à elles, et ne jamais séparer l'exigence clinique du respect dû à la personne.</p>
     </div>
 
