@@ -29,19 +29,60 @@
   --line: #D9D0C0;
   --line-soft: #E8E2D6;
 
-  --coral: #9AB5A8;
-  --coral-deep: #7A9A8C;
-  --coral-pale: #E4EDEA;
+  --sauge: #9AB5A8;
+  --sauge-deep: #7A9A8C;
+  --sauge-pale: #E4EDEA;
 
-  --teal: #C9A84C;
-  --teal-deep: #A8883A;
-  --teal-pale: #F5E8C8;
+  --ocre: #C9A84C;
+  --ocre-deep: #A8883A;
+  --ocre-pale: #F5E8C8;
 
-  --amber: #E8B4A0;
-  --amber-pale: #F8E8E0;
+  --rose: #E8B4A0;
+  /* Il manquait un ton foncé au rosé : faute de quoi l'étiquette « C » des
+     patterns et la pastille conséquence de la synthèse écrivaient en #E8B4A0
+     sur #F8E8E0, soit un contraste de 1,5 pour 1. Illisible. */
+  --rose-deep: #A8503A;
+  --rose-pale: #F8E8E0;
 
-  --m1: #8B5E6B;
-  --m1-pale: #EFE0E4;
+  --prune: #8B5E6B;
+  --prune-deep: #74495A;
+  --prune-pale: #EFE0E4;
+
+  /* Le vase de tension avait emprunté le vert du comportement pour « ce qui
+     fait monter » et le jaune de l'antécédent pour « ce qui fait descendre ».
+     Deux couleurs de volet employées à dire autre chose. Il a maintenant les
+     siennes, prises aux deux extrémités de ses propres paliers. */
+  --vase-monte: #E2562F;
+  --vase-monte-deep: #B4401F;
+  --vase-monte-pale: #FBE7E1;
+  --vase-descend: #A8D5CD;
+  --vase-descend-deep: #3E7A6E;
+  --vase-descend-pale: #E8F4F1;
+
+  /* ── Couleur de volet ───────────────────────────────────────────────
+     Source unique, à employer partout où un volet de l'analyse est désigné —
+     et nulle part ailleurs. Le contexte partage la couleur de l'antécédent :
+     c'est l'antécédent lointain, pas un sixième volet. */
+  --vol-contexte:       var(--ocre);
+  --vol-contexte-deep:  var(--ocre-deep);
+  --vol-contexte-pale:  var(--ocre-pale);
+  --vol-contexte-texte: #7A6220;
+  --vol-antecedent:       var(--ocre);
+  --vol-antecedent-deep:  var(--ocre-deep);
+  --vol-antecedent-pale:  var(--ocre-pale);
+  --vol-antecedent-texte: #7A6220;
+  --vol-comportement:       var(--sauge);
+  --vol-comportement-deep:  var(--sauge-deep);
+  --vol-comportement-pale:  var(--sauge-pale);
+  --vol-comportement-texte: #46685A;
+  --vol-consequence:       var(--rose);
+  --vol-consequence-deep:  var(--rose-deep);
+  --vol-consequence-pale:  var(--rose-pale);
+  --vol-consequence-texte: var(--rose-deep);
+  --vol-intervention:       var(--prune);
+  --vol-intervention-deep:  var(--prune-deep);
+  --vol-intervention-pale:  var(--prune-pale);
+  --vol-intervention-texte: var(--prune-deep);
 
   --radius: 16px;
   --radius-sm: 10px;
@@ -53,13 +94,13 @@
   --hdr-text: #fff;
   --hdr-text-soft: rgba(255,255,255,.72);
   --hdr-text-faint: rgba(255,255,255,.55);
-  --hdr-accent: var(--coral);
+  --hdr-accent: var(--sauge);
   --hdr-accent-text: #fff;
   --hdr-outline: rgba(255,255,255,.16);
   --hdr-fill: rgba(255,255,255,.06);
 }
 body.tool-baf{
-  --hdr-bg: var(--coral);
+  --hdr-bg: var(--sauge);
   --hdr-text: var(--slate);
   --hdr-text-soft: rgba(61,79,107,.72);
   --hdr-text-faint: rgba(61,79,107,.5);
@@ -69,11 +110,11 @@ body.tool-baf{
   --hdr-fill: rgba(255,255,255,.26);
 }
 body.tool-idc{
-  --hdr-bg: var(--amber);
-  --hdr-text: var(--m1);
+  --hdr-bg: var(--rose);
+  --hdr-text: var(--prune);
   --hdr-text-soft: rgba(139,94,107,.72);
   --hdr-text-faint: rgba(139,94,107,.5);
-  --hdr-accent: var(--m1);
+  --hdr-accent: var(--prune);
   --hdr-accent-text: #fff;
 }
 
@@ -106,16 +147,16 @@ input[type=checkbox],input[type=radio]{
   position:relative;cursor:pointer;background:var(--card);
   flex-shrink:0;
 }
-input[type=checkbox]:checked,input[type=radio]:checked{background:var(--coral-deep);border-color:var(--coral-deep);}
+input[type=checkbox]:checked,input[type=radio]:checked{background:var(--sauge-deep);border-color:var(--sauge-deep);}
 input[type=checkbox]:checked::after,input[type=radio]:checked::after{
   content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
   color:#fff;font-size:10px;font-weight:700;
 }
 body.tool-baf input[type=checkbox]:checked,body.tool-baf input[type=radio]:checked{background:var(--slate);border-color:var(--slate);}
-body.tool-idc input[type=checkbox]:checked,body.tool-idc input[type=radio]:checked{background:var(--m1);border-color:var(--m1);}
-a{color:var(--coral-deep);}
+body.tool-idc input[type=checkbox]:checked,body.tool-idc input[type=radio]:checked{background:var(--prune);border-color:var(--prune);}
+a{color:var(--sauge-deep);}
 body.tool-baf a{color:var(--slate);}
-body.tool-idc a{color:var(--m1);}
+body.tool-idc a{color:var(--prune);}
 
 .wrap{max-width:1080px;margin:0 auto;padding:0 24px;}
 
@@ -248,10 +289,10 @@ nav.main button.on{background:var(--hdr-accent);color:var(--hdr-accent-text);bor
   color:rgba(255,255,255,.82);
   transition:border-color .15s, color .15s, background .15s;
 }
-.top-actions button:hover{border-color:var(--coral);color:#fff;background:rgba(255,255,255,.1);}
+.top-actions button:hover{border-color:var(--sauge);color:#fff;background:rgba(255,255,255,.1);}
 .top-actions button.sim{
-  border-color:var(--amber);
-  color:var(--amber);
+  border-color:var(--rose);
+  color:var(--rose);
   background:rgba(214,154,31,.12);
 }
 .top-actions button.danger:hover{border-color:#D6573F;color:#fff;}
@@ -309,10 +350,10 @@ section.view.show{display:block;animation:fadein .25s ease;}
 .hero svg.bigrose{width:74px;height:74px;color:var(--slate);margin-bottom:14px;}
 .hero .kicker{
   font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
-  color:var(--coral-deep);margin-bottom:12px;
+  color:var(--sauge-deep);margin-bottom:12px;
 }
 .hero h1{font-size:36px;margin-bottom:12px;font-weight:700;}
-.hero h1 i{font-style:normal;color:var(--coral-deep);}
+.hero h1 i{font-style:normal;color:var(--sauge-deep);}
 .hero .sub{
   font-family:'Source Serif 4', serif;
   font-size:17.5px;color:var(--ink-soft);
@@ -331,28 +372,28 @@ section.view.show{display:block;animation:fadein .25s ease;}
 }
 .intro-card h3{font-size:17px;margin-bottom:10px;}
 .intro-card p{font-family:'Source Serif 4', serif;font-size:15.5px;color:var(--ink-soft);line-height:1.65;text-align:justify;text-justify:inter-word;}
-.intro-card p i{color:var(--coral-deep);font-style:italic;}
+.intro-card p i{color:var(--sauge-deep);font-style:italic;}
 .intro-card p b{color:var(--ink);font-weight:600;}
 .intro-card .ethique{
   margin-top:18px;
   padding:16px 18px;
-  background:var(--coral-pale);
-  border-left:3px solid var(--coral);
+  background:var(--sauge-pale);
+  border-left:3px solid var(--sauge);
   border-radius:var(--radius-sm);
   font-size:13.5px;
   color:var(--ink);
   text-align:justify;text-justify:inter-word;
 }
-.intro-card .ethique b{color:var(--coral-deep);}
+.intro-card .ethique b{color:var(--sauge-deep);}
 
 /* Identité par outil : accents du contenu (hors header) */
 body.tool-baf .hero .kicker, body.tool-baf .hero h1 i,
 body.tool-baf .intro-card p i, body.tool-baf .intro-card .ethique b{color:var(--slate);}
-body.tool-idc .hero svg.bigscale{color:var(--m1);}
+body.tool-idc .hero svg.bigscale{color:var(--prune);}
 body.tool-idc .hero .kicker, body.tool-idc .hero h1 i,
-body.tool-idc .intro-card p i, body.tool-idc .intro-card .ethique b{color:var(--m1);}
-body.tool-idc .intro-card{border-top-color:var(--m1);}
-body.tool-idc .intro-card .ethique{background:var(--amber-pale);border-left-color:var(--amber);}
+body.tool-idc .intro-card p i, body.tool-idc .intro-card .ethique b{color:var(--prune);}
+body.tool-idc .intro-card{border-top-color:var(--prune);}
+body.tool-idc .intro-card .ethique{background:var(--rose-pale);border-left-color:var(--rose);}
 
 .modules-stack{
   display:flex;flex-direction:column;align-items:center;
@@ -399,14 +440,14 @@ body.tool-idc .intro-card .ethique{background:var(--amber-pale);border-left-colo
 
 .mod-row{display:flex;gap:14px;width:100%;max-width:880px;flex-wrap:wrap;}
 .mod-row .mod-btn{flex:1 1 260px;}
-.mod-btn.m2{background:var(--coral);color:var(--slate);}
+.mod-btn.m2{background:var(--sauge);color:var(--slate);}
 .mod-btn.m2 .num,.mod-btn.m2 .temps{color:var(--slate);opacity:.75;}
 
 /* Accueil global : les deux boutons d'entrée préfigurent la couleur de leur outil */
 #view-accueil .mod-row .mod-btn.m2{color:#fff;}
 #view-accueil .mod-row .mod-btn.m2 .num,
 #view-accueil .mod-row .mod-btn.m2 .temps{color:#fff;opacity:.85;}
-#view-accueil .mod-row .mod-btn.m2:nth-child(2){background:var(--amber);}
+#view-accueil .mod-row .mod-btn.m2:nth-child(2){background:var(--rose);}
 
 .mod-btn.synth{
   background:var(--slate);
@@ -455,9 +496,9 @@ body{padding-bottom:38px;}
   font-size:20px;cursor:pointer;box-shadow:var(--shadow-card);
   line-height:1;
 }
-.scrolltop-btn:hover{background:var(--teal-deep);}
-body.tool-baf .scrolltop-btn{background:var(--coral-deep);}
-body.tool-idc .scrolltop-btn{background:var(--m1);}
+.scrolltop-btn:hover{background:var(--ocre-deep);}
+body.tool-baf .scrolltop-btn{background:var(--sauge-deep);}
+body.tool-idc .scrolltop-btn{background:var(--prune);}
 
 /* ============================================================
    MODULE GÉNÉRIQUE (header de module)
@@ -472,7 +513,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   display:flex;align-items:center;gap:6px;
 }
 .mod-header .crumb button{
-  background:none;border:none;color:var(--coral-deep);font-weight:700;font-size:12.5px;
+  background:none;border:none;color:var(--sauge-deep);font-weight:700;font-size:12.5px;
   text-decoration:underline;padding:0;
 }
 .mod-header .temps-tag{
@@ -485,13 +526,15 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
 .mod-header .sub{font-family:'Source Serif 4',serif;font-size:15px;color:var(--ink-soft);max-width:none;line-height:1.6;text-align:justify;text-justify:inter-word;}
 .m1-progress-wrap{display:flex;align-items:center;gap:10px;margin-top:12px;}
 .m1-progress-bar{flex:1;height:6px;background:var(--line-soft);border-radius:999px;overflow:hidden;}
-.m1-progress-fill{height:100%;background:var(--coral-deep);border-radius:999px;transition:width .25s;}
+.m1-progress-fill{height:100%;background:var(--sauge-deep);border-radius:999px;transition:width .25s;}
 .m1-progress-label{font-size:11.5px;color:var(--ink-soft);font-weight:600;white-space:nowrap;}
 .mod-header .sub b{color:var(--ink);font-weight:600;}
 
-.tag-m1{background:var(--m1-pale);color:var(--m1);}
-.tag-m2{background:var(--teal-pale);color:var(--teal-deep);}
-.tag-m4{background:var(--amber-pale);color:var(--coral-deep);}
+.tag-m1{background:var(--prune-pale);color:var(--prune);}
+.tag-m2{background:var(--ocre-pale);color:var(--ocre-deep);}
+/* Repères, Ressources, Lecture transversale : ce ne sont pas des volets.
+   Ils mélangeaient un fond de conséquence et une encre de comportement. */
+.tag-m4{background:var(--paper-deep);color:var(--ink-soft);}
 
 /* ============================================================
    FORMULAIRES (génériques, réutilisés partout)
@@ -517,7 +560,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   color:var(--ink-soft);font-size:10px;cursor:pointer;
   transition:transform .15s,border-color .15s,color .15s;
 }
-.help-toggle:hover{border-color:var(--coral-deep);color:var(--coral-deep);}
+.help-toggle:hover{border-color:var(--sauge-deep);color:var(--sauge-deep);}
 .help-toggle.open{transform:rotate(180deg);}
 .field input[type=text],.field input[type=number],.field textarea,.field select{
   width:100%;
@@ -528,7 +571,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   color:var(--ink);
 }
 .field input:focus,.field textarea:focus,.field select:focus{
-  outline:none;border-color:var(--teal);
+  outline:none;border-color:var(--ocre);
 }
 .field textarea{resize:vertical;min-height:70px;}
 
@@ -545,9 +588,9 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   transition:border-color .15s, color .15s, background .15s;
 }
 .choice-row label:has(input:checked){
-  border-color:var(--teal);
-  background:var(--teal-pale);
-  color:var(--teal-deep);
+  border-color:var(--ocre);
+  background:var(--ocre-pale);
+  color:var(--ocre-deep);
 }
 
 .btn{
@@ -561,7 +604,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
 .btn-primary{background:var(--slate);color:#fff;box-shadow:0 3px 12px rgba(43,53,64,.3);}
 .btn-secondary{background:var(--card);color:var(--ink);border:1.5px solid var(--slate);}
 .btn-ghost{background:none;color:var(--ink-soft);border:1.5px solid var(--line);}
-.btn-gold{background:var(--coral);color:#fff;box-shadow:0 3px 12px rgba(226,86,47,.32);}
+.btn-gold{background:var(--sauge);color:#fff;box-shadow:0 3px 12px rgba(226,86,47,.32);}
 .btn-sm{padding:8px 16px;font-size:13px;}
 .btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
 
@@ -590,10 +633,10 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   cursor:pointer;
   transition:border-color .15s, box-shadow .15s;
 }
-.event-item:hover{border-color:var(--teal);box-shadow:var(--shadow-soft);}
+.event-item:hover{border-color:var(--ocre);box-shadow:var(--shadow-soft);}
 .event-item .ev-num{
   width:34px;height:34px;border-radius:50%;
-  background:var(--teal-pale);color:var(--teal-deep);
+  background:var(--ocre-pale);color:var(--ocre-deep);
   display:flex;align-items:center;justify-content:center;
   font-weight:700;font-size:13px;flex-shrink:0;
 }
@@ -601,7 +644,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
 .event-item .ev-date{font-size:13px;font-weight:700;color:var(--ink);}
 .event-item .ev-desc{font-size:12.5px;color:var(--ink-soft);margin-top:2px;}
 .event-item .ev-arrow{color:var(--ink-soft);font-size:18px;}
-.event-brouillon-tag{display:inline-block;background:var(--amber-pale);color:var(--coral-deep);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 7px;border-radius:999px;margin-left:4px;}
+.event-brouillon-tag{display:inline-block;background:var(--slate);color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 7px;border-radius:999px;margin-left:4px;}
 /* Repères chronologiques dans la liste des évènements */
 .ev-groupe-mois{
   font-size:13px;font-weight:700;color:var(--ink);
@@ -639,15 +682,15 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .step-item.current .step-nom{color:var(--ink);}
-.step-item.done .step-nom{color:var(--teal-deep);}
+.step-item.done .step-nom{color:var(--ocre-deep);}
 .stepper .step-dot{
   width:100%;height:5px;border-radius:999px;
   background:var(--line);
   transition:transform .12s, background-color .12s;
 }
 .step-item:hover .step-dot{background:var(--hdr-accent);transform:scaleY(1.6);}
-.step-item.done .step-dot{background:var(--teal);}
-.step-item.current .step-dot{background:var(--coral);}
+.step-item.done .step-dot{background:var(--ocre);}
+.step-item.current .step-dot{background:var(--sauge);}
 
 .step-label{font-size:12px;color:var(--ink-soft);margin-bottom:18px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;}
 
@@ -726,15 +769,15 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   box-shadow:0 1px 4px rgba(44,36,22,.12);
 }
 .mode-approfondi-panel{
-  background:var(--teal-pale);
-  border:1px solid var(--teal);
+  background:var(--ocre-pale);
+  border:1px solid var(--ocre);
   border-radius:12px;
   padding:20px 22px;
   margin-bottom:22px;
   text-align:center;
 }
 .mode-approfondi-panel .ico-wip{font-size:2rem;margin-bottom:8px;}
-.mode-approfondi-panel h4{font-size:16px;font-weight:700;margin-bottom:6px;color:var(--teal-deep);}
+.mode-approfondi-panel h4{font-size:16px;font-weight:700;margin-bottom:6px;color:var(--ocre-deep);}
 .mode-approfondi-panel p{font-size:14px;color:var(--ink-soft);margin:0;}
 
 /* ─── Journée type : créneaux rapide ──────────────────────── */
@@ -757,14 +800,14 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
 }
 .creneau-row input[type=text]:focus,
 .creneau-row select:focus{
-  outline:none;border-color:var(--coral);
+  outline:none;border-color:var(--sauge);
 }
 .creneau-del{
   background:none;border:none;cursor:pointer;
   color:var(--ink-soft);font-size:16px;padding:4px;
   border-radius:4px;transition:color .12s;flex-shrink:0;
 }
-.creneau-del:hover{color:var(--coral-deep);}
+.creneau-del:hover{color:var(--sauge-deep);}
 .creneau-add{
   display:flex;align-items:center;gap:6px;
   background:none;border:1.5px dashed var(--line);
@@ -773,7 +816,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   cursor:pointer;transition:border-color .12s,color .12s;
   margin-top:4px;
 }
-.creneau-add:hover{border-color:var(--coral);color:var(--coral-deep);}
+.creneau-add:hover{border-color:var(--sauge);color:var(--sauge-deep);}
 .trajet-row{display:flex;gap:8px;align-items:center;margin-bottom:6px;flex-wrap:wrap;}
 .trajet-label{min-width:110px;font-size:13px;font-weight:600;color:var(--ink-soft);}
 .trajet-row select{padding:6px 8px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--card);color:var(--ink);font-size:13px;}
@@ -808,7 +851,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   background:none;border:none;color:var(--ink-soft);
   font-size:11px;cursor:pointer;padding:1px 3px;line-height:1;
 }
-.semaine-grid th .col-del:hover{color:var(--coral-deep);}
+.semaine-grid th .col-del:hover{color:var(--sauge-deep);}
 .semaine-grid td{
   border:1px solid var(--line);
   padding:3px 4px;vertical-align:middle;
@@ -824,7 +867,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   color:var(--ink);font-size:11.5px;padding:2px 3px;
 }
 .semaine-grid td input[type=text]:focus{
-  outline:1px solid var(--coral);border-radius:2px;
+  outline:1px solid var(--sauge);border-radius:2px;
 }
 .semaine-grid td input[type=text]::placeholder{color:var(--line);}
 .semaine-grid tr:hover td{background:var(--paper);}
@@ -835,7 +878,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   width:100%;border:none;background:transparent;
   color:var(--ink-soft);font-size:10px;font-style:italic;padding:2px 3px;
 }
-.semaine-grid input.input-provenance:focus{outline:1px solid var(--coral);border-radius:2px;}
+.semaine-grid input.input-provenance:focus{outline:1px solid var(--sauge);border-radius:2px;}
 .semaine-grid input.input-provenance::placeholder{color:var(--line);}
 .semaine-ajouter-jour{
   margin-top:12px;font-size:12.5px;
@@ -873,8 +916,8 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   text-align:left;background:var(--paper);width:100%;
 }
 .sim-profil-card:hover{
-  border-color:var(--coral);
-  background:var(--coral-pale);
+  border-color:var(--sauge);
+  background:var(--sauge-pale);
 }
 .sim-profil-card .spn{font-size:14px;font-weight:700;color:var(--ink);}
 .sim-profil-card .spd{font-size:12.5px;color:var(--ink-soft);margin-top:3px;line-height:1.5;}
@@ -968,9 +1011,9 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   color:var(--ink-soft);
   transition:border-color .15s, color .15s, background .15s;
 }
-.accueil-btn:hover{border-color:var(--coral);color:var(--coral-deep);background:var(--coral-pale);}
-.accueil-btn.sim{border-color:var(--amber);color:var(--amber);background:var(--amber-pale);}
-.accueil-btn.danger:hover{border-color:#D6573F;color:#D6573F;background:var(--coral-pale);}
+.accueil-btn:hover{border-color:var(--sauge);color:var(--sauge-deep);background:var(--sauge-pale);}
+.accueil-btn.sim{border-color:var(--rose);color:var(--rose);background:var(--rose-pale);}
+.accueil-btn.danger:hover{border-color:#D6573F;color:#D6573F;background:var(--sauge-pale);}
 
 /* ============================================================
    ACCUEIL — MODE D'EMPLOI MULTI-POSTE
@@ -1013,8 +1056,8 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   font-size:12.5px;color:var(--ink);font-family:monospace;
 }
 .multiposte-warn{
-  background:var(--coral-pale);
-  border-left:3px solid var(--coral);
+  background:var(--sauge-pale);
+  border-left:3px solid var(--sauge);
   border-radius:var(--radius-sm);
   padding:10px 14px;margin:10px 0;
   font-size:13.5px;color:var(--ink);font-family:'Space Grotesk',sans-serif;
@@ -1044,8 +1087,10 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   cursor:pointer;
   transition:all .15s;
 }
-.m3-tab:hover{border-color:var(--teal);color:var(--teal-deep);}
-.m3-tab.on{background:var(--teal);border-color:var(--teal);color:#fff;}
+/* La couleur de l'onglet vient de son volet, posée en ligne par renderM3Tabs :
+   ces deux règles peignaient tous les onglets en jaune, c'est-à-dire tous de la
+   couleur de l'antécédent. */
+.m3-tab:hover{filter:brightness(.96);}
 .m3-tab .m3-tab-count{
   display:inline-block;
   background:rgba(255,255,255,.25);
@@ -1092,22 +1137,25 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   transition:border-color .15s, box-shadow .15s;
   position:relative;
 }
-.m3-item:hover{border-color:var(--teal);}
+.m3-item:hover{border-color:var(--ocre);}
 .m3-item.categorise{
-  border-color:var(--teal);
-  background:var(--teal-pale);
+  border-color:var(--ocre);
+  background:var(--ocre-pale);
 }
 .m3-item-text{flex:1;font-size:13.5px;color:var(--ink);line-height:1.45;}
 .m3-item-tag-post{
   display:inline-block;margin-bottom:4px;
-  background:#D6573F;color:#fff;
+  /* Prune : ce comportement est né d'une intervention. */
+  background:var(--vol-intervention-deep);color:#fff;
   font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
   padding:2px 7px;border-radius:999px;
 }
 .m3-item-source{font-size:11px;color:var(--ink-soft);margin-top:3px;font-style:italic;}
 .m3-item-cat-badge{
   display:inline-block;
-  background:var(--teal);
+  /* Couleur neutre : la couleur réelle vient de la catégorie, posée en ligne.
+     Le jaune par défaut se confondait avec la couleur de l'antécédent. */
+  background:var(--slate);
   color:#fff;
   font-size:11px;font-weight:700;
   border-radius:999px;
@@ -1116,7 +1164,24 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   margin-right:4px;
   cursor:pointer;
 }
-.m3-item-cat-badge:hover{background:var(--teal-deep);}
+.m3-item-cat-badge:hover{background:var(--ocre-deep);}
+
+/* Légende du code couleur, affichée là où les couleurs de volet servent à lire.
+   Le survol donne le détail, mais la légende reste visible : sur tablette il
+   n'y a pas de souris, et une info qui n'existe qu'au survol n'existe pas. */
+.legende-volets{
+  display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;
+  background:var(--paper);border:1px solid var(--line);
+  border-radius:var(--radius-sm);
+  padding:8px 13px;margin-bottom:14px;
+  font-size:12px;color:var(--ink-soft);
+}
+.legende-volets .lv-titre{font-weight:700;color:var(--ink);}
+.legende-volets .lv-item{display:flex;align-items:center;gap:6px;cursor:help;}
+.legende-volets .lv-pastille{
+  width:12px;height:12px;border-radius:3px;flex-shrink:0;
+  border:1px solid rgba(0,0,0,.08);
+}
 
 /* Bouton « détail » d'un item : rappelle l'évènement entier sans quitter la
    catégorisation. Il est dans le flux (et non posé en absolu) pour ne jamais
@@ -1131,7 +1196,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   cursor:pointer;font-family:inherit;
   transition:color .14s, border-color .14s, background .14s;
 }
-.m3-item-detail:hover{color:var(--teal-deep);border-color:var(--teal);background:var(--card);}
+.m3-item-detail:hover{color:var(--ocre-deep);border-color:var(--ocre);background:var(--card);}
 
 /* Fenêtre « détail » : l'évènement complet, en lecture seule. Plus large que la
    modale de simulation — c'est du texte long à lire, pas des boutons à cliquer. */
@@ -1148,8 +1213,8 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   padding:2px 2px 8px;min-height:0;
 }
 .evt-detail-bloc.actif{
-  background:var(--teal-pale);
-  border-left:3px solid var(--teal);
+  background:var(--ocre-pale);
+  border-left:3px solid var(--ocre);
   margin-left:-11px;padding:7px 10px;
   border-radius:0 6px 6px 0;
 }
@@ -1183,30 +1248,30 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   background:none;border:none;padding:0;outline:none;
   font-family:inherit;cursor:text;
 }
-.m3-cat-name:focus{color:var(--teal-deep);}
+.m3-cat-name:focus{color:var(--ocre-deep);}
 .m3-cat-count{font-size:11.5px;color:var(--ink-soft);flex-shrink:0;}
 .m3-cat-del{
   background:none;border:none;color:var(--ink-soft);
   font-size:14px;cursor:pointer;padding:2px 4px;border-radius:4px;
   flex-shrink:0;
 }
-.m3-cat-del:hover{color:var(--coral);background:var(--coral-pale);}
+.m3-cat-del:hover{color:var(--sauge);background:var(--sauge-pale);}
 .m3-cat-items{padding:6px 10px 6px;}
 .m3-cat-item-chip{
   display:inline-flex;align-items:center;gap:5px;
-  background:var(--teal-pale);
-  border:1px solid var(--teal);
-  color:var(--teal-deep);
+  background:var(--ocre-pale);
+  border:1px solid var(--ocre);
+  color:var(--ocre-deep);
   border-radius:999px;
   font-size:12px;font-weight:600;
   padding:3px 10px;
   margin:3px 4px 3px 0;
 }
 .m3-cat-item-chip button{
-  background:none;border:none;color:var(--teal-deep);
+  background:none;border:none;color:var(--ocre-deep);
   cursor:pointer;font-size:13px;padding:0;line-height:1;
 }
-.m3-cat-item-chip button:hover{color:var(--coral);}
+.m3-cat-item-chip button:hover{color:var(--sauge);}
 .m3-cat-empty{font-size:12px;color:var(--ink-soft);font-style:italic;padding:4px 2px;}
 
 /* ── Le vase de tension : la mesure ──────────────────────────────────
@@ -1229,7 +1294,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   text-align:center;padding:6px;border:1.5px solid var(--line);
   border-radius:6px;background:var(--card);color:var(--ink);
 }
-.vase-cote input:focus{outline:none;border-color:var(--teal);}
+.vase-cote input:focus{outline:none;border-color:var(--ocre);}
 .vase-unite{font-size:12.5px;color:var(--ink-soft);}
 .vase-palier{font-size:13.5px;font-weight:700;color:var(--ink);}
 .vase-palier.vide{color:var(--ink-soft);font-weight:400;font-style:italic;}
@@ -1238,16 +1303,16 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   font-family:inherit;font-size:11.5px;color:var(--ink-soft);
   padding:3px 11px;cursor:pointer;
 }
-.vase-effacer:hover{color:var(--coral-deep);border-color:var(--coral);}
+.vase-effacer:hover{color:var(--sauge-deep);border-color:var(--sauge);}
 .vase-note-field{margin-top:13px;margin-bottom:0;}
 .vase-note-field textarea{min-height:56px;}
 .vase-ancienne{
-  background:var(--amber-pale);border-left:3px solid var(--amber);
+  background:var(--rose-pale);border-left:3px solid var(--rose);
   padding:11px 15px;border-radius:8px;font-size:13px;
   margin-bottom:16px;line-height:1.55;
 }
 .vase-alerte{
-  background:var(--amber-pale);border-left:3px solid var(--coral-deep);
+  background:var(--rose-pale);border-left:3px solid var(--sauge-deep);
   margin-top:10px;padding:10px 14px;font-size:13px;border-radius:6px;
 }
 
@@ -1284,7 +1349,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   color:var(--ink);
   transition:background .12s;
 }
-.m3-assign-popup .m3-assign-opt:hover{background:var(--teal-pale);}
+.m3-assign-popup .m3-assign-opt:hover{background:var(--ocre-pale);}
 .m3-assign-popup .m3-assign-close{
   display:block;width:100%;text-align:center;
   margin-top:8px;padding:6px;
@@ -1306,13 +1371,13 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   font-size:13px;font-weight:700;color:var(--ink-soft);cursor:pointer;
   transition:all .15s;
 }
-.m4-tab:hover{border-color:var(--coral);color:var(--coral-deep);}
-.m4-tab.on{background:var(--coral);border-color:var(--coral);color:#fff;}
+.m4-tab:hover{border-color:var(--sauge);color:var(--sauge-deep);}
+.m4-tab.on{background:var(--sauge);border-color:var(--sauge);color:#fff;}
 
 /* ── Sous-module : Pattern ABC ──────────────────────────────── */
 .abc-intro{
   background:var(--paper-deep);
-  border-left:3px solid var(--coral);
+  border-left:3px solid var(--sauge);
   border-radius:var(--radius-sm);
   padding:14px 18px;margin-bottom:20px;font-size:13.5px;
   text-align:justify;text-justify:inter-word;
@@ -1328,7 +1393,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
 }
 .abc-pattern-num{
   width:28px;height:28px;border-radius:50%;
-  background:var(--coral);color:#fff;
+  background:var(--sauge);color:#fff;
   display:flex;align-items:center;justify-content:center;
   font-weight:700;font-size:13px;flex-shrink:0;
 }
@@ -1336,12 +1401,12 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   flex:1;font-size:14px;font-weight:700;color:var(--ink);
   background:none;border:none;padding:0;outline:none;font-family:inherit;
 }
-.abc-pattern-label:focus{color:var(--coral-deep);}
+.abc-pattern-label:focus{color:var(--sauge-deep);}
 .abc-pattern-del{
   background:none;border:none;color:var(--ink-soft);
   font-size:14px;cursor:pointer;padding:4px;border-radius:4px;
 }
-.abc-pattern-del:hover{color:var(--coral);background:var(--coral-pale);}
+.abc-pattern-del:hover{color:var(--sauge);background:var(--sauge-pale);}
 
 /* La séquence A → B → C */
 .abc-sequence{
@@ -1356,16 +1421,16 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
   padding:2px 10px;border-radius:999px;margin-bottom:2px;
 }
-.abc-slot-letter.a{background:var(--teal-pale);color:var(--teal-deep);}
-.abc-slot-letter.b{background:var(--coral-pale);color:var(--coral-deep);}
-.abc-slot-letter.c{background:var(--amber-pale);color:var(--amber);}
+.abc-slot-letter.a{background:var(--vol-antecedent-pale);color:var(--vol-antecedent-texte);}
+.abc-slot-letter.b{background:var(--vol-comportement-pale);color:var(--vol-comportement-texte);}
+.abc-slot-letter.c{background:var(--vol-consequence-pale);color:var(--vol-consequence-texte);}
 .abc-slot-select{
   width:100%;padding:8px 10px;border:1.5px solid var(--line);
   border-radius:var(--radius-sm);background:var(--paper);
   font-family:inherit;font-size:13px;color:var(--ink);
   cursor:pointer;
 }
-.abc-slot-select:focus{outline:none;border-color:var(--coral);}
+.abc-slot-select:focus{outline:none;border-color:var(--sauge);}
 .abc-arrow{font-size:22px;color:var(--ink-soft);flex-shrink:0;align-self:center;margin-top:18px;}
 .abc-pattern-note{
   width:100%;padding:8px 10px;border:1.5px solid var(--line);
@@ -1373,7 +1438,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   font-family:inherit;font-size:13px;color:var(--ink);
   resize:vertical;min-height:50px;
 }
-.abc-pattern-note:focus{outline:none;border-color:var(--coral);}
+.abc-pattern-note:focus{outline:none;border-color:var(--sauge);}
 .abc-pattern-note::placeholder{color:var(--line);}
 
 .abc-add-btn{
@@ -1383,17 +1448,17 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   background:none;color:var(--ink-soft);font-size:14px;font-weight:600;
   cursor:pointer;transition:border-color .15s, color .15s;
 }
-.abc-add-btn:hover{border-color:var(--coral);color:var(--coral-deep);}
+.abc-add-btn:hover{border-color:var(--sauge);color:var(--sauge-deep);}
 
 /* ── Sous-module : Gradation ────────────────────────────────── */
 .grad-intro{
   background:var(--paper-deep);
-  border-left:3px solid var(--amber);
+  border-left:3px solid var(--rose);
   border-radius:var(--radius-sm);
   padding:14px 18px;margin-bottom:20px;font-size:13.5px;
   text-align:justify;text-justify:inter-word;
 }
-.grad-intro b{color:var(--coral-deep);}
+.grad-intro b{color:var(--sauge-deep);}
 .vase-connu-grille{
   display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:10px;
 }
@@ -1407,7 +1472,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
 .vase-part-titre:first-of-type{border-top:none;padding-top:0;margin-top:6px;}
 .vase-part-aide{font-size:13px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;}
 .vase-prudence{
-  background:var(--amber-pale);border-left:3px solid var(--amber);
+  background:var(--rose-pale);border-left:3px solid var(--rose);
   padding:9px 13px;border-radius:6px;margin-top:9px;font-size:12.5px;
 }
 .vase-palier-bloc{
@@ -1428,18 +1493,18 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
 .vase-signes-vide{font-size:12.5px;color:var(--ink-soft);font-style:italic;margin-bottom:10px;}
 .vase-palier-bloc textarea{min-height:54px;}
 .vase-apriori{
-  background:var(--teal-pale);border-left:3px solid var(--teal);
+  background:var(--ocre-pale);border-left:3px solid var(--ocre);
   border-radius:8px;padding:12px 15px;margin-bottom:14px;font-size:13px;line-height:1.6;
 }
-.vase-apriori h5{font-size:13px;margin:0 0 6px;color:var(--teal-deep);}
+.vase-apriori h5{font-size:13px;margin:0 0 6px;color:var(--ocre-deep);}
 .vase-apriori div + div{margin-top:5px;}
 .vase-a-situer{
-  background:var(--amber-pale);border-left:3px solid var(--amber);
+  background:var(--rose-pale);border-left:3px solid var(--rose);
   border-radius:8px;padding:11px 14px;margin-bottom:14px;font-size:12.5px;
 }
 .vase-a-situer .vase-tag{background:var(--card);border:1px solid var(--line);color:var(--ink);}
 .vase-a-situer button.situer{
-  background:none;border:none;color:var(--teal-deep);cursor:pointer;
+  background:none;border:none;color:var(--ocre-deep);cursor:pointer;
   font-family:inherit;font-size:11.5px;font-weight:700;padding:0 3px;
 }
 .vase-a-situer button.situer:hover{text-decoration:underline;}
@@ -1461,7 +1526,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
 .grad-item-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
 .grad-item-num{
   width:26px;height:26px;border-radius:50%;
-  background:var(--amber);color:#fff;
+  background:var(--rose);color:#fff;
   display:flex;align-items:center;justify-content:center;
   font-weight:700;font-size:12px;flex-shrink:0;
 }
@@ -1469,7 +1534,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   background:none;border:none;color:var(--ink-soft);
   font-size:13px;cursor:pointer;padding:3px;border-radius:4px;margin-left:auto;
 }
-.grad-item-del:hover{color:var(--coral);background:var(--coral-pale);}
+.grad-item-del:hover{color:var(--sauge);background:var(--sauge-pale);}
 .grad-sequence{
   display:flex;align-items:center;flex-wrap:wrap;gap:6px;
   margin-bottom:10px;
@@ -1483,7 +1548,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   border-radius:var(--radius-sm);background:var(--paper);
   font-family:inherit;font-size:13px;
 }
-.grad-cp-select:focus{outline:none;border-color:var(--amber);}
+.grad-cp-select:focus{outline:none;border-color:var(--rose);}
 .grad-cp-del{
   background:none;border:none;cursor:pointer;
   font-size:11px;color:var(--ink-soft);padding:1px 4px;
@@ -1495,13 +1560,13 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   background:none;font-size:12px;font-weight:600;color:var(--ink-soft);cursor:pointer;
   align-self:flex-end;margin-bottom:4px;
 }
-.grad-add-cp:hover{border-color:var(--amber);color:var(--amber);}
+.grad-add-cp:hover{border-color:var(--rose);color:var(--rose);}
 .grad-item-note{
   width:100%;padding:8px 10px;border:1.5px solid var(--line);
   border-radius:var(--radius-sm);background:var(--paper);
   font-family:inherit;font-size:13px;resize:vertical;min-height:45px;
 }
-.grad-item-note:focus{outline:none;border-color:var(--amber);}
+.grad-item-note:focus{outline:none;border-color:var(--rose);}
 
 /* ── Sous-module : Vase de tension ──────────────────────────── */
 .vase-section{
@@ -1513,11 +1578,11 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   background:var(--card);border:1.5px solid var(--line);
   border-radius:var(--radius);padding:18px 20px;
 }
-.vase-card.monte{border-color:var(--coral);}
-.vase-card.descend{border-color:var(--teal);}
+.vase-card.monte{border-color:var(--vase-monte);}
+.vase-card.descend{border-color:var(--vase-descend-deep);}
 .vase-card h4{font-size:15px;margin-bottom:6px;}
-.vase-card.monte h4{color:var(--coral-deep);}
-.vase-card.descend h4{color:var(--teal-deep);}
+.vase-card.monte h4{color:var(--vase-monte-deep);}
+.vase-card.descend h4{color:var(--vase-descend-deep);}
 .vase-card .help{margin-bottom:10px;}
 .vase-tags{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px;}
 .vase-tag{
@@ -1525,8 +1590,8 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   border-radius:999px;font-size:12.5px;font-weight:600;
   padding:5px 12px;cursor:default;
 }
-.vase-tag.monte{background:var(--coral-pale);color:var(--coral-deep);border:1px solid var(--coral);}
-.vase-tag.descend{background:var(--teal-pale);color:var(--teal-deep);border:1px solid var(--teal);}
+.vase-tag.monte{background:var(--vase-monte-pale);color:var(--vase-monte-deep);border:1px solid var(--vase-monte);}
+.vase-tag.descend{background:var(--vase-descend-pale);color:var(--vase-descend-deep);border:1px solid var(--vase-descend);}
 .vase-tag button{
   background:none;border:none;cursor:pointer;font-size:13px;padding:0;line-height:1;
   color:inherit;opacity:.7;
@@ -1538,22 +1603,22 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   border-radius:var(--radius-sm);background:var(--paper);
   font-family:inherit;font-size:13px;
 }
-.vase-input-row input:focus{outline:none;border-color:var(--coral);}
-.vase-input-row.descend input:focus{border-color:var(--teal);}
+.vase-input-row input:focus{outline:none;border-color:var(--sauge);}
+.vase-input-row.descend input:focus{border-color:var(--vase-descend-deep);}
 .vase-input-row button{
   padding:8px 14px;border-radius:var(--radius-sm);border:none;
   font-weight:700;font-size:13px;cursor:pointer;
   white-space:nowrap;
 }
-.vase-input-row.monte button{background:var(--coral);color:#fff;}
-.vase-input-row.descend button{background:var(--teal);color:#fff;}
+.vase-input-row.monte button{background:var(--vase-monte);color:#fff;}
+.vase-input-row.descend button{background:var(--vase-descend-deep);color:#fff;}
 .vase-texte{
   width:100%;padding:10px 12px;
   border:1.5px solid var(--line);border-radius:var(--radius-sm);
   background:var(--paper);font-family:'Source Serif 4',serif;
   font-size:14px;color:var(--ink);resize:vertical;min-height:80px;
 }
-.vase-texte:focus{outline:none;border-color:var(--teal);}
+.vase-texte:focus{outline:none;border-color:var(--ocre);}
 
 
 
@@ -1638,7 +1703,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
 }
 .corr-bar{
   display:block;height:100%;
-  background:var(--coral);border-radius:3px;
+  background:var(--sauge);border-radius:3px;
   transition:width .3s;
 }
 .corr-pct{
@@ -1688,26 +1753,26 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
    INDICE DE CONFIANCE (ICAF) — styles propres, fusionnés ici.
    Palette/typo/radius partagés avec le Recueil (:root commun).
    ============================================================ */
-.idc-baf-badge{display:none;align-items:center;gap:7px;background:rgba(255,255,255,.35);border:1px solid var(--m1);border-radius:999px;padding:4px 11px;font-size:12px;font-weight:600;color:var(--m1);white-space:nowrap;}
+.idc-baf-badge{display:none;align-items:center;gap:7px;background:rgba(255,255,255,.35);border:1px solid var(--prune);border-radius:999px;padding:4px 11px;font-size:12px;font-weight:600;color:var(--prune);white-space:nowrap;}
 .idc-baf-badge svg{width:16px;height:16px;flex-shrink:0;}
 .idc-baf-badge.visible{display:flex;}
 .hero svg.bigscale{width:68px;height:68px;color:var(--slate);margin-bottom:14px;}
 .entrees{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:36px 0 0;}
 @media(max-width:680px){.entrees{grid-template-columns:1fr;}}
 .entree-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:28px 26px;cursor:pointer;transition:border-color .15s,box-shadow .15s;text-align:left;display:block;width:100%;}
-.entree-card:hover{border-color:var(--m1);box-shadow:var(--shadow-card);}
-.entree-card.primary{border-top:3px solid var(--m1);}
-.entree-card.secondary{border-top:3px solid var(--teal);}
+.entree-card:hover{border-color:var(--prune);box-shadow:var(--shadow-card);}
+.entree-card.primary{border-top:3px solid var(--prune);}
+.entree-card.secondary{border-top:3px solid var(--ocre);}
 .entree-icon{font-size:28px;margin-bottom:12px;}
 .entree-card h3{font-size:16.5px;margin-bottom:7px;}
 .entree-card p{font-family:'Source Serif 4',serif;font-size:14px;color:var(--ink-soft);line-height:1.6;margin:0;}
-.entree-card .entree-cta{display:inline-block;margin-top:16px;font-size:12.5px;font-weight:700;color:var(--m1);border:1px solid var(--amber);border-radius:999px;padding:5px 14px;}
+.entree-card .entree-cta{display:inline-block;margin-top:16px;font-size:12.5px;font-weight:700;color:var(--prune);border:1px solid var(--rose);border-radius:999px;padding:5px 14px;}
 
 /* ── MODULE HEADER ── */
 
 /* ── TOOLBAR ── */
 .toggle-all-link{display:inline-block;margin-bottom:10px;font-size:12px;font-weight:600;color:var(--ink-soft);text-decoration:none;cursor:pointer;}
-.toggle-all-link:hover{color:var(--m1);text-decoration:underline;}
+.toggle-all-link:hover{color:var(--prune);text-decoration:underline;}
 
 /* ── META ── */
 .meta-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px;background:var(--card);padding:14px 16px;border-radius:var(--radius-sm);border:1px solid var(--line);}
@@ -1719,11 +1784,11 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
 .cot-tabs{display:flex;gap:0;overflow-x:auto;border-bottom:2px solid var(--line);margin-bottom:20px;}
 .cot-tabs button{background:none;border:none;border-bottom:3px solid transparent;padding:9px 16px;font-size:13px;font-weight:600;color:var(--ink-soft);transition:.12s;white-space:nowrap;cursor:pointer;margin-bottom:-2px;}
 .cot-tabs button:hover{color:var(--ink);}
-.cot-tabs button.act{color:var(--slate);border-bottom-color:var(--coral);}
+.cot-tabs button.act{color:var(--slate);border-bottom-color:var(--sauge);}
 .cot-tabs .tab-del{font-size:10px;color:var(--ink-soft);margin-left:5px;vertical-align:middle;}
-.cot-tabs .add-cot{font-size:18px;color:var(--coral-deep);padding:9px 13px;}
-.cot-tabs .synth-btn{margin-left:auto;color:var(--teal-deep);}
-.cot-tabs .synth-btn.act{border-bottom-color:var(--teal);}
+.cot-tabs .add-cot{font-size:18px;color:var(--sauge-deep);padding:9px 13px;}
+.cot-tabs .synth-btn{margin-left:auto;color:var(--ocre-deep);}
+.cot-tabs .synth-btn.act{border-bottom-color:var(--ocre);}
 
 /* ── SCORE GLOBAL ── */
 .global-row{display:flex;gap:24px;align-items:center;margin-bottom:22px;flex-wrap:wrap;}
@@ -1778,14 +1843,14 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
 .score-btn.s0{background:#f4d4cc;color:#c04040;border-color:#e0a0a0;}
 
 /* ── BAF ENCART ── */
-.baf-ref{display:flex;align-items:flex-start;gap:8px;background:var(--coral-pale);border-left:3px solid var(--coral);border-radius:0 6px 6px 0;padding:5px 10px;margin-top:4px;font-size:11.5px;color:var(--ink-soft);}
-.baf-ref svg{width:13px;height:13px;flex-shrink:0;color:var(--coral-deep);margin-top:1px;}
+.baf-ref{display:flex;align-items:flex-start;gap:8px;background:var(--sauge-pale);border-left:3px solid var(--sauge);border-radius:0 6px 6px 0;padding:5px 10px;margin-top:4px;font-size:11.5px;color:var(--ink-soft);}
+.baf-ref svg{width:13px;height:13px;flex-shrink:0;color:var(--sauge-deep);margin-top:1px;}
 .baf-ref span{line-height:1.45;}
 .baf-ref strong{color:var(--slate);font-weight:600;}
 
 /* ── ADD BUTTONS ── */
 .btn-add{background:none;border:1px dashed var(--line);border-radius:5px;padding:4px 12px;font-size:11.5px;color:var(--ink-soft);cursor:pointer;margin:5px 10px;}
-.btn-add:hover{border-color:var(--coral);color:var(--coral-deep);}
+.btn-add:hover{border-color:var(--sauge);color:var(--sauge-deep);}
 .btn-add-item{margin:5px 0;font-size:12.5px;}
 
 
@@ -1797,13 +1862,13 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
 .synth-table td{padding:8px 10px;border-bottom:1px solid var(--line-soft);text-align:center;}
 .synth-table td:first-child{text-align:left;font-weight:600;}
 .synth-table tr:nth-child(even){background:var(--paper);}
-.synth-table .gr{background:var(--teal-pale)!important;}
+.synth-table .gr{background:var(--ocre-pale)!important;}
 .synth-table .gr td{font-weight:700;}
 .radars-row{display:flex;gap:24px;justify-content:center;flex-wrap:wrap;margin:16px 0;}
 .radar-col{text-align:center;}
 .radar-col .rc-label{font-size:12px;font-weight:600;color:var(--ink-soft);margin-bottom:4px;}
 .note-box{margin-top:16px;padding:12px 14px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius-sm);font-size:11.5px;color:var(--ink-soft);}
-.qual-section h3{font-size:14px;color:var(--slate);margin:22px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--coral-pale);}
+.qual-section h3{font-size:14px;color:var(--slate);margin:22px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--sauge-pale);}
 .qual-dim{margin-bottom:14px;border:1px solid var(--line);border-radius:var(--radius-sm);}
 .qual-dim-header{padding:10px 14px;display:flex;justify-content:space-between;align-items:center;color:#fff;border-radius:var(--radius-sm) var(--radius-sm) 0 0;}
 .qual-dim-header .la{font-weight:700;font-size:13px;}
@@ -1817,7 +1882,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
 .qual-body ul{margin:0 0 5px 16px;padding:0;}
 .qual-body li{margin-bottom:2px;line-height:1.4;}
 .qual-body .empty{font-style:italic;color:var(--line);}
-.cot-label-banner{font-size:13px;font-weight:700;color:var(--slate);margin:14px 0 8px;padding:6px 10px;background:var(--coral-pale);border-radius:5px;}
+.cot-label-banner{font-size:13px;font-weight:700;color:var(--slate);margin:14px 0 8px;padding:6px 10px;background:var(--sauge-pale);border-radius:5px;}
 
 /* ── Explorer : fiche de contexte ── */
 .explorer-fiche{
@@ -1845,13 +1910,13 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   background:none;border:none;cursor:pointer;flex-shrink:0;
   color:var(--ink-soft);font-size:15px;line-height:1;padding:2px 5px;
 }
-.abc-multi-del:hover{color:var(--coral-deep);}
+.abc-multi-del:hover{color:var(--sauge-deep);}
 .abc-multi-add{
   background:none;border:1px dashed var(--line);border-radius:6px;
   color:var(--ink-soft);font-size:11.5px;font-weight:600;
   padding:4px 9px;cursor:pointer;width:100%;
 }
-.abc-multi-add:hover{border-color:var(--coral-deep);color:var(--coral-deep);}
+.abc-multi-add:hover{border-color:var(--sauge-deep);color:var(--sauge-deep);}
 
 /* ── Ce que les données suggèrent : deux statuts distincts ── */
 .suggestion-section{
@@ -1865,8 +1930,8 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
   padding:3px 10px;border-radius:999px;margin-bottom:6px;
 }
-.suggestion-etiquette.compte{background:var(--teal-pale);color:var(--teal-deep);}
-.suggestion-etiquette.main{background:var(--coral-pale);color:var(--coral-deep);}
+.suggestion-etiquette.compte{background:var(--ocre-pale);color:var(--ocre-deep);}
+.suggestion-etiquette.main{background:var(--sauge-pale);color:var(--sauge-deep);}
 .suggestion-note{
   display:block;
   font-family:'Source Serif 4',serif;
@@ -1896,7 +1961,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
 }
 .volet-barre{height:100%;transition:width .25s;}
 .volet-barre.post{
-  background:repeating-linear-gradient(45deg,var(--coral-deep),var(--coral-deep) 3px,var(--amber-pale) 3px,var(--amber-pale) 6px);
+  background:repeating-linear-gradient(45deg,var(--sauge-deep),var(--sauge-deep) 3px,var(--rose-pale) 3px,var(--rose-pale) 6px);
 }
 .volet-compte{flex:0 0 auto;font-size:11.5px;color:var(--ink-soft);font-weight:600;white-space:nowrap;}
 .volet-legende{
@@ -1905,7 +1970,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
 }
 .volet-legende .pastille{
   display:inline-block;width:22px;height:9px;border-radius:2px;
-  background:repeating-linear-gradient(45deg,var(--coral-deep),var(--coral-deep) 3px,var(--amber-pale) 3px,var(--amber-pale) 6px);
+  background:repeating-linear-gradient(45deg,var(--sauge-deep),var(--sauge-deep) 3px,var(--rose-pale) 3px,var(--rose-pale) 6px);
 }
 @media(max-width:640px){.volet-nom{flex:0 0 110px;}}
 
@@ -1951,7 +2016,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   display:flex;align-items:flex-end;
 }
 .bar-remplissage{
-  width:100%;background:var(--coral-deep);
+  width:100%;background:var(--sauge-deep);
   border-radius:4px 4px 0 0;transition:height .25s;
   min-height:0;
 }
@@ -1978,11 +2043,11 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
 
 /* Signalement passager d'un item qu'on vient de rejoindre depuis une catégorie */
 @keyframes viser{
-  0%{box-shadow:0 0 0 0 var(--teal);}
-  25%{box-shadow:0 0 0 4px var(--teal-pale);}
+  0%{box-shadow:0 0 0 0 var(--ocre);}
+  25%{box-shadow:0 0 0 4px var(--ocre-pale);}
   100%{box-shadow:0 0 0 0 rgba(0,0,0,0);}
 }
-.m3-item.item-vise{animation:viser 1.6s ease-out;border-color:var(--teal);}
+.m3-item.item-vise{animation:viser 1.6s ease-out;border-color:var(--ocre);}
 
 /* ── REPÈRES : questions/réponses repliées ── */
 .repere-q{
@@ -1999,10 +2064,10 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
 .repere-q summary::-webkit-details-marker{display:none;}
 .repere-q summary::after{
   content:'+';position:absolute;right:4px;top:9px;
-  font-size:17px;font-weight:400;color:var(--coral-deep);
+  font-size:17px;font-weight:400;color:var(--sauge-deep);
 }
 .repere-q[open] summary::after{content:'−';}
-.repere-q summary:hover{color:var(--coral-deep);}
+.repere-q summary:hover{color:var(--sauge-deep);}
 .repere-r{
   padding:0 26px 14px 0;
   font-family:'Source Serif 4',serif;
@@ -2015,7 +2080,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
 .repere-r code{background:var(--paper-deep);border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-size:12.5px;font-family:monospace;}
 
 /* ── GLOSSAIRE TOOLTIP ── */
-.gw{position:relative;display:inline;cursor:help;border-bottom:1px dotted var(--coral-deep);color:var(--slate);font-weight:600;}
+.gw{position:relative;display:inline;cursor:help;border-bottom:1px dotted var(--sauge-deep);color:var(--slate);font-weight:600;}
 .gw::after{content:"🔍";font-size:8px;margin-left:1px;vertical-align:super;}
 .gtt{display:none;position:fixed;padding:10px 14px;border-radius:8px;font-size:11.5px;font-weight:400;font-style:normal;width:320px;z-index:9999;line-height:1.5;box-shadow:0 4px 18px rgba(44,36,22,.18);pointer-events:none;font-family:'Space Grotesk',sans-serif;}
 
@@ -2098,7 +2163,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
     <div class="hero">
       <svg class="bigrose" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="1">
 <circle cx="100" cy="100" r="96"/>
-<path d="M100 22 L118 100 L100 178 L82 100 Z" fill="var(--coral)" stroke="none"/>
+<path d="M100 22 L118 100 L100 178 L82 100 Z" fill="var(--sauge)" stroke="none"/>
 <path d="M100 22 L100 178" stroke="currentColor" stroke-width="1" opacity=".4"/>
 <circle cx="100" cy="100" r="6" fill="var(--paper)" stroke="currentColor" stroke-width="2"/>
 </svg>
@@ -2161,7 +2226,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
       <svg class="bigrose" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="1">
 <circle cx="100" cy="100" r="96"/>
 <line x1="100.0" y1="4.0" x2="100.0" y2="16.0" stroke-width="1.6"/><line x1="116.7" y1="5.5" x2="115.6" y2="11.4" stroke-width="0.8"/><line x1="132.8" y1="9.8" x2="130.8" y2="15.4" stroke-width="0.8"/><line x1="148.0" y1="16.9" x2="145.0" y2="22.1" stroke-width="0.8"/><line x1="161.7" y1="26.5" x2="157.9" y2="31.1" stroke-width="0.8"/><line x1="173.5" y1="38.3" x2="168.9" y2="42.1" stroke-width="0.8"/><line x1="183.1" y1="52.0" x2="177.9" y2="55.0" stroke-width="0.8"/><line x1="190.2" y1="67.2" x2="184.6" y2="69.2" stroke-width="0.8"/><line x1="194.5" y1="83.3" x2="188.6" y2="84.4" stroke-width="0.8"/><line x1="196.0" y1="100.0" x2="184.0" y2="100.0" stroke-width="1.6"/><line x1="194.5" y1="116.7" x2="188.6" y2="115.6" stroke-width="0.8"/><line x1="190.2" y1="132.8" x2="184.6" y2="130.8" stroke-width="0.8"/><line x1="183.1" y1="148.0" x2="177.9" y2="145.0" stroke-width="0.8"/><line x1="173.5" y1="161.7" x2="168.9" y2="157.9" stroke-width="0.8"/><line x1="161.7" y1="173.5" x2="157.9" y2="168.9" stroke-width="0.8"/><line x1="148.0" y1="183.1" x2="145.0" y2="177.9" stroke-width="0.8"/><line x1="132.8" y1="190.2" x2="130.8" y2="184.6" stroke-width="0.8"/><line x1="116.7" y1="194.5" x2="115.6" y2="188.6" stroke-width="0.8"/><line x1="100.0" y1="196.0" x2="100.0" y2="184.0" stroke-width="1.6"/><line x1="83.3" y1="194.5" x2="84.4" y2="188.6" stroke-width="0.8"/><line x1="67.2" y1="190.2" x2="69.2" y2="184.6" stroke-width="0.8"/><line x1="52.0" y1="183.1" x2="55.0" y2="177.9" stroke-width="0.8"/><line x1="38.3" y1="173.5" x2="42.1" y2="168.9" stroke-width="0.8"/><line x1="26.5" y1="161.7" x2="31.1" y2="157.9" stroke-width="0.8"/><line x1="16.9" y1="148.0" x2="22.1" y2="145.0" stroke-width="0.8"/><line x1="9.8" y1="132.8" x2="15.4" y2="130.8" stroke-width="0.8"/><line x1="5.5" y1="116.7" x2="11.4" y2="115.6" stroke-width="0.8"/><line x1="4.0" y1="100.0" x2="16.0" y2="100.0" stroke-width="1.6"/><line x1="5.5" y1="83.3" x2="11.4" y2="84.4" stroke-width="0.8"/><line x1="9.8" y1="67.2" x2="15.4" y2="69.2" stroke-width="0.8"/><line x1="16.9" y1="52.0" x2="22.1" y2="55.0" stroke-width="0.8"/><line x1="26.5" y1="38.3" x2="31.1" y2="42.1" stroke-width="0.8"/><line x1="38.3" y1="26.5" x2="42.1" y2="31.1" stroke-width="0.8"/><line x1="52.0" y1="16.9" x2="55.0" y2="22.1" stroke-width="0.8"/><line x1="67.2" y1="9.8" x2="69.2" y2="15.4" stroke-width="0.8"/><line x1="83.3" y1="5.5" x2="84.4" y2="11.4" stroke-width="0.8"/>
-<path d="M100 22 L118 100 L100 178 L82 100 Z" fill="var(--coral)" stroke="none"/>
+<path d="M100 22 L118 100 L100 178 L82 100 Z" fill="var(--sauge)" stroke="none"/>
 <path d="M100 22 L100 178" stroke="currentColor" stroke-width="1" opacity=".4"/>
 <circle cx="100" cy="100" r="6" fill="var(--paper)" stroke="currentColor" stroke-width="2"/>
 </svg>
@@ -2250,10 +2315,10 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
       <div class="crumb"><button onclick="route('accueil')">← Accueil</button></div>
       <div class="hero">
         <svg class="bigscale" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="24" cy="24" r="20.5" fill="var(--m1)" stroke="var(--m1)" stroke-width="1.4"/>
-          <circle cx="24" cy="24" r="20.5" fill="none" stroke="var(--amber)" stroke-width="1.4"/>
-          <path d="M24 10 L29.5 24 L24 38 L18.5 24 Z" fill="var(--amber)"/>
-          <circle cx="24" cy="24" r="2.6" fill="var(--m1)" stroke="#fff" stroke-width="1"/>
+          <circle cx="24" cy="24" r="20.5" fill="var(--prune)" stroke="var(--prune)" stroke-width="1.4"/>
+          <circle cx="24" cy="24" r="20.5" fill="none" stroke="var(--rose)" stroke-width="1.4"/>
+          <path d="M24 10 L29.5 24 L24 38 L18.5 24 Z" fill="var(--rose)"/>
+          <circle cx="24" cy="24" r="2.6" fill="var(--prune)" stroke="#fff" stroke-width="1"/>
         </svg>
         <div class="kicker">Outil de recherche — EMIA35</div>
         <h1>Indice de confiance</h1>
@@ -2293,7 +2358,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
         </button>
       </div>
       <div style="margin-top:16px;text-align:center;">
-        <button onclick="confirmerReset()" style="background:none;border:1px solid var(--line);border-radius:999px;padding:6px 18px;font-size:12px;font-weight:600;color:var(--ink-soft);cursor:pointer;transition:.15s;" onmouseover="this.style.borderColor='var(--coral-deep)';this.style.color='var(--coral-deep)'" onmouseout="this.style.borderColor='var(--line)';this.style.color='var(--ink-soft)'">↺ Effacer les données et recommencer</button>
+        <button onclick="confirmerReset()" style="background:none;border:1px solid var(--line);border-radius:999px;padding:6px 18px;font-size:12px;font-weight:600;color:var(--ink-soft);cursor:pointer;transition:.15s;" onmouseover="this.style.borderColor='var(--sauge-deep)';this.style.color='var(--sauge-deep)'" onmouseout="this.style.borderColor='var(--line)';this.style.color='var(--ink-soft)'">↺ Effacer les données et recommencer</button>
       </div>
       <div style="margin-top:16px;padding:14px 16px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius-sm);font-family:'Source Serif 4',serif;font-size:13.5px;color:var(--ink-soft);line-height:1.65;">
         <strong style="color:var(--slate);font-family:'Space Grotesk',sans-serif;">Posture du cotateur</strong> — Dans les deux cas, le cotateur reste extérieur à la production de l'AF. Les données du Recueil affichées sont des <em>références informationnelles</em> : elles ne cotent rien, elles éclairent. Le jugement reste entièrement celui du cotateur, sur la base du document rédigé.
@@ -2350,7 +2415,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
     </div>
     <div id="m1-rapide-content">
     <div class="card">
-      <div class="ethique" style="background:var(--coral-pale);border-left:3px solid var(--coral);padding:14px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;text-align:justify;text-justify:inter-word;">
+      <div class="ethique" style="background:var(--sauge-pale);border-left:3px solid var(--sauge);padding:14px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;text-align:justify;text-justify:inter-word;">
         Ne renseignez aucun nom de famille, aucune ville, aucune structure nommément. Un prénom seul suffit — fictif si besoin.
       </div>
 
@@ -2392,7 +2457,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
            jours/heures par lieu, rendu dans #m1-jours-heures-multi. -->
       <div id="m1-jours-heures-simple">
         <div class="field">
-          <label>Jours d'accueil habituels <button type="button" id="btn-cocher-jours" class="btn-link" onclick="toggleTousJours()" style="font-size:12px;font-weight:600;color:var(--coral-deep);background:none;border:none;cursor:pointer;margin-left:8px;padding:0;">Tout cocher</button></label>
+          <label>Jours d'accueil habituels <button type="button" id="btn-cocher-jours" class="btn-link" onclick="toggleTousJours()" style="font-size:12px;font-weight:600;color:var(--sauge-deep);background:none;border:none;cursor:pointer;margin-left:8px;padding:0;">Tout cocher</button></label>
           <div class="choice-row" id="m1-jours">
             <label><input type="checkbox" value="lundi" onchange="saveM1()"> Lundi</label>
             <label><input type="checkbox" value="mardi" onchange="saveM1()"> Mardi</label>
@@ -2433,7 +2498,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
         <div class="help">Ajoutez autant de créneaux que nécessaire. Ce n'est pas un emploi du temps rigide — c'est pour faire apparaître les transitions, souvent déterminantes dans l'analyse.</div>
         <div class="creneau-list" id="m1-creneau-list"></div>
         <button type="button" class="creneau-add" onclick="ajouterCreneau()">＋ Ajouter un créneau</button>
-        <div id="m1-couverture-alerte" class="ethique" style="display:none;background:var(--amber-pale);border-left:3px solid var(--coral-deep);margin-top:10px;padding:10px 14px;font-size:13px;"></div>
+        <div id="m1-couverture-alerte" class="ethique" style="display:none;background:var(--rose-pale);border-left:3px solid var(--sauge-deep);margin-top:10px;padding:10px 14px;font-size:13px;"></div>
       </div>
 
       <div class="field">
@@ -2515,7 +2580,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
     <div class="card">
       <h4 style="font-size:16px;color:var(--ink);margin-bottom:4px;">Évènements déjà décrits <span id="m2-compteur" style="color:var(--ink-soft);font-weight:400;font-size:13px;"></span></h4>
       <div id="m2-periode" style="font-size:12.5px;color:var(--ink-soft);font-style:italic;margin-bottom:10px;min-height:18px;"></div>
-      <div id="m2-brouillon-banner" class="ethique no-print" style="display:none;background:var(--amber-pale);border-left:3px solid var(--coral-deep);padding:10px 14px;margin-bottom:14px;font-size:13px;"></div>
+      <div id="m2-brouillon-banner" class="ethique no-print" style="display:none;background:var(--rose-pale);border-left:3px solid var(--sauge-deep);padding:10px 14px;margin-bottom:14px;font-size:13px;"></div>
       <div class="event-list" id="m2-event-list">
         <div class="event-empty">Aucun évènement déclaré pour le moment.</div>
       </div>
@@ -2558,6 +2623,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
     </div>
 
     <div id="m3-rapide-content">
+    <div id="m3-legende"></div>
     <!-- Onglets des 5 sous-modules -->
     <div class="m3-tabs" id="m3-tabs"></div>
 
@@ -2623,6 +2689,7 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
       <div class="abc-intro">
         <b>Un pattern, c'est une séquence qui se répète.</b> À partir des catégories que vous avez créées dans le module 2, composez une ou plusieurs séquences <b>A → B → C</b> qui vous semblent récurrentes. Ce n'est pas une certitude — c'est une hypothèse de lecture, à prendre au conditionnel. Vous pouvez en proposer plusieurs.
       </div>
+      <div id="m4-legende"></div>
       <div class="abc-patterns-list" id="abc-patterns-list"></div>
       <button class="abc-add-btn" onclick="ajouterPattern()">+ Proposer un nouveau pattern</button>
     </div>
@@ -2633,17 +2700,17 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
         <b>Comment la tension monte-t-elle ?</b> Certains comportements s'enchaînent — la personne commence par un signe discret, puis ça s'intensifie. Proposez ici les séquences de montée en tension que vous repérez, à partir des comportements décrits dans le module 1. Plusieurs CD peuvent apparaître dans la même séquence.
         <div class="vase-svg-wrap">
           <svg viewBox="0 0 200 160" width="180" height="140" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M60 20 L50 130 Q50 145 65 145 L135 145 Q150 145 150 130 L140 20 Z" stroke="var(--amber)" stroke-width="2" fill="var(--amber-pale)" fill-opacity=".4"/>
-            <path d="M60 20 L140 20" stroke="var(--amber)" stroke-width="1.5"/>
+            <path d="M60 20 L50 130 Q50 145 65 145 L135 145 Q150 145 150 130 L140 20 Z" stroke="var(--rose)" stroke-width="2" fill="var(--rose-pale)" fill-opacity=".4"/>
+            <path d="M60 20 L140 20" stroke="var(--rose)" stroke-width="1.5"/>
             <text x="100" y="60" text-anchor="middle" font-size="10" fill="var(--ink-soft)" font-family="Space Grotesk">↑ tension</text>
-            <text x="100" y="110" text-anchor="middle" font-size="10" fill="var(--amber)" font-family="Space Grotesk" font-weight="700">monte...</text>
-            <path d="M85 80 L100 40 L115 80" stroke="var(--coral)" stroke-width="1.5" fill="none"/>
-            <circle cx="100" cy="38" r="3" fill="var(--coral)"/>
+            <text x="100" y="110" text-anchor="middle" font-size="10" fill="var(--rose)" font-family="Space Grotesk" font-weight="700">monte...</text>
+            <path d="M85 80 L100 40 L115 80" stroke="var(--sauge)" stroke-width="1.5" fill="none"/>
+            <circle cx="100" cy="38" r="3" fill="var(--sauge)"/>
           </svg>
         </div>
       </div>
       <div class="grad-list" id="grad-list"></div>
-      <button class="abc-add-btn" style="border-color:var(--amber);" onclick="ajouterGradation()">+ Proposer une séquence de montée en tension</button>
+      <button class="abc-add-btn" style="border-color:var(--rose);" onclick="ajouterGradation()">+ Proposer une séquence de montée en tension</button>
     </div>
 
     <!-- VASE DE TENSION -->
@@ -3482,7 +3549,7 @@ function renderGrilleSemaine() {
         placeholder="${esc(c.nom||'')}"
         oninput="updateSemaine('${j.id}',${ci},this.value)"></td>`;
     }).join('');
-    return `<tr><td class="col-horaire"><span>${esc(horaire)}</span><span style="font-size:10px;color:var(--coral-deep);font-weight:600;">${esc(c.nom||'')}</span></td>${cells}</tr>`;
+    return `<tr><td class="col-horaire"><span>${esc(horaire)}</span><span style="font-size:10px;color:var(--sauge-deep);font-weight:600;">${esc(c.nom||'')}</span></td>${cells}</tr>`;
   }).join('') +
   '<tr class="row-provenance"><td class="col-horaire" style="font-size:9.5px;color:var(--ink-soft);">Départ</td>' +
   jours.map(j => `<td><input type="text" class="input-provenance" value="${esc((provenance[j.id]||{}).depart||'')}"
@@ -4250,7 +4317,7 @@ const ETAPES = [
               `<label><input type="radio" name="fmoment" value="${esc(m)}" ${d.moment===m?'checked':''}> ${esc(m)}</label>`
             ).join('')}
           </div>
-          <div id="f-moment-alerte" class="ethique" style="display:none;background:var(--amber-pale);border-left:3px solid var(--coral-deep);margin-top:10px;padding:10px 14px;font-size:13px;"></div>
+          <div id="f-moment-alerte" class="ethique" style="display:none;background:var(--rose-pale);border-left:3px solid var(--sauge-deep);margin-top:10px;padding:10px 14px;font-size:13px;"></div>
           <div class="field" style="margin-top:8px;">
             <label for="f-moment-precision">Précision sur le moment (facultatif)</label>
             <input type="text" id="f-moment-precision" value="${esc(d.momentPrecision||'')}" placeholder="ex : tout début de l'activité, juste avant le brossage de dents...">
@@ -4276,7 +4343,7 @@ const ETAPES = [
     label: 'Contexte', court: 'Contexte',
     render: (d) => `
       <div class="card">
-        <div style="background:var(--teal-pale);border-left:3px solid var(--teal);padding:13px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;">
+        <div style="background:var(--vol-contexte-pale);border-left:3px solid var(--vol-contexte);padding:13px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;" title="Jaune ocre : le contexte et l'antécédent, ce qui précède le comportement.">
           <b>Contexte (setting events)</b> — Ce qui précède de loin, pas juste la seconde d'avant. C'est souvent là que les clés se cachent.
         </div>
         <div class="field">
@@ -4309,7 +4376,7 @@ const ETAPES = [
     label: 'Comportement (B)', court: 'Comportement',
     render: (d) => `
       <div class="card">
-        <div style="background:var(--coral-pale);border-left:3px solid var(--coral);padding:13px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;">
+        <div style="background:var(--vol-comportement-pale);border-left:3px solid var(--vol-comportement);padding:13px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;" title="Vert sauge : le comportement.">
           <b>Imaginez qu'une caméra filmait la scène.</b> Qu'est-ce qu'elle aurait enregistré exactement ? Pas "il a fait sa crise habituelle", pas "il a été difficile" — mais quels gestes, quels sons, dans quel ordre, pendant combien de temps ?
         </div>
         <div class="field">
@@ -4345,7 +4412,7 @@ const ETAPES = [
         : [{id:'ant_'+Date.now(), texte:'', declencheurPresume:false}];
       return `
       <div class="card">
-        <div style="background:var(--teal-pale);border-left:3px solid var(--teal);padding:13px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;">
+        <div style="background:var(--vol-antecedent-pale);border-left:3px solid var(--vol-antecedent);padding:13px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;" title="Jaune ocre : le contexte et l'antécédent, ce qui précède le comportement.">
           <b>Ce qui s'est passé juste avant le comportement.</b> Pas une interprétation ("il était énervé"), pas un résumé ("RAS") — mais ce qui s'est concrètement passé dans les secondes ou minutes précédentes. Il y en a souvent <b>plusieurs</b> : ajoutez-en autant que nécessaire.
         </div>
         <div class="field">
@@ -4378,7 +4445,7 @@ const ETAPES = [
       const interventions = (d.interventions && d.interventions.length) ? d.interventions : [{id:'iv_'+Date.now(), texte:'', effet:'', precision:'', cdPostIntervention:''}];
       return `
       <div class="card">
-        <div style="background:var(--m1-pale);border-left:3px solid var(--m1);padding:13px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;">
+        <div style="background:var(--vol-intervention-pale);border-left:3px solid var(--vol-intervention);padding:13px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;" title="Prune : l'intervention de l'entourage.">
           <b>Ce que vous ou l'entourage avez fait en réponse.</b> Y compris "on n'a rien fait" — les moments où le comportement cesse sans intervention sont des données précieuses qu'on perd souvent.
         </div>
         <div id="inter-list">
@@ -4415,7 +4482,7 @@ const ETAPES = [
     label: 'Conséquence pour la personne (C)', court: 'Conséquence',
     render: (d) => `
       <div class="card">
-        <div style="background:var(--amber-pale);border-left:3px solid var(--amber);padding:13px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;">
+        <div style="background:var(--vol-consequence-pale);border-left:3px solid var(--vol-consequence);padding:13px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;" title="Rosé : la conséquence pour la personne.">
           <b>Ce n'est pas la même chose que ce que vous avez fait.</b> La conséquence, c'est ce qui a changé <em>pour la personne</em> après le comportement — ce qu'elle a obtenu, ce qu'elle a évité. C'est ce qui nous dit pourquoi le comportement "marche" pour elle.
         </div>
         <div class="field">
@@ -4444,7 +4511,7 @@ const ETAPES = [
     render: (d) => {
       const prenom = state.m1.prenom || 'la personne';
       return `
-      <div class="card" style="border-top:3px solid var(--teal);">
+      <div class="card" style="border-top:3px solid var(--ocre);">
         <h3 style="font-size:18px;margin-bottom:18px;">Récapitulatif de l'évènement</h3>
         <div style="display:grid;gap:14px;">
           ${recapBloc('👤 Déclarant', `${d.declarant||'—'} (${d.role||'—'})` + (d.temoin ? ' · '+d.temoin : ''))}
@@ -5212,7 +5279,7 @@ function histogrammeVolet(sous) {
       lignes.push({
         nom: cheminCat(sous.id, id),
         enfant: rang > 0,
-        color: cat.color || 'var(--teal)',
+        color: cat.color || 'var(--ocre)',
         total: assignes.length,
         primaire: assignes.length - post,
         post
@@ -5234,7 +5301,7 @@ function histogrammeVolet(sous) {
           <div class="volet-barre" style="width:${largeurPrim}%;background:${l.color};" title="${l.primaire} en comportement primaire"></div>
           ${l.post > 0 ? `<div class="volet-barre post" style="width:${largeurPost}%;" title="${l.post} apparu après une intervention"></div>` : ''}
         </div>
-        <div class="volet-compte">${l.total}${l.post > 0 ? ` <span style="color:var(--coral-deep);font-weight:600;">(dont ${l.post} post-int.)</span>` : ''}</div>
+        <div class="volet-compte">${l.total}${l.post > 0 ? ` <span style="color:var(--sauge-deep);font-weight:600;">(dont ${l.post} post-int.)</span>` : ''}</div>
       </div>`;
     }).join('')}
     ${aDesPost ? `<div class="volet-legende"><span class="pastille"></span> apparu après une intervention</div>` : ''}
@@ -5346,8 +5413,8 @@ function refreshSynthese(){
   // lignes vides ne s'affichent pas.
   const ligneVaseSynthese = (titre, tags, ton) => {
     if (!tags.length) return '';
-    const fond = ton === 'teal' ? 'var(--teal-pale)' : 'var(--coral-pale)';
-    const encre = ton === 'teal' ? 'var(--teal-deep)' : 'var(--coral-deep)';
+    const fond = ton === 'teal' ? 'var(--ocre-pale)' : 'var(--sauge-pale)';
+    const encre = ton === 'teal' ? 'var(--ocre-deep)' : 'var(--sauge-deep)';
     return '<div style="margin-bottom:5px;font-size:13px;"><span style="color:' + encre + ';font-weight:700;">' +
       esc(titre) + ' :</span> ' +
       tags.map(t => '<span style="background:' + fond + ';color:' + encre +
@@ -5386,12 +5453,12 @@ function refreshSynthese(){
             : pastille('?', fond, encre);
           html += `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;font-size:13.5px;">
             <span style="font-weight:700;color:var(--ink-soft);font-size:12px;">Pattern ${i+1}</span>
-            ${groupe(asIds, 'antecedents', 'var(--teal-pale)', 'var(--teal-deep)')}
+            ${groupe(asIds, 'antecedents', 'var(--vol-antecedent-pale)', 'var(--vol-antecedent-texte)')}
             <span style="color:var(--ink-soft);">→</span>
-            ${pastille(getLabel('cp', p.b), 'var(--coral-pale)', 'var(--coral-deep)')}
+            ${pastille(getLabel('cp', p.b), 'var(--vol-comportement-pale)', 'var(--vol-comportement-texte)')}
             <span style="color:var(--ink-soft);">→</span>
-            ${groupe(csIds, 'consequences', 'var(--amber-pale)', 'var(--amber)')}
-            ${p.b2 ? `<span style="color:var(--ink-soft);">↳</span>${pastille(getLabel('cp', p.b2), 'var(--amber-pale)', 'var(--coral-deep)')}<span style="font-size:10.5px;color:var(--ink-soft);">post-intervention</span>` : ''}
+            ${groupe(csIds, 'consequences', 'var(--vol-consequence-pale)', 'var(--vol-consequence-texte)')}
+            ${p.b2 ? `<span style="color:var(--ink-soft);">↳</span>${pastille(getLabel('cp', p.b2), 'var(--vol-comportement-pale)', 'var(--vol-comportement-texte)')}<span style="font-size:10.5px;color:var(--ink-soft);">post-intervention</span>` : ''}
           </div>`;
         });
         html += '</div>';
@@ -5637,13 +5704,26 @@ function renderIndice() {
       </div>
     </div>`;
 
+  // Un pictogramme sans légende ne veut rien dire pour qui arrive sur l'outil.
+  const LEGENDE_SCORE = {
+    1:   'Critère satisfait',
+    0.5: 'Critère partiellement satisfait',
+    0:   'Critère non satisfait'
+  };
   const scoreIcon = s => s === 1 ? '✅' : s === 0.5 ? '⚠️' : '❌';
 
-  detailEl.innerHTML = `<div class="indice-criteria">` +
+  detailEl.innerHTML =
+    '<div class="legende-volets" style="margin-bottom:12px;">' +
+      '<span class="lv-titre">Lecture</span>' +
+      '<span class="lv-item" title="Critère satisfait">✅ satisfait</span>' +
+      '<span class="lv-item" title="Critère partiellement satisfait">⚠️ partiel</span>' +
+      '<span class="lv-item" title="Critère non satisfait">❌ non satisfait</span>' +
+    '</div>' +
+    `<div class="indice-criteria">` +
     criteres.map(c => {
       const conseil = c.conseils[c.score];
       return `<div class="indice-crit">
-        <div class="indice-crit-icon">${scoreIcon(c.score)}</div>
+        <div class="indice-crit-icon" title="${esc(LEGENDE_SCORE[c.score] || '')}" aria-label="${esc(LEGENDE_SCORE[c.score] || '')}">${scoreIcon(c.score)}</div>
         <div class="indice-crit-body">
           <div class="indice-crit-label">${c.label} <span style="font-weight:400;color:var(--ink-soft);font-size:12px;">— ${c.affichage}</span></div>
           ${conseil ? `<div class="indice-crit-conseil">${conseil}</div>` : ''}
@@ -5770,7 +5850,7 @@ function renderCorrelations() {
     html += `<div class="corr-section">
       <div class="corr-section-title">⏮ Antécédent → ⏭ Conséquence</div>
       <div class="corr-note">Quand cet antécédent est présent, cette conséquence apparaît dans X% des évènements où l'antécédent est catégorisé.</div>
-      ${ante_cons.map(p => corrLine(p, 'var(--teal-pale)', 'var(--amber-pale)', '→')).join('')}
+      ${ante_cons.map(p => corrLine(p, 'var(--ocre-pale)', 'var(--rose-pale)', '→')).join('')}
     </div>`;
   }
 
@@ -5779,11 +5859,11 @@ function renderCorrelations() {
       <div class="corr-section-title">⏮ 🎥 ⏭ Séquences complètes qui reviennent</div>
       <div class="corr-note">Ces trois éléments ont été catégorisés ensemble sur un même évènement, ce nombre de fois. C'est un décompte, pas une hypothèse : à vous d'en faire un pattern dans Interpréter, ou non.</div>
       ${triplets.map(t => `<div class="corr-row">
-        <span class="corr-tag" style="background:var(--teal-pale);">${esc(t.a)}</span>
+        <span class="corr-tag" style="background:var(--ocre-pale);">${esc(t.a)}</span>
         <span class="corr-arrow">→</span>
-        <span class="corr-tag" style="background:var(--coral-pale);">${esc(t.b)}</span>
+        <span class="corr-tag" style="background:var(--sauge-pale);">${esc(t.b)}</span>
         <span class="corr-arrow">→</span>
-        <span class="corr-tag" style="background:var(--amber-pale);">${esc(t.c)}</span>
+        <span class="corr-tag" style="background:var(--rose-pale);">${esc(t.c)}</span>
         <span class="corr-count">${t.n} fois sur ${evts.length}</span>
       </div>`).join('')}
     </div>`;
@@ -5793,7 +5873,7 @@ function renderCorrelations() {
     html += `<div class="corr-section">
       <div class="corr-section-title">🎥 Comportement → ⏭ Conséquence</div>
       <div class="corr-note">Le comportement et la conséquence co-apparaissent dans ces évènements. C'est souvent là que la fonction du comportement se lit.</div>
-      ${cp_cons.map(p => corrLine(p, 'var(--coral-pale)', 'var(--amber-pale)', '→')).join('')}
+      ${cp_cons.map(p => corrLine(p, 'var(--sauge-pale)', 'var(--rose-pale)', '→')).join('')}
     </div>`;
   }
 
@@ -6996,10 +7076,35 @@ function extraireCDPostIntervention(evt) {
 }
 
 // Configuration des 5 sous-modules
+/* ── Le code couleur, dit une fois ─────────────────────────────────────
+   Une couleur par volet, la même d'un bout à l'autre de l'outil. Le contexte
+   partage celle de l'antécédent : c'est l'antécédent lointain. */
+const LEGENDE_VOLETS = {
+  antecedent:   "Jaune ocre — le contexte et l'antécédent : ce qui précède le comportement.",
+  contexte:     "Jaune ocre — le contexte et l'antécédent : ce qui précède le comportement.",
+  comportement: "Vert sauge — le comportement observé.",
+  consequence:  "Rosé — la conséquence pour la personne : ce qu'elle a obtenu ou évité.",
+  intervention: "Prune — l'intervention de l'entourage, et ce qu'elle a produit."
+};
+const ORDRE_LEGENDE = [
+  ['antecedent',   'Contexte et antécédent'],
+  ['comportement', 'Comportement'],
+  ['consequence',  'Conséquence'],
+  ['intervention', 'Intervention']
+];
+function legendeVolets(titre) {
+  return '<div class="legende-volets"><span class="lv-titre">' +
+    (titre || 'Code couleur') + '</span>' +
+    ORDRE_LEGENDE.map(([cle, nom]) =>
+      '<span class="lv-item" title="' + esc(LEGENDE_VOLETS[cle]) + '">' +
+      '<span class="lv-pastille" style="background:var(--vol-' + cle + ');"></span>' + nom + '</span>'
+    ).join('') + '</div>';
+}
+
 const M3_SOUS = [
   {
     id: 'cp',
-    label: 'Comportements', icon: '🎥',
+    label: 'Comportements', icon: '🎥', couleur: 'comportement',
     help: 'Ce qui a été décrit comme comportement dans chaque évènement (colonne B). Regroupez ce qui vous semble appartenir à la même famille — sans vous imposer une nomenclature.',
     placeholder: 'ex : Hétéro-agressivité, Auto-agressivité, Refus verbal, Agitation…',
     extract: (evt) => {
@@ -7012,7 +7117,7 @@ const M3_SOUS = [
   },
   {
     id: 'antecedents',
-    label: 'Antécédents', icon: '⏮',
+    label: 'Antécédents', icon: '⏮', couleur: 'antecedent',
     help: 'Tout ce qui précède le comportement : le contexte (setting events) et les antécédents. Le badge « présumé déclencheur » signale ce que le déclarant a coché — c\'est son avis, vous restez libre d\'en juger autrement. Un CD apparu après une intervention (badge « post-intervention ») est aussi affiché ici : il devient le contexte de la suite de la crise.',
     placeholder: 'ex : Transition, Fin d\'activité appréciée, Changement de routine, Fatigue…',
     extract: (evt) => {
@@ -7028,7 +7133,7 @@ const M3_SOUS = [
   },
   {
     id: 'consequences',
-    label: 'Conséquences', icon: '⏭',
+    label: 'Conséquences', icon: '⏭', couleur: 'consequence',
     help: 'Ce que la personne a obtenu ou évité suite au comportement. C\'est souvent là que la fonction du comportement se lit. Un CD apparu après une intervention (badge « post-intervention ») est aussi affiché ici : il est la conséquence directe de cette intervention.',
     placeholder: 'ex : Obtient attention, Évite consigne, Accès à un objet, Sortie de la situation…',
     extract: (evt) => {
@@ -7042,7 +7147,7 @@ const M3_SOUS = [
   },
   {
     id: 'interventions',
-    label: 'Interventions', icon: '🙌',
+    label: 'Interventions', icon: '🙌', couleur: 'intervention',
     help: 'Ce que l\'entourage a fait en réponse, et avec quel effet. Utile pour repérer ce qui apaise, ce qui aggrave, et les angles morts.',
     placeholder: 'ex : Contenance physique, Verbalisation, Retrait, Relais de pro, Ne rien faire…',
     extract: (evt) => {
@@ -7200,18 +7305,7 @@ function renderM3() {
   noData.style.display = 'none';
   workspace.style.display = '';
 
-  // Onglets
-  const tabsEl = document.getElementById('m3-tabs');
-  tabsEl.innerHTML = M3_SOUS.map(s => {
-    const items = extraireItems(s.id).filter(it => !it.vide);
-    const nAssignes = items.filter(it => catDunItem(s.id, it.id).length > 0).length;
-    const isOn = state.m3.sous === s.id;
-    return `<button class="m3-tab${isOn?' on':''}" onclick="changerSous('${s.id}')">
-      ${s.icon} ${s.label}
-      <span class="m3-tab-count">${nAssignes}/${items.length}</span>
-    </button>`;
-  }).join('');
-
+  renderM3Tabs();
   renderM3Sous(state.m3.sous);
 }
 
@@ -7235,7 +7329,7 @@ function renderM3Sous(sousId) {
   const nReels = items.length - nVides;
   document.getElementById('m3-items-count').innerHTML =
     nReels + ' élément' + (nReels > 1 ? 's' : '') +
-    (nVides > 0 ? ` <span style="color:var(--coral-deep);">· ${nVides} non renseigné${nVides>1?'s':''}</span>` : '');
+    (nVides > 0 ? ` <span style="color:var(--sauge-deep);">· ${nVides} non renseigné${nVides>1?'s':''}</span>` : '');
   document.getElementById('m3-items-help').textContent = sous.help;
 
   // ── Colonne gauche : items ──────────────────────────────────────
@@ -7252,19 +7346,19 @@ function renderM3Sous(sousId) {
         ? catIds.map(cid => {
             const cat = cats[cid];
             if (!cat) return '';
-            return `<span class="m3-item-cat-badge" style="background:${cat.color||'var(--teal)'};" onclick="retirerDeUneCat('${sousId}','${item.id}','${cid}',event)">
+            return `<span class="m3-item-cat-badge" style="background:${cat.color||'var(--ocre)'};" onclick="retirerDeUneCat('${sousId}','${item.id}','${cid}',event)">
              ${esc(cheminCat(sousId, cid))} ×
            </span>`;
           }).join(' ')
         : `<span style="font-size:11.5px;color:var(--ink-soft);font-style:italic;">Non catégorisé — cliquez pour assigner</span>`;
       const dateStr = item.date ? formatDate(item.date) : '';
       const src = [dateStr, item.moment].filter(Boolean).join(' · ');
-      const cpLabel = cpLabels && cpLabels[item.id] ? `<span class="m3-item-tag-post" style="background:var(--slate);">${cpLabels[item.id]}</span>` : '';
+      const cpLabel = cpLabels && cpLabels[item.id] ? `<span class="m3-item-tag-post" style="background:var(--vol-comportement-deep);" title="Repère de crise : CP1, CP2 pour deux évènements du même jour ; CP1.2 pour un CD apparu après une intervention du même évènement.">${cpLabels[item.id]}</span>` : '';
       return `<div class="m3-item${catIds.length>0?' categorise':''}${item.vide?' item-vide':''}" data-item-id="${esc(item.id)}" onclick="ouvrirAssign('${sousId}','${item.id}',event)">
         <div style="flex:1">
           ${cpLabel}
           ${item.tag==='post-intervention' ? `<span class="m3-item-tag-post">post-intervention</span>` : ''}
-          ${item.tag==='presume-declencheur' ? `<span class="m3-item-tag-post" style="background:var(--teal-deep);" title="Le déclarant pense que c'est ce qui a déclenché — à vous d'en juger">présumé déclencheur</span>` : ''}
+          ${item.tag==='presume-declencheur' ? `<span class="m3-item-tag-post" style="background:var(--vol-antecedent-deep);" title="Le déclarant pense que c'est ce qui a déclenché — à vous d'en juger. Jaune ocre : couleur de l'antécédent.">présumé déclencheur</span>` : ''}
           ${item.vide ? `<span class="m3-item-tag-post" style="background:var(--line);color:var(--ink-soft);" title="Ce volet n'a pas été rempli par le déclarant">non renseigné</span>` : ''}
           <div class="m3-item-text">${esc(item.texte)}</div>
           ${src ? `<div class="m3-item-source">Évt. ${item.evtIdx+1}${src?' — '+src:''}</div>` : ''}
@@ -7295,7 +7389,7 @@ function renderM3Sous(sousId) {
             onchange="renommerCat('${sousId}','${catId}',this.value)"
             placeholder="${estEnfant ? 'Nom de la sous-catégorie' : 'Nom de la catégorie'}">
           <span class="m3-cat-count">${catItems.length} élément${catItems.length>1?'s':''}</span>
-          ${estEnfant ? '' : `<button class="m3-cat-del" onclick="ajouterSousCategorie('${sousId}','${catId}')" title="Ajouter une sous-catégorie" style="color:var(--coral-deep);">＋</button>`}
+          ${estEnfant ? '' : `<button class="m3-cat-del" onclick="ajouterSousCategorie('${sousId}','${catId}')" title="Ajouter une sous-catégorie" style="color:var(--sauge-deep);">＋</button>`}
           <button class="m3-cat-del" onclick="supprimerCat('${sousId}','${catId}')" title="Supprimer cette catégorie">✕</button>
         </div>
         <div class="m3-cat-items">
@@ -7382,9 +7476,9 @@ function assignPopupContent(sousId, itemId) {
             const cat = cats[id];
             if (!cat) return '';
             const isActive = activeCatIds.includes(id);
-            return `<button class="m3-assign-opt" style="${isActive?'background:var(--teal-pale);color:var(--teal-deep);':''}${estEnfant?'padding-left:26px;font-weight:500;':''}"
+            return `<button class="m3-assign-opt" style="${isActive?'background:var(--ocre-pale);color:var(--ocre-deep);':''}${estEnfant?'padding-left:26px;font-weight:500;':''}"
               onclick="assignerItem('${sousId}','${itemId}','${id}')">
-              <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${cat.color||'var(--teal)'};margin-right:6px;vertical-align:middle;${estEnfant?'opacity:.55;':''}"></span>
+              <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${cat.color||'var(--ocre)'};margin-right:6px;vertical-align:middle;${estEnfant?'opacity:.55;':''}"></span>
               ${estEnfant ? '<span style="color:var(--ink-soft);">↳ </span>' : ''}${esc(cat.nom)}${isActive?' ✓':''}
             </button>`;
           };
@@ -7627,6 +7721,8 @@ function supprimerCat(sousId, catId) {
 }
 
 function renderM3Tabs() {
+  const leg = document.getElementById('m3-legende');
+  if (leg) leg.innerHTML = legendeVolets('Code couleur des volets');
   // Re-render seulement les onglets (pas tout le sous-module)
   ensureM3();
   const evts = state.m2.evenements || [];
@@ -7639,7 +7735,13 @@ function renderM3Tabs() {
     const items = extraireItems(s.id).filter(it => !it.vide);
     const nAssignes = items.filter(it => catDunItem(s.id, it.id).length > 0).length;
     const isOn = state.m3.sous === s.id;
-    return `<button class="m3-tab${isOn?' on':''}" onclick="changerSous('${s.id}')">
+    // Chaque onglet porte la couleur de son volet : ils étaient tous jaunes,
+    // c'est-à-dire tous de la couleur de l'antécédent.
+    const c = s.couleur ? `--vol-${s.couleur}` : '--slate';
+    const style = isOn
+      ? `background:var(${c}-texte);border-color:var(${c}-texte);color:#fff;`
+      : `border-color:var(${c}-pale);color:var(${c}-texte);`;
+    return `<button class="m3-tab${isOn?' on':''}" style="${style}" onclick="changerSous('${s.id}')" title="${esc(LEGENDE_VOLETS[s.couleur] || '')}">
       ${s.icon} ${s.label}
       <span class="m3-tab-count">${nAssignes}/${items.length}</span>
     </button>`;
@@ -7681,6 +7783,8 @@ function ensureM4() {
 
 function renderM4() {
   ensureM4();
+  const leg = document.getElementById('m4-legende');
+  if (leg) leg.innerHTML = legendeVolets('Code couleur des volets');
   changerSousM4(state.m4.sous || 'pattern');
   renderPatterns();
   renderGradations();
@@ -7831,7 +7935,7 @@ function renderExploration() {
           const max = liste[0].n;
           return `<div class="volet-ligne">
             <div class="volet-nom" title="${esc(t.nom)}">${esc(t.nom)}</div>
-            <div class="volet-piste"><div class="volet-barre" style="width:${Math.round(t.n/max*100)}%;background:var(--coral-deep);"></div></div>
+            <div class="volet-piste"><div class="volet-barre" style="width:${Math.round(t.n/max*100)}%;background:var(--sauge-deep);"></div></div>
             <div class="volet-compte">${t.n} / ${sousEns.length}</div>
           </div>`;
         }).join('')}
@@ -7952,7 +8056,7 @@ function renderPatterns() {
         ${p.b2 ? `
           <span class="abc-arrow">↳</span>
           <div class="abc-slot">
-            <span class="abc-slot-letter b" style="background:var(--amber-pale);color:var(--coral-deep);">CD suivant</span>
+            <span class="abc-slot-letter b" style="background:var(--rose-pale);color:var(--sauge-deep);">CD suivant</span>
             <select class="abc-slot-select" onchange="updatePattern('${esc(p.id)}','b2',this.value)">
               ${buildCatOptions('cp', p.b2, 'Catégorie CD…')}
             </select>
@@ -9626,7 +9730,7 @@ function bindTooltips(){
       // Couleur selon la dimension parente
       const dimEl=el.closest('.dim-block');
       const di=dimEl?parseInt(dimEl.getAttribute('data-di')):null;
-      const col=di!==null?lightC(DC[di%DC.length],0.18):'var(--coral-pale)';
+      const col=di!==null?lightC(DC[di%DC.length],0.18):'var(--sauge-pale)';
       TT.style.background=col;TT.style.color='var(--ink)';TT.style.border='1px solid var(--line)';
       const rect=el.getBoundingClientRect();
       TT.style.display='block';
@@ -9860,7 +9964,7 @@ function mkSynth(){
       const vs=all.map(s=>s.dims[di].score);
       vs.forEach(v=>tr.appendChild(tdEl(Math.round(v*100)+'%')));
       const mn=vs.reduce((a,b)=>a+b,0)/vs.length;
-      tr.appendChild(tdEl(Math.round(mn*100)+'%',false,'var(--coral-deep)'));
+      tr.appendChild(tdEl(Math.round(mn*100)+'%',false,'var(--sauge-deep)'));
       const sd=vs.length>1?Math.sqrt(vs.reduce((a,v)=>a+(v-mn)**2,0)/(vs.length-1)):0;
       tr.appendChild(tdEl((sd*100).toFixed(1)+'%'));
       tbody.appendChild(tr);
@@ -9915,7 +10019,7 @@ function mkSynth(){
         else nc.push({lb});
       });});
       const mkH4=(cls,txt)=>{const h=document.createElement('h4');h.className=cls;h.textContent=txt;return h;};
-      const mkUl=(items)=>{const ul=document.createElement('ul');items.forEach(s=>{const li=document.createElement('li');li.innerHTML=s.lb+(s.cm?' <em style="color:var(--coral-deep)">— '+s.cm+'</em>':'');ul.appendChild(li);});return ul;};
+      const mkUl=(items)=>{const ul=document.createElement('ul');items.forEach(s=>{const li=document.createElement('li');li.innerHTML=s.lb+(s.cm?' <em style="color:var(--sauge-deep)">— '+s.cm+'</em>':'');ul.appendChild(li);});return ul;};
       body.appendChild(mkH4('ok','✓ Points forts ('+strengths.length+')'));
       if(strengths.length)body.appendChild(mkUl(strengths));
       else{const em=document.createElement('div');em.className='empty';em.textContent='Aucun';body.appendChild(em);}
@@ -9939,7 +10043,7 @@ function mkSynth(){
 // ============================================================
 function mkPbar(v){
   const p=Math.round(v*100);
-  const c=p>=67?'#5A9E72':p>=34?'var(--teal)':'#c04040';
+  const c=p>=67?'#5A9E72':p>=34?'var(--ocre)':'#c04040';
   const d=document.createElement('div');d.className='prog';
   d.innerHTML='<div class="fl" style="width:'+p+'%;background:'+c+'"></div><span class="pc" style="color:'+(p>50?'#fff':'var(--ink)')+'">'+p+'%</span>';
   return d;
@@ -9964,7 +10068,7 @@ function mkRadar(ds,sz){
   });
   const dp=ds.map((d,i)=>{const p=gp(i,d.score);return p.x+','+p.y;}).join(' ');
   const po2=document.createElementNS('http://www.w3.org/2000/svg','polygon');
-  po2.setAttribute('points',dp);po2.setAttribute('fill','rgba(154,181,168,0.25)');po2.setAttribute('stroke','var(--coral-deep)');po2.setAttribute('stroke-width','2');svg.appendChild(po2);
+  po2.setAttribute('points',dp);po2.setAttribute('fill','rgba(154,181,168,0.25)');po2.setAttribute('stroke','var(--sauge-deep)');po2.setAttribute('stroke-width','2');svg.appendChild(po2);
   ds.forEach((d,i)=>{
     const p=gp(i,d.score);const lp=gp(i,1.18);
     const ci=document.createElementNS('http://www.w3.org/2000/svg','circle');
