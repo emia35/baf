@@ -1166,6 +1166,17 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
 }
 .m3-item-cat-badge:hover{background:var(--ocre-deep);}
 
+/* Les documents à imprimer. */
+.res-docs{display:grid;gap:14px;}
+.res-doc{
+  border:1.5px solid var(--line);border-radius:var(--radius-sm);
+  background:var(--paper);padding:16px 18px;
+}
+.res-doc-tete{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+.res-doc-ico{font-size:20px;}
+.res-doc-titre{font-size:15px;font-weight:700;color:var(--ink);}
+.res-doc-desc{font-size:13px;color:var(--ink-soft);line-height:1.6;margin-bottom:12px;}
+
 /* Un graphique s'emporte : SVG pour le retoucher, PNG pour le coller. */
 .graphique-actions{
   display:flex;gap:6px;justify-content:flex-end;margin-top:6px;
@@ -2295,10 +2306,34 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
       <h2>Documents et liens utiles</h2>
       <div class="sub">Les supports partageables, les références et les liens qui accompagnent la démarche.</div>
     </div>
-    <div class="construction">
+    <div class="ethique" style="margin-bottom:18px;">
+      <b>Toutes les familles et toutes les institutions ne pourront pas utiliser l'outil numérique.</b> Ces trois documents permettent de recueillir sur papier exactement ce que la BAF demande, puis de le recopier ici sans rien réinterpréter. La grille reprend colonne pour colonne le mode rapide du formulaire : la correspondance est littérale, c'est ce qui rend la recopie sûre.
+    </div>
+
+    <div class="res-docs">
+      <div class="res-doc">
+        <div class="res-doc-tete"><span class="res-doc-ico">📋</span><span class="res-doc-titre">Grille ABC — version BAF</span></div>
+        <div class="res-doc-desc">Une ligne par évènement, huit colonnes qui reprennent celles du mode rapide : quand et qui, contexte, antécédent, comportement, intervention et effet, conséquence pour la personne, vase de tension, commentaire. Format paysage, cinq lignes par page, en-têtes aux couleurs des volets.</div>
+        <button class="btn btn-secondary btn-sm" onclick="telechargerGrilleABC()">⬇ Télécharger (.docx)</button>
+      </div>
+
+      <div class="res-doc">
+        <div class="res-doc-tete"><span class="res-doc-ico">🧭</span><span class="res-doc-titre">Préambule</span></div>
+        <div class="res-doc-desc">Le module « Se connaître » sur papier : la personne, ses espaces de vie, sa journée type, la nuit et les trajets, et ce qu'on sait déjà de son vase de tension. À remplir une fois, ensemble, avant tout recueil.</div>
+        <button class="btn btn-secondary btn-sm" onclick="telechargerPreambulePapier()">⬇ Télécharger (.docx)</button>
+      </div>
+
+      <div class="res-doc">
+        <div class="res-doc-tete"><span class="res-doc-ico">📖</span><span class="res-doc-titre">Guide de remplissage</span></div>
+        <div class="res-doc-desc">La règle de la caméra, la différence entre observer et interpréter, entre contexte et antécédent, ce qu'est vraiment une conséquence, comment coter le vase — et un exemple pour chaque colonne de la grille. Écrit à partir des consignes de l'outil, pour que le papier dise la même chose que l'écran.</div>
+        <button class="btn btn-secondary btn-sm" onclick="telechargerGuide()">⬇ Télécharger (.docx)</button>
+      </div>
+    </div>
+
+    <div class="construction" style="margin-top:20px;">
       <span class="ico">🧰</span>
-      <h3>En construction</h3>
-      <p>Cet espace accueillera les documents à partager avec les équipes et les familles, ainsi que les références sur lesquelles s'appuie la BAF. Il se remplira au fil de vos retours.</p>
+      <h3>La suite</h3>
+      <p>Les références sur lesquelles s'appuie la BAF viendront ici, ainsi que les supports que vos retours feront apparaître.</p>
     </div>
   </section>
 
@@ -9594,6 +9629,502 @@ function repartitionHeures(evts) {
 }
 
 // Histogramme : contrairement au camembert, il sait montrer un zéro.
+/* ══════════════════════════════════════════════════════════════════════
+   ÉCRITURE D'UN FICHIER .DOCX
+   ══════════════════════════════════════════════════════════════════════
+   Un .docx est une archive ZIP contenant du XML. On l'écrit à la main :
+   pas de bibliothèque, l'outil reste un fichier HTML autonome. L'archive est
+   stockée sans compression — c'est permis par le format, et ça évite d'avoir
+   à embarquer un compresseur.
+
+   Pourquoi pas un .doc HTML, plus court à produire ? Parce que Word affiche
+   alors « le format du fichier ne correspond pas à l'extension », ce qui est
+   alarmant pour une famille. Un vrai .docx s'ouvre sans un mot. */
+
+const _TABLE_CRC = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
+
+function crc32(octets) {
+  let c = 0xFFFFFFFF;
+  for (let i = 0; i < octets.length; i++) c = _TABLE_CRC[(c ^ octets[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+
+// Archive ZIP « stored » : en-tête local, données, répertoire central, fin.
+function zipStocke(fichiers) {
+  const enc = new TextEncoder();
+  const d = new Date();
+  const heureDos = ((d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1)) & 0xFFFF;
+  const dateDos = (((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate()) & 0xFFFF;
+
+  const morceaux = [];
+  const central = [];
+  let position = 0;
+
+  const u16 = (v) => [v & 0xFF, (v >> 8) & 0xFF];
+  const u32 = (v) => [v & 0xFF, (v >> 8) & 0xFF, (v >> 16) & 0xFF, (v >>> 24) & 0xFF];
+
+  fichiers.forEach(f => {
+    const nom = enc.encode(f.nom);
+    const data = enc.encode(f.texte);
+    const somme = crc32(data);
+    // 0x0800 : le nom du fichier est en UTF-8.
+    const entete = [].concat(
+      u32(0x04034b50), u16(20), u16(0x0800), u16(0), u16(heureDos), u16(dateDos),
+      u32(somme), u32(data.length), u32(data.length), u16(nom.length), u16(0)
+    );
+    morceaux.push(new Uint8Array(entete), nom, data);
+    central.push({nom, somme, taille: data.length, offset: position});
+    position += entete.length + nom.length + data.length;
+  });
+
+  const debutCentral = position;
+  let tailleCentral = 0;
+  central.forEach(c => {
+    const e = [].concat(
+      u32(0x02014b50), u16(20), u16(20), u16(0x0800), u16(0), u16(heureDos), u16(dateDos),
+      u32(c.somme), u32(c.taille), u32(c.taille),
+      u16(c.nom.length), u16(0), u16(0), u16(0), u16(0), u32(0), u32(c.offset)
+    );
+    morceaux.push(new Uint8Array(e), c.nom);
+    tailleCentral += e.length + c.nom.length;
+  });
+
+  morceaux.push(new Uint8Array([].concat(
+    u32(0x06054b50), u16(0), u16(0), u16(central.length), u16(central.length),
+    u32(tailleCentral), u32(debutCentral), u16(0)
+  )));
+
+  return new Blob(morceaux, {type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+}
+
+/* ── Fabrique de contenu OOXML ─────────────────────────────────────── */
+function xe(t) {
+  return String(t == null ? '' : t)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+}
+
+// Couleurs de la BAF, en hexadécimal sans dièse — Word ne lit pas les variables.
+const DOCX_C = {
+  ink: '2C2416', inkSoft: '6B6152', ligne: 'D9D0C0', papier: 'F5F0E8', papierFonce: 'EDE7D9',
+  slate: '3D4F6B',
+  antecedent: 'F5E8C8', antecedentTexte: '7A6220', antecedentTrait: 'C9A84C',
+  comportement: 'E4EDEA', comportementTexte: '46685A', comportementTrait: '9AB5A8',
+  consequence: 'F8E8E0', consequenceTexte: 'A8503A', consequenceTrait: 'E8B4A0',
+  intervention: 'EFE0E4', interventionTexte: '74495A', interventionTrait: '8B5E6B'
+};
+
+function docxRun(t, o) {
+  o = o || {};
+  const rPr = '<w:rPr>' +
+    (o.gras ? '<w:b/>' : '') +
+    (o.italique ? '<w:i/>' : '') +
+    (o.taille ? '<w:sz w:val="' + o.taille + '"/><w:szCs w:val="' + o.taille + '"/>' : '') +
+    (o.couleur ? '<w:color w:val="' + o.couleur + '"/>' : '') +
+    (o.majuscules ? '<w:caps/>' : '') +
+    '</w:rPr>';
+  // Un saut de ligne à l'intérieur d'un paragraphe devient <w:br/>.
+  const morceaux = String(t == null ? '' : t).split('\n');
+  const contenu = morceaux.map((m, i) =>
+    (i ? '<w:br/>' : '') + '<w:t xml:space="preserve">' + xe(m) + '</w:t>').join('');
+  return '<w:r>' + rPr + contenu + '</w:r>';
+}
+
+function docxP(contenu, o) {
+  o = o || {};
+  const runs = Array.isArray(contenu)
+    ? contenu.map(r => docxRun(r.t, r)).join('')
+    : docxRun(contenu, o);
+  const bordure = o.traitGauche
+    ? '<w:pBdr><w:left w:val="single" w:sz="18" w:space="6" w:color="' + o.traitGauche + '"/></w:pBdr>'
+    : '';
+  const fond = o.fond ? '<w:shd w:val="clear" w:color="auto" w:fill="' + o.fond + '"/>' : '';
+  const pPr = '<w:pPr>' +
+    '<w:spacing w:before="' + (o.avant != null ? o.avant : 0) + '" w:after="' + (o.apres != null ? o.apres : 100) + '"/>' +
+    (o.align ? '<w:jc w:val="' + o.align + '"/>' : '') +
+    (o.retrait ? '<w:ind w:left="' + o.retrait + '"/>' : '') +
+    bordure + fond +
+    '</w:pPr>';
+  return '<w:p>' + pPr + runs + '</w:p>';
+}
+
+function docxTitre(niveau, texte) {
+  const tailles = {1: 36, 2: 28, 3: 24};
+  return docxP(texte, {
+    gras: true, taille: tailles[niveau] || 24, couleur: DOCX_C.slate,
+    avant: niveau === 1 ? 0 : 280, apres: 120
+  });
+}
+
+function docxPuce(texte) {
+  return docxP([{t: '•  ', gras: true, couleur: DOCX_C.inkSoft}, {t: texte}], {retrait: 220, apres: 60});
+}
+
+function docxCellule(contenu, largeur, o) {
+  o = o || {};
+  const paras = Array.isArray(contenu) ? contenu : [docxP(contenu, o.paraOpts)];
+  return '<w:tc><w:tcPr>' +
+    '<w:tcW w:w="' + largeur + '" w:type="dxa"/>' +
+    (o.fond ? '<w:shd w:val="clear" w:color="auto" w:fill="' + o.fond + '"/>' : '') +
+    '<w:tcMar><w:top w:w="60" w:type="dxa"/><w:left w:w="90" w:type="dxa"/>' +
+    '<w:bottom w:w="60" w:type="dxa"/><w:right w:w="90" w:type="dxa"/></w:tcMar>' +
+    '</w:tcPr>' + (paras.join('') || docxP('')) + '</w:tc>';
+}
+
+function docxTableau(lignes, largeurs, o) {
+  o = o || {};
+  const bord = (n) => '<w:' + n + ' w:val="single" w:sz="6" w:space="0" w:color="' + DOCX_C.ligne + '"/>';
+  const tbl = '<w:tbl><w:tblPr><w:tblW w:w="0" w:type="auto"/><w:tblLayout w:type="fixed"/>' +
+    '<w:tblBorders>' + ['top','left','bottom','right','insideH','insideV'].map(bord).join('') + '</w:tblBorders>' +
+    '</w:tblPr><w:tblGrid>' + largeurs.map(l => '<w:gridCol w:w="' + l + '"/>').join('') + '</w:tblGrid>' +
+    lignes.map((lg, i) => {
+      const hauteur = (i === 0 ? (o.hauteurEntete || 0) : (o.hauteur || 0));
+      return '<w:tr>' +
+        (hauteur ? '<w:trPr><w:trHeight w:val="' + hauteur + '"/></w:trPr>' : '') +
+        lg.map((c, j) => docxCellule(c.contenu, largeurs[j], c)).join('') + '</w:tr>';
+    }).join('') + '</w:tbl>' + docxP('', {apres: 0});
+  return tbl;
+}
+
+function construireDocx(corps, paysage) {
+  const pgSz = paysage
+    ? '<w:pgSz w:w="16838" w:h="11906" w:orient="landscape"/><w:pgMar w:top="794" w:right="794" w:bottom="794" w:left="794" w:header="0" w:footer="0" w:gutter="0"/>'
+    : '<w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="0" w:footer="0" w:gutter="0"/>';
+
+  const document = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">' +
+    '<w:body>' + corps + '<w:sectPr>' + pgSz + '</w:sectPr></w:body></w:document>';
+
+  const styles = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">' +
+    '<w:docDefaults><w:rPrDefault><w:rPr>' +
+    '<w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/>' +
+    '<w:color w:val="' + DOCX_C.ink + '"/><w:sz w:val="21"/><w:szCs w:val="21"/><w:lang w:val="fr-FR"/>' +
+    '</w:rPr></w:rPrDefault>' +
+    '<w:pPrDefault><w:pPr><w:spacing w:after="100" w:line="264" w:lineRule="auto"/></w:pPr></w:pPrDefault>' +
+    '</w:docDefaults>' +
+    '<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style>' +
+    '</w:styles>';
+
+  const types = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+    '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+    '<Default Extension="xml" ContentType="application/xml"/>' +
+    '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>' +
+    '<Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>' +
+    '</Types>';
+
+  const relsRacine = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+    '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>' +
+    '</Relationships>';
+
+  const relsDoc = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+    '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>' +
+    '</Relationships>';
+
+  return zipStocke([
+    {nom: '[Content_Types].xml', texte: types},
+    {nom: '_rels/.rels', texte: relsRacine},
+    {nom: 'word/_rels/document.xml.rels', texte: relsDoc},
+    {nom: 'word/document.xml', texte: document},
+    {nom: 'word/styles.xml', texte: styles}
+  ]);
+}
+
+function telechargerDocx(nomFichier, corps, paysage) {
+  try {
+    telechargerFichier(construireDocx(corps, paysage), nomFichier);
+    showToast('Document téléchargé.');
+  } catch (e) {
+    alert('Le document n\'a pas pu être produit : ' + e.message);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   LES TROIS DOCUMENTS À IMPRIMER
+   ══════════════════════════════════════════════════════════════════════
+   Toutes les familles et toutes les institutions ne pourront pas utiliser
+   l'outil numérique. Ces trois documents permettent de recueillir sur papier
+   ce que la BAF demande, puis de le recopier sans rien réinterpréter.
+
+   La grille reprend exactement le mode rapide : une colonne, une case. La
+   correspondance est littérale, c'est ce qui rend la recopie sûre. */
+
+const LIEN_BAF = 'emia35.github.io/baf';
+
+function docxIntertitre(texte, couleurFond, couleurTrait) {
+  return docxP(texte, {
+    gras: true, taille: 22, couleur: DOCX_C.ink,
+    fond: couleurFond, traitGauche: couleurTrait, avant: 240, apres: 120
+  });
+}
+
+/* ── 1. La grille ABC ───────────────────────────────────────────────── */
+function corpsGrilleABC() {
+  const L = [2100, 1950, 1950, 2500, 2100, 2100, 1250, 1300];
+  const enTete = (titre, aide, fond, encre) => ({
+    fond: fond,
+    contenu: [
+      docxP(titre, {gras: true, taille: 19, couleur: encre, apres: 40}),
+      docxP(aide, {taille: 14, couleur: DOCX_C.inkSoft, apres: 0})
+    ]
+  });
+
+  const ligneEnTete = [
+    enTete('Quand · Qui', 'Date, heure, moment de la journée, lieu.\nQui remplit, et à quel titre.\n☐ J\'ai vu la scène moi-même', DOCX_C.papierFonce, DOCX_C.ink),
+    enTete('Contexte', 'Ce qui s\'était passé avant, de loin : la nuit, le week-end, un changement, une douleur, un remplacement.', DOCX_C.antecedent, DOCX_C.antecedentTexte),
+    enTete('Antécédent', 'Ce qui s\'est passé juste avant, et dans quel état il ou elle était.', DOCX_C.antecedent, DOCX_C.antecedentTexte),
+    enTete('Comportement', 'Ce qu\'une caméra aurait filmé : les gestes, les sons, l\'ordre, la durée.', DOCX_C.comportement, DOCX_C.comportementTexte),
+    enTete('Intervention · effet', 'Ce que vous avez fait, et ce que ça a donné. « On n\'a rien fait » est une réponse.', DOCX_C.intervention, DOCX_C.interventionTexte),
+    enTete('Conséquence pour la personne', 'Ce qu\'elle a obtenu, ce qu\'elle a évité. Pas ce que vous avez fait.', DOCX_C.consequence, DOCX_C.consequenceTexte),
+    enTete('Vase', 'De 0 à 100.', DOCX_C.papierFonce, DOCX_C.ink),
+    enTete('Commentaire', 'Ce qui ne rentrait nulle part.', DOCX_C.papierFonce, DOCX_C.ink)
+  ];
+
+  const celluleVase = () => ({contenu: [
+    docxP('contexte  ___', {taille: 16, couleur: DOCX_C.inkSoft, apres: 200}),
+    docxP('avant  ___', {taille: 16, couleur: DOCX_C.inkSoft, apres: 200}),
+    docxP('au plus fort  ___', {taille: 16, couleur: DOCX_C.inkSoft, apres: 0})
+  ]});
+
+  const ligneVide = () => [
+    {contenu: [docxP('')]}, {contenu: [docxP('')]}, {contenu: [docxP('')]},
+    {contenu: [docxP('')]}, {contenu: [docxP('')]}, {contenu: [docxP('')]},
+    celluleVase(), {contenu: [docxP('')]}
+  ];
+
+  const lignes = [ligneEnTete];
+  for (let i = 0; i < 5; i++) lignes.push(ligneVide());
+
+  return docxTitre(1, 'Grille ABC — version BAF') +
+    docxP('Recueil d\'un évènement, à remplir à la main', {italique: true, couleur: DOCX_C.inkSoft, taille: 22, apres: 200}) +
+
+    docxP([
+      {t: 'Cette grille reprend exactement le mode rapide de la BAF : une colonne, une case. '},
+      {t: 'Ce que vous écrivez ici se recopie ensuite case par case dans l\'outil, sans rien réinterpréter. '},
+      {t: 'Le mode approfondi — les mêmes questions, déroulées une à une, avec les relances et les exemples — est disponible sur la BAF en ligne : ', },
+      {t: LIEN_BAF, gras: true}
+    ], {fond: DOCX_C.papierFonce, traitGauche: DOCX_C.slate, apres: 120}) +
+
+    docxP([
+      {t: 'Avant de commencer. ', gras: true},
+      {t: 'Écrivez ce qu\'une caméra aurait enregistré : les gestes, les sons, dans quel ordre, pendant combien de temps. Pas « il a fait sa crise », pas « elle était énervée » — ce qu\'on aurait vu. Le guide de remplissage donne un exemple pour chaque colonne.'}
+    ], {apres: 60}) +
+
+    docxP([
+      {t: 'N\'inscrivez aucun nom de famille, aucune ville, aucun nom de structure. ', gras: true, couleur: DOCX_C.consequenceTexte},
+      {t: 'Un prénom seul suffit.'}
+    ], {apres: 180}) +
+
+    docxTableau(lignes, L, {hauteur: 1500}) +
+
+    docxP([
+      {t: 'Les paliers du vase de tension : ', gras: true},
+      {t: '0-20 tranquille · 20-40 normal · 40-60 tendu · 60-80 angoissé · 80-100 débordé. '},
+      {t: 'Ce sont des repères, pas des crans : 52 ou 68 sont des réponses parfaitement valables. Si vous ne savez pas, laissez vide — une case vide est une information, un chiffre inventé n\'en est pas une.', italique: true}
+    ], {taille: 17, couleur: DOCX_C.inkSoft, avant: 140, apres: 0});
+}
+
+/* ── 2. Le préambule ────────────────────────────────────────────────── */
+function corpsPreambule() {
+  const PLEIN = 9638;
+  const caseVide = (hauteur) => docxTableau(
+    [[{contenu: [docxP('')]}]], [PLEIN], {hauteur: hauteur || 500}
+  );
+  const champ = (libelle, hauteur) =>
+    docxP(libelle, {gras: true, taille: 19, couleur: DOCX_C.inkSoft, avant: 120, apres: 40}) +
+    caseVide(hauteur);
+
+  const tableauVide = (entetes, largeurs, nbLignes) => {
+    const lignes = [entetes.map(e => ({
+      fond: DOCX_C.papierFonce,
+      contenu: [docxP(e, {gras: true, taille: 18, apres: 0})]
+    }))];
+    for (let i = 0; i < nbLignes; i++) {
+      lignes.push(largeurs.map(() => ({contenu: [docxP('')]})));
+    }
+    return docxTableau(lignes, largeurs, {hauteur: 420});
+  };
+
+  return docxTitre(1, 'Apprenons à nous connaître') +
+    docxP('Le préambule de la BAF, à remplir à la main', {italique: true, couleur: DOCX_C.inkSoft, taille: 22, apres: 200}) +
+
+    docxP([
+      {t: 'Ce document se remplit une fois, ensemble, avant tout recueil d\'évènements. '},
+      {t: 'Il pose ce que tout le monde doit savoir de la personne et de son quotidien pour que les observations de chacun se comparent. '},
+      {t: 'Il correspond au module « Se connaître » de la BAF : ', },
+      {t: LIEN_BAF, gras: true}
+    ], {fond: DOCX_C.papierFonce, traitGauche: DOCX_C.slate, apres: 120}) +
+
+    docxP([
+      {t: 'N\'inscrivez aucun nom de famille, aucune ville, aucun nom de structure. ', gras: true, couleur: DOCX_C.consequenceTexte},
+      {t: 'Un prénom seul suffit — ce document circulera entre plusieurs mains.'}
+    ], {apres: 180}) +
+
+    docxIntertitre('1 · La personne', DOCX_C.papierFonce, DOCX_C.slate) +
+    tableauVide(['Prénom', 'Âge'], [4819, 4819], 1) +
+    champ('Éléments de diagnostic, de fonctionnement, de communication', 900) +
+
+    docxIntertitre('2 · Les espaces de vie', DOCX_C.papierFonce, DOCX_C.slate) +
+    docxP('Tous les lieux où la personne passe du temps : famille, institution, école, libéral, taxi, séjours. Un comportement observé à l\'atelier n\'a pas forcément le même sens qu\'à la maison.', {taille: 18, couleur: DOCX_C.inkSoft, apres: 100}) +
+    tableauVide(['Lieu', 'Jours de présence', 'De … à …'], [3500, 3400, 2738], 4) +
+
+    docxIntertitre('3 · La journée type', DOCX_C.papierFonce, DOCX_C.slate) +
+    docxP('Les temps qui structurent une journée ordinaire, avec leurs horaires. C\'est ce découpage qui servira ensuite à situer chaque évènement.', {taille: 18, couleur: DOCX_C.inkSoft, apres: 100}) +
+    tableauVide(['Moment de la journée', 'Début', 'Fin'], [5638, 2000, 2000], 7) +
+
+    docxIntertitre('4 · La nuit et les trajets', DOCX_C.papierFonce, DOCX_C.slate) +
+    tableauVide(['Heure de coucher habituelle', 'Heure de lever habituelle'], [4819, 4819], 1) +
+    tableauVide(['Trajet avant l\'accueil (mode, durée)', 'Trajet après l\'accueil (mode, durée)'], [4819, 4819], 1) +
+
+    docxIntertitre('5 · Son vase de tension, ce qu\'on en sait déjà', DOCX_C.antecedent, DOCX_C.antecedentTrait) +
+    docxP('Tout le monde a un vase qui se remplit de ce qu\'il vit. Avant même de regarder les évènements : d\'après ce que vous connaissez de cette personne, qu\'est-ce qui le remplit, qu\'est-ce qui le vide ? Ce sont des hypothèses de départ — les données les confirmeront ou non.', {taille: 18, couleur: DOCX_C.inkSoft, apres: 100}) +
+    champ('Ce qui vient d\'elle ou de lui — fonctionnement, angoisse, histoire, santé', 800) +
+    champ('Ce qui vient du dehors — environnement, organisation, personnes, évènements', 800) +
+    champ('Ce qui le fait redescendre — même partiellement, même provisoirement', 800) +
+
+    docxIntertitre('6 · Autre chose', DOCX_C.papierFonce, DOCX_C.slate) +
+    champ('Tout ce qui pourrait être utile par la suite', 1100);
+}
+
+/* ── 3. Le guide de remplissage ─────────────────────────────────────
+   Écrit à partir des textes d'aide de l'outil, pour que le papier dise la
+   même chose que l'écran et non une doctrine parallèle. */
+function corpsGuide() {
+  const PLEIN = 9638;
+
+  const exemple = (bon, mauvais) => docxTableau([
+    [
+      {fond: DOCX_C.comportement, contenu: [docxP('On écrit', {gras: true, taille: 18, couleur: DOCX_C.comportementTexte, apres: 0})]},
+      {fond: DOCX_C.consequence, contenu: [docxP('On évite', {gras: true, taille: 18, couleur: DOCX_C.consequenceTexte, apres: 0})]}
+    ],
+    [
+      {contenu: [docxP(bon, {taille: 19, apres: 0})]},
+      {contenu: [docxP(mauvais, {taille: 19, italique: true, couleur: DOCX_C.inkSoft, apres: 0})]}
+    ]
+  ], [4819, 4819], {});
+
+  const colonne = (nom, quoi, ex, fond, encre) =>
+    docxP(nom, {gras: true, taille: 20, couleur: encre, fond: fond, traitGauche: encre, avant: 160, apres: 60}) +
+    docxP(quoi, {apres: 40}) +
+    docxP([{t: 'Par exemple : ', gras: true, couleur: DOCX_C.inkSoft}, {t: ex, italique: true}],
+          {taille: 19, couleur: DOCX_C.inkSoft, retrait: 180, apres: 100});
+
+  return docxTitre(1, 'Guide de remplissage') +
+    docxP('Comment remplir la grille ABC et le préambule de la BAF', {italique: true, couleur: DOCX_C.inkSoft, taille: 22, apres: 200}) +
+
+    docxP([
+      {t: 'Ce guide accompagne deux documents : le préambule, qu\'on remplit une fois ensemble, et la grille ABC, qu\'on remplit à chaque évènement. '},
+      {t: 'Il dit la même chose que l\'outil en ligne — ', },
+      {t: LIEN_BAF, gras: true},
+      {t: ' — dont il reprend les consignes mot pour mot.'}
+    ], {fond: DOCX_C.papierFonce, traitGauche: DOCX_C.slate, apres: 180}) +
+
+    docxTitre(2, 'À quoi sert ce que vous écrivez') +
+    docxP('Un comportement-défi n\'est jamais là pour rien. C\'est une tentative, souvent coûteuse, de répondre à un besoin. Le travail ne consiste pas à le faire cesser, mais à comprendre à quoi il sert et dans quelles conditions il apparaît.') +
+    docxP('Pour cela il faut des faits, pas des impressions — et il en faut beaucoup, venant de plusieurs personnes et de plusieurs lieux. Une analyse fonctionnelle sérieuse ne repose pas sur le regard d\'une seule personne depuis un seul endroit. Votre feuille ne vaut donc pas pour elle-même : elle vaut par ce qu\'elle apporte à l\'ensemble.') +
+    docxP('Vous n\'avez rien à conclure. Décrire suffit, et c\'est déjà beaucoup.') +
+
+    docxTitre(2, 'La règle de la caméra') +
+    docxP('Imaginez qu\'une caméra filmait la scène. Qu\'aurait-elle enregistré exactement ? Pas « il a fait sa crise habituelle », pas « elle a été difficile » — mais quels gestes, quels sons, dans quel ordre, pendant combien de temps.') +
+    docxP('C\'est la règle la plus utile de toutes, et la plus difficile à tenir. Elle a une raison précise : deux personnes qui écrivent « il était agressif » ne parlent pas forcément de la même chose, alors que deux personnes qui écrivent « il a donné un coup de pied dans la chaise » parlent bien du même fait.') +
+    exemple('A crié très fort pendant une trentaine de secondes, puis a retourné une chaise, puis a tapé le mur avec la main ouverte.',
+            'Il a fait une grosse crise, il était très agressif.') +
+
+    docxTitre(2, 'Observer n\'est pas interpréter') +
+    docxP('« Il tournait en rond depuis dix minutes » est une observation. « Il était anxieux » est une conclusion — peut-être juste, mais c\'est déjà une interprétation, et elle ferme la question au lieu de l\'ouvrir.') +
+    docxP('Notez le signe, pas ce que vous en déduisez. L\'interprétation viendra plus tard, en équipe, avec l\'ensemble des données sous les yeux.') +
+    exemple('Se bouchait les oreilles et se mettait en retrait près de la porte.',
+            'Était en surcharge sensorielle.') +
+
+    docxTitre(2, 'Contexte ou antécédent ?') +
+    docxP('C\'est la distinction qui revient le plus souvent, et elle est simple.') +
+    docxP([{t: 'Le contexte', gras: true, couleur: DOCX_C.antecedentTexte}, {t: ', c\'est ce qui précède de loin : la nuit d\'avant, le retour de week-end, un traitement modifié, un remplacement, une douleur signalée la veille. Ça ne déclenche rien tout seul, mais ça remplit le vase.'}]) +
+    docxP([{t: 'L\'antécédent', gras: true, couleur: DOCX_C.antecedentTexte}, {t: ', c\'est ce qui se passe juste avant, dans les secondes ou les minutes : une consigne, une activité qui se termine, un bruit, quelqu\'un qui s\'approche, un objet qu\'on retire.'}]) +
+    docxP('Les deux comptent. Un même antécédent ne produit pas le même effet selon le contexte — c\'est souvent là que l\'explication se trouve, et c\'est pour ça qu\'on demande les deux séparément.') +
+    docxP('Si vous hésitez, posez-vous la question : est-ce que ça vient de se produire, ou est-ce que c\'était déjà là en arrivant ?', {italique: true, couleur: DOCX_C.inkSoft}) +
+
+    docxTitre(2, 'La conséquence, c\'est pour la personne') +
+    docxP('La colonne « conséquence » ne demande pas ce que vous avez fait — ça, c\'est la colonne « intervention ». Elle demande ce qui a changé pour la personne : ce qu\'elle a obtenu, ce qu\'elle a évité.') +
+    docxP('C\'est là que se lit la raison pour laquelle le comportement « marche » pour elle. Un comportement qui permet régulièrement d\'échapper à une demande a toutes les chances de revenir, même si personne ne l\'a voulu.') +
+    exemple('A obtenu cinq minutes de plus sur son activité, et n\'a pas eu à aller au repas tout de suite.',
+            'On a fini par céder.') +
+
+    docxTitre(2, 'Le vase de tension') +
+    docxP('On a tous un vase qui se remplit de ce qu\'on vit : ce qui vient de l\'intérieur — le fonctionnement, l\'angoisse, l\'histoire, le corps — et ce qui vient du dehors — l\'environnement, les évènements qui tombent.') +
+    docxP('Sur la grille, vous notez où il en est à trois moments, de 0 à 100 : au moment du contexte, juste avant le comportement, et au plus fort. Les paliers servent de repères :') +
+    docxTableau([[
+      {fond: 'A8D5CD', contenu: [docxP('0-20\ntranquille', {gras: true, taille: 17, align: 'center', apres: 0})]},
+      {fond: 'C7D6CD', contenu: [docxP('20-40\nnormal', {gras: true, taille: 17, align: 'center', apres: 0})]},
+      {fond: 'F0E2B8', contenu: [docxP('40-60\ntendu', {gras: true, taille: 17, align: 'center', apres: 0})]},
+      {fond: 'F6C9BB', contenu: [docxP('60-80\nangoissé', {gras: true, taille: 17, align: 'center', apres: 0})]},
+      {fond: 'D9C6E8', contenu: [docxP('80-100\ndébordé', {gras: true, taille: 17, align: 'center', apres: 0})]}
+    ]], [1927, 1927, 1928, 1928, 1928], {}) +
+    docxP('Ce sont des repères, pas des crans : 52 ou 68 sont des réponses parfaitement valables. C\'est votre perception, pas une mesure — personne ne vous demande d\'être exact, on vous demande d\'être sincère.') +
+    docxP([{t: 'Si vous ne savez pas, laissez vide. ', gras: true}, {t: 'Une case vide est une information ; un chiffre inventé n\'en est pas une.'}]) +
+    docxP('Et si vous le pouvez, écrivez à quoi ça se voyait — c\'est cette matière, mise bout à bout sur tous les évènements, qui permettra de décrire les signes précurseurs propres à cette personne.') +
+    exemple('Tension 70. Il tournait en rond et regardait souvent vers la porte.',
+            'Tension 70.') +
+
+    docxTitre(2, 'Avez-vous vu la scène vous-même ?') +
+    docxP('La grille demande si vous étiez témoin direct. Ce n\'est pas une mise en doute : un évènement rapporté par un tiers ou constaté après coup reste une donnée utile, mais elle ne se lit pas de la même façon. L\'outil en tient compte dans son indice de confiance.') +
+    docxP('Répondez simplement : ai-je vu, ou m\'a-t-on raconté ?', {italique: true, couleur: DOCX_C.inkSoft}) +
+
+    docxTitre(2, 'Colonne par colonne') +
+    docxP('Un exemple pour chacune, à garder sous les yeux en remplissant la grille.', {couleur: DOCX_C.inkSoft, apres: 120}) +
+    colonne('Quand · Qui',
+      'La date, l\'heure approximative, le moment de la journée et le lieu. Votre prénom et à quel titre vous écrivez. Cochez si vous avez vu la scène.',
+      'Lundi 7 septembre, vers 11h20, fin de l\'activité du matin, dans le hall. Karim, éducateur. Vu directement.',
+      DOCX_C.papierFonce, DOCX_C.ink) +
+    colonne('Contexte',
+      'Où, avec qui, et ce qui s\'était passé avant — de loin. Le ratio d\'encadrement compte : « 1 pro, 8 résidents » n\'est pas la même chose que « 2 pros, 3 résidents ».',
+      'Au foyer, dans le hall. 1 pro pour 9 résidents. Retour de week-end famille ce matin, il a peu dormi d\'après sa mère.',
+      DOCX_C.antecedent, DOCX_C.antecedentTexte) +
+    colonne('Antécédent',
+      'Les secondes ou les minutes qui précèdent, et l\'état dans lequel il ou elle était. S\'il y a plusieurs éléments, notez-les tous ; si l\'un vous semble avoir déclenché, soulignez-le.',
+      'On lui a demandé de ranger ses affaires pour passer au repas. Il tournait en rond dans le couloir depuis une dizaine de minutes et regardait souvent vers la porte.',
+      DOCX_C.antecedent, DOCX_C.antecedentTexte) +
+    colonne('Comportement',
+      'Les gestes, les sons, l\'ordre, la durée. La séquence compte autant que les actes.',
+      'A crié très fort pendant une trentaine de secondes, puis a retourné une chaise, puis a tapé le mur avec la main ouverte. Environ cinq minutes en tout.',
+      DOCX_C.comportement, DOCX_C.comportementTexte) +
+    colonne('Intervention · effet',
+      'Votre réponse et ce qu\'elle a donné. « On n\'a rien fait » est une réponse précieuse : les moments où ça s\'arrête sans intervention se perdent souvent. Si un nouveau comportement est apparu après votre intervention, notez-le : c\'est un comportement à part entière.',
+      'J\'ai proposé un préavis de cinq minutes, puis je me suis mise en retrait. La tension est redescendue au bout de cinq minutes environ.',
+      DOCX_C.intervention, DOCX_C.interventionTexte) +
+    colonne('Conséquence pour la personne',
+      'Ce qu\'elle a obtenu, ce qu\'elle a évité, comment l\'épisode s\'est terminé.',
+      'Il a obtenu cinq minutes de plus sur son activité et n\'a pas eu à aller au repas tout de suite. L\'épisode s\'est terminé quand l\'éducatrice est partie.',
+      DOCX_C.consequence, DOCX_C.consequenceTexte) +
+    colonne('Vase',
+      'Trois chiffres de 0 à 100 : au moment du contexte, juste avant, au plus fort. Vide si vous ne savez pas.',
+      'contexte 30 · avant 60 · au plus fort 90.',
+      DOCX_C.papierFonce, DOCX_C.ink) +
+    colonne('Commentaire',
+      'Ce qui ne rentrait dans aucune case : une intuition, un doute, un détail qui vous a frappé.',
+      'C\'est la troisième fois cette semaine juste avant le repas.',
+      DOCX_C.papierFonce, DOCX_C.ink) +
+
+    docxTitre(2, 'Ce qu\'on en fait ensuite') +
+    docxP('Les feuilles sont recopiées dans la BAF, case par case, sans rien réinterpréter : la grille a exactement les mêmes colonnes que l\'outil, c\'est ce qui rend la recopie sûre.') +
+    docxP('L\'outil range ensuite, compte, croise, et met en évidence ce qui revient. Il ne conclut pas. Les conclusions se posent en équipe, avec les données sous les yeux — et votre feuille en fait partie.') +
+    docxP('Merci du temps que vous y passez. C\'est un travail ingrat sur le moment, et c\'est lui qui rend l\'analyse possible.', {italique: true, couleur: DOCX_C.inkSoft, avant: 120});
+}
+
+function telechargerGrilleABC() { telechargerDocx('BAF_Grille-ABC.docx', corpsGrilleABC(), true); }
+function telechargerPreambulePapier() { telechargerDocx('BAF_Preambule.docx', corpsPreambule(), false); }
+function telechargerGuide() { telechargerDocx('BAF_Guide-de-remplissage.docx', corpsGuide(), false); }
+
 /* ── Emporter un graphique ─────────────────────────────────────────────
    Un SVG de la page se sert dans les couleurs du document : var(--sauge-deep)
    n'existe plus une fois le fichier sorti. On résout donc chaque couleur
