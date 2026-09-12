@@ -1166,6 +1166,44 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
 }
 .m3-item-cat-badge:hover{background:var(--ocre-deep);}
 
+/* ── Mode rapide / détaillé, étape par étape ─────────────────────────
+   Le déclarant pressé écrit une case par étape ; celui qui a le temps déroule
+   les questions. On peut mélanger : une étape en rapide, la suivante en
+   détaillé. Le résumé rapide n'est jamais écrasé — il reste affiché en haut
+   de l'étape quand on passe en détaillé. */
+.mode-etape{
+  display:flex;align-items:center;gap:8px;
+  margin-bottom:12px;flex-wrap:wrap;
+}
+.mode-etape .me-label{font-size:12px;color:var(--ink-soft);font-weight:600;}
+.mode-etape-btns{display:inline-flex;border:1.5px solid var(--line);border-radius:999px;overflow:hidden;}
+.mode-etape-btns button{
+  background:none;border:none;cursor:pointer;font-family:inherit;
+  font-size:12px;font-weight:700;padding:5px 13px;color:var(--ink-soft);
+  transition:background .14s,color .14s;
+}
+.mode-etape-btns button.active{background:var(--slate);color:#fff;}
+.mode-etape-btns button:not(.active):hover{background:var(--paper-deep);}
+.rappel-resume{
+  background:var(--paper-deep);border-left:3px solid var(--slate);
+  border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:16px;
+  font-size:13px;color:var(--ink);line-height:1.55;
+}
+.rappel-resume .rr-titre{
+  font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+  color:var(--ink-soft);margin-bottom:3px;
+}
+.rapide-aide{
+  font-size:12.5px;color:var(--ink-soft);line-height:1.55;
+  margin:-2px 0 9px;
+}
+.rapide-exemple{
+  background:var(--paper-deep);border-radius:6px;
+  padding:9px 12px;margin-top:9px;
+  font-size:12.5px;color:var(--ink-soft);line-height:1.55;font-style:italic;
+}
+.rapide-exemple b{font-style:normal;color:var(--ink-soft);}
+
 /* Légende du code couleur, affichée là où les couleurs de volet servent à lire.
    Le survol donne le détail, mais la légende reste visible : sur tablette il
    n'y a pas de souris, et une info qui n'existe qu'au survol n'existe pas. */
@@ -3166,7 +3204,7 @@ function route(name, fromHistory){
   // chaque sortie recrée un brouillon fantôme, vide, dans la liste.
   const formView = document.getElementById('view-m2-form');
   if (!fermetureVolontaire && name !== 'm2-form' && formView && formView.classList.contains('show') && typeof ETAPES !== 'undefined' && ETAPES[currentEtapeIdx]) {
-    try { Object.assign(formDraft, ETAPES[currentEtapeIdx].collect()); saveBrouillon(); } catch(e) {}
+    try { Object.assign(formDraft, collecterEtape(ETAPES[currentEtapeIdx])); saveBrouillon(); } catch(e) {}
   }
   fermetureVolontaire = false;
   document.querySelectorAll('section.view').forEach(s=>s.classList.remove('show'));
@@ -4255,6 +4293,136 @@ function majTension(actuel, cle) {
   return t;
 }
 
+/* ── Le mode rapide ────────────────────────────────────────────────────
+   Une case par étape, au lieu du questionnaire déroulé. C'est exactement la
+   forme de la grille ABC papier : une colonne, une case. Ce qu'on y écrit est
+   un résumé — il n'écrase jamais les champs détaillés et reste visible quand
+   on passe en mode détaillé.
+
+   Moins de détail veut dire moins de confiance : l'indice du recueil compte
+   une étape détaillée pour 1, une étape résumée pour 0,4, une étape vide pour 0. */
+const RAPIDE_ETAPES = {
+  contexte: {
+    question: "Le contexte, en quelques lignes",
+    aide: "Où, avec qui, et ce qui s'était passé avant — de loin : la nuit, le week-end, un changement, une douleur, un remplacement.",
+    exemple: "Au foyer, dans le hall. 1 pro pour 9 résidents. Retour de week-end famille ce matin, il a peu dormi d'après sa mère.",
+    placeholder: "Où, qui était là, et ce qui s'était passé avant dans la journée ou la semaine..."
+  },
+  comportement: {
+    question: "Le comportement, en quelques lignes",
+    aide: "Ce qu'une caméra aurait enregistré : les gestes, les sons, dans quel ordre, pendant combien de temps. Pas « il a fait sa crise » — ce qu'on aurait vu.",
+    exemple: "A crié très fort pendant une trentaine de secondes, puis a retourné une chaise, puis a tapé le mur avec la main ouverte. Environ cinq minutes en tout.",
+    placeholder: "Les gestes, les sons, l'ordre, la durée..."
+  },
+  antecedent: {
+    question: "Ce qui s'est passé juste avant, en quelques lignes",
+    aide: "Les secondes ou les minutes qui précèdent, et l'état dans lequel il ou elle était — décrit, pas conclu.",
+    exemple: "On lui a demandé de ranger ses affaires pour passer au repas. Il tournait en rond dans le couloir depuis une dizaine de minutes et regardait souvent vers la porte.",
+    placeholder: "La consigne, le bruit, le départ de quelqu'un... et l'état juste avant."
+  },
+  intervention: {
+    question: "Ce que vous avez fait, en quelques lignes",
+    aide: "Votre réponse et ce qu'elle a donné. « On n'a rien fait » est une réponse : les moments où ça s'arrête sans intervention sont des données précieuses.",
+    exemple: "J'ai proposé un préavis de cinq minutes, puis je me suis mise en retrait. La tension est redescendue au bout de cinq minutes environ.",
+    placeholder: "Ce que vous avez fait, et avec quel effet..."
+  },
+  consequence: {
+    question: "Ce que ça a changé pour la personne, en quelques lignes",
+    aide: "Pas ce que vous avez fait : ce que <em>la personne</em> a obtenu ou évité. C'est là que la fonction du comportement se lit.",
+    exemple: "Il a obtenu cinq minutes de plus sur son activité et n'a pas eu à aller au repas tout de suite. L'épisode s'est terminé quand l'éducatrice est partie.",
+    placeholder: "Ce qu'elle a obtenu, ce qu'elle a évité, comment ça s'est terminé..."
+  }
+};
+
+// Une étape est « détaillée » quand ses champs propres portent quelque chose.
+// C'est la donnée qui fait foi, pas un drapeau d'interface.
+function etapeDetailRemplie(d, id) {
+  const rempli = (x) => !!(x && String(x).trim());
+  switch (id) {
+    case 'contexte':     return rempli(d.lieu) || rempli(d.presences) || rempli(d.avantLoin);
+    case 'comportement': return rempli(d.comportement);
+    case 'antecedent':   return (d.antecedents || []).some(a => rempli(a && a.texte)) || rempli(d.etatAvant);
+    case 'intervention': return (d.interventions || []).some(iv => rempli(iv && iv.texte)) || rempli(d.interAutre);
+    case 'consequence':  return rempli(d.obtenu) || rempli(d.evite) || rempli(d.finPersonne);
+    default: return false;
+  }
+}
+function resumeEtape(d, id) {
+  return ((d && d.resumes) || {})[id] || '';
+}
+
+// Mode forcé à la main pendant la saisie en cours ; vidé à chaque ouverture.
+let modeForceEtape = {};
+function modeEtape(id) {
+  if (!RAPIDE_ETAPES[id]) return 'detaille';
+  if (modeForceEtape[id]) return modeForceEtape[id];
+  if (etapeDetailRemplie(formDraft, id)) return 'detaille';
+  if (resumeEtape(formDraft, id)) return 'rapide';
+  return (state.m2 && state.m2.modeSaisie === 'rapide') ? 'rapide' : 'detaille';
+}
+function basculerModeEtape(id, mode) {
+  // On sauvegarde ce qui est à l'écran avant de changer de forme.
+  try { Object.assign(formDraft, collecterEtape(ETAPES[currentEtapeIdx])); } catch(e) {}
+  modeForceEtape[id] = mode;
+  // Le choix se retient pour les étapes et les évènements suivants.
+  if (!state.m2) state.m2 = {};
+  state.m2.modeSaisie = mode;
+  renderEtape(currentEtapeIdx);
+}
+
+function blocModeEtape(id, mode) {
+  return '<div class="mode-etape no-print">' +
+    '<span class="me-label">Comment voulez-vous répondre ?</span>' +
+    '<span class="mode-etape-btns">' +
+      '<button type="button" class="' + (mode === 'rapide' ? 'active' : '') + '" onclick="basculerModeEtape(\'' + id + '\',\'rapide\')" title="Une seule case libre pour toute l\'étape">⚡ Rapide</button>' +
+      '<button type="button" class="' + (mode !== 'rapide' ? 'active' : '') + '" onclick="basculerModeEtape(\'' + id + '\',\'detaille\')" title="Les questions déroulées, une à une">🔬 Détaillé</button>' +
+    '</span></div>';
+}
+
+function blocRapide(id, d) {
+  const c = RAPIDE_ETAPES[id];
+  return '<div class="card">' +
+    '<div class="field" style="margin-bottom:0;">' +
+      '<label for="resume-' + id + '">' + esc(c.question) + '</label>' +
+      '<div class="rapide-aide">' + c.aide + '</div>' +
+      '<textarea id="resume-' + id + '" style="min-height:110px;" placeholder="' + esc(c.placeholder) + '">' + esc(resumeEtape(d, id)) + '</textarea>' +
+      '<div class="rapide-exemple"><b>Par exemple :</b> ' + esc(c.exemple) + '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+// En mode détaillé, le résumé déjà écrit reste sous les yeux : il a été donné,
+// on ne le fait pas disparaître parce qu'on change de forme.
+function blocRappelResume(id, d) {
+  const r = resumeEtape(d, id);
+  if (!r) return '';
+  return '<div class="rappel-resume"><div class="rr-titre">Ce qui a été écrit en mode rapide</div>' + esc(r) + '</div>';
+}
+
+function rendreEtape(etape, d) {
+  if (!RAPIDE_ETAPES[etape.id]) return etape.render(d);
+  const mode = modeEtape(etape.id);
+  const barre = blocModeEtape(etape.id, mode);
+  if (mode === 'rapide') return barre + blocRapide(etape.id, d);
+  return barre + blocRappelResume(etape.id, d) + etape.render(d);
+}
+
+// En mode rapide les champs détaillés ne sont pas à l'écran : appeler
+// etape.collect() renverrait des chaînes vides et effacerait ce qui existe.
+function collecterEtape(etape) {
+  const id = etape.id;
+  if (!RAPIDE_ETAPES[id]) return etape.collect();
+  const out = (modeEtape(id) === 'rapide') ? {} : etape.collect();
+  const el = document.getElementById('resume-' + id);
+  if (el) {
+    const r = Object.assign({}, formDraft.resumes || {});
+    const v = el.value.trim();
+    if (v) r[id] = v; else delete r[id];
+    out.resumes = r;
+  }
+  return out;
+}
+
 const ETAPES = [
   {
     id: 'declarant',
@@ -4517,22 +4685,22 @@ const ETAPES = [
           ${recapBloc('👤 Déclarant', `${d.declarant||'—'} (${d.role||'—'})` + (d.temoin ? ' · '+d.temoin : ''))}
           ${recapBloc('📅 Quand', `${formatDate(d.date)} ${d.heure?'à '+d.heure:''} — ${d.moment||'moment non précisé'}`)}
           ${recapBloc('📍 Où / Qui présent', [d.lieu, d.presences].filter(Boolean).join(' — ') || '—')}
-          ${recapBloc('⏮ Contexte', d.avantLoin||'—')}
-          ${recapBloc('⚡ Antécédent', ((d.antecedents||[]).filter(a=>a.texte && a.texte.trim())
+          ${recapEtape(d, 'contexte', '⏮ Contexte', d.avantLoin)}
+          ${recapEtape(d, 'antecedent', '⚡ Antécédent', ((d.antecedents||[]).filter(a=>a.texte && a.texte.trim())
               .map(a => a.texte.trim() + (a.declencheurPresume ? ' (présumé déclencheur)' : ''))
               .concat(d.etatAvant ? ['État avant : ' + d.etatAvant] : [])
               .join(' · ')) || '—')}
-          ${recapBloc('🎥 Comportement', d.comportement||'—', d.duree ? `Durée : ${d.duree}` : '')}
+          ${recapEtape(d, 'comportement', '🎥 Comportement', d.comportement, d.duree ? `Durée : ${d.duree}` : '')}
           ${recapBloc('💧 Vase de tension', resumeTensionTexte(d) || '—', d.intensite ? 'Ancienne échelle conservée : ' + d.intensite : '')}
           ${d.gradation ? recapBloc('📈 Gradation', d.gradation) : ''}
-          ${recapBloc(`🔄 Conséquence pour ${prenom}`, [d.obtenu ? 'Obtenu : '+d.obtenu : '', d.evite ? 'Évité : '+d.evite : ''].filter(Boolean).join(' / ') || '—')}
-          ${recapBloc('🙌 Intervention', (d.interventions||[]).map((iv, i) => {
+          ${recapEtape(d, 'consequence', `🔄 Conséquence pour ${prenom}`, [d.obtenu ? 'Obtenu : '+d.obtenu : '', d.evite ? 'Évité : '+d.evite : '', d.finPersonne ? 'Fin : '+d.finPersonne : ''].filter(Boolean).join(' / '))}
+          ${recapEtape(d, 'intervention', '🙌 Intervention', (d.interventions||[]).map((iv, i) => {
               if (!iv.texte && !iv.effet) return null;
               const detail = effetNeedsCdPost(iv.effet)
                 ? (iv.cdPostIntervention ? ' (nouveau CD : '+iv.cdPostIntervention+')' : '')
                 : (iv.precision ? ' ('+iv.precision+')' : '');
               return (i === 0 ? '' : 'puis : ') + (iv.texte||'—') + (iv.effet ? ' → '+iv.effet : '') + detail;
-            }).filter(Boolean).join(' / ') || '—')}
+            }).filter(Boolean).join(' / '))}
         </div>
       </div>
       <div class="card">
@@ -4554,6 +4722,15 @@ function resumeTensionTexte(evt) {
   const pts = pointsTensionEvt(evt).filter(p => p.v !== null);
   if (!pts.length) return '';
   return pts.map(p => p.label + ' : ' + p.v + ' (' + nomPalier(p.v) + ')').join('  →  ');
+}
+
+// Un volet répondu en mode rapide s'affiche tel quel, dit comme tel : on ne
+// fait pas passer un résumé pour une réponse déroulée.
+function recapEtape(d, id, label, valeur, extra) {
+  if (etapeDetailRemplie(d, id)) return recapBloc(label, valeur || '—', extra);
+  const r = resumeEtape(d, id);
+  if (r) return recapBloc(label + ' — résumé rapide', r);
+  return recapBloc(label, '—');
 }
 
 function recapBloc(label, val, extra) {
@@ -4639,7 +4816,7 @@ function collecterAntecedents() {
 }
 
 function ajouterAntecedentEvt() {
-  Object.assign(formDraft, ETAPES[currentEtapeIdx].collect());
+  Object.assign(formDraft, collecterEtape(ETAPES[currentEtapeIdx]));
   if (!formDraft.antecedents || !formDraft.antecedents.length) {
     formDraft.antecedents = [{id:'ant_'+Date.now(), texte:'', declencheurPresume:false}];
   }
@@ -4648,7 +4825,7 @@ function ajouterAntecedentEvt() {
 }
 
 function retirerAntecedentEvt(i) {
-  Object.assign(formDraft, ETAPES[currentEtapeIdx].collect());
+  Object.assign(formDraft, collecterEtape(ETAPES[currentEtapeIdx]));
   if (formDraft.antecedents && formDraft.antecedents.length > 1) {
     formDraft.antecedents.splice(i, 1);
   }
@@ -4748,7 +4925,7 @@ function onInterEffetChange(i, value) {
 }
 
 function ajouterInterventionEvt() {
-  const collected = ETAPES[currentEtapeIdx].collect();
+  const collected = collecterEtape(ETAPES[currentEtapeIdx]);
   Object.assign(formDraft, collected);
   if (!formDraft.interventions || !formDraft.interventions.length) {
     formDraft.interventions = [{id:'iv_'+Date.now(), texte:'', effet:'', precision:'', cdPostIntervention:''}];
@@ -4758,7 +4935,7 @@ function ajouterInterventionEvt() {
 }
 
 function retirerInterventionEvt(i) {
-  const collected = ETAPES[currentEtapeIdx].collect();
+  const collected = collecterEtape(ETAPES[currentEtapeIdx]);
   Object.assign(formDraft, collected);
   if (formDraft.interventions && formDraft.interventions.length > 1) {
     formDraft.interventions.splice(i, 1);
@@ -4974,6 +5151,7 @@ function ouvrirFormulaireEvenement(idx) {
     if (suggere) formDraft.moment = suggere;
   }
   currentEtapeIdx = 0;
+  modeForceEtape = {};
   document.getElementById('m2form-titre').textContent =
     (formEditIdx !== null ? 'Modifier un évènement' : 'Décrire un évènement');
   renderEtape(currentEtapeIdx);
@@ -4999,7 +5177,7 @@ function renderEtape(idx) {
     `Étape ${idx + 1} / ${total} — ${ETAPES[idx].label}`;
 
   // Contenu
-  document.getElementById('form-etapes').innerHTML = ETAPES[idx].render(formDraft);
+  document.getElementById('form-etapes').innerHTML = rendreEtape(ETAPES[idx], formDraft);
   // Les vases se dessinent en JS : le HTML ne porte que le gabarit vide.
   majTousLesVases();
 
@@ -5020,7 +5198,7 @@ function renderEtape(idx) {
 
 function aller(idx) {
   // Collecter l\'étape courante
-  const collected = ETAPES[currentEtapeIdx].collect();
+  const collected = collecterEtape(ETAPES[currentEtapeIdx]);
   Object.assign(formDraft, collected);
   saveBrouillon();
   renderEtape(idx);
@@ -5040,7 +5218,7 @@ function trierEvenements() {
 
 function validerFormulaireEvt() {
   // Collecter la dernière étape
-  const collected = ETAPES[currentEtapeIdx].collect();
+  const collected = collecterEtape(ETAPES[currentEtapeIdx]);
   Object.assign(formDraft, collected);
 
   // Ajouter ou mettre à jour
@@ -5549,7 +5727,22 @@ function computeIndice() {
   // Taux de catégorisation (part des items distincts catégorisés au moins une fois)
   const tauxCateg = computeM3Categorisation().pct / 100;
 
-  // ── 8 Critères ─────────────────────────────────────────────
+  /* Niveau de détail du recueil. Une étape déroulée vaut 1, une étape
+     répondue en une case vaut 0,4, une étape vide vaut 0. Un résumé vaut mieux
+     que rien, mais il ne permet ni de distinguer un contexte d'un antécédent,
+     ni de lire une séquence — d'où une confiance moindre.
+     Choix à signaler : c'est un critère parmi les autres, pas un multiplicateur
+     global. Un dossier entièrement en mode rapide plafonne donc à 40 % sur cet
+     axe-là, pas sur l'indice entier. */
+  const ETAPES_NOTEES = ['contexte','comportement','antecedent','intervention','consequence'];
+  let sommeDetail = 0;
+  evts.forEach(e => ETAPES_NOTEES.forEach(id => {
+    if (etapeDetailRemplie(e, id)) sommeDetail += 1;
+    else if (resumeEtape(e, id)) sommeDetail += 0.4;
+  }));
+  const tauxDetail = n > 0 ? sommeDetail / (n * ETAPES_NOTEES.length) : 0;
+
+  // ── Critères ───────────────────────────────────────────────
   const criteres = [
     {
       id: 'volume',
@@ -5666,6 +5859,18 @@ function computeIndice() {
       conseils: {
         0: 'Moins de la moitié des évènements sont vus directement par la personne qui les décrit. Le récit de seconde main perd en précision — croisez ces évènements avec un témoin direct si possible.',
         0.5: '50-79% en observation directe. Le reste est rapporté ou constaté après coup — à garder en tête au moment d\'interpréter.',
+        1: null
+      }
+    },
+    {
+      id: 'niveau_detail',
+      label: 'Niveau de détail du recueil (rapide ou déroulé)',
+      valeur: Math.round(tauxDetail * 100),
+      score: tauxDetail >= 0.8 ? 1 : tauxDetail >= 0.5 ? 0.5 : 0,
+      affichage: n > 0 ? Math.round(tauxDetail * 100) + '% du détail attendu' : 'Aucun évènement',
+      conseils: {
+        0: 'Le recueil est très majoritairement en mode rapide, ou incomplet. Un résumé vaut mieux que rien, mais il ne permet pas de distinguer un contexte d\'un antécédent ni de lire une séquence. Reprenez en mode détaillé les évènements qui comptent le plus.',
+        0.5: 'Une bonne part du recueil est en mode rapide. C\'est exploitable — le détail reste ce qui permet de trancher entre deux hypothèses.',
         1: null
       }
     }
@@ -6411,6 +6616,7 @@ const PROFILS_SIM = [
 
   {
     prenom:'Tom', age:'14', diag:'TSA, anxiété sévère',
+    partRapide: 0.55,
     lieux:['ecole','famille'], lieuxCustom:[],
     jours:['lundi','mardi','jeudi','vendredi'],
     heures:'École : 8h30-16h30', coucher:'22h00', lever:'06h45',
@@ -6641,6 +6847,27 @@ function simuler(idx){
     });
 
     const temoin = pondere([['Témoin direct', 8], ['Rapporté par un tiers', 2], ['Constaté après coup', 1]]);
+    /* Mode rapide : le déclarant a répondu en une case au lieu de dérouler.
+       On déplace le texte, on ne le réécrit pas — sinon la catégorisation
+       calculée ne s'y retrouverait plus, et la démonstration mentirait sur ce
+       qu'un résumé contient réellement. */
+    const resumes = {};
+    if (P.partRapide && alea() < P.partRapide) {
+      const candidats = ['contexte','comportement','antecedent','intervention','consequence'];
+      const nbRapide = 1 + Math.floor(alea() * 3);
+      for (let k = 0; k < nbRapide; k++) {
+        const etape = candidats.splice(Math.floor(alea() * candidats.length), 1)[0];
+        if (!etape) break;
+        if (etape === 'contexte' && contexte) { resumes.contexte = contexte; }
+        else if (etape === 'comportement') { resumes.comportement = cp.texte; }
+        else if (etape === 'antecedent' && antes.length) { resumes.antecedent = antes[0].texte; }
+        else if (etape === 'intervention' && interventions.length) {
+          resumes.intervention = interventions[0].texte + ' → ' + interventions[0].effet;
+        }
+        else if (etape === 'consequence') { resumes.consequence = cons.texte; }
+      }
+    }
+
     evts.push({
       id: 'sim_' + idx + '_' + i,
       date: jour.date.toISOString().slice(0,10),
@@ -6652,16 +6879,17 @@ function simuler(idx){
       temoin,
       lieu,
       presences: piocher(P.presences),
-      avantLoin: contexte,
-      antecedents: antes,
-      etatAvant: piocher(P.etatsAvant),
-      comportement: cp.texte,
+      avantLoin: resumes.contexte ? '' : contexte,
+      antecedents: resumes.antecedent ? [] : antes,
+      etatAvant: resumes.antecedent ? '' : piocher(P.etatsAvant),
+      comportement: resumes.comportement ? '' : cp.texte,
       duree: pondere([['< 1 min',2],['1 à 5 min',4],['5 à 15 min',3],['15 à 30 min',1],['> 30 min',1]]),
       tension,
-      obtenu: cons.texte,
-      evite: alea() < 0.4 ? piocher(P.evitements) : '',
-      finPersonne: piocher(P.finsEpisode),
-      interventions,
+      obtenu: resumes.consequence ? '' : cons.texte,
+      evite: resumes.consequence ? '' : (alea() < 0.4 ? piocher(P.evitements) : ''),
+      finPersonne: resumes.consequence ? '' : piocher(P.finsEpisode),
+      interventions: resumes.intervention ? [] : interventions,
+      resumes,
       commentaire: alea() < 0.25 ? piocher(P.commentaires) : ''
     });
   }
@@ -7110,6 +7338,7 @@ const M3_SOUS = [
     extract: (evt) => {
       const parts = [];
       if (evt.comportement) parts.push(evt.comportement);
+      else if (resumeEtape(evt, 'comportement')) parts.push('§RESU§' + resumeEtape(evt, 'comportement'));
       if (evt.gradation) parts.push('(gradation) ' + evt.gradation);
       extraireCDPostIntervention(evt).forEach(t => parts.push('§POST§' + t));
       return parts;
@@ -7123,10 +7352,12 @@ const M3_SOUS = [
     extract: (evt) => {
       const parts = [];
       if (evt.avantLoin && evt.avantLoin.toLowerCase() !== 'ras' && evt.avantLoin.trim()) parts.push('(contexte) ' + evt.avantLoin);
+      else if (resumeEtape(evt, 'contexte')) parts.push('§RESU§(contexte) ' + resumeEtape(evt, 'contexte'));
       (evt.antecedents || []).forEach(a => {
         if (a.texte && a.texte.trim()) parts.push((a.declencheurPresume ? '§DECL§' : '') + a.texte.trim());
       });
       if (evt.etatAvant) parts.push('État avant : ' + evt.etatAvant);
+      if (!etapeDetailRemplie(evt, 'antecedent') && resumeEtape(evt, 'antecedent')) parts.push('§RESU§' + resumeEtape(evt, 'antecedent'));
       extraireCDPostIntervention(evt).forEach(t => parts.push('§POST§' + t));
       return parts;
     }
@@ -7141,6 +7372,7 @@ const M3_SOUS = [
       if (evt.obtenu) parts.push('Obtenu : ' + evt.obtenu);
       if (evt.evite) parts.push('Évité : ' + evt.evite);
       if (evt.finPersonne) parts.push('Fin : ' + evt.finPersonne);
+      if (!etapeDetailRemplie(evt, 'consequence') && resumeEtape(evt, 'consequence')) parts.push('§RESU§' + resumeEtape(evt, 'consequence'));
       extraireCDPostIntervention(evt).forEach(t => parts.push('§POST§' + t));
       return parts;
     }
@@ -7155,6 +7387,7 @@ const M3_SOUS = [
       (evt.interventions || []).forEach(iv => {
         if (iv.texte && iv.texte.trim()) parts.push(iv.texte.trim() + (iv.effet ? ' → ' + iv.effet : ''));
       });
+      if (!etapeDetailRemplie(evt, 'intervention') && resumeEtape(evt, 'intervention')) parts.push('§RESU§' + resumeEtape(evt, 'intervention'));
       return parts;
     }
   }
@@ -7195,11 +7428,12 @@ function extraireItems(sousId) {
         produits++;
         const isPost = texte.startsWith('§POST§');
         const isDecl = texte.startsWith('§DECL§');
+        const isResume = texte.startsWith('§RESU§');
         items.push({
           id: `e${evt.id}_${i}`,
           evtIdx,
-          texte: ((isPost || isDecl) ? texte.slice(6) : texte).trim(),
-          tag: isPost ? 'post-intervention' : (isDecl ? 'presume-declencheur' : ''),
+          texte: ((isPost || isDecl || isResume) ? texte.slice(6) : texte).trim(),
+          tag: isPost ? 'post-intervention' : (isDecl ? 'presume-declencheur' : (isResume ? 'resume' : '')),
           date: evt.date || '',
           heure: evt.heure || '',
           moment: evt.moment || '',
@@ -7359,6 +7593,7 @@ function renderM3Sous(sousId) {
           ${cpLabel}
           ${item.tag==='post-intervention' ? `<span class="m3-item-tag-post">post-intervention</span>` : ''}
           ${item.tag==='presume-declencheur' ? `<span class="m3-item-tag-post" style="background:var(--vol-antecedent-deep);" title="Le déclarant pense que c'est ce qui a déclenché — à vous d'en juger. Jaune ocre : couleur de l'antécédent.">présumé déclencheur</span>` : ''}
+          ${item.tag==='resume' ? `<span class="m3-item-tag-post" style="background:var(--slate);" title="Répondu en mode rapide : une seule case pour toute l'étape. Le détail n'a pas été déroulé.">résumé rapide</span>` : ''}
           ${item.vide ? `<span class="m3-item-tag-post" style="background:var(--line);color:var(--ink-soft);" title="Ce volet n'a pas été rempli par le déclarant">non renseigné</span>` : ''}
           <div class="m3-item-text">${esc(item.texte)}</div>
           ${src ? `<div class="m3-item-source">Évt. ${item.evtIdx+1}${src?' — '+src:''}</div>` : ''}
@@ -7608,13 +7843,13 @@ function ouvrirDetailEvt(evtIdx, sousId, event) {
   document.getElementById('evt-detail-body').innerHTML = [
     detailBloc('👤 Déclarant', (d.declarant || '—') + ' (' + (d.role || '—') + ')' + (d.temoin ? ' · ' + d.temoin : '')),
     detailBloc('📍 Où / qui était présent', [d.lieu, d.presences].filter(Boolean).join(' — ')),
-    detailBloc('⏮ Contexte', d.avantLoin, '', 'antecedents', sousId),
-    detailBloc('⚡ Antécédent', antecedents, d.etatAvant ? 'État avant : ' + d.etatAvant : '', 'antecedents', sousId),
-    detailBloc('🎥 Comportement', d.comportement, dureeIntens, 'cp', sousId),
+    detailBloc('⏮ Contexte' + (etapeDetailRemplie(d,'contexte') ? '' : (resumeEtape(d,'contexte') ? ' — résumé rapide' : '')), etapeDetailRemplie(d,'contexte') ? d.avantLoin : resumeEtape(d,'contexte'), '', 'antecedents', sousId),
+    detailBloc('⚡ Antécédent' + (etapeDetailRemplie(d,'antecedent') ? '' : (resumeEtape(d,'antecedent') ? ' — résumé rapide' : '')), etapeDetailRemplie(d,'antecedent') ? antecedents : resumeEtape(d,'antecedent'), d.etatAvant ? 'État avant : ' + d.etatAvant : '', 'antecedents', sousId),
+    detailBloc('🎥 Comportement' + (etapeDetailRemplie(d,'comportement') ? '' : (resumeEtape(d,'comportement') ? ' — résumé rapide' : '')), etapeDetailRemplie(d,'comportement') ? d.comportement : resumeEtape(d,'comportement'), dureeIntens, 'cp', sousId),
     detailBloc('💧 Vase de tension', resumeTensionTexte(d), notesTension(d), 'cp', sousId),
     d.gradation ? detailBloc('📈 Gradation', d.gradation, '', 'cp', sousId) : '',
-    detailBloc('🔄 Conséquence pour ' + prenom, consequences, '', 'consequences', sousId),
-    detailBloc('🙌 Intervention de l’entourage', interventions, '', 'interventions', sousId),
+    detailBloc('🔄 Conséquence pour ' + prenom + (etapeDetailRemplie(d,'consequence') ? '' : (resumeEtape(d,'consequence') ? ' — résumé rapide' : '')), etapeDetailRemplie(d,'consequence') ? consequences : resumeEtape(d,'consequence'), '', 'consequences', sousId),
+    detailBloc('🙌 Intervention de l’entourage' + (etapeDetailRemplie(d,'intervention') ? '' : (resumeEtape(d,'intervention') ? ' — résumé rapide' : '')), etapeDetailRemplie(d,'intervention') ? interventions : resumeEtape(d,'intervention'), '', 'interventions', sousId),
     d.commentaire ? detailBloc('💬 Commentaire libre', d.commentaire) : ''
   ].filter(Boolean).join('');
 
