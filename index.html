@@ -1244,6 +1244,47 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
 #view-apropos .card p:last-child{margin-bottom:0;}
 #view-apropos .card p{margin:0 0 10px;line-height:1.65;font-size:14px;}
 
+/* ── Les notes de version ──────────────────────────────────────────────
+   Le numéro au pied de page doit se lire comme un lien : c'est la seule
+   porte d'entrée des notes, et rien d'autre ne l'annonce. Même traitement
+   que l'adresse mail juste à côté, pour qu'il se reconnaisse comme tel. */
+footer.bottom .footer-version{
+  background:none;border:none;padding:0;margin:0;
+  font-family:inherit;font-size:inherit;line-height:inherit;
+  color:var(--ink-soft);text-decoration:underline;cursor:pointer;
+}
+footer.bottom .footer-version:hover{color:var(--sauge-deep);}
+
+#view-notes .note-v{border-bottom:1px solid var(--line-soft);padding:2px 0;}
+#view-notes .note-v:last-child{border-bottom:none;}
+#view-notes .note-v summary{
+  cursor:pointer;list-style:none;
+  padding:13px 26px 13px 0;position:relative;
+}
+#view-notes .note-v summary::-webkit-details-marker{display:none;}
+#view-notes .note-v summary::after{
+  content:'+';position:absolute;right:4px;top:11px;
+  font-size:17px;font-weight:400;color:var(--sauge-deep);
+}
+#view-notes .note-v[open] summary::after{content:'−';}
+#view-notes .note-v summary:hover .nv-titre{color:var(--sauge-deep);}
+#view-notes .nv-version{
+  display:inline-block;background:var(--paper-deep);color:var(--ink-soft);
+  font-size:12px;font-weight:600;padding:2px 8px;border-radius:4px;
+  margin-right:10px;letter-spacing:0.3px;white-space:nowrap;
+}
+#view-notes .nv-titre{font-size:14.5px;font-weight:600;color:var(--ink);}
+#view-notes .nv-corps{padding:0 26px 18px 0;}
+#view-notes .nv-corps h4{
+  font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;
+  color:var(--ink-soft);margin:20px 0 8px;
+}
+#view-notes .nv-corps h4:first-child{margin-top:4px;}
+#view-notes .nv-corps p{margin:0 0 9px;line-height:1.65;font-size:14px;}
+#view-notes .nv-corps ul{margin:0 0 9px;padding-left:19px;}
+#view-notes .nv-corps li{margin:0 0 7px;line-height:1.6;font-size:14px;}
+
+
 .res-docs{display:grid;gap:14px;}
 .res-doc{
   border:1.5px solid var(--line);border-radius:var(--radius-sm);
@@ -2453,6 +2494,22 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
     </div>
   </section>
 
+
+  <section id="view-notes" class="view">
+    <div class="mod-header">
+      <div class="crumb"><button onclick="route('accueil')">← Accueil</button></div>
+      <span class="temps-tag tag-m4">Notes de version</span>
+      <h2>Ce qui a changé, et quand</h2>
+      <div class="sub">Une note par lot de travail. Le numéro affiché en bas de page est celui de la note la plus récente.</div>
+    </div>
+
+    <div class="ethique" style="margin-bottom:18px;">
+      <b>La page que vous avez sous les yeux porte son numéro en bas à droite.</b> Elle ne sait pas toute seule qu'une version plus récente existe : si quelque chose vous semble corrigé ailleurs mais pas chez vous, rechargez en forçant (Ctrl + Maj + R, ou Cmd + Maj + R sur Mac). Et si vous nous signalez un souci, donnez-nous ce numéro : il dit exactement quelle version vous aviez.
+    </div>
+
+    <div class="card" id="notes-contenu"></div>
+  </section>
+
   <section id="view-ressources" class="view">
     <div class="mod-header">
       <div class="crumb"><button onclick="route('accueil')">← Accueil</button></div>
@@ -3213,7 +3270,7 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
 <footer class="bottom no-print">
   <div class="footer-inner">
     <div class="footer-line footer-left">Outil créé par Émilie Musard, éducatrice spécialisée et Arthur Guillieux, psychologue clinicien — <a href="mailto:emia35@adapei35.asso.fr">emia35@adapei35.asso.fr</a></div>
-    <div class="footer-line footer-right">⚠ Outil toujours en cours de construction</div>
+    <div class="footer-line footer-right"><button type="button" class="footer-version" id="footer-version" onclick="route('notes')"></button> · ⚠ Outil toujours en cours de construction</div>
   </div>
 </footer>
 
@@ -3465,7 +3522,7 @@ function route(name, fromHistory){
 
   const isBaf = ['baf-accueil','m1','m2','m2-form','m3','m4','synthese'].includes(name);
   const isIdc = ['idc-accueil','idc-main'].includes(name);
-  const isGlobal = ['accueil','reperes','ressources','apropos'].includes(name);
+  const isGlobal = ['accueil','reperes','ressources','apropos','notes'].includes(name);
   const bafNavGroup = document.getElementById('baf-nav-group');
   const idcNavGroup = document.getElementById('idc-nav-group');
   const globalNavGroup = document.getElementById('global-nav-group');
@@ -3473,6 +3530,7 @@ function route(name, fromHistory){
   if(idcNavGroup) idcNavGroup.style.display = isIdc ? 'flex' : 'none';
   if(globalNavGroup) globalNavGroup.style.display = isGlobal ? 'flex' : 'none';
   if(name === 'reperes') renderReperes();
+  if(name === 'notes') renderNotes();
 
   // Identité visuelle par outil (couleur d\'accent du header/nav)
   document.body.classList.toggle('tool-baf', isBaf);
@@ -3633,6 +3691,7 @@ const ADRESSES_VUES = {
   'reperes':      'reperes',
   'ressources':   'ressources',
   'apropos':      'a-propos',
+  'notes':        'notes-de-version',
   'baf-accueil':  'recueil-des-donnees',
   'm1':           'se-connaitre',
   'm2':           'recueillir',
@@ -6700,7 +6759,7 @@ function construireFichierWord(clone){
 <h1>BAF — Boussole pour une Analyse Fonctionnelle</h1>
 <p style="color:#6B6152;font-size:10pt;margin-bottom:14pt;"><b>${esc(prenom)}</b> — document produit le ${dateAffichee}</p>
 ${resoudreVariablesCSS(clone.innerHTML)}
-<div class="baf-pied">Produit par la BAF — Boussole pour une Analyse Fonctionnelle. Outil créé par Émilie Musard, éducatrice spécialisée, et Arthur Guillieux, psychologue clinicien.</div>
+<div class="baf-pied">Produit par la BAF — Boussole pour une Analyse Fonctionnelle, ${versionCourante()}. Outil créé par Émilie Musard, éducatrice spécialisée, et Arthur Guillieux, psychologue clinicien.</div>
 </body></html>`;
 
   const blob = new Blob(['﻿', html], {type:'application/msword'});
@@ -7437,6 +7496,31 @@ function _bancEgal(nom, attendu, obtenu, tolerance) {
 
 // Recalculs indépendants, écrits sans réutiliser les fonctions de production.
 const _CONTROLES = [
+
+  {nom:'Les notes de version se rendent sans exception', test: () => {
+    let souci = '';
+    try { renderNotes(); } catch (e) { souci = e.message; }
+    return _bancEgal('Rendu des notes de version', '', souci);
+  }},
+
+  {nom:'Le pied de page annonce la note la plus récente', test: () => {
+    /* Le numéro affiché et la première note sortent de la même source : ils
+       ne peuvent pas diverger. Ce contrôle garde la propriété si quelqu'un
+       réintroduit un jour un numéro écrit à la main dans le HTML. */
+    majPiedVersion();
+    const el = document.getElementById('footer-version');
+    const attendu = versionCourante() + ' · notes de version';
+    return _bancEgal('Version au pied de page', attendu, el ? el.textContent : 'BOUTON ABSENT');
+  }},
+
+  {nom:'Chaque vue a une adresse lisible', test: () => {
+    /* Une vue sans adresse se route encore, mais son lien ne se partage pas
+       et le bouton « précédent » la rate. Oubli facile en ajoutant une page. */
+    const vues = Array.from(document.querySelectorAll('section.view'))
+      .map(s => s.id.replace(/^view-/, ''));
+    const adressees = Object.keys(ADRESSES_VUES);
+    return _bancEgal('Vues sans adresse', '', vues.filter(v => adressees.indexOf(v) === -1).join(','));
+  }},
 
   {nom:'Nombre d\'évènements', test: () => {
     let n = 0;
@@ -10183,9 +10267,16 @@ function construireDocx(corps, paysage) {
     ? '<w:pgSz w:w="16838" w:h="11906" w:orient="landscape"/><w:pgMar w:top="794" w:right="794" w:bottom="794" w:left="794" w:header="0" w:footer="0" w:gutter="0"/>'
     : '<w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="0" w:footer="0" w:gutter="0"/>';
 
+  /* Chaque document porte la version de l'outil qui l'a produit : une grille
+     remplie il y a six mois ne vient pas forcement de la meme. */
+  const pied = docxP([{
+    t: 'BAF — Boussole pour une Analyse Fonctionnelle · ' + versionCourante() + ' · ' + LIEN_BAF,
+    italique: true, taille: 15, couleur: DOCX_C.inkSoft
+  }], {avant: 220, apres: 0});
+
   const document = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
     '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">' +
-    '<w:body>' + corps + '<w:sectPr>' + pgSz + '</w:sectPr></w:body></w:document>';
+    '<w:body>' + corps + pied + '<w:sectPr>' + pgSz + '</w:sectPr></w:body></w:document>';
 
   const styles = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
     '<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">' +
@@ -10863,9 +10954,208 @@ refreshM2List();
 refreshAccueilBadges();
 // Le hash d'arrivée fait foi : écraser systématiquement par #accueil rendait
 // tout lien partagé inopérant, il ouvrait toujours la page d'accueil.
+/* ══════════════════════════════════════════════════════════════════════
+   LES NOTES DE VERSION
+   ══════════════════════════════════════════════════════════════════════
+   Une entrée par lot de travail, la plus récente en tête. Le numéro affiché
+   au pied de page EST la date de cette première entrée : une version, une
+   note, et rien à tenir à jour en double. Ajouter une note ici suffit.
+
+   Ce bloc est déclaré ICI, avant le routage initial, et pas plus bas avec
+   les autres rendus. renderNotes() peut s'exécuter dès l'ouverture d'un lien
+   direct vers #notes-de-version ; un const déclaré après route() serait
+   alors en zone morte temporelle et lèverait une ReferenceError qui
+   interromprait tout le script. C'est exactement ce qui avait cassé
+   l'outil 2. Ne pas déplacer ce bloc plus bas.
+
+   Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
+   arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
+
+const NOTES_VERSION = [
+
+  {
+    date: '2026-09-12',
+    titre: 'Le vase de tension, le mode rapide, et trois documents à imprimer',
+    corps: `
+<h4>Le vase de tension remplace l'intensité 1–5</h4>
+<p>Une seule notion dans tout l'outil : un vase qui se remplit de ce que la personne vit. L'échelle de 1 à 5 laisse place à une échelle <b>0 à 100 à valeur libre</b>, avec cinq paliers nommés — <i>tranquille</i> (0-20), <i>normal</i> (20-40), <i>tendu</i> (40-60), <i>angoissé</i> (60-80), <i>débordé</i> (80-100). Ce sont des repères de lecture, pas des crans : 52 et 68 sont des valeurs parfaitement légitimes.</p>
+<p>On mesure <b>quatre fois</b> dans un évènement : dans le contexte, juste avant, au plus fort, puis une fois par intervention. Le curseur démarre <b>non coté</b> et ne devient jamais 0 tout seul.</p>
+<p>Chaque mesure porte une note libre : <i>à quoi ça se voyait</i>. C'est le point important — cette matière est récoltée plus loin, dans Interpréter.</p>
+<p><b>Les anciens dossiers ne sont pas convertis.</b> Là où une intensité 1-5 existe, elle reste affichée en lecture seule, avec une invitation à coter le vase. Traduire « 4 — Forte » en « 70 » fabriquerait un chiffre que personne n'a produit.</p>
+<p>Sur la carte thermique, le rond porte désormais le niveau de tension, au choix en moyenne de la montée ou en pic. La moyenne <b>exclut les niveaux d'après intervention</b> : sinon un évènement bien désamorcé ressortirait moins grave qu'un évènement où personne n'est intervenu.</p>
+
+<h4>Interpréter : l'onglet Vase de tension ne part plus d'une page blanche, il récolte</h4>
+<ul>
+<li><b>Les paliers.</b> Toutes les notes « à quoi ça se voyait » sont rangées selon le niveau posé par le déclarant, les notes identiques regroupées avec leur nombre. C'est ce qui fait apparaître un signe précurseur récurrent. L'équipe lit, regroupe, et écrit à quoi ressemble chaque palier chez cette personne.</li>
+<li><b>Ce qui le remplit, ce qui le vide</b>, en trois colonnes : ce qui vient d'elle ou de lui, ce qui vient du dehors, ce qui fait redescendre. Le préambule pose la même question, avant qu'on regarde les données.</li>
+<li><b>La courbe, une journée à la fois.</b> Trait plein entre deux mesures d'un même évènement, pointillés entre deux évènements — personne n'a déclaré ce qui s'est passé entre les deux. Les interventions sont des repères verticaux.</li>
+</ul>
+
+<h4>Recueillir : un mode rapide</h4>
+<p>À côté du formulaire déroulé, un <b>mode rapide</b> : une seule case libre par étape, exactement la forme d'une colonne de grille ABC papier. Le choix se fait <b>étape par étape</b> — on peut résumer le contexte et dérouler le comportement — et il se retient pour la suite. Chaque case porte sa consigne et un exemple de ce qu'on en attend.</p>
+<p>Basculer en rapide <b>n'efface jamais</b> ce qui a été saisi en détaillé. Organiser récolte les résumés comme des éléments catégorisables, badgés « résumé rapide » : on ne fait pas passer un résumé pour une réponse déroulée. L'indice de confiance gagne un dixième critère, le niveau de détail du recueil.</p>
+<p>Aussi : l'heure d'un nouvel évènement est pré-remplie à l'heure courante avec le créneau correspondant — suggestion, pas contrainte — et l'étape 5/7 est reformulée.</p>
+
+<h4>Organiser</h4>
+<ul>
+<li><b>Le contexte a son propre volet.</b> Il était mélangé à l'antécédent, ce qui obligeait à inventer des catégories recouvrant deux moments très différents. Les catégorisations déjà faites ont été reportées : elles désignent exactement les mêmes textes qu'avant.</li>
+<li><b>Un bouton « détail »</b> sur chaque élément rappelle l'évènement entier en fenêtre, en lecture seule, le volet en cours surligné. Plus besoin de quitter la catégorisation pour se rappeler le contexte.</li>
+<li><b>Des catégories proposées</b> par volet, tirées de la littérature. Rien n'est créé d'office : on clique ce qu'on veut, on renomme, on supprime.</li>
+<li>Un élément classé prend <b>la couleur de son volet</b>, et cliquer dessus montre franchement où il se trouve dans la colonne de gauche.</li>
+<li>L'aide à la catégorisation est devenue un bouton lisible plutôt qu'un chevron muet.</li>
+</ul>
+
+<h4>Interpréter et Synthèse</h4>
+<ul>
+<li><b>Des patterns proposés en toutes lettres.</b> L'outil relit la catégorisation et écrit ce qui revient — il ne remplit aucun pattern, composer une séquence reste un acte clinique. Un lien n'est signalé que s'il est au moins 30 % plus fréquent qu'en moyenne, et les deux chiffres sont toujours donnés pour qu'on puisse vérifier. Toute phrase appuyée sur moins de cinq évènements porte sa propre réserve.</li>
+<li><b>Explorer croise jusqu'à trois termes</b>, avec l'entonnoir affiché étape par étape : on voit où l'effectif a fondu, et quel terme a vidé l'intersection.</li>
+<li><b>Tous les graphiques sont redessinés en SVG</b> et s'exportent un par un, en SVG ou en PNG, avec leur titre et leur légende.</li>
+<li>L'export Word reprend le style de la synthèse, graphiques compris.</li>
+</ul>
+
+<h4>Un seul code couleur, d'un bout à l'autre</h4>
+<p>Jaune ocre pour le contexte et l'antécédent, vert sauge pour le comportement, rosé pour la conséquence, prune pour l'intervention. La légende est <b>affichée</b> dans Organiser et dans Interpréter — pas seulement au survol, il n'y a pas de souris sur une tablette — avec le détail au survol, et elle suit dans l'export. Les pictogrammes ✅ ⚠️ ❌ de l'indice de confiance ont aussi leur légende.</p>
+<p>Huit endroits où la couleur disait autre chose ont été corrigés, dont plusieurs textes devenus illisibles faute de contraste.</p>
+
+<h4>Ressources : trois documents à imprimer</h4>
+<ul>
+<li><b>La grille ABC</b>, en paysage, pour une famille ou une structure qui ne peut pas utiliser l'outil numérique. Elle reprend <b>colonne pour colonne le mode rapide</b> : la recopie ne demande aucune décision.</li>
+<li><b>Le préambule</b>, qui reprend le module « Se connaître ».</li>
+<li><b>Le guide de remplissage</b>, écrit à partir des consignes de l'outil — le papier dit la même chose que l'écran — avec un exemple pour chaque colonne.</li>
+</ul>
+<p>Les trois rappellent de n'inscrire ni nom de famille, ni ville, ni structure.</p>
+
+<h4>Ailleurs dans l'outil</h4>
+<ul>
+<li>Les barres (en-tête, onglets, progression) défilent latéralement en fenêtre réduite, au lieu de se tasser.</li>
+<li>Chaque segment de la barre de progression porte le nom de son étape.</li>
+<li><b>Importer ouvre deux choix</b> : à partir d'un fichier, ou simuler un dossier. Un dossier chargé ou simulé depuis l'outil 2 part directement en cotation.</li>
+<li>Le logo EMIA ouvre une page <b>À propos</b>.</li>
+</ul>
+
+<h4>Retiré</h4>
+<ul>
+<li>L'échelle d'intensité 1-5 pour les nouveaux recueils (conservée en lecture seule dans les anciens dossiers).</li>
+<li>Le bascule rapide/approfondi de Recueillir, Organiser et Interpréter : il n'ouvrait qu'un panneau « en construction ».</li>
+<li>Le bouton Simuler isolé sur les pages d'accueil, et les numéros ① ② ③ de l'en-tête.</li>
+</ul>
+
+<h4>Corrigé</h4>
+<ul>
+<li><b>Ouvrir la Synthèse sur un dossier neuf</b> interrompait silencieusement l'affichage — c'est-à-dire au tout premier usage de l'outil.</li>
+<li><b>L'outil 2 ne fonctionnait plus du tout</b> dès qu'on ouvrait un lien direct vers la page indice de confiance.</li>
+<li>Le « moment dominant » qui débordait de sa case, et un titre de carte thermique affiché deux fois.</li>
+</ul>
+
+<h4>Pas encore stabilisé</h4>
+<ul>
+<li>Le visuel du vase, les catégories proposées et la pondération du niveau de détail sont des premières propositions, faites pour être discutées.</li>
+<li>Depuis la séparation du contexte et de l'antécédent, les corrélations et les patterns proposés portent sur l'antécédent seul.</li>
+<li>Le module Repères et la page À propos sont des premiers jets.</li>
+<li>Le rendu des trois documents dans Word n'a pas pu être vérifié partout : dites-nous s'ils s'ouvrent mal.</li>
+</ul>`
+  },
+
+  {
+    date: '2026-09-11',
+    titre: 'La vérification des calculs, la barre dossier, et l\'outil 2 branché sur le recueil',
+    corps: `
+<h4>Chaque chiffre affiché est recalculé une seconde fois</h4>
+<p>Plusieurs faux chiffres avaient été découverts par hasard, et on ne savait plus lesquels croire. Plutôt que de corriger au cas par cas, chaque chiffre affiché est désormais <b>recalculé par un second code</b>, volontairement naïf et écrit autrement, puis comparé au premier — de façon qu'une même erreur ait peu de chances de se produire des deux côtés.</p>
+<p>Une trentaine de contrôles — nombre d'évènements, taux de catégorisation, sommes de pourcentages, carte jour × moment, répartitions par jour, par mois et par heure, fréquence, indice de confiance, part d'observation directe, corrélations, histogrammes — lancés sur sept jeux d'épreuve, dont le dossier vide et le dossier à un seul évènement. Le banc reste dans l'outil et se relance après chaque modification.</p>
+
+<h4>L'outil 2 lit directement le dossier ouvert</h4>
+<ul>
+<li>Il n'ouvrait qu'un sélecteur de fichier : il fallait exporter puis réimporter ce qu'on avait déjà sous la main. Son accueil propose maintenant de <b>coter le dossier en cours</b>, ou d'importer un fichier venu d'ailleurs.</li>
+<li><b>Il voit enfin tout le recueil.</b> Il ne lisait que six indicateurs bruts. Il exploite désormais la part d'observation directe, les antécédents structurés et les déclencheurs présumés, les conséquences et les interventions, les comportements post-intervention, le contexte, la durée réelle du recueil, les espaces de vie, les catégories et sous-catégories, les patterns et les gradations.</li>
+<li><b>Cinq sous-items sont pré-cotés</b>, ceux qui s'objectivent sans jugement : deux déclarants, un déclarant par espace, volume et période, distinction observé/rapporté, complétude du contexte. La correspondance se fait sur le texte exact du sous-item et jamais par mot-clé. Une pré-cotation ne remplace jamais une cotation déjà posée, et rien de ce qui relève du jugement clinique n'est touché.</li>
+</ul>
+
+<h4>Une barre dossier unique</h4>
+<ul>
+<li>Une seule barre pour les deux outils : d'où l'on vient à gauche, l'état du dossier au centre, ce qu'on peut en faire à droite. Elle dit ce qui est chargé, ou « aucun fichier chargé — travail local ».</li>
+<li><b>Exporter, Importer et Effacer sont accessibles depuis n'importe quelle page</b>, au lieu d'être coincés sur l'accueil du recueil. Importer prévient que le dossier ouvert sera remplacé, et ne fait rien si on renonce.</li>
+<li>Chaque bouton d'export annonce son format : <b>.json</b> pour reprendre le travail, <b>.doc</b> pour un bilan.</li>
+<li><b>Les fichiers exportés changent de nom</b> : BAF_… devient RDAF_… (recueil de données), EQAF devient ICAF (indice de confiance).</li>
+</ul>
+
+<h4>Des adresses lisibles, et des liens qui marchent</h4>
+<p>Les adresses des pages sont devenues lisibles — <i>#organiser</i>, <i>#recueil-des-donnees</i>, <i>#se-connaitre</i> — les anciennes restant acceptées. Surtout : <b>un lien partagé ouvre enfin la bonne page</b>, ce qui n'était jamais le cas jusque-là, l'adresse d'arrivée étant systématiquement écrasée au chargement.</p>
+
+<h4>La carte jour × moment devient une vraie carte thermique</h4>
+<p>Le fond de chaque case se colore selon le nombre d'évènements, le rond central portant le niveau de tension. Quand la mesure manque, le rond devient un <b>contour pointillé</b> au lieu d'un rond gris qu'on confondait avec une tension faible.</p>
+
+<h4>Le simulateur devient un générateur</h4>
+<p>Les trois profils de démonstration étaient des listes d'évènements écrits à la main. Ils sont maintenant <b>engendrés</b> à partir d'un profil qui décrit la personne : les moments sortent obligatoirement de sa journée type, les heures tombent dans le bon créneau, les lieux sont des lieux déclarés, et chaque évènement porte un déclarant avec son rôle et son statut de témoin.</p>
+<p>Ce n'était pas cosmétique : les anciennes données simulées <b>ne se comportaient pas comme des vraies</b>, et c'est précisément ce qui a masqué longtemps un défaut de la carte jour × moment. Léo et Naomie couvrent six mois ; <b>Tom reste volontairement maigre</b> (9 évènements), parce que c'est le cas de données pauvres, celui dans lequel une équipe découvre l'outil.</p>
+
+<h4>Affichage</h4>
+<ul>
+<li>Dans le planning hebdomadaire, chaque jour prend la couleur de son lieu d'accueil dès qu'il y en a plusieurs, avec le nom du lieu sous le jour.</li>
+<li>« Autre lieu… » devient une case comme les autres ; la ligne de saisie n'apparaît qu'au clic.</li>
+<li>Repères et Ressources passent à droite de l'en-tête : ce sont des ressources de consultation, pas des étapes du parcours.</li>
+</ul>
+
+<h4>Corrigé</h4>
+<p>L'« intensité moyenne » de l'outil 2 n'avait jamais pu s'afficher : la table de correspondance attendait un format que le formulaire ne produisait pas, et la conversion échouait à tous les coups.</p>`
+  },
+
+  {
+    date: '2026-09-10',
+    version: 'antérieur',
+    titre: 'Juin — 10 septembre 2026 : les grandes étapes',
+    corps: `
+<p><i>Cette entrée est reconstituée après coup, à partir de l'historique du projet. Elle est volontairement sommaire : les notes détaillées commencent au 11 septembre.</i></p>
+
+<h4>Juin 2026 — la fondation</h4>
+<ul>
+<li>Le recueil de données et l'indice de confiance étaient <b>deux pages séparées</b>. Elles fusionnent en un seul fichier le 21 juin : depuis, les deux outils partagent le même dossier.</li>
+<li>Le module « Apprenons à nous connaître » prend sa forme : journée type, trajets, emploi du temps, progression.</li>
+<li>Le formulaire d'évènement est réordonné en étapes, avec un mode brouillon et un tri automatique.</li>
+<li>L'intervention de l'entourage devient une liste : une intervention, son effet, et un nouveau comportement post-intervention quand l'effet est nul ou aggravant.</li>
+<li>Organiser accepte qu'un même élément aille dans plusieurs catégories.</li>
+<li>Les aides deviennent repliables partout, une mention de confidentialité apparaît sur l'accueil, et la synthèse s'exporte en Word plutôt qu'en PDF, pour aller directement dans un bilan.</li>
+</ul>
+
+<h4>10 septembre — le vocabulaire, puis deux gros lots</h4>
+<ul>
+<li><b>Le vocabulaire est fixé</b> : « antécédent lointain » devient <b>contexte</b>, « antécédent immédiat » devient <b>antécédent</b>. Le témoin direct, l'échelle d'effet à quatre niveaux et la numérotation des crises apparaissent.</li>
+<li><b>Premier lot</b> : brouillons multiples, plusieurs lieux d'accueil avec leurs jours et leurs heures, fusion de l'antécédent et du déclencheur en un seul volet, export Word sélectif, et les modules <b>Repères</b> et <b>Ressources</b>.</li>
+<li><b>Second lot</b> : sous-catégories, fréquence des évènements, répartition temporelle à quatre échelles, histogrammes par volet, distinction entre ce que disent les chiffres et ce qu'en pense l'équipe, patterns enrichis, et le module <b>Explorer</b>.</li>
+</ul>`
+  }
+
+];
+
+function versionNote(n) {
+  return (n && n.version) ? n.version : ('v' + ((n && n.date) || '').replace(/-/g, '.'));
+}
+function versionCourante() {
+  return versionNote(NOTES_VERSION[0]);
+}
+function majPiedVersion() {
+  const el = document.getElementById('footer-version');
+  if (el) el.textContent = versionCourante() + ' · notes de version';
+}
+function renderNotes() {
+  const el = document.getElementById('notes-contenu');
+  if (!el) return;
+  el.innerHTML = NOTES_VERSION.map((n, i) =>
+    '<details class="note-v"' + (i === 0 ? ' open' : '') + '>' +
+      '<summary>' +
+        '<span class="nv-version">' + esc(versionNote(n)) + '</span>' +
+        '<span class="nv-titre">' + esc(n.titre) + '</span>' +
+      '</summary>' +
+      '<div class="nv-corps">' + n.corps + '</div>' +
+    '</details>'
+  ).join('');
+}
+
+
 const vueInitiale = vueDepuisAdresse(location.hash) || 'accueil';
 history.replaceState({route:vueInitiale}, '', '#'+adresseDeVue(vueInitiale));
 route(vueInitiale, true);
+majPiedVersion();
 
 // ============================================================
 // INDICE DE CONFIANCE (ICAF) — logique fusionnée ici.
