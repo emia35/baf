@@ -2666,7 +2666,7 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
       <div class="sub">Les supports partageables, les références et les liens qui accompagnent la démarche.</div>
     </div>
     <div class="ethique" style="margin-bottom:18px;">
-      <b>Toutes les familles et toutes les institutions ne pourront pas utiliser l'outil numérique.</b> Ces trois documents permettent de recueillir sur papier exactement ce que la BAF demande, puis de le recopier ici sans rien réinterpréter. La grille reprend colonne pour colonne le mode rapide du formulaire : la correspondance est littérale, c'est ce qui rend la recopie sûre.
+      <b>Toutes les familles et toutes les institutions ne pourront pas utiliser l'outil numérique.</b> Les trois premiers documents permettent de recueillir sur papier exactement ce que la BAF demande, puis de le recopier ici sans rien réinterpréter. La grille reprend colonne pour colonne le mode rapide du formulaire : la correspondance est littérale, c'est ce qui rend la recopie sûre.
     </div>
 
     <div class="res-docs">
@@ -2686,6 +2686,12 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
         <div class="res-doc-tete"><span class="res-doc-ico">📖</span><span class="res-doc-titre">Guide de remplissage</span></div>
         <div class="res-doc-desc">La règle de la caméra, la différence entre observer et interpréter, entre contexte et antécédent, ce qu'est vraiment une conséquence, comment coter le vase — et un exemple pour chaque colonne de la grille. Écrit à partir des consignes de l'outil, pour que le papier dise la même chose que l'écran.</div>
         <button class="btn btn-secondary btn-sm" onclick="telechargerGuide()">⬇ Télécharger (.docx)</button>
+      </div>
+
+      <div class="res-doc">
+        <div class="res-doc-tete"><span class="res-doc-ico">🧭</span><span class="res-doc-titre">Faire une analyse fonctionnelle avec la BAF</span></div>
+        <div class="res-doc-desc">Le protocole, dans l'ordre : ouvrir le dossier, faire valider le préambule par les parties, envoyer les kits, fusionner les contributions, organiser, interpréter, coter. Huit étapes, avec à chaque fois où c'est dans l'outil et le piège à éviter. À poser à côté du clavier les premières fois.</div>
+        <button class="btn btn-secondary btn-sm" onclick="telechargerModeEmploi()">⬇ Télécharger (.docx)</button>
       </div>
     </div>
 
@@ -7810,6 +7816,20 @@ function _bancEgal(nom, attendu, obtenu, tolerance) {
 // Recalculs indépendants, écrits sans réutiliser les fonctions de production.
 const _CONTROLES = [
 
+  {nom:'Les quatre documents se fabriquent sans exception', test: () => {
+    /* Une erreur dans un corps de document ne se voit qu'au clic, et le clic
+       ouvre une boîte de téléchargement : personne ne l'essaie jamais. */
+    const soucis = [];
+    [['grille', corpsGrilleABC, true], ['préambule', corpsPreambule, false],
+     ['guide', corpsGuide, false], ['mode d\'emploi', corpsModeEmploi, false]].forEach(([nom, f, paysage]) => {
+      try {
+        const blob = construireDocx(f(), paysage);
+        if (!blob || !blob.size) soucis.push(nom + ' : archive vide');
+      } catch (e) { soucis.push(nom + ' : ' + e.message); }
+    });
+    return _bancEgal('Documents en défaut', '', soucis.join(' | '));
+  }},
+
   {nom:'Fusionner deux fois le même envoi ne duplique rien', test: () => {
     const sauve = JSON.parse(JSON.stringify({m2: state.m2, contributions: state.contributions || {}}));
     const vraiAlert = window.alert, vraiConfirm = window.confirm;
@@ -11090,6 +11110,139 @@ function corpsGuide() {
     docxP('L\'outil range ensuite, compte, croise, et met en évidence ce qui revient. Il ne conclut pas. Les conclusions se posent en équipe, avec les données sous les yeux — et votre feuille en fait partie.') +
     docxP('Merci du temps que vous y passez. C\'est un travail ingrat sur le moment, et c\'est lui qui rend l\'analyse possible.', {italique: true, couleur: DOCX_C.inkSoft, avant: 120});
 }
+
+/* ── 4. Le mode d'emploi ────────────────────────────────────────────────
+   Le déroulé d'une AF à l'EMIA, dans l'ordre, pour être suivi à la lettre par
+   quelqu'un qui découvre. Pas un manuel de l'outil : un protocole de travail —
+   ce qu'on fait, dans quel ordre, et ce qu'on ne fait pas encore.
+   Il double ce que l'écran dit, à dessein : un protocole qu'on ne peut pas
+   poser à côté du clavier n'est pas suivi. */
+function corpsModeEmploi() {
+  const etape = (n, titre, ou, corps, piege) =>
+    docxP([
+      {t: n + ' · ', gras: true, taille: 24, couleur: DOCX_C.slate},
+      {t: titre, gras: true, taille: 24, couleur: DOCX_C.slate}
+    ], {avant: 260, apres: 40}) +
+    docxP([{t: 'Dans la BAF : ', gras: true, taille: 17, couleur: DOCX_C.inkSoft},
+           {t: ou, taille: 17, couleur: DOCX_C.inkSoft, italique: true}], {apres: 80}) +
+    corps.map(t => docxPuce(t)).join('') +
+    (piege ? docxP([{t: 'À éviter. ', gras: true, couleur: DOCX_C.consequenceTexte}, {t: piege}],
+      {fond: DOCX_C.consequence, traitGauche: DOCX_C.consequenceTrait, avant: 80, apres: 60}) : '');
+
+  return docxTitre(1, "Faire une analyse fonctionnelle avec la BAF") +
+    docxP([{t: "Le déroulé d'une AF à l'EMIA, dans l'ordre. À suivre à la lettre les premières fois — " +
+               "les raccourcis se prennent quand on sait ce qu'ils coûtent.", italique: true, couleur: DOCX_C.inkSoft}],
+      {apres: 200}) +
+
+    docxP([
+      {t: "Deux principes qui traversent tout. ", gras: true},
+      {t: "Un : on décrit avant d'interpréter — ce qu'une caméra aurait filmé, pas ce qu'on en pense. " +
+          "Deux : on ne retouche jamais le déclaratif. Ce que quelqu'un a décrit reste tel qu'il l'a écrit ; " +
+          "le travail de l'équipe commence à l'étape Organiser, et tout ce qu'il produit se lit par-dessus " +
+          "sans jamais modifier la source."}
+    ], {fond: DOCX_C.papierFonce, traitGauche: DOCX_C.slate, apres: 120}) +
+
+    docxP([
+      {t: "Avant de commencer. ", gras: true, couleur: DOCX_C.consequenceTexte},
+      {t: "Aucun nom de famille, aucune ville, aucune structure nommée. Un prénom seul, fictif si besoin — " +
+          "et le même d'un bout à l'autre, y compris dans les fichiers échangés. La BAF ne pense pas et ne " +
+          "pose pas de diagnostic : tout ce qu'elle fait apparaître est du matériau de discussion."}
+    ], {fond: DOCX_C.consequence, traitGauche: DOCX_C.consequenceTrait, apres: 200}) +
+
+    docxIntertitre('Les huit étapes', DOCX_C.papierFonce, DOCX_C.slate) +
+
+    etape(1, "Ouvrir le dossier et remplir le préambule",
+      "Se connaître",
+      ["Renseignez ce que l'équipe sait déjà : la personne, ses espaces de vie, sa journée type avec ses horaires réels, la nuit, les trajets.",
+       "La journée type n'est pas décorative : c'est elle qui fournit les moments dans lesquels tous les évènements viendront se ranger. Un créneau oublié ici, et des observations n'auront nulle part où se poser.",
+       "Le vase de tension connu : ce qui la fait monter, ce qui vient du dehors, ce qui la fait redescendre — avant même de regarder les données."],
+      "Remplir le préambule au fil de l'eau, pendant que les évènements arrivent. Il doit être stable avant de partir chez les déclarants.") +
+
+    etape(2, "Envoyer le préambule aux différentes parties",
+      "Recueillir → Exporter un kit déclarant",
+      ["Chaque partie — famille, foyer, IME, accueil de jour — reçoit le kit et relit le préambule.",
+       "Elle ne peut pas le modifier : elle signale, section par section, ce qui lui paraît faux ou incomplet.",
+       "C'est coûteux, et c'est le cœur du travail. Une AF construite sur un préambule que personne n'a validé décrit une personne que personne ne reconnaît."],
+      "Sauter cette étape parce qu'on est pressé. C'est celle qui fait que les observations des uns et des autres parlent de la même personne.") +
+
+    etape(3, "Corriger le préambule",
+      "Se connaître → « Ce que les déclarants disent de ce préambule »",
+      ["Les remarques arrivent groupées par section, étiquetées de leur provenance.",
+       "Vous corrigez à la main. Rien ne s'applique tout seul, et c'est voulu.",
+       "Une contradiction entre deux lieux n'est pas forcément une erreur à trancher : c'est souvent une information à garder."],
+      null) +
+
+    etape(4, "Envoyer le kit de recueil",
+      "Recueillir → Exporter un kit déclarant (préambule corrigé)",
+      ["Le kit contient le préambule consolidé, aucun évènement, et rien du travail d'analyse.",
+       "Accompagnez-le d'un mot : ce qu'on attend, sur quelle période, et qu'il ne s'agit pas d'analyser.",
+       "Pour une famille qui ne peut pas utiliser l'outil numérique, la grille ABC papier reprend colonne pour colonne le mode rapide : la recopie ensuite ne demande aucune décision."],
+      null) +
+
+    etape(5, "Récupérer et fusionner les contributions",
+      "Recueillir → Ajouter une contribution",
+      ["Chaque évènement arrive avec sa provenance et la garde.",
+       "Les envois successifs d'une même personne ne se dupliquent pas.",
+       "Si un envoi remplace des évènements déjà catégorisés, l'outil le signale : vérifiez que les catégories correspondent toujours au texte."],
+      "Retaper à la main ce qu'on a reçu. Outre le temps perdu, on reformule sans s'en rendre compte — et on perd la trace de qui a dit quoi.") +
+
+    etape(6, "Organiser",
+      "Organiser",
+      ["Cinq volets : contexte, antécédent, comportement, conséquence, intervention. Chacun a sa couleur, la même partout.",
+       "Créez vos catégories, ou partez de celles que l'outil propose — ce sont des amorces, pas une nomenclature.",
+       "Un même élément peut aller dans plusieurs catégories. Le bouton « détail » rappelle l'évènement entier quand un item isolé ne suffit pas à décider."],
+      "Catégoriser en pensant déjà à la fonction. On regroupe ce qui se ressemble ; l'hypothèse vient après, et pas avant.") +
+
+    etape(7, "Interpréter",
+      "Interpréter",
+      ["L'outil écrit ce qui revient, avec ses chiffres et sa réserve quand l'effectif est faible. Il ne remplit aucun pattern : composer une séquence reste un acte clinique.",
+       "Le vase de tension se décrit ici : à quoi ressemble chaque palier chez cette personne, à partir de ce que les déclarants ont noté.",
+       "Explorer permet de croiser jusqu'à trois termes — une catégorie, un jour, un moment, une provenance — et montre où l'effectif fond."],
+      "Prendre un pourcentage pour une preuve. Un taux calculé sur quatre évènements est une piste, pas une tendance, et l'outil le dit à chaque fois.") +
+
+    etape(8, "Coter la qualité de l'analyse",
+      "Indice de confiance (ICAF)",
+      ["L'ICAF évalue le travail produit, pas la personne accompagnée, pas les déclarants.",
+       "Il se cote à plusieurs. Les écarts entre cotateurs sont plus instructifs que la note.",
+       "Un indice bas n'invalide rien : il dit où le matériau est mince, donc ce qu'il faudrait aller chercher."],
+      null) +
+
+    docxIntertitre('Les trois fichiers, et ce qu\'ils portent', DOCX_C.papierFonce, DOCX_C.slate) +
+    docxTableau([
+      [
+        {contenu: [docxP('Fichier', {gras: true, taille: 19})], fond: DOCX_C.papierFonce},
+        {contenu: [docxP('Ce qu\'il contient', {gras: true, taille: 19})], fond: DOCX_C.papierFonce},
+        {contenu: [docxP('Qui l\'envoie', {gras: true, taille: 19})], fond: DOCX_C.papierFonce}
+      ],
+      [
+        {contenu: [docxP('Kit déclarant', {gras: true, taille: 18})]},
+        {contenu: [docxP('Le préambule seul. Aucun évènement, rien de l\'analyse.', {taille: 18})]},
+        {contenu: [docxP('L\'équipe, vers un déclarant', {taille: 18})]}
+      ],
+      [
+        {contenu: [docxP('Contribution', {gras: true, taille: 18})]},
+        {contenu: [docxP('Les évènements décrits, et les remarques sur le préambule. Rien d\'autre.', {taille: 18})]},
+        {contenu: [docxP('Un déclarant, vers l\'équipe', {taille: 18})]}
+      ],
+      [
+        {contenu: [docxP('Dossier', {gras: true, taille: 18})]},
+        {contenu: [docxP('Tout : préambule, évènements, organisation, interprétation.', {taille: 18})]},
+        {contenu: [docxP('L\'équipe, pour elle-même', {taille: 18})]}
+      ]
+    ], [2200, 5100, 2338], {hauteur: 400}) +
+
+    docxP([
+      {t: "Le dossier complet ne sort pas de l'équipe. ", gras: true},
+      {t: "Il contient l'ensemble du matériau et le travail d'analyse. Ce qui circule vers l'extérieur, " +
+          "c'est le bilan — pas le fichier."}
+    ], {fond: DOCX_C.consequence, traitGauche: DOCX_C.consequenceTrait, avant: 120, apres: 200}) +
+
+    docxIntertitre('Deux choses à ne pas croire', DOCX_C.papierFonce, DOCX_C.slate) +
+    docxPuce("Que l'outil produit l'analyse. Il range, il compte, il signale ce qui revient. L'hypothèse fonctionnelle, c'est vous.") +
+    docxPuce("Qu'une AF se fait vite. Ce protocole prend des semaines, et l'essentiel de ce temps n'est pas passé devant l'écran — il est passé à discuter avec ceux qui accompagnent la personne.");
+}
+
+function telechargerModeEmploi() { telechargerDocx('BAF_Mode-emploi.docx', corpsModeEmploi(), false); }
 
 function telechargerGrilleABC() { telechargerDocx('BAF_Grille-ABC.docx', corpsGrilleABC(), true); }
 function telechargerPreambulePapier() { telechargerDocx('BAF_Preambule.docx', corpsPreambule(), false); }
