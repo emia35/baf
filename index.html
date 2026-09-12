@@ -12372,6 +12372,55 @@ const NOTES_VERSION = [
 
   {
     date: '2026-09-12',
+    version: 'v2026.09.12-2',
+    titre: 'Le téléphone, le circuit des déclarants, et un repère sur chaque page',
+    corps: `
+<h4>La BAF tient enfin sur un téléphone</h4>
+<p>Sur un écran de téléphone, le document se dessinait plus large que l'écran : il fallait <b>balayer latéralement pour lire une phrase</b>, sur toutes les pages. Trois boutons de la barre dossier, qui refusaient de rétrécir, en étaient la cause.</p>
+<p>Sous 620 pixels de large, ces trois actions passent dans un menu unique « Dossier », qui reprend au passage l'état du dossier ouvert. Le pied de page s'empile sur deux lignes — il se comprimait au point que les noms des auteurs disparaissaient. La tablette, elle, n'avait jamais rien eu.</p>
+
+<h4>Faire participer d'autres personnes : le kit et la contribution</h4>
+<p>C'est le gros morceau. Une famille, un foyer, un accueil de jour voient des choses que l'équipe ne voit pas — mais ils n'ont pas à faire l'analyse fonctionnelle. Le circuit est maintenant en place :</p>
+<ul>
+<li><b>L'équipe exporte un kit déclarant</b> depuis Recueillir. Il contient le préambule, aucun évènement, et rien du travail d'analyse.</li>
+<li><b>La personne qui le reçoit ouvre la BAF</b> et charge ce fichier. L'outil passe en <b>mode déclarant</b> : une page d'accueil qui explique ce qu'on lui demande et ce qu'on ne lui demande pas, le préambule en lecture seule, et Recueillir.</li>
+<li><b>Elle peut contester le préambule</b>, section par section, sans pouvoir le modifier. Si chacun le réécrivait de son côté, les observations ne se compareraient plus.</li>
+<li><b>Organiser, Interpréter, la Synthèse et l'indice de confiance restent visibles</b> mais s'ouvrent sur une page qui dit ce qu'ils font et qui s'en charge. L'outil ne cache rien : il montre où s'arrête la part de chacun.</li>
+<li><b>Elle renvoie sa contribution</b>, un fichier que l'équipe fusionne dans Recueillir. Chaque évènement garde la trace de sa provenance — « domicile », « foyer » — et les envois successifs d'une même personne ne se dupliquent pas.</li>
+<li><b>Les remarques sur le préambule</b> apparaissent dans « Se connaître », groupées par section et étiquetées de leur provenance. Présentées, jamais appliquées : c'est l'équipe qui corrige.</li>
+</ul>
+<p>La provenance devient aussi un terme d'Explorer : croiser « domicile » avec une catégorie est désormais une question qu'on peut poser.</p>
+
+<h4>« Où suis-je ? » — la même bande sur chaque module</h4>
+<p>Trois questions, toujours les mêmes, toujours au même endroit : <b>ce qu'on fait ici</b>, <b>d'où ça vient</b>, <b>où ça repart</b>. Parce que ce qui perd quelqu'un dans la BAF, ce n'est pas le manque d'explications — c'est de ne pas voir la chaîne, et de croire qu'on ressaisit ce qu'on a déjà écrit.</p>
+<p>La bande se replie d'un clic et s'en souvient sur toutes les pages. Une nouvelle page <b>« Le parcours »</b> dessine l'enchaînement complet, boucle des déclarants comprise.</p>
+
+<h4>Un quatrième document : « Faire une analyse fonctionnelle avec la BAF »</h4>
+<p>Le protocole, dans l'ordre, à poser à côté du clavier : ouvrir le dossier, faire valider le préambule par les parties, envoyer les kits, fusionner les contributions, organiser, interpréter, coter. Huit étapes, chacune avec l'endroit où elle se passe dans l'outil et le piège qui la guette.</p>
+
+<h4>Sous le capot</h4>
+<ul>
+<li>Un dossier porte désormais une <b>identité</b> qui ne change plus, et un fichier exporté <b>annonce ce qu'il est</b> — dossier, kit ou contribution. Un fichier qui n'a rien à faire là est refusé avec sa raison, au lieu d'écraser silencieusement le travail en cours.</li>
+<li>Les anciens fichiers restent lisibles, sans rien à faire.</li>
+<li>Tous les documents produits — la synthèse Word et les quatre documents imprimables — portent la version de l'outil qui les a produits.</li>
+</ul>
+
+<h4>Corrigé</h4>
+<ul>
+<li>Une simulation héritait du numéro du dossier qu'elle remplaçait : deux dossiers sans rapport portaient la même identité.</li>
+<li>Le défilement horizontal sur téléphone, décrit plus haut.</li>
+</ul>
+
+<h4>Pas encore stabilisé</h4>
+<ul>
+<li>Le circuit kit / contribution n'a encore été éprouvé qu'en test. Le premier vrai aller-retour avec une famille dira ce qui manque.</li>
+<li>La BAF dit encore souvent la même chose à trois endroits d'une même page. La prochaine passe de lisibilité consistera surtout à <b>couper</b>, pas à ajouter.</li>
+<li>Les sessions et les comptes ne sont pas au programme : l'outil reste un fichier autonome qui ne collecte rien, et les échanges passent par des fichiers que vous maîtrisez.</li>
+</ul>`
+  },
+
+  {
+    date: '2026-09-12',
     titre: 'Le vase de tension, le mode rapide, et trois documents à imprimer',
     corps: `
 <h4>Le vase de tension remplace l'intensité 1–5</h4>
