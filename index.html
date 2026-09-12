@@ -1359,6 +1359,58 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
 @media(max-width:760px){.vase-connu-grille{grid-template-columns:1fr;}}
 .vase-connu-titre{font-size:13px;font-weight:700;color:var(--ink);display:block;margin-bottom:2px;}
 .vase-connu-grille textarea{min-height:76px;}
+.vase-part-titre{
+  font-size:16px;font-weight:700;color:var(--ink);
+  margin:28px 0 6px;padding-top:18px;border-top:1.5px solid var(--line);
+}
+.vase-part-titre:first-of-type{border-top:none;padding-top:0;margin-top:6px;}
+.vase-part-aide{font-size:13px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;}
+.vase-prudence{
+  background:var(--amber-pale);border-left:3px solid var(--amber);
+  padding:9px 13px;border-radius:6px;margin-top:9px;font-size:12.5px;
+}
+.vase-palier-bloc{
+  border:1.5px solid var(--line);border-left-width:5px;
+  border-radius:var(--radius-sm);background:var(--paper);
+  padding:13px 16px;margin-bottom:11px;
+}
+.vase-palier-tete{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin-bottom:9px;}
+.vase-palier-nom{font-size:14.5px;font-weight:700;color:var(--ink);}
+.vase-palier-plage{font-size:12px;color:var(--ink-soft);}
+.vase-palier-compte{font-size:12px;color:var(--ink-soft);margin-left:auto;}
+.vase-signes{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+.vase-signe{
+  background:var(--card);border:1px solid var(--line);
+  border-radius:999px;padding:4px 11px;font-size:12.5px;color:var(--ink);
+}
+.vase-signe b{font-weight:700;color:var(--ink-soft);margin-left:4px;}
+.vase-signes-vide{font-size:12.5px;color:var(--ink-soft);font-style:italic;margin-bottom:10px;}
+.vase-palier-bloc textarea{min-height:54px;}
+.vase-apriori{
+  background:var(--teal-pale);border-left:3px solid var(--teal);
+  border-radius:8px;padding:12px 15px;margin-bottom:14px;font-size:13px;line-height:1.6;
+}
+.vase-apriori h5{font-size:13px;margin:0 0 6px;color:var(--teal-deep);}
+.vase-apriori div + div{margin-top:5px;}
+.vase-a-situer{
+  background:var(--amber-pale);border-left:3px solid var(--amber);
+  border-radius:8px;padding:11px 14px;margin-bottom:14px;font-size:12.5px;
+}
+.vase-a-situer .vase-tag{background:var(--card);border:1px solid var(--line);color:var(--ink);}
+.vase-a-situer button.situer{
+  background:none;border:none;color:var(--teal-deep);cursor:pointer;
+  font-family:inherit;font-size:11.5px;font-weight:700;padding:0 3px;
+}
+.vase-a-situer button.situer:hover{text-decoration:underline;}
+.vase-section{grid-template-columns:repeat(3,1fr);}
+@media(max-width:900px){.vase-section{grid-template-columns:1fr;}}
+.courbe-jour-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
+.courbe-jour-bar select{
+  font-family:inherit;font-size:13px;padding:6px 9px;
+  border:1.5px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink);
+}
+.courbe-wrap{overflow-x:auto;border:1.5px solid var(--line);border-radius:var(--radius-sm);background:var(--paper);padding:10px;}
+.courbe-noncotes{font-size:12.5px;color:var(--ink-soft);font-style:italic;margin-top:9px;}
 .vase-svg-wrap{text-align:center;margin:10px 0 20px;}
 .grad-list{display:flex;flex-direction:column;gap:14px;margin-bottom:18px;}
 .grad-item{
@@ -2589,24 +2641,44 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
     <!-- VASE DE TENSION -->
     <div id="m4-sous-vase" style="display:none;">
       <div class="abc-intro">
-        <b>Le vase de tension.</b> Au-delà des séquences précises, qu'est-ce qui fait monter la tension de façon générale ? Qu'est-ce qui la fait baisser ? Ces éléments de contexte sont précieux pour penser les régulations à proposer.
+        <b>Le vase de tension.</b> Tout le monde a un vase qui se remplit de ce qu'il vit : ce qui vient de l'intérieur — le fonctionnement, l'angoisse, l'histoire, le corps — et ce qui vient du dehors — l'environnement, les évènements qui tombent. Les déclarants l'ont mesuré évènement par évènement. C'est ici qu'on essaie d'écrire ce qu'on en a compris.
       </div>
+
+      <h4 class="vase-part-titre">1 · À quoi ressemblent les paliers chez <span id="vase-prenom">cette personne</span></h4>
+      <div class="vase-part-aide">
+        Chaque palier rassemble ce que les déclarants ont écrit sous « à quoi ça se voyait », rangé selon le niveau qu'ils avaient posé. Vous n'avez rien à ressaisir : vous lisez, vous regroupez, vous écrivez la synthèse.
+        <div class="vase-prudence">⚠ Ce que vous écrivez ici devient l'aide affichée aux déclarants au moment de coter. Si vous réécrivez un palier plus tard, les cotations passées gardent leur chiffre mais changent un peu de sens — le nombre reste la donnée, la description est une aide à la lecture.</div>
+      </div>
+      <div id="vase-paliers-liste"></div>
+
+      <h4 class="vase-part-titre">2 · Ce qui le remplit, ce qui le vide</h4>
+      <div id="vase-apriori"></div>
+      <div id="vase-a-situer"></div>
       <div class="vase-section">
         <div class="vase-card monte">
-          <h4>🔺 Ce qui augmente la tension</h4>
-          <div class="help field">Facteurs, situations, moments qui semblent mettre la pression à la hausse — même si ça ne déclenche pas toujours un comportement visible.</div>
-          <div class="vase-tags" id="vase-monte-tags"></div>
+          <h4>🔺 Ce qui vient d'elle ou de lui</h4>
+          <div class="help field">Le fonctionnement, l'angoisse, l'histoire, la santé — ce qui remplit le vase de l'intérieur, indépendamment de ce qui se passe autour.</div>
+          <div class="vase-tags" id="vase-interieur-tags"></div>
           <div class="vase-input-row monte">
-            <input type="text" id="vase-monte-input" placeholder="ex : transitions, bruit, fatigue, changement...">
-            <button onclick="ajouterVaseTag('monte')">Ajouter</button>
+            <input type="text" id="vase-interieur-input" placeholder="ex : anticipation anxieuse, douleurs, sommeil court...">
+            <button onclick="ajouterVaseTag('interieur')">Ajouter</button>
+          </div>
+        </div>
+        <div class="vase-card monte">
+          <h4>🔺 Ce qui vient du dehors</h4>
+          <div class="help field">L'environnement, l'organisation, les personnes, les évènements — ce qui remplit le vase de l'extérieur.</div>
+          <div class="vase-tags" id="vase-exterieur-tags"></div>
+          <div class="vase-input-row monte">
+            <input type="text" id="vase-exterieur-input" placeholder="ex : bruit, transitions, remplacement, changement de salle...">
+            <button onclick="ajouterVaseTag('exterieur')">Ajouter</button>
           </div>
         </div>
         <div class="vase-card descend">
-          <h4>🔻 Ce qui diminue la tension</h4>
+          <h4>🔻 Ce qui le fait redescendre</h4>
           <div class="help field">Ce qui apaise, ce qui régule — même partiellement, même provisoirement.</div>
           <div class="vase-tags" id="vase-descend-tags"></div>
           <div class="vase-input-row descend">
-            <input type="text" id="vase-descend-input" placeholder="ex : musique, routines, espace calme, humour...">
+            <input type="text" id="vase-descend-input" placeholder="ex : musique, routines, espace calme, préavis...">
             <button onclick="ajouterVaseTag('descend')">Ajouter</button>
           </div>
         </div>
@@ -2619,6 +2691,12 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
             placeholder="ex : la tension semble s'accumuler en début de semaine et se relâcher après les activités physiques..."></textarea>
         </div>
       </div>
+
+      <h4 class="vase-part-titre">3 · Perception de la tension au fil de la journée</h4>
+      <div class="vase-part-aide">
+        Une journée à la fois. Le trait plein relie des mesures qui se suivent dans un même évènement ; les pointillés relient deux évènements séparés dans la journée — personne n'a déclaré ce qui s'est passé entre les deux. Le contexte n'a pas d'heure : il est posé à gauche de son évènement, comme un niveau de départ.
+      </div>
+      <div id="vase-courbe"></div>
     </div>
 
     <!-- EXPLORER -->
@@ -3838,11 +3916,11 @@ let formEditIdx = null; // null = nouveau, int = modification
    note attachée à chaque mesure — à quoi ça se voyait. Ces notes sont la
    matière que le module Interpréter récolte et range par palier. */
 const PALIERS_VASE = [
-  {min:0,  nom:'tranquille', couleur:'#A8D5CD'},
-  {min:20, nom:'normal',     couleur:'#9AB5A8'},
-  {min:40, nom:'tendu',      couleur:'#C9A84C'},
-  {min:60, nom:'angoissé',   couleur:'#E2562F'},
-  {min:80, nom:'débordé',    couleur:'#7B4EA0'}
+  {id:'tranquille', min:0,  nom:'tranquille', couleur:'#A8D5CD'},
+  {id:'normal',     min:20, nom:'normal',     couleur:'#9AB5A8'},
+  {id:'tendu',      min:40, nom:'tendu',      couleur:'#C9A84C'},
+  {id:'angoisse',   min:60, nom:'angoissé',   couleur:'#E2562F'},
+  {id:'deborde',    min:80, nom:'débordé',    couleur:'#7B4EA0'}
 ];
 
 // Borne basse incluse : 40 est « tendu », pas « normal ».
@@ -5225,6 +5303,18 @@ function refreshSynthese(){
 
   // ── M4 : patterns + gradations + vase ──────────────────────────────────
   const synthM4El = document.getElementById('synth-m4');
+  // Les tags portent maintenant leur source : une ligne par source, et les
+  // lignes vides ne s'affichent pas.
+  const ligneVaseSynthese = (titre, tags, ton) => {
+    if (!tags.length) return '';
+    const fond = ton === 'teal' ? 'var(--teal-pale)' : 'var(--coral-pale)';
+    const encre = ton === 'teal' ? 'var(--teal-deep)' : 'var(--coral-deep)';
+    return '<div style="margin-bottom:5px;font-size:13px;"><span style="color:' + encre + ';font-weight:700;">' +
+      esc(titre) + ' :</span> ' +
+      tags.map(t => '<span style="background:' + fond + ';color:' + encre +
+        ';border-radius:999px;padding:2px 8px;font-size:12px;margin:0 2px;">' + esc(t.texte) + '</span>').join('') +
+      '</div>';
+  };
   if (synthM4El) {
     ensureM4();
     const patterns = state.m4.patterns || [];
@@ -5276,8 +5366,10 @@ function refreshSynthese(){
       if (monte.length > 0 || descend.length > 0) {
         html += `<div>
           <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin-bottom:6px;">💧 Vase de tension</div>
-          ${monte.length > 0 ? `<div style="margin-bottom:5px;font-size:13px;"><span style="color:var(--coral-deep);font-weight:700;">Augmente :</span> ${monte.map(t=>'<span style="background:var(--coral-pale);color:var(--coral-deep);border-radius:999px;padding:2px 8px;font-size:12px;margin:0 2px;">'+esc(t)+'</span>').join('')}</div>` : ''}
-          ${descend.length > 0 ? `<div style="font-size:13px;"><span style="color:var(--teal-deep);font-weight:700;">Diminue :</span> ${descend.map(t=>'<span style="background:var(--teal-pale);color:var(--teal-deep);border-radius:999px;padding:2px 8px;font-size:12px;margin:0 2px;">'+esc(t)+'</span>').join('')}</div>` : ''}
+          ${ligneVaseSynthese("Augmente — ce qui vient d'elle ou de lui", monte.filter(t=>t.source==='interieur'), 'coral')}
+          ${ligneVaseSynthese('Augmente — ce qui vient du dehors', monte.filter(t=>t.source==='exterieur'), 'coral')}
+          ${ligneVaseSynthese('Augmente — reste à situer', monte.filter(t=>!t.source), 'coral')}
+          ${ligneVaseSynthese('Diminue', descend, 'teal')}
         </div>`;
       }
       synthM4El.innerHTML = html;
@@ -6068,8 +6160,23 @@ const PROFILS_SIM = [
       {label:"Montée de fin de journée", cps:['Refus et opposition','Cris et vocalisations','Comportements moteurs'], note:"En fin de journée, l'opposition calme précède les cris, puis le passage à l'acte."}
     ],
     vase:{
-      monte:['transitions non préparées','fin d\'activité appréciée','retour de week-end','bruit','attente sans repère','changement de professionnel'],
-      descend:['préavis de cinq minutes','activités motrices','espace isolé','relais de collègue','routines stables'],
+      monte:[
+        {texte:'anticipation anxieuse des changements', source:'interieur'},
+        {texte:'nuits courtes', source:'interieur'},
+        {texte:'transitions non préparées', source:'exterieur'},
+        {texte:"fin d'activité appréciée", source:'exterieur'},
+        {texte:'retour de week-end', source:'exterieur'},
+        {texte:'bruit', source:'exterieur'},
+        {texte:'attente sans repère', source:'exterieur'},
+        {texte:'changement de professionnel', source:'exterieur'}
+      ],
+      descend:[
+        {texte:'préavis de cinq minutes', source:''},
+        {texte:'activités motrices', source:''},
+        {texte:'espace isolé', source:''},
+        {texte:'relais de collègue', source:''},
+        {texte:'routines stables', source:''}
+      ],
       texte:"La tension semble s'accumuler en début de semaine et se libérer lors des activités physiques. Les lundis de retour de week-end sont systématiquement plus chargés."
     }
   },
@@ -6163,8 +6270,22 @@ const PROFILS_SIM = [
       {label:"Séquence du lundi matin", cps:['Cris et hurlements','Auto-agressivité'], note:"Les cris précèdent l'auto-agressivité quand la séparation se prolonge."}
     ],
     vase:{
-      monte:['séparation parentale','changement de professionnel référent','environnements sonores','changements imprévus','fin d\'activité appréciée'],
-      descend:['musique au casque','pictogrammes','peluche','snoezelen','routines stables'],
+      monte:[
+        {texte:'douleurs dentaires non repérées', source:'interieur'},
+        {texte:'périodes de sommeil très court', source:'interieur'},
+        {texte:'séparation parentale', source:'exterieur'},
+        {texte:'changement de professionnel référent', source:'exterieur'},
+        {texte:'environnements sonores', source:'exterieur'},
+        {texte:'changements imprévus', source:'exterieur'},
+        {texte:"fin d'activité appréciée", source:'exterieur'}
+      ],
+      descend:[
+        {texte:'musique au casque', source:''},
+        {texte:'pictogrammes', source:''},
+        {texte:'peluche', source:''},
+        {texte:'snoezelen', source:''},
+        {texte:'routines stables', source:''}
+      ],
       texte:"Naomie régule beaucoup par les supports sensoriels. Les pictogrammes réduisent l'anxiété liée aux transitions, mais pas suffisamment quand la surcharge est déjà installée."
     }
   },
@@ -6249,8 +6370,21 @@ const PROFILS_SIM = [
       {label:"Journée à risque", cps:['Refus verbal','Cris','Fuite'], note:"Les jours de fatigue ou d'AESH absent, le verbal précède rapidement la fuite."}
     ],
     vase:{
-      monte:['absence de l\'AESH','changements non annoncés','bruit','prise de parole imposée','fatigue'],
-      descend:['AESH stable','ordinateur habituel','travail seul autorisé','mathématiques','routines préservées'],
+      monte:[
+        {texte:'anxiété anticipatoire', source:'interieur'},
+        {texte:'fatigue accumulée', source:'interieur'},
+        {texte:"absence de l'AESH", source:'exterieur'},
+        {texte:'changements non annoncés', source:'exterieur'},
+        {texte:'bruit', source:'exterieur'},
+        {texte:'prise de parole imposée', source:'exterieur'}
+      ],
+      descend:[
+        {texte:'AESH stable', source:''},
+        {texte:'ordinateur habituel', source:''},
+        {texte:'travail seul autorisé', source:''},
+        {texte:'mathématiques', source:''},
+        {texte:'routines préservées', source:''}
+      ],
       texte:"Tom fonctionne par routines et repères stables. L'imprévu, même mineur, a un coût énergétique important. Les fins de journée concentrent la fatigue accumulée."
     }
   }
@@ -6429,7 +6563,7 @@ function simuler(idx){
   state.m2.evenements = evts;
   state.m2.brouillons = [];
   state.m3 = {sous:'cp', categories:{cp:{},antecedents:{},declencheurs:{},consequences:{},interventions:{}}, _idsMigratedV2:true, _antecedentsFusionnes:true};
-  state.m4 = {sous:'pattern', patterns:[], gradations:[], vase:{monte:[],descend:[],texte:''}};
+  state.m4 = {sous:'pattern', patterns:[], gradations:[], vase:{monte:[],descend:[],texte:''}, paliers:{}, courbeJour:null};
 
   // ── Catégorisation calculée ───────────────────────────────────────────
   // On relit les items comme le fait le module Organiser, et on range chacun
@@ -6466,7 +6600,14 @@ function simuler(idx){
     cps: g.cps.map(n => idCat('cp', n)).filter(Boolean),
     note: g.note
   }));
-  state.m4.vase = {monte: P.vase.monte.slice(), descend: P.vase.descend.slice(), texte: P.vase.texte};
+  state.m4.vase = {
+    monte: P.vase.monte.map(t => Object.assign({}, t)),
+    descend: P.vase.descend.map(t => Object.assign({}, t)),
+    texte: P.vase.texte
+  };
+  // Les paliers, tels qu'une équipe les aurait écrits après avoir lu la récolte.
+  state.m4.paliers = P.paliers ? Object.assign({}, P.paliers) : {};
+  state.m4.courbeJour = null;
 
   persist();
   loadM1FromState();
@@ -7479,6 +7620,15 @@ function ensureM4() {
   if (!state.m4.vase) state.m4.vase = {monte:[], descend:[], texte:''};
   if (!Array.isArray(state.m4.vase.monte)) state.m4.vase.monte = [];
   if (!Array.isArray(state.m4.vase.descend)) state.m4.vase.descend = [];
+  // Migration idempotente : un tag était une chaîne, il devient un objet
+  // porteur de sa source. Les tags déjà saisis n'ont pas de source — on ne
+  // devine pas à leur place, ils sont proposés « à situer ».
+  ['monte','descend'].forEach(k => {
+    state.m4.vase[k] = state.m4.vase[k].map(t =>
+      (typeof t === 'string') ? {texte: t, source: ''} : t
+    ).filter(t => t && t.texte);
+  });
+  if (!state.m4.paliers || typeof state.m4.paliers !== 'object') state.m4.paliers = {};
   if (!state.m4.sous) state.m4.sous = 'pattern';
   // Un pattern ne se réduit pas toujours à un antécédent et une conséquence :
   // plusieurs antécédents peuvent converger, plusieurs conséquences suivre.
@@ -7925,38 +8075,312 @@ function supprimerGradation(id) {
 /* ─── VASE DE TENSION ──────────────────────────────────────── */
 function renderVase() {
   ensureM4();
-  const vase = state.m4.vase;
-  ['monte','descend'].forEach(type => {
-    const tagsEl = document.getElementById('vase-'+type+'-tags');
-    if (!tagsEl) return;
-    tagsEl.innerHTML = (vase[type] || []).map((tag, i) =>
-      `<span class="vase-tag ${type}">
-        ${esc(tag)}
-        <button onclick="retirerVaseTag('${type}',${i})">×</button>
-      </span>`
-    ).join('');
-  });
+  const prenomEl = document.getElementById('vase-prenom');
+  if (prenomEl) prenomEl.textContent = state.m1.prenom || 'cette personne';
+  renderVasePaliers();
+  renderVaseApriori();
+  renderVaseTags();
+  renderCourbeTension();
   const texteEl = document.getElementById('vase-texte');
-  if (texteEl) texteEl.value = vase.texte || '';
+  if (texteEl) texteEl.value = (state.m4.vase.texte) || '';
+}
+
+/* ── 1 · Les paliers ───────────────────────────────────────────────────
+   Rien n'est ressaisi : on relit les notes que les déclarants ont écrites à
+   côté de chaque mesure, et on les range selon le niveau qu'ils avaient posé.
+   Les notes identiques sont regroupées avec leur nombre — c'est ce qui fait
+   apparaître un signe précurseur récurrent. Calculé à la lecture : rien de
+   tout cela n'est écrit dans les évènements. */
+function recolteParPalier() {
+  const res = {};
+  PALIERS_VASE.forEach(p => { res[p.id] = {}; });
+  (state.m2.evenements || []).forEach((evt, idx) => {
+    pointsTensionEvt(evt).forEach(pt => {
+      if (pt.v === null || !pt.note) return;
+      const pal = palierDe(pt.v);
+      if (!pal) return;
+      const cle = pt.note.trim().toLowerCase();
+      if (!res[pal.id][cle]) res[pal.id][cle] = {texte: pt.note.trim(), occurrences: []};
+      res[pal.id][cle].occurrences.push({
+        evtIdx: idx, date: evt.date || '', declarant: evt.declarant || '',
+        moment: pt.label, v: pt.v
+      });
+    });
+  });
+  return res;
+}
+
+function renderVasePaliers() {
+  const el = document.getElementById('vase-paliers-liste');
+  if (!el) return;
+  const recolte = recolteParPalier();
+  const paliers = state.m4.paliers || {};
+  el.innerHTML = PALIERS_VASE.slice().reverse().map(p => {
+    const groupes = Object.values(recolte[p.id] || {})
+      .sort((a, b) => b.occurrences.length - a.occurrences.length);
+    const total = groupes.reduce((n, g) => n + g.occurrences.length, 0);
+    const signes = groupes.length
+      ? '<div class="vase-signes">' + groupes.map(g => {
+          const detail = g.occurrences.slice(0, 8).map(o =>
+            (o.date ? formatDate(o.date) : 'sans date') + ' — ' + o.moment + ' (' + o.v + ')' +
+            (o.declarant ? ', ' + o.declarant : '')
+          ).join(' · ');
+          const reste = g.occurrences.length > 8 ? ' · et ' + (g.occurrences.length - 8) + ' autre(s)' : '';
+          return '<span class="vase-signe" title="' + esc(detail + reste) + '">' + esc(g.texte) +
+                 (g.occurrences.length > 1 ? '<b>× ' + g.occurrences.length + '</b>' : '') + '</span>';
+        }).join('') + '</div>'
+      : '<div class="vase-signes-vide">Aucun signe rapporté à ce palier pour l\'instant. Les déclarants n\'ont pas encore coté d\'évènement à ce niveau, ou n\'ont pas rempli « à quoi ça se voyait ».</div>';
+    return '<div class="vase-palier-bloc" style="border-left-color:' + p.couleur + ';">' +
+      '<div class="vase-palier-tete">' +
+        '<span class="vase-palier-nom">' + p.nom + '</span>' +
+        '<span class="vase-palier-plage">' + p.min + ' à ' + (p.min + 20) + '</span>' +
+        '<span class="vase-palier-compte">' + (total ? total + ' signe' + (total > 1 ? 's' : '') + ' rapporté' + (total > 1 ? 's' : '') : 'rien rapporté') + '</span>' +
+      '</div>' + signes +
+      '<div class="field" style="margin-bottom:0;">' +
+        '<label for="palier-' + p.id + '">Ce que ce palier donne à voir chez ' + esc(state.m1.prenom || 'cette personne') + '</label>' +
+        '<textarea id="palier-' + p.id + '" oninput="savePalier(\'' + p.id + '\')" placeholder="Une ou deux phrases, à partir des signes ci-dessus : à quoi reconnaît-on ce palier ?">' +
+          esc(paliers[p.id] || '') + '</textarea>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function savePalier(id) {
+  ensureM4();
+  const el = document.getElementById('palier-' + id);
+  if (!el) return;
+  state.m4.paliers[id] = el.value;
+  persist();
+}
+
+/* ── 2 · Ce qui le remplit ─────────────────────────────────────────── */
+// Ce que le préambule disait avant qu'on regarde les données : on l'affiche à
+// côté de ce que l'analyse a trouvé, sans les mélanger.
+function renderVaseApriori() {
+  const el = document.getElementById('vase-apriori');
+  if (!el) return;
+  const vc = state.m1.vaseConnu || {};
+  const lignes = [
+    vc.interieur ? '<div><b>Ce qui vient d\'elle ou de lui :</b> ' + esc(vc.interieur) + '</div>' : '',
+    vc.exterieur ? '<div><b>Ce qui vient du dehors :</b> ' + esc(vc.exterieur) + '</div>' : '',
+    vc.descend   ? '<div><b>Ce qui le fait redescendre :</b> ' + esc(vc.descend) + '</div>' : ''
+  ].filter(Boolean);
+  if (!lignes.length) { el.innerHTML = ''; return; }
+  el.innerHTML = '<div class="vase-apriori"><h5>Ce qu\'on en disait dans le préambule, avant de regarder les données</h5>' +
+    lignes.join('') + '</div>';
+}
+
+function renderVaseTags() {
+  ensureM4();
+  const vase = state.m4.vase;
+  const chip = (liste, i, texte) =>
+    '<span class="vase-tag ' + (liste === 'descend' ? 'descend' : 'monte') + '">' + esc(texte) +
+    '<button onclick="retirerVaseTag(\'' + liste + '\',' + i + ')">×</button></span>';
+
+  ['interieur','exterieur'].forEach(src => {
+    const cible = document.getElementById('vase-' + src + '-tags');
+    if (!cible) return;
+    cible.innerHTML = vase.monte.map((t, i) => t.source === src ? chip('monte', i, t.texte) : '').join('');
+  });
+  const cibleD = document.getElementById('vase-descend-tags');
+  if (cibleD) cibleD.innerHTML = vase.descend.map((t, i) => chip('descend', i, t.texte)).join('');
+
+  // Les tags saisis avant que la distinction existe : on ne devine pas à leur
+  // place, on demande où les mettre.
+  const el = document.getElementById('vase-a-situer');
+  if (!el) return;
+  const aSituer = vase.monte.map((t, i) => ({t, i})).filter(x => !x.t.source);
+  if (!aSituer.length) { el.innerHTML = ''; return; }
+  el.innerHTML = '<div class="vase-a-situer">Ces éléments ont été saisis avant qu\'on distingue l\'intérieur du dehors. Où les rangez-vous ?<div class="vase-tags" style="margin-top:8px;">' +
+    aSituer.map(x =>
+      '<span class="vase-tag">' + esc(x.t.texte) +
+      '<button class="situer" onclick="situerVaseTag(' + x.i + ',\'interieur\')">d\'elle</button>' +
+      '<button class="situer" onclick="situerVaseTag(' + x.i + ',\'exterieur\')">du dehors</button>' +
+      '<button onclick="retirerVaseTag(\'monte\',' + x.i + ')">×</button></span>'
+    ).join('') + '</div></div>';
 }
 
 function ajouterVaseTag(type) {
   ensureM4();
-  const input = document.getElementById('vase-'+type+'-input');
+  const input = document.getElementById('vase-' + type + '-input');
   if (!input || !input.value.trim()) return;
-  state.m4.vase[type].push(input.value.trim());
+  if (type === 'descend') state.m4.vase.descend.push({texte: input.value.trim(), source: ''});
+  else state.m4.vase.monte.push({texte: input.value.trim(), source: type});
   input.value = '';
   persist();
-  renderVase();
+  renderVaseTags();
   refreshSynthese();
 }
 
-function retirerVaseTag(type, idx) {
+function retirerVaseTag(liste, idx) {
   ensureM4();
-  state.m4.vase[type].splice(idx, 1);
+  if (!state.m4.vase[liste]) return;
+  state.m4.vase[liste].splice(idx, 1);
   persist();
-  renderVase();
+  renderVaseTags();
   refreshSynthese();
+}
+
+function situerVaseTag(idx, source) {
+  ensureM4();
+  const t = state.m4.vase.monte[idx];
+  if (!t) return;
+  t.source = source;
+  persist();
+  renderVaseTags();
+}
+
+/* ── 3 · La courbe ─────────────────────────────────────────────────────
+   Une journée à la fois. Trait plein entre deux mesures d'un même évènement,
+   pointillés entre deux évènements : personne n'a déclaré ce qui s'est passé
+   entre les deux, on ne le dessine donc pas comme une continuité. Aucune
+   interpolation lisse — ce sont des points d'observation, pas une fonction. */
+function journeesAvecTension() {
+  const parJour = {};
+  (state.m2.evenements || []).forEach((evt, idx) => {
+    if (!evt.date) return;
+    const pts = pointsTensionEvt(evt).filter(p => p.v !== null);
+    if (!parJour[evt.date]) parJour[evt.date] = {date: evt.date, points: 0, evts: []};
+    parJour[evt.date].evts.push({evt, idx, pts});
+    parJour[evt.date].points += pts.length;
+  });
+  return Object.keys(parJour).map(d => parJour[d])
+    .filter(j => j.points >= 2)
+    .sort((a, b) => b.date.localeCompare(a.date));
+}
+
+function changerJourCourbe(date) {
+  ensureM4();
+  state.m4.courbeJour = date;
+  persist();
+  renderCourbeTension();
+}
+
+const FLECHE_EFFET = {
+  'Disparition de la tension': '↓↓',
+  'Diminution de la tension': '↓',
+  'Aucun effet visible': '→',
+  'Augmentation de la tension': '↑'
+};
+
+function renderCourbeTension() {
+  const el = document.getElementById('vase-courbe');
+  if (!el) return;
+  ensureM4();
+  const jours = journeesAvecTension();
+  if (!jours.length) {
+    el.innerHTML = '<div class="event-empty">Aucune journée ne porte encore deux mesures de tension. La courbe apparaîtra dès que des évènements auront été cotés.</div>';
+    return;
+  }
+  let choisi = state.m4.courbeJour;
+  if (!jours.some(j => j.date === choisi)) choisi = jours[0].date;
+  state.m4.courbeJour = choisi;
+  const jour = jours.find(j => j.date === choisi);
+
+  const selecteur = '<div class="courbe-jour-bar"><label for="courbe-jour">Journée :</label>' +
+    '<select id="courbe-jour" onchange="changerJourCourbe(this.value)">' +
+    jours.map(j => '<option value="' + j.date + '"' + (j.date === choisi ? ' selected' : '') + '>' +
+      formatDate(j.date) + ' — ' + j.points + ' mesure' + (j.points > 1 ? 's' : '') + '</option>').join('') +
+    '</select><span style="font-size:12.5px;color:var(--ink-soft);">' + jours.length +
+    ' journée' + (jours.length > 1 ? 's' : '') + ' comporte' + (jours.length > 1 ? 'nt' : '') + ' au moins deux mesures.</span></div>';
+
+  const groupes = jour.evts.filter(g => g.pts.length)
+    .sort((a, b) => (a.evt.heure || '').localeCompare(b.evt.heure || ''));
+
+  const L = 46, T = 22, HG = 250, STEP = 78, GAP = 40;
+  let x = L + 34;
+  groupes.forEach((g, gi) => {
+    if (gi) x += GAP;
+    g.pts.forEach((pt, i) => { pt._x = x; if (i < g.pts.length - 1) x += STEP; });
+    x += STEP;
+  });
+  const W = Math.max(x + 20, L + 220);
+  const H = T + HG + 78;
+  const y = (v) => T + (100 - v) / 100 * HG;
+
+  let svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H +
+    '" xmlns="http://www.w3.org/2000/svg" style="font-family:\'Space Grotesk\',sans-serif;">';
+
+  // Bandes des paliers, en fond
+  PALIERS_VASE.forEach(p => {
+    svg += '<rect x="' + L + '" y="' + y(p.min + 20).toFixed(1) + '" width="' + (W - L - 8) +
+      '" height="' + (y(p.min) - y(p.min + 20)).toFixed(1) + '" fill="' + p.couleur + '" fill-opacity="0.13"/>';
+    svg += '<text x="' + (L - 8) + '" y="' + (y(p.min + 10) + 3.5).toFixed(1) +
+      '" text-anchor="end" font-size="9.5" fill="var(--ink-soft)">' + p.nom + '</text>';
+  });
+  [0, 20, 40, 60, 80, 100].forEach(v => {
+    svg += '<line x1="' + L + '" y1="' + y(v).toFixed(1) + '" x2="' + (W - 8) + '" y2="' + y(v).toFixed(1) +
+      '" stroke="var(--line)" stroke-width="0.6"/>';
+  });
+
+  // Repères verticaux des interventions
+  groupes.forEach(g => g.pts.forEach(pt => {
+    if (pt.cle.indexOf('iv') !== 0) return;
+    svg += '<line x1="' + pt._x + '" y1="' + T + '" x2="' + pt._x + '" y2="' + (T + HG) +
+      '" stroke="var(--ink-soft)" stroke-width="0.8" stroke-dasharray="3,3" opacity="0.5"/>';
+  }));
+
+  // Traits pleins dans un évènement, pointillés entre deux évènements
+  groupes.forEach((g, gi) => {
+    for (let i = 0; i < g.pts.length - 1; i++) {
+      svg += '<line x1="' + g.pts[i]._x + '" y1="' + y(g.pts[i].v).toFixed(1) +
+        '" x2="' + g.pts[i + 1]._x + '" y2="' + y(g.pts[i + 1].v).toFixed(1) +
+        '" stroke="var(--ink)" stroke-width="2" stroke-linecap="round"/>';
+    }
+    const suivant = groupes[gi + 1];
+    if (suivant) {
+      const a = g.pts[g.pts.length - 1], bb = suivant.pts[0];
+      svg += '<line x1="' + a._x + '" y1="' + y(a.v).toFixed(1) + '" x2="' + bb._x + '" y2="' + y(bb.v).toFixed(1) +
+        '" stroke="var(--ink-soft)" stroke-width="1.6" stroke-dasharray="5,5"/>';
+    }
+  });
+
+  // Points
+  const COURT = {contexte: 'contexte', antecedent: 'avant', pic: 'pic'};
+  groupes.forEach((g, gi) => {
+    g.pts.forEach(pt => {
+      const pal = palierDe(pt.v);
+      const court = COURT[pt.cle] || ('interv. ' + (parseInt(pt.cle.slice(2), 10) + 1));
+      const contexte = pt.cle === 'contexte' && g.evt.avantLoin ? ' — contexte déclaré : ' + g.evt.avantLoin : '';
+      const effet = pt.intervention && pt.intervention.effet ? ' — effet déclaré : ' + pt.intervention.effet : '';
+      const tip = 'Évt. ' + (g.idx + 1) + (g.evt.heure ? ' à ' + g.evt.heure : '') + ' · ' + pt.label +
+        ' : ' + pt.v + ' (' + pal.nom + ')' + (g.evt.declarant ? ' · déclaré par ' + g.evt.declarant : '') +
+        (pt.note ? ' · ' + pt.note : '') + contexte + effet;
+      if (pt.intervention) {
+        const f = FLECHE_EFFET[pt.intervention.effet] || '';
+        if (f) svg += '<text x="' + pt._x + '" y="' + (y(pt.v) - 13).toFixed(1) +
+          '" text-anchor="middle" font-size="12" font-weight="700" fill="var(--ink-soft)">' + f + '</text>';
+      }
+      svg += '<circle cx="' + pt._x + '" cy="' + y(pt.v).toFixed(1) + '" r="6.5" fill="' + pal.couleur +
+        '" stroke="#fff" stroke-width="1.6"><title>' + esc(tip) + '</title></circle>';
+      svg += '<text x="' + pt._x + '" y="' + (T + HG + 16) + '" text-anchor="middle" font-size="9.5" fill="var(--ink-soft)">' +
+        esc(court) + '</text>';
+    });
+    // Sous le groupe : l'heure et le déclarant
+    const xs = g.pts.map(p => p._x);
+    const cx = (Math.min.apply(null, xs) + Math.max.apply(null, xs)) / 2;
+    svg += '<text x="' + cx + '" y="' + (T + HG + 34) + '" text-anchor="middle" font-size="10.5" font-weight="700" fill="var(--ink)">' +
+      'Évt. ' + (g.idx + 1) + (g.evt.heure ? ' · ' + g.evt.heure : '') + '</text>';
+    if (g.evt.declarant) {
+      svg += '<text x="' + cx + '" y="' + (T + HG + 48) + '" text-anchor="middle" font-size="9.5" fill="var(--ink-soft)">' +
+        esc(g.evt.declarant) + '</text>';
+    }
+  });
+  svg += '</svg>';
+
+  const nonCotes = jour.evts.filter(g => !g.pts.length);
+  const mentionNonCotes = nonCotes.length
+    ? '<div class="courbe-noncotes">Non coté ce jour-là : ' +
+      nonCotes.map(g => 'évt. ' + (g.idx + 1) + (g.evt.heure ? ' à ' + g.evt.heure : '')).join(', ') + '.</div>'
+    : '';
+
+  el.innerHTML = selecteur +
+    '<div class="courbe-wrap">' + svg + '</div>' +
+    '<div class="scatter-legend" style="margin-top:8px;">' +
+      '<div class="scatter-legend-item"><svg width="26" height="8"><line x1="1" y1="4" x2="25" y2="4" stroke="var(--ink)" stroke-width="2"/></svg>&nbsp;mesures d\'un même évènement</div>' +
+      '<div class="scatter-legend-item" style="margin-left:12px;"><svg width="26" height="8"><line x1="1" y1="4" x2="25" y2="4" stroke="var(--ink-soft)" stroke-width="1.6" stroke-dasharray="5,5"/></svg>&nbsp;entre deux évènements — rien n\'a été déclaré entre les deux</div>' +
+      '<div class="scatter-legend-item" style="margin-left:12px;">↓↓ ↓ → ↑ effet déclaré de l\'intervention</div>' +
+    '</div>' + mentionNonCotes;
 }
 
 function saveVase() {
@@ -7968,8 +8392,9 @@ function saveVase() {
 // Permettre ajout tag avec Entrée
 document.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
-  if (e.target.id === 'vase-monte-input') { e.preventDefault(); ajouterVaseTag('monte'); }
-  if (e.target.id === 'vase-descend-input') { e.preventDefault(); ajouterVaseTag('descend'); }
+  ['interieur','exterieur','descend'].forEach(t => {
+    if (e.target.id === 'vase-' + t + '-input') { e.preventDefault(); ajouterVaseTag(t); }
+  });
 });
 
 
