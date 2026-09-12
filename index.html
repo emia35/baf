@@ -258,6 +258,58 @@ header.top{
    lisible — « Dossier » — plutôt que trois pictogrammes seuls : sur un écran
    étroit, deviner ce que fait une icône coûte plus cher que la place gagnée. */
 .subbar-compact{display:none;}
+/* ── La bande « Où suis-je ? » ─────────────────────────────────────────
+   Sobre par construction : un fond de papier, pas de couleur de volet — elle
+   ne désigne aucun volet — et trois lignes d'étiquette/valeur qui se lisent
+   en diagonale. Elle se replie d'un clic, et la préférence vaut partout. */
+.situer{
+  border:1px solid var(--line);border-radius:var(--radius-sm);
+  background:var(--paper);margin:0 0 18px;overflow:hidden;
+}
+.situer-tete{
+  display:flex;align-items:center;gap:9px;width:100%;
+  background:none;border:none;padding:9px 14px;cursor:pointer;
+  font-family:inherit;font-size:12.5px;font-weight:700;color:var(--ink-soft);
+  text-align:left;
+}
+.situer-tete:hover{color:var(--slate);}
+.situer-ico{font-size:13px;flex-shrink:0;}
+.situer-titre{flex:1;letter-spacing:.3px;}
+.situer-chevron{flex-shrink:0;font-size:11px;transition:transform .16s;}
+.situer.replie .situer-chevron{transform:rotate(-90deg);}
+.situer.replie .situer-corps{display:none;}
+.situer-corps{padding:2px 14px 12px;}
+.situer-ligne{
+  display:flex;gap:12px;align-items:baseline;
+  padding:5px 0;border-top:1px solid var(--line-soft);
+  font-size:13.5px;line-height:1.55;
+}
+.situer-ligne:first-child{border-top:none;}
+.situer-libelle{
+  flex:0 0 128px;font-size:11px;font-weight:700;color:var(--ink-soft);
+  text-transform:uppercase;letter-spacing:.5px;
+}
+.situer-texte{flex:1;color:var(--ink);}
+.situer-pied{margin-top:8px;}
+.situer-lien{
+  background:none;border:none;padding:0;cursor:pointer;font-family:inherit;
+  font-size:12.5px;font-weight:600;color:var(--slate);text-decoration:underline;
+}
+.situer-lien:hover{color:var(--sauge-deep);}
+@media(max-width:620px){
+  .situer-ligne{flex-direction:column;gap:2px;}
+  .situer-libelle{flex:none;}
+}
+.parcours-titre{
+  font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;
+  color:var(--ink-soft);margin:0 0 12px;
+}
+.parcours-ligne{
+  font-size:14px;line-height:1.6;padding:7px 0;
+  border-top:1px solid var(--line-soft);
+}
+.parcours-ligne:first-of-type{border-top:none;}
+.parcours-ligne b{color:var(--slate);}
 .contrib-liste{margin-top:14px;display:flex;flex-direction:column;gap:6px;}
 .contrib-item{
   display:flex;flex-direction:column;gap:2px;
@@ -2643,6 +2695,16 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
     <div id="reserve-contenu"></div>
   </section>
 
+  <section id="view-parcours" class="view">
+    <div class="mod-header">
+      <div class="crumb"><button onclick="route('accueil')">← Accueil</button></div>
+      <span class="temps-tag tag-m4">Le parcours</span>
+      <h2>Comment la BAF s'enchaîne</h2>
+      <div class="sub">Cinq étapes, et une boucle vers les personnes qui observent. Rien ne se ressaisit d'une étape à l'autre : ce qui est écrit une fois traverse tout l'outil.</div>
+    </div>
+    <div id="parcours-contenu"></div>
+  </section>
+
   <section id="view-notes" class="view">
     <div class="mod-header">
       <div class="crumb"><button onclick="route('accueil')">← Accueil</button></div>
@@ -3698,6 +3760,19 @@ const DEPOT = {
   },
   oublier(cle) {
     try { localStorage.removeItem(cle || this.CLE); } catch (e) {}
+  },
+  /* Les préférences d'affichage ne sont pas des données de dossier : elles
+     appartiennent à la personne devant l'écran, pas à la personne suivie.
+     Clé séparée, et elles ne partent donc jamais dans un export. */
+  CLE_PREFS: 'baf_emia35_prefs_v1',
+  preference(cle, valeur) {
+    try {
+      const p = JSON.parse(localStorage.getItem(this.CLE_PREFS) || '{}');
+      if (valeur === undefined) return p[cle];
+      p[cle] = valeur;
+      localStorage.setItem(this.CLE_PREFS, JSON.stringify(p));
+      return valeur;
+    } catch (e) { return undefined; }
   }
 };
 
@@ -3800,7 +3875,7 @@ function route(name, fromHistory){
 
   const isBaf = ['baf-accueil','m1','m2','m2-form','m3','m4','synthese','declarant','reserve'].includes(name);
   const isIdc = ['idc-accueil','idc-main'].includes(name);
-  const isGlobal = ['accueil','reperes','ressources','apropos','notes'].includes(name);
+  const isGlobal = ['accueil','reperes','ressources','apropos','notes','parcours'].includes(name);
   const bafNavGroup = document.getElementById('baf-nav-group');
   const idcNavGroup = document.getElementById('idc-nav-group');
   const globalNavGroup = document.getElementById('global-nav-group');
@@ -3810,6 +3885,8 @@ function route(name, fromHistory){
   if(name === 'reperes') renderReperes();
   if(name === 'notes') renderNotes();
   if(name === 'declarant') renderDeclarant();
+  if(name === 'parcours') renderParcours();
+  poserSituer(name);
   appliquerModeDeclarant();
 
   // Identité visuelle par outil (couleur d\'accent du header/nav)
@@ -3996,6 +4073,7 @@ const ADRESSES_VUES = {
   'reperes':      'reperes',
   'ressources':   'ressources',
   'apropos':      'a-propos',
+  'parcours':     'le-parcours',
   'notes':        'notes-de-version',
   'declarant':    'participer',
   'reserve':      'reserve-a-l-equipe',
@@ -7816,6 +7894,26 @@ function _bancEgal(nom, attendu, obtenu, tolerance) {
 // Recalculs indépendants, écrits sans réutiliser les fonctions de production.
 const _CONTROLES = [
 
+  {nom:'Chaque module sait dire où l\'on est', test: () => {
+    /* Une bande manquante sur un module, et la chaîne redevient invisible
+       exactement là où quelqu'un se perd. */
+    const manquants = Object.keys(SITUER).filter(v => {
+      poserSituer(v);
+      const b = document.querySelector('#view-' + v + ' .situer .situer-texte');
+      return !b || !b.textContent.trim();
+    });
+    const trous = Object.keys(SITUER).filter(v =>
+      SITUER_LIBELLES.some(([c]) => !SITUER[v][c] || !SITUER[v][c].trim()));
+    return _bancEgal('Modules sans repère', '', manquants.concat(trous).join(','));
+  }},
+
+  {nom:'Le parcours se dessine sans exception', test: () => {
+    let souci = '';
+    try { renderParcours(); } catch (e) { souci = e.message; }
+    const svg = document.querySelector('#parcours-contenu svg');
+    return _bancEgal('Rendu du parcours', 'ok', souci ? souci : (svg ? 'ok' : 'AUCUN SVG'));
+  }},
+
   {nom:'Les quatre documents se fabriquent sans exception', test: () => {
     /* Une erreur dans un corps de document ne se voit qu'au clic, et le clic
        ouvre une boîte de téléchargement : personne ne l'essaie jamais. */
@@ -11602,6 +11700,186 @@ refreshM2List();
 refreshAccueilBadges();
 // Le hash d'arrivée fait foi : écraser systématiquement par #accueil rendait
 // tout lien partagé inopérant, il ouvrait toujours la page d'accueil.
+/* ══════════════════════════════════════════════════════════════════════
+   SITUER — la même bande sur chaque module
+   ══════════════════════════════════════════════════════════════════════
+   Ce qui perd quelqu'un dans la BAF, ce n'est pas le manque d'explications :
+   c'est de ne pas voir la chaîne. On écrit une phrase dans Recueillir, elle
+   ressurgit dans Organiser comme un élément à catégoriser, elle devient un
+   pattern dans Interpréter — et personne n'a jamais dit que ces trois choses
+   étaient la même. Alors on croit qu'on ressaisit.
+
+   Trois questions, toujours les mêmes, toujours au même endroit, toujours
+   dans le même ordre. L'uniformité est ce qui rend un outil apprenable ; une
+   explication différente par page, c'est du bruit.
+
+   La bande se replie et s'en souvient — sinon, au troisième dossier,
+   l'utilisateur expérimenté ferme l'outil. */
+
+const SITUER = {
+  m1: {
+    ici: "Ce que l'équipe sait déjà de la personne, avant toute observation.",
+    vient: "De vous, et des remarques que les déclarants renvoient sur ce préambule.",
+    repart: "Vers les moments et les lieux dans lesquels chaque évènement viendra se ranger."
+  },
+  m2: {
+    ici: "Des évènements décrits un par un, comme une caméra les aurait filmés.",
+    vient: "De vous, et des contributions que d'autres personnes vous renvoient.",
+    repart: "Vers Organiser : chaque phrase écrite ici y devient un élément à catégoriser."
+  },
+  m3: {
+    ici: "On regroupe ce qui se ressemble, volet par volet.",
+    vient: "Des textes écrits dans Recueillir. Rien n'est ressaisi : tout est repris tel quel.",
+    repart: "Vers Interpréter et la Synthèse, qui comptent ce que vous avez regroupé."
+  },
+  m4: {
+    ici: "Les hypothèses, les séquences qui reviennent, les paliers du vase de tension.",
+    vient: "De vos catégories, et des notes écrites par les déclarants à chaque mesure de tension.",
+    repart: "Vers le bilan, et vers l'indice de confiance qui cote la solidité du tout."
+  },
+  synthese: {
+    ici: "Ce que l'ensemble des évènements donne à voir, en chiffres et en graphiques.",
+    vient: "De tout ce qui précède. Rien ne se saisit ici.",
+    repart: "Vers l'export Word, pour l'intégrer à un bilan."
+  },
+  'idc-main': {
+    ici: "La qualité méthodologique de l'analyse — pas la personne, pas les déclarants.",
+    vient: "Du dossier ouvert, et de votre jugement clinique sur ce qui a été produit.",
+    repart: "Vers ce qu'il faudrait aller chercher pour que l'analyse tienne mieux."
+  }
+};
+
+const SITUER_LIBELLES = [
+  ['ici', "Ce qu'on fait ici"],
+  ['vient', "D'où ça vient"],
+  ['repart', "Où ça repart"]
+];
+
+function situerReplie() {
+  return DEPOT.preference('situer-replie') === '1';
+}
+function basculerSituer() {
+  DEPOT.preference('situer-replie', situerReplie() ? '0' : '1');
+  document.querySelectorAll('.situer').forEach(b => b.classList.toggle('replie', situerReplie()));
+}
+
+/* Posée par le routage, jamais écrite en dur dans les six vues : une bande
+   recopiée six fois finit par diverger six fois. */
+function poserSituer(nomVue) {
+  const info = SITUER[nomVue];
+  const vue = document.getElementById('view-' + nomVue);
+  if (!vue || !info) return;
+  let bande = vue.querySelector('.situer');
+  if (!bande) {
+    bande = document.createElement('div');
+    bande.className = 'situer';
+    const entete = vue.querySelector('.mod-header');
+    if (entete && entete.nextSibling) vue.insertBefore(bande, entete.nextSibling);
+    else vue.insertBefore(bande, vue.firstChild);
+  }
+  bande.classList.toggle('replie', situerReplie());
+  bande.innerHTML =
+    '<button type="button" class="situer-tete" onclick="basculerSituer()" ' +
+      'title="Afficher ou masquer ce repère sur toutes les pages">' +
+      '<span class="situer-ico">🧭</span>' +
+      '<span class="situer-titre">Où suis-je ?</span>' +
+      '<span class="situer-chevron">▾</span>' +
+    '</button>' +
+    '<div class="situer-corps">' +
+      SITUER_LIBELLES.map(([cle, libelle]) =>
+        '<div class="situer-ligne">' +
+          '<span class="situer-libelle">' + esc(libelle) + '</span>' +
+          '<span class="situer-texte">' + esc(info[cle]) + '</span>' +
+        '</div>').join('') +
+      '<div class="situer-pied">' +
+        '<button type="button" class="situer-lien" onclick="route(\'parcours\')">Voir le parcours entier →</button>' +
+      '</div>' +
+    '</div>';
+}
+
+const SITUER_ENCHAINEMENT = [
+  {de: 'Se connaître → Recueillir :', quoi: "les moments de la journée type et les lieux, qui deviennent les cases où chaque évènement se range."},
+  {de: 'Recueillir → Organiser :', quoi: "chaque réponse écrite devient un élément à catégoriser, texte pour texte."},
+  {de: 'Organiser → Interpréter :', quoi: "les catégories deviennent les termes des séquences et des croisements."},
+  {de: 'Interpréter → Synthèse :', quoi: "les patterns et les paliers du vase rejoignent les chiffres du recueil."},
+  {de: 'Tout → Indice de confiance :', quoi: "la complétude du matériau produit dix critères, dont le niveau de détail du recueil."}
+];
+
+/* ── Le parcours, dessiné une fois ─────────────────────────────────────
+   En SVG comme tous les graphiques depuis la passe 33 : il s'exporte avec
+   les autres, et il reste lisible imprimé. */
+function renderParcours() {
+  const el = document.getElementById('parcours-contenu');
+  if (!el) return;
+  const etapes = [
+    {x: 40,  nom: 'Se connaître', sous: 'le préambule'},
+    {x: 196, nom: 'Recueillir',   sous: 'les évènements'},
+    {x: 352, nom: 'Organiser',    sous: 'les catégories'},
+    {x: 508, nom: 'Interpréter',  sous: 'les hypothèses'},
+    {x: 664, nom: 'Synthèse',     sous: 'la vue d\'ensemble'}
+  ];
+  const L = 136, H = 58, Y = 96;
+  const boite = (e) =>
+    '<rect x="' + e.x + '" y="' + Y + '" width="' + L + '" height="' + H + '" rx="9" ' +
+      'fill="var(--card)" stroke="var(--slate)" stroke-width="1.6"/>' +
+    '<text x="' + (e.x + L / 2) + '" y="' + (Y + 24) + '" text-anchor="middle" ' +
+      'font-size="14" font-weight="700" fill="var(--ink)">' + esc(e.nom) + '</text>' +
+    '<text x="' + (e.x + L / 2) + '" y="' + (Y + 42) + '" text-anchor="middle" ' +
+      'font-size="11.5" fill="var(--ink-soft)">' + esc(e.sous) + '</text>';
+  const fleche = (x1, x2, y) =>
+    '<line x1="' + x1 + '" y1="' + y + '" x2="' + (x2 - 7) + '" y2="' + y + '" ' +
+      'stroke="var(--slate)" stroke-width="1.6"/>' +
+    '<polygon points="' + x2 + ',' + y + ' ' + (x2 - 8) + ',' + (y - 4.5) + ' ' + (x2 - 8) + ',' + (y + 4.5) + '" fill="var(--slate)"/>';
+
+  const svg =
+    '<svg class="graphique" viewBox="0 0 840 300" xmlns="http://www.w3.org/2000/svg" role="img" ' +
+      'aria-label="Le parcours d\'une analyse fonctionnelle dans la BAF">' +
+    '<text x="420" y="26" text-anchor="middle" font-size="13" font-weight="700" ' +
+      'fill="var(--ink-soft)" letter-spacing="0.6">L\'ÉQUIPE</text>' +
+    etapes.map(boite).join('') +
+    etapes.slice(0, -1).map((e, i) => fleche(e.x + L, etapes[i + 1].x, Y + H / 2)).join('') +
+    // La boucle des déclarants, sous Recueillir
+    '<rect x="140" y="216" width="248" height="54" rx="9" fill="var(--sauge-pale)" ' +
+      'stroke="var(--sauge-deep)" stroke-width="1.6"/>' +
+    '<text x="264" y="238" text-anchor="middle" font-size="13.5" font-weight="700" ' +
+      'fill="var(--sauge-deep)">Familles, foyers, institutions</text>' +
+    '<text x="264" y="256" text-anchor="middle" font-size="11.5" fill="var(--ink-soft)">' +
+      'décrivent ce qu\'ils ont vu</text>' +
+    '<line x1="212" y1="' + (Y + H) + '" x2="212" y2="210" stroke="var(--sauge-deep)" ' +
+      'stroke-width="1.6" stroke-dasharray="5 4"/>' +
+    '<polygon points="212,216 207.5,208 216.5,208" fill="var(--sauge-deep)"/>' +
+    '<text x="222" y="188" font-size="11" fill="var(--sauge-deep)">le kit</text>' +
+    '<line x1="316" y1="216" x2="316" y2="' + (Y + H + 6) + '" stroke="var(--sauge-deep)" ' +
+      'stroke-width="1.6" stroke-dasharray="5 4"/>' +
+    '<polygon points="316,' + (Y + H) + ' 311.5,' + (Y + H + 8) + ' 320.5,' + (Y + H + 8) + '" fill="var(--sauge-deep)"/>' +
+    '<text x="326" y="188" font-size="11" fill="var(--sauge-deep)">la contribution</text>' +
+    // L'ICAF, à part
+    '<rect x="664" y="216" width="136" height="54" rx="9" fill="var(--paper-deep)" ' +
+      'stroke="var(--ink-soft)" stroke-width="1.4" stroke-dasharray="4 3"/>' +
+    '<text x="732" y="238" text-anchor="middle" font-size="13" font-weight="700" ' +
+      'fill="var(--ink)">Indice de confiance</text>' +
+    '<text x="732" y="256" text-anchor="middle" font-size="11.5" fill="var(--ink-soft)">' +
+      'cote le travail produit</text>' +
+    '<line x1="732" y1="' + (Y + H) + '" x2="732" y2="210" stroke="var(--ink-soft)" ' +
+      'stroke-width="1.4" stroke-dasharray="4 3"/>' +
+    '<polygon points="732,216 727.5,208 736.5,208" fill="var(--ink-soft)"/>' +
+    '</svg>';
+
+  el.innerHTML =
+    '<div class="card"><h5 class="parcours-titre">Le parcours d\'une analyse fonctionnelle</h5>' + svg + '</div>' +
+    '<div class="card">' +
+      '<h3 style="font-size:17px;margin-bottom:12px;">Ce qui circule d\'une étape à l\'autre</h3>' +
+      SITUER_ENCHAINEMENT.map(l =>
+        '<div class="parcours-ligne"><b>' + esc(l.de) + '</b> ' + esc(l.quoi) + '</div>').join('') +
+    '</div>' +
+    '<div class="ethique">' +
+      '<b>Rien ne se ressaisit d\'une étape à l\'autre.</b> Ce que vous écrivez une fois dans Recueillir ' +
+      'traverse tout l\'outil sans être retouché : Organiser le range, Interpréter le compte, la Synthèse ' +
+      'le met en forme. Si vous avez l\'impression de retaper quelque chose, c\'est qu\'il y a une erreur — ' +
+      'dites-le-nous.' +
+    '</div>';
+}
+
 /* ══════════════════════════════════════════════════════════════════════
    LE MODE DÉCLARANT
    ══════════════════════════════════════════════════════════════════════
