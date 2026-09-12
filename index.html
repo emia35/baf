@@ -55,6 +55,8 @@
   --hdr-text-faint: rgba(255,255,255,.55);
   --hdr-accent: var(--coral);
   --hdr-accent-text: #fff;
+  --hdr-outline: rgba(255,255,255,.16);
+  --hdr-fill: rgba(255,255,255,.06);
 }
 body.tool-baf{
   --hdr-bg: var(--coral);
@@ -63,6 +65,8 @@ body.tool-baf{
   --hdr-text-faint: rgba(61,79,107,.5);
   --hdr-accent: var(--slate);
   --hdr-accent-text: #fff;
+  --hdr-outline: rgba(61,79,107,.24);
+  --hdr-fill: rgba(255,255,255,.26);
 }
 body.tool-idc{
   --hdr-bg: var(--amber);
@@ -125,13 +129,27 @@ header.top{
   transition:background-color .2s, border-color .2s;
 }
 .idc-nav-btn.on{background:var(--hdr-accent);border-color:var(--hdr-accent);}
+/* Les barres de l'outil se consultent souvent en fenêtre réduite — moitié
+   d'écran. Plutôt que de rogner ou de replier, elles défilent latéralement.
+   Pas d'indice visuel : la barre de défilement est masquée, le geste suffit. */
+.barre-defilable{
+  overflow-x:auto;overflow-y:hidden;
+  scrollbar-width:none;-ms-overflow-style:none;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior-x:contain;
+}
+.barre-defilable::-webkit-scrollbar{display:none;}
+
 .top-inner{
   display:flex;align-items:center;gap:18px;
   padding:10px 24px;
   max-width:1080px;margin:0 auto;
   flex-wrap:nowrap;
-  overflow:hidden;
+  overflow-x:auto;overflow-y:hidden;
+  scrollbar-width:none;-ms-overflow-style:none;
 }
+.top-inner::-webkit-scrollbar{display:none;}
+.top-inner > *{flex-shrink:0;}
 @media(max-width:680px){
   .top-inner{flex-wrap:wrap;padding:10px 14px;}
 }
@@ -148,6 +166,7 @@ header.top{
 }
 .subbar-back{
   display:flex;align-items:center;gap:8px;
+  flex-shrink:0;white-space:nowrap;
   background:none;border:none;cursor:pointer;
   font-size:14px;font-weight:700;color:var(--slate);
   padding:4px 2px;
@@ -196,14 +215,10 @@ header.top{
 nav.main{
   display:flex;gap:4px;flex-wrap:nowrap;
   margin-left:10px;
-  flex:1;
-  overflow:hidden;
-}
-@media(max-width:680px){
-  nav.main{flex-wrap:wrap;}
+  flex:1 0 auto;
 }
 nav.main button{
-  background:none;border:1px solid transparent;
+  background:var(--hdr-fill);border:1px solid var(--hdr-outline);
   padding:7px 11px;
   font-size:14.5px;font-weight:600;
   color:var(--hdr-text-soft);
@@ -257,7 +272,7 @@ nav.main button.on{background:var(--hdr-accent);color:var(--hdr-accent-text);bor
    boutons de navigation et non celle des actions. */
 #global-nav-group{display:flex;gap:4px;align-items:center;}
 .nav-btn-ressource{
-  background:none;border:1px solid transparent;
+  background:var(--hdr-fill);border:1px solid var(--hdr-outline);
   padding:7px 11px;border-radius:8px;
   font-size:14.5px;font-weight:600;
   color:var(--hdr-text-soft);
@@ -606,15 +621,33 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
 }
 
 /* étapes formulaire évènement (stepper) */
-.stepper{display:flex;gap:4px;margin-bottom:24px;flex-wrap:wrap;}
+.stepper{
+  display:flex;gap:6px;margin-bottom:24px;flex-wrap:nowrap;
+  overflow-x:auto;overflow-y:hidden;
+  scrollbar-width:none;-ms-overflow-style:none;
+  padding-bottom:2px;
+}
+.stepper::-webkit-scrollbar{display:none;}
+.step-item{
+  flex:1 1 0;min-width:62px;
+  display:flex;flex-direction:column;gap:4px;
+  cursor:pointer;
+}
+.step-nom{
+  font-size:10px;font-weight:700;letter-spacing:.01em;
+  color:var(--ink-soft);text-align:center;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.step-item.current .step-nom{color:var(--ink);}
+.step-item.done .step-nom{color:var(--teal-deep);}
 .stepper .step-dot{
-  flex:1;min-width:18px;height:5px;border-radius:999px;
-  background:var(--line);cursor:pointer;
+  width:100%;height:5px;border-radius:999px;
+  background:var(--line);
   transition:transform .12s, background-color .12s;
 }
-.stepper .step-dot:hover{background:var(--hdr-accent);transform:scaleY(1.6);}
-.stepper .step-dot.done{background:var(--teal);}
-.stepper .step-dot.current{background:var(--coral);}
+.step-item:hover .step-dot{background:var(--hdr-accent);transform:scaleY(1.6);}
+.step-item.done .step-dot{background:var(--teal);}
+.step-item.current .step-dot{background:var(--coral);}
 
 .step-label{font-size:12px;color:var(--ink-soft);margin-bottom:18px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;}
 
@@ -637,12 +670,14 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
 .kpi-row{display:flex;gap:14px;flex-wrap:wrap;}
 .kpi{
   background:var(--paper);border:1px solid var(--line);border-radius:var(--radius-sm);
-  padding:15px 18px;text-align:center;min-width:120px;flex:1;
+  padding:15px 18px;text-align:center;min-width:120px;flex:1 1 140px;
 }
+/* Un nom de créneau maison peut être long (« Transition / rangement ») : en
+   fenêtre réduite il débordait de sa case. Il passe maintenant à la ligne. */
 .kpi .val{
   font-size:20px;font-weight:700;color:var(--ink);
-  line-height:1.2;
-  white-space:nowrap;
+  line-height:1.25;
+  overflow-wrap:anywhere;
 }
 .kpi .lbl{font-size:11.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin-top:3px;}
 .kpi .kpi-sub{font-size:11px;color:var(--ink-soft);font-style:italic;margin-top:4px;}
@@ -993,6 +1028,12 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   display:flex;gap:6px;flex-wrap:wrap;
   margin-bottom:20px;
 }
+.m3-tabs, .m4-tabs{
+  overflow-x:auto;overflow-y:hidden;flex-wrap:nowrap;
+  scrollbar-width:none;-ms-overflow-style:none;
+}
+.m3-tabs::-webkit-scrollbar, .m4-tabs::-webkit-scrollbar{display:none;}
+.m3-tab, .m4-tab{flex-shrink:0;}
 .m3-tab{
   background:var(--paper);
   border:1.5px solid var(--line);
@@ -1623,9 +1664,12 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
   margin-bottom:12px;
 }
 .synth-chart-block svg{display:block;margin:0 auto;}
+/* La légende s'étalait sur toute la largeur du bloc : le libellé à gauche, le
+   pourcentage à l'autre bout. Elle est ramenée sous le graphique, à sa largeur. */
 .synth-chart-legend{
   display:flex;flex-direction:column;gap:5px;
-  margin-top:10px;text-align:left;
+  margin:10px auto 0;text-align:left;
+  max-width:240px;
 }
 .synth-legend-item{
   display:flex;align-items:center;gap:7px;
@@ -2002,9 +2046,9 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
     <nav class="main" id="nav">
       <span id="baf-nav-group" style="display:none;">
         <button data-go="m1" class="nav-btn">Se connaître</button>
-        <button data-go="m2" class="nav-btn">① Recueillir</button>
-        <button data-go="m3" class="nav-btn">② Organiser</button>
-        <button data-go="m4" class="nav-btn">③ Interpréter</button>
+        <button data-go="m2" class="nav-btn">Recueillir</button>
+        <button data-go="m3" class="nav-btn">Organiser</button>
+        <button data-go="m4" class="nav-btn">Interpréter</button>
         <button data-go="synthese" class="nav-btn">Synthèse</button>
       </span>
       <span id="idc-nav-group" style="display:none;">
@@ -2462,18 +2506,6 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
       <div class="sub">Un comportement-défi est un comportement comme un autre — entouré de plein d'autres comportements. Certains font plus mal que d'autres, mais ici, on parle d'<b>évènements</b> : chaque entrée déclarative décrit une situation, qu'elle se rapporte à un ou plusieurs comportements-défis.</div>
     </div>
 
-    <div class="mode-toggle-bar no-print">
-      <span class="mode-label">Mode :</span>
-      <div class="mode-toggle-btns">
-        <button id="m2-btn-rapide" class="active" onclick="setMode('m2','rapide')">⚡ Rapide</button>
-        <button id="m2-btn-approfondi" onclick="setMode('m2','approfondi')">🔬 Approfondi</button>
-      </div>
-    </div>
-    <div id="m2-approfondi-panel" class="mode-approfondi-panel" style="display:none;">
-      <div class="ico-wip">🔬</div>
-      <h4>Mode approfondi — en construction</h4>
-      <p>Ce module enrichi sera disponible dans une prochaine version de la BAF.</p>
-    </div>
     <div id="m2-rapide-content">
     <div class="card" id="m2-intro-card">
       <p style="font-size:14px;color:var(--ink-soft);">Pour chaque évènement, on vous guide pas à pas — un peu comme si l'équipe de l'EMIA était face à vous et vous posait les questions, une à la fois. Le but : rester factuel, décrire ce qui s'est passé comme une caméra l'aurait filmé, sans chercher à interpréter ou analyser tout de suite. Ça viendra après.</p>
@@ -2525,18 +2557,6 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
       <div class="sub">Reprendre ce qui a été décrit dans le module 1 et l'associer à des catégories que <b>vous</b> définissez — pour faire apparaître des regroupements, sans rien figer. Pas de catégories imposées : vous créez les vôtres.</div>
     </div>
 
-    <div class="mode-toggle-bar no-print">
-      <span class="mode-label">Mode :</span>
-      <div class="mode-toggle-btns">
-        <button id="m3-btn-rapide" class="active" onclick="setMode('m3','rapide')">⚡ Rapide</button>
-        <button id="m3-btn-approfondi" onclick="setMode('m3','approfondi')">🔬 Approfondi</button>
-      </div>
-    </div>
-    <div id="m3-approfondi-panel" class="mode-approfondi-panel" style="display:none;">
-      <div class="ico-wip">🔬</div>
-      <h4>Mode approfondi — en construction</h4>
-      <p>Ce module enrichi sera disponible dans une prochaine version de la BAF.</p>
-    </div>
     <div id="m3-rapide-content">
     <!-- Onglets des 5 sous-modules -->
     <div class="m3-tabs" id="m3-tabs"></div>
@@ -2589,18 +2609,6 @@ body.tool-idc .scrolltop-btn{background:var(--m1);}
       <div class="sub">À partir de ce que vous avez organisé, vous pouvez maintenant proposer des patterns — pas pour conclure définitivement, mais pour <b>donner à voir ce que vous, vous repérez</b>. Ce matériau sera discuté avec un clinicien.</div>
     </div>
 
-    <div class="mode-toggle-bar no-print">
-      <span class="mode-label">Mode :</span>
-      <div class="mode-toggle-btns">
-        <button id="m4-btn-rapide" class="active" onclick="setMode('m4','rapide')">⚡ Rapide</button>
-        <button id="m4-btn-approfondi" onclick="setMode('m4','approfondi')">🔬 Approfondi</button>
-      </div>
-    </div>
-    <div id="m4-approfondi-panel" class="mode-approfondi-panel" style="display:none;">
-      <div class="ico-wip">🔬</div>
-      <h4>Mode approfondi — en construction</h4>
-      <p>Ce module enrichi sera disponible dans une prochaine version de la BAF.</p>
-    </div>
     <div id="m4-rapide-content">
     <!-- Onglets des 3 sous-modules -->
     <div class="m4-tabs" id="m4-tabs">
@@ -3117,11 +3125,12 @@ function route(name, fromHistory){
   document.body.classList.toggle('tool-idc', isIdc);
 
   // Barre fixe sous le header : flèche retour + export, propre à chaque outil
-  const dansOutil1 = ['m1','m2','m2-form','m3','m4','synthese'].includes(name);
-  const dansOutil2 = (name === 'idc-main');
+  const dansOutil1 = ['baf-accueil','m1','m2','m2-form','m3','m4','synthese'].includes(name);
+  const dansOutil2 = ['idc-accueil','idc-main'].includes(name);
+  const surAccueilOutil = (name === 'baf-accueil' || name === 'idc-accueil');
   const subbar = document.getElementById('tool-subbar');
   if(subbar) subbar.style.display = (dansOutil1 || dansOutil2) ? '' : 'none';
-  if(dansOutil1 || dansOutil2) majBarreDossier(dansOutil2 ? 'idc' : 'baf');
+  if(dansOutil1 || dansOutil2) majBarreDossier(dansOutil2 ? 'idc' : 'baf', surAccueilOutil);
   syncHeaderHeight();
 
   // Historique navigateur : le bouton "précédent" doit naviguer dans l\'outil,
@@ -3147,11 +3156,17 @@ function route(name, fromHistory){
    pas de notion de fichier ouvert, on retient le nom du fichier importé. */
 let outilCourant = 'baf';
 
-function majBarreDossier(outil) {
+// surAccueilOutil : on est déjà sur l'accueil de l'outil, la flèche ramène
+// alors à l'accueil général plutôt que sur la page où l'on se trouve.
+let subbarSurAccueilOutil = false;
+function majBarreDossier(outil, surAccueilOutil) {
   outilCourant = outil;
+  subbarSurAccueilOutil = !!surAccueilOutil;
   const label = document.getElementById('subbar-retour-label');
   const zone = document.getElementById('subbar-dossier');
-  if (label) label.textContent = outil === 'idc' ? 'Accueil indice de confiance' : 'Accueil recueil des données';
+  if (label) label.textContent = subbarSurAccueilOutil
+    ? 'Accueil général'
+    : (outil === 'idc' ? 'Accueil indice de confiance' : 'Accueil recueil des données');
   if (!zone) return;
 
   if (outil === 'idc') {
@@ -3177,6 +3192,7 @@ function majBarreDossier(outil) {
 }
 
 function retourAccueilOutil() {
+  if (subbarSurAccueilOutil) { route('accueil'); return; }
   route(outilCourant === 'idc' ? 'idc-accueil' : 'baf-accueil');
 }
 function exporterDossierCourant() {
@@ -4175,7 +4191,7 @@ function majTension(actuel, cle) {
 const ETAPES = [
   {
     id: 'declarant',
-    label: 'Qui déclare ?',
+    label: 'Qui déclare ?', court: 'Déclarant',
     render: (d) => `
       <div class="card">
         <div class="field">
@@ -4257,7 +4273,7 @@ const ETAPES = [
   },
   {
     id: 'contexte',
-    label: 'Contexte',
+    label: 'Contexte', court: 'Contexte',
     render: (d) => `
       <div class="card">
         <div style="background:var(--teal-pale);border-left:3px solid var(--teal);padding:13px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;">
@@ -4290,7 +4306,7 @@ const ETAPES = [
   },
   {
     id: 'comportement',
-    label: 'Comportement (B)',
+    label: 'Comportement (B)', court: 'Comportement',
     render: (d) => `
       <div class="card">
         <div style="background:var(--coral-pale);border-left:3px solid var(--coral);padding:13px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;">
@@ -4322,7 +4338,7 @@ const ETAPES = [
   },
   {
     id: 'antecedent',
-    label: 'Antécédent (A)',
+    label: 'Antécédent (A)', court: 'Antécédent',
     render: (d) => {
       const antecedents = (d.antecedents && d.antecedents.length)
         ? d.antecedents
@@ -4357,7 +4373,7 @@ const ETAPES = [
   },
   {
     id: 'intervention',
-    label: "Intervention de l’entourage",
+    label: "Intervention de l’entourage", court: 'Intervention',
     render: (d) => {
       const interventions = (d.interventions && d.interventions.length) ? d.interventions : [{id:'iv_'+Date.now(), texte:'', effet:'', precision:'', cdPostIntervention:''}];
       return `
@@ -4396,7 +4412,7 @@ const ETAPES = [
   },
   {
     id: 'consequence',
-    label: 'Conséquence pour la personne (C)',
+    label: 'Conséquence pour la personne (C)', court: 'Conséquence',
     render: (d) => `
       <div class="card">
         <div style="background:var(--amber-pale);border-left:3px solid var(--amber);padding:13px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;">
@@ -4424,7 +4440,7 @@ const ETAPES = [
   },
   {
     id: 'recap',
-    label: 'Récapitulatif',
+    label: 'Récapitulatif', court: 'Récapitulatif',
     render: (d) => {
       const prenom = state.m1.prenom || 'la personne';
       return `
@@ -4604,8 +4620,8 @@ function renderInterventionBlock(iv, i, total) {
         <textarea id="f-inter-precision-${i}" style="min-height:56px;" placeholder="ex : apaisement progressif sur 15 min, puis rebond verbal.">${esc(iv.precision||'')}</textarea>
       </div>
       <div class="field" id="f-inter-cdpost-wrap-${i}" style="display:${needsCdPost?'':'none'};">
-        <label for="f-inter-cdpost-${i}">Décrivez le nouveau comportement observé après cette intervention</label>
-        <div class="help">Ce comportement sera repéré comme un CD distinct (« post-intervention ») dans le module Organiser — la réponse a elle-même produit un nouveau comportement-défi à analyser.</div>
+        <label for="f-inter-cdpost-${i}">Si un nouveau CD apparaît, décrivez-le</label>
+        <div class="help">Il sera automatiquement consigné comme CD post-intervention dans le module Organiser : la réponse a elle-même produit un nouveau comportement-défi à analyser.</div>
         <textarea id="f-inter-cdpost-${i}" style="min-height:56px;" placeholder="ex : est passé des cris à des coups contre le mur.">${esc(iv.cdPostIntervention||'')}</textarea>
       </div>
       ${vaseWidget('iv' + i, iv.tension,
@@ -4726,6 +4742,26 @@ function creneauDuMoment(momentLabel) {
     if (exact) return exact;
   }
   return candidats[0];
+}
+
+// Créneau de la journée type qui contient une heure donnée. Renvoie '' si
+// aucun ne la contient — on ne force alors aucune suggestion.
+function momentDeLHeure(heure) {
+  const enMinutes = (s) => {
+    const m = (s||'').match(/(\d{1,2})[h:](\d{2})/);
+    return m ? parseInt(m[1],10)*60 + parseInt(m[2],10) : null;
+  };
+  const h = enMinutes(heure);
+  if (h === null) return '';
+  const creneaux = (state.m1 && state.m1.journeeCreneaux) || [];
+  for (const c of creneaux) {
+    const d = enMinutes(c.debut), f = enMinutes(c.fin);
+    if (d === null || f === null) continue;
+    // Un créneau de nuit enjambe minuit : la fin est « avant » le début.
+    const dedans = (d <= f) ? (h >= d && h <= f) : (h >= d || h <= f);
+    if (dedans) return c.nom;
+  }
+  return '';
 }
 
 function verifierCoherenceHeureMoment() {
@@ -4861,9 +4897,14 @@ function ouvrirFormulaireEvenement(idx) {
     formDraft = Object.assign({}, state.m2.evenements[formEditIdx]);
   } else {
     formDraft = {};
-    // Le pro pressé note souvent l'évènement le jour même : on pré-remplit,
-    // la date reste évidemment modifiable.
-    formDraft.date = new Date().toISOString().slice(0,10);
+    // Le pro pressé note souvent l'évènement le jour même, peu après : on
+    // propose la date, l'heure courante et le créneau de la journée type qui
+    // la contient. Tout reste modifiable — c'est une amorce, pas une mesure.
+    const maintenant = new Date();
+    formDraft.date = maintenant.toISOString().slice(0,10);
+    formDraft.heure = String(maintenant.getHours()).padStart(2,'0') + ':' + String(maintenant.getMinutes()).padStart(2,'0');
+    const suggere = momentDeLHeure(formDraft.heure);
+    if (suggere) formDraft.moment = suggere;
   }
   currentEtapeIdx = 0;
   document.getElementById('m2form-titre').textContent =
@@ -4880,7 +4921,10 @@ function renderEtape(idx) {
   const stepper = document.getElementById('form-stepper');
   stepper.innerHTML = ETAPES.map((e, i) => {
     let cls = i < idx ? 'done' : i === idx ? 'current' : '';
-    return `<div class="step-dot ${cls}" onclick="aller(${i})" title="Aller à : ${esc(e.label)}"></div>`;
+    return `<div class="step-item ${cls}" role="button" tabindex="0" onclick="aller(${i})" title="Aller à : ${esc(e.label)}">
+      <div class="step-nom">${esc(e.court || e.label)}</div>
+      <div class="step-dot"></div>
+    </div>`;
   }).join('');
 
   // Label d\'étape
@@ -5090,28 +5134,23 @@ function libelleSemaine(d) {
 }
 
 /* ── Mise à jour des stats en synthèse ─────────────────────── */
-function fitKpiText(el, maxPx, minPx){
+/* Un nom de créneau maison peut être long (« Transition / rangement du matin »).
+   L'ancienne version forçait le texte sur une seule ligne et réduisait la police
+   jusqu'à 10 px : en dessous d'une certaine largeur elle atteignait ce plancher
+   et le texte débordait quand même — et comme l'ajustement se faisait dans un
+   requestAnimationFrame, il ne se jouait pas du tout quand l'onglet ne dessinait
+   pas. On laisse maintenant le texte passer à la ligne et on choisit la taille
+   d'après sa longueur : déterministe, sans reflow, et jamais illisible. */
+function fitKpiText(el, maxPx){
   if(!el) return;
-  maxPx = maxPx || 20;
-  minPx = minPx || 10;
-  el.style.whiteSpace = 'nowrap';
-  el.style.fontSize = maxPx + 'px';
-  // Lire scrollWidth force un reflow synchrone ; on réduit jusqu'à ce que le texte tienne
-  const adjust = () => {
-    let size = maxPx;
-    el.style.fontSize = size + 'px';
-    let guard = 0;
-    while (el.scrollWidth > el.clientWidth && size > minPx && guard < 40) {
-      size -= 0.5;
-      el.style.fontSize = size + 'px';
-      guard++;
-    }
-  };
-  if (typeof requestAnimationFrame === 'function') {
-    requestAnimationFrame(adjust);
-  } else {
-    adjust();
-  }
+  const n = (el.textContent || '').trim().length;
+  const base = maxPx || 20;
+  let taille = base;
+  if (n > 28) taille = Math.max(13, base - 6.5);
+  else if (n > 18) taille = Math.max(14.5, base - 5);
+  else if (n > 11) taille = Math.max(16, base - 3);
+  el.style.whiteSpace = 'normal';
+  el.style.fontSize = taille + 'px';
 }
 
 // ─── Utilitaire : normaliser un libellé de moment ─────────────
