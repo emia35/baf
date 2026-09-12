@@ -1166,6 +1166,46 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
 }
 .m3-item-cat-badge:hover{background:var(--ocre-deep);}
 
+/* Catégories proposées : une base de départ, jamais créée d'office. */
+.cats-suggerees{
+  background:var(--paper);border:1.5px dashed var(--line);
+  border-radius:var(--radius-sm);padding:11px 13px;margin-bottom:12px;
+}
+.cats-suggerees .cs-titre{
+  font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+  color:var(--ink-soft);margin-bottom:4px;
+}
+.cats-suggerees .cs-aide{font-size:12px;color:var(--ink-soft);line-height:1.5;margin-bottom:8px;}
+.cats-suggerees .cs-liste{display:flex;flex-wrap:wrap;gap:6px;}
+.cs-chip{
+  background:var(--card);border:1px solid var(--line);border-radius:999px;
+  font-family:inherit;font-size:12px;font-weight:600;color:var(--ink);
+  padding:4px 11px;cursor:pointer;
+  transition:border-color .14s,background .14s;
+}
+.cs-chip:hover{border-color:var(--slate);background:var(--paper-deep);}
+.cs-chip .cs-plus{color:var(--ink-soft);font-weight:700;margin-right:3px;}
+
+/* Ce que les données suggèrent — du texte, pas un formulaire pré-rempli. */
+.suggestions-patterns{
+  background:var(--paper);border:1.5px solid var(--line);
+  border-left:4px solid var(--slate);
+  border-radius:0 var(--radius-sm) var(--radius-sm) 0;
+  padding:14px 17px;margin-bottom:16px;
+}
+.suggestions-patterns h5{font-size:13.5px;margin:0 0 4px;color:var(--ink);}
+.suggestions-patterns .sp-avert{font-size:12px;color:var(--ink-soft);line-height:1.55;margin-bottom:11px;}
+.sp-item{
+  font-size:13.5px;color:var(--ink);line-height:1.6;
+  padding:9px 0;border-top:1px solid var(--line-soft);
+}
+.sp-item:first-of-type{border-top:none;}
+.sp-item b{font-weight:700;}
+.sp-chiffre{
+  display:inline-block;background:var(--paper-deep);border-radius:4px;
+  padding:0 5px;font-weight:700;font-size:12.5px;
+}
+
 /* ── Mode rapide / détaillé, étape par étape ─────────────────────────
    Le déclarant pressé écrit une case par étape ; celui qui a le temps déroule
    les questions. On peut mélanger : une étape en rapide, la suivante en
@@ -1935,6 +1975,21 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
   background:var(--paper-deep);border-radius:var(--radius-sm);
   font-size:12px;font-style:italic;color:var(--ink-soft);
 }
+.explorer-croisement{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
+}
+@media(max-width:800px){.explorer-croisement{grid-template-columns:1fr;}}
+.explorer-croisement select{
+  width:100%;padding:9px 11px;border:1.5px solid var(--line);
+  border-radius:var(--radius-sm);background:var(--paper);
+  font-family:inherit;font-size:13.5px;color:var(--ink);cursor:pointer;
+}
+.explorer-croisement select:focus{outline:none;border-color:var(--slate);}
+.explorer-entonnoir{
+  font-size:12.5px;color:var(--ink-soft);line-height:1.6;
+  background:var(--paper-deep);border-radius:6px;padding:9px 12px;margin-bottom:10px;
+}
+.explorer-entonnoir b{color:var(--ink);}
 #explorer-terme{
   width:100%;padding:10px 13px;
   border:1.5px solid var(--line);border-radius:var(--radius-sm);
@@ -2692,6 +2747,7 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
             <span class="m3-col-title">Catégories</span>
           </div>
           <div class="help" style="margin-bottom:12px;">Créez vos propres catégories. Pas de bonne réponse — juste ce qui vous semble faire sens pour cette personne.</div>
+          <div id="m3-cats-suggestions"></div>
           <div id="m3-cats-list"></div>
           <button class="btn btn-secondary btn-sm" style="margin-top:10px;width:100%;" onclick="ajouterCategorie()">+ Ajouter une catégorie</button>
         </div>
@@ -2728,6 +2784,7 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
         <b>Un pattern, c'est une séquence qui se répète.</b> À partir des catégories que vous avez créées dans le module 2, composez une ou plusieurs séquences <b>A → B → C</b> qui vous semblent récurrentes. Ce n'est pas une certitude — c'est une hypothèse de lecture, à prendre au conditionnel. Vous pouvez en proposer plusieurs.
       </div>
       <div id="m4-legende"></div>
+      <div id="m4-suggestions"></div>
       <div class="abc-patterns-list" id="abc-patterns-list"></div>
       <button class="abc-add-btn" onclick="ajouterPattern()">+ Proposer un nouveau pattern</button>
     </div>
@@ -2815,12 +2872,22 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
     <!-- EXPLORER -->
     <div id="m4-sous-explorer" style="display:none;">
       <div class="abc-intro">
-        <b>Se promener dans les données.</b> Choisissez un élément — un comportement, un antécédent, un jour, un moment — et l'outil recalcule tout ce qu'il sait autour de lui : ce qui l'accompagne, quand il arrive, ce qui suit. Rien n'est enregistré ici, c'est un tableau de bord de lecture.
+        <b>Se promener dans les données.</b> Choisissez un élément — un comportement, un antécédent, un jour, un moment — et l'outil recalcule tout ce qu'il sait autour de lui : ce qui l'accompagne, quand il arrive, ce qui suit. Vous pouvez en croiser jusqu'à trois : l'outil ne garde alors que les évènements qui les réunissent tous. Rien n'est enregistré ici, c'est un tableau de bord de lecture.
       </div>
       <div class="card">
-        <div class="field" style="margin-bottom:0;">
-          <label for="explorer-terme">Explorer autour de…</label>
-          <select id="explorer-terme" onchange="renderExploration()"></select>
+        <div class="explorer-croisement">
+          <div class="field" style="margin-bottom:0;">
+            <label for="explorer-terme">Explorer autour de…</label>
+            <select id="explorer-terme" onchange="renderExploration()"></select>
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label for="explorer-terme2">et en même temps (facultatif)</label>
+            <select id="explorer-terme2" onchange="renderExploration()"></select>
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label for="explorer-terme3">et encore (facultatif)</label>
+            <select id="explorer-terme3" onchange="renderExploration()"></select>
+          </div>
         </div>
       </div>
       <div id="explorer-resultat"></div>
@@ -7329,6 +7396,74 @@ function legendeVolets(titre) {
     ).join('') + '</div>';
 }
 
+/* ── Catégories proposées ──────────────────────────────────────────────
+   Une base de départ tirée de la littérature, pour une équipe qui n'a pas
+   l'habitude de catégoriser. Rien n'est créé d'office : on clique ce qu'on
+   veut, on renomme, on supprime. Une catégorie déjà présente disparaît de la
+   liste. Ce sont des amorces, pas une nomenclature. */
+const CATEGORIES_SUGGEREES = {
+  cp: {
+    aide: "Des familles de comportements couramment décrites. À reprendre, renommer ou ignorer — la bonne catégorie est celle qui fait sens pour cette personne.",
+    liste: ['Auto-agressivité', 'Hétéro-agressivité', "Agressivité sur l'environnement et les objets",
+            'Agitation psychomotrice', 'Stéréotypies envahissantes', 'Retrait et repli',
+            'Opposition verbale', 'Fugue et départ']
+  },
+  antecedents: {
+    aide: "Ce qui précède le plus souvent un comportement-défi. Le contexte lointain et l'antécédent immédiat se rangent ici tous les deux.",
+    liste: ['Consigne ou demande', "Transition ou fin d'activité", 'Attente sans repère',
+            'Surcharge sensorielle', 'Douleur ou état somatique',
+            "Modification de l'environnement social", "Frustration d'un accès"]
+  },
+  consequences: {
+    aide: "Les quatre fonctions classiquement décrites en analyse fonctionnelle. Un même comportement peut en servir plusieurs à la fois, et dans le même contexte — n'hésitez pas à en assigner deux.",
+    liste: ["Obtient de l'attention", 'Échappe ou évite', 'Obtient un objet ou une activité',
+            'Auto-stimulation sensorielle']
+  },
+  interventions: {
+    aide: "Les réponses de l'entourage les plus fréquentes. Y compris « ne rien faire », qui est une intervention et qui se lit dans les données.",
+    liste: ['Verbalisation', 'Rappel du cadre', 'Retrait proposé', 'Contenance physique',
+            'Relais de professionnel', 'Ne rien faire', 'Retrait de la demande']
+  }
+};
+
+// Une suggestion déjà créée — quel que soit le nom exact, à la casse et aux
+// accents près — ne se propose plus.
+function normaliserNomCat(n) {
+  return (n || '').toString().trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+function suggestionsRestantes(sousId) {
+  const conf = CATEGORIES_SUGGEREES[sousId];
+  if (!conf) return null;
+  ensureM3();
+  const existants = new Set(
+    Object.values(state.m3.categories[sousId] || {}).map(c => normaliserNomCat(c && c.nom))
+  );
+  const liste = conf.liste.filter(n => !existants.has(normaliserNomCat(n)));
+  return liste.length ? {aide: conf.aide, liste} : null;
+}
+function blocSuggestionsCats(sousId) {
+  const sug = suggestionsRestantes(sousId);
+  if (!sug) return '';
+  return '<div class="cats-suggerees no-print">' +
+    '<div class="cs-titre">Pour démarrer</div>' +
+    '<div class="cs-aide">' + esc(sug.aide) + '</div>' +
+    '<div class="cs-liste">' + sug.liste.map(n =>
+      '<button type="button" class="cs-chip" onclick="creerCategorieSuggeree(\'' + sousId + '\', this.dataset.nom)" data-nom="' + esc(n) + '">' +
+      '<span class="cs-plus">+</span>' + esc(n) + '</button>'
+    ).join('') + '</div></div>';
+}
+function creerCategorieSuggeree(sousId, nom) {
+  ensureM3();
+  const cats = state.m3.categories[sousId];
+  const idx = Object.keys(cats).length;
+  const catId = 'cat_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+  cats[catId] = {nom: nom, color: catColorFor(idx), items: []};
+  persist();
+  renderM3Sous(sousId);
+  renderM3Tabs();
+}
+
 const M3_SOUS = [
   {
     id: 'cp',
@@ -7605,6 +7740,8 @@ function renderM3Sous(sousId) {
   }
 
   // ── Colonne droite : catégories ─────────────────────────────────
+  const sugEl = document.getElementById('m3-cats-suggestions');
+  if (sugEl) sugEl.innerHTML = blocSuggestionsCats(sousId);
   const catsEl = document.getElementById('m3-cats-list');
   const racines = catsRacines(sousId);
 
@@ -8016,10 +8153,142 @@ function ensureM4() {
   });
 }
 
+/* ── Ce que les données suggèrent ──────────────────────────────────────
+   L'outil relit la catégorisation et écrit, en toutes lettres, les séquences
+   qui reviennent. Il n'en remplit aucune : composer un pattern est un acte
+   clinique, il revient à la personne qui cote. Ce sont des co-occurrences
+   observées dans du déclaratif, pas des causes — et un taux élevé peut tenir
+   sur trois évènements, ce qui est dit à chaque fois. */
+const SUGG_MIN_OCCURRENCES = 3;   // en deçà, on compte des cas, pas une tendance
+const SUGG_ECART_MIN = 1.3;       // 30 % plus fréquent qu'à l'ordinaire
+const SUGG_MAX_PHRASES = 6;
+
+function statsCategories() {
+  ensureM3();
+  const evts = state.m2.evenements || [];
+  const nA = {}, nB = {}, nC = {}, nAB = {}, nBC = {}, nABC = {};
+  let categorises = 0, evtA = 0, evtB = 0, evtC = 0;
+  evts.forEach(evt => {
+    if (!evt.id) return;
+    const A = catsDeEvt('antecedents', evt.id);
+    const B = catsDeEvt('cp', evt.id);
+    const C = catsDeEvt('consequences', evt.id);
+    if (A.length || B.length || C.length) categorises++;
+    if (A.length) evtA++;
+    if (B.length) evtB++;
+    if (C.length) evtC++;
+    A.forEach(a => { nA[a] = (nA[a] || 0) + 1; });
+    B.forEach(x => { nB[x] = (nB[x] || 0) + 1; });
+    C.forEach(c => { nC[c] = (nC[c] || 0) + 1; });
+    A.forEach(a => B.forEach(x => { const k = a + '\u00a6' + x; nAB[k] = (nAB[k] || 0) + 1; }));
+    B.forEach(x => C.forEach(c => { const k = x + '\u00a6' + c; nBC[k] = (nBC[k] || 0) + 1; }));
+    A.forEach(a => B.forEach(x => C.forEach(c => {
+      const k = a + '\u00a6' + x + '\u00a6' + c; nABC[k] = (nABC[k] || 0) + 1;
+    })));
+  });
+  return {nA, nB, nC, nAB, nBC, nABC, categorises, evtA, evtB, evtC, total: evts.length};
+}
+
+/* Un taux brut ne dit rien tout seul : « 50 % » n'a de sens que comparé à ce
+   que fait cette catégorie d'ordinaire. On ne signale donc un lien que s'il
+   est nettement plus fréquent après tel antécédent qu'en moyenne, et on donne
+   toujours les deux chiffres pour que la comparaison soit vérifiable. */
+function reserveEffectif(n) {
+  return n < 5 ? ' <i>Sur un effectif aussi faible, c\'est une piste, pas une tendance.</i>' : '';
+}
+
+function suggestionsPatterns() {
+  const st = statsCategories();
+  const phrases = [];
+  const pct = (x, y) => y > 0 ? Math.round(x / y * 100) : 0;
+  const ch = (t) => '<span class="sp-chiffre">' + t + '</span>';
+
+  // 1. Liens antécédent → comportement plus marqués qu'à l'ordinaire
+  Object.keys(st.nAB)
+    .map(k => {
+      const [a, x] = k.split('\u00a6');
+      const cond = st.nAB[k] / st.nA[a];
+      const base = st.nB[x] / (st.evtB || 1);
+      return {a, b: x, n: st.nAB[k], nA: st.nA[a], cond, base, ecart: base > 0 ? cond / base : 0};
+    })
+    .filter(p => p.n >= SUGG_MIN_OCCURRENCES && p.ecart >= SUGG_ECART_MIN)
+    .sort((p, q) => (q.cond - q.base) * q.n - (p.cond - p.base) * p.n)
+    .slice(0, 2)
+    .forEach(p => {
+      phrases.push('Après <b>' + esc(p.a) + '</b> (' + ch(p.nA + ' évènement' + (p.nA > 1 ? 's' : '')) +
+        '), le comportement <b>' + esc(p.b) + '</b> apparaît ' + ch(p.n + ' fois') +
+        ', soit ' + ch(pct(p.n, p.nA) + ' %') + ' — contre ' + ch(Math.round(p.base * 100) + ' %') +
+        ' en moyenne sur l\'ensemble des évènements.' + reserveEffectif(p.nA));
+    });
+
+  // 2. Liens comportement → conséquence : c'est là que la fonction se lit
+  Object.keys(st.nBC)
+    .map(k => {
+      const [x, c] = k.split('\u00a6');
+      const cond = st.nBC[k] / st.nB[x];
+      const base = st.nC[c] / (st.evtC || 1);
+      return {b: x, c, n: st.nBC[k], nB: st.nB[x], cond, base, ecart: base > 0 ? cond / base : 0};
+    })
+    .filter(p => p.n >= SUGG_MIN_OCCURRENCES && p.ecart >= SUGG_ECART_MIN)
+    .sort((p, q) => (q.cond - q.base) * q.n - (p.cond - p.base) * p.n)
+    .slice(0, 2)
+    .forEach(p => {
+      phrases.push('<b>' + esc(p.b) + '</b> (' + ch(p.nB + ' évènement' + (p.nB > 1 ? 's' : '')) +
+        ') débouche sur <b>' + esc(p.c) + '</b> ' + ch(p.n + ' fois') + ', soit ' +
+        ch(pct(p.n, p.nB) + ' %') + ' — contre ' + ch(Math.round(p.base * 100) + ' %') +
+        ' en moyenne. C\'est le lien qui oriente la lecture de la fonction.' + reserveEffectif(p.nB));
+    });
+
+  // 3. La séquence complète la plus fréquente, sans seuil de taux : ce qui
+  //    compte ici est qu'elle revienne, et le taux est donné pour le relativiser.
+  Object.keys(st.nABC)
+    .map(k => { const [a, x, c] = k.split('\u00a6'); return {a, b: x, c, n: st.nABC[k]}; })
+    .filter(t => t.n >= SUGG_MIN_OCCURRENCES)
+    .sort((p, q) => q.n - p.n)
+    .slice(0, 2)
+    .forEach((t, rang) => {
+      phrases.push((rang === 0 ? 'Séquence complète la plus fréquente' : 'Autre séquence complète récurrente') + ' : <b>' + esc(t.a) + '</b> → <b>' +
+        esc(t.b) + '</b> → <b>' + esc(t.c) + '</b>, observée ' + ch(t.n + ' fois') +
+        '. Sur les ' + ch(st.nA[t.a] + ' évènements') + ' où <b>' + esc(t.a) +
+        '</b> est noté, cela représente ' + ch(pct(t.n, st.nA[t.a]) + ' %') + '.' + reserveEffectif(st.nA[t.a]));
+    });
+
+  // 4. Une conséquence nettement dominante cadre la lecture de l'ensemble.
+  const domC = Object.keys(st.nC).map(c => ({c, n: st.nC[c]})).sort((p, q) => q.n - p.n)[0];
+  if (domC && st.evtC >= 8 && domC.n / st.evtC >= 0.4) {
+    phrases.push('Toutes séquences confondues, <b>' + esc(domC.c) + '</b> est la conséquence notée dans ' +
+      ch(pct(domC.n, st.evtC) + ' %') + ' des évènements catégorisés (' + ch(domC.n + ' sur ' + st.evtC) +
+      '). Une conséquence aussi présente mérite d\'être interrogée en premier.');
+  }
+
+  const vues = new Set();
+  const uniques = phrases.filter(p => { if (vues.has(p)) return false; vues.add(p); return true; });
+  return {phrases: uniques.slice(0, SUGG_MAX_PHRASES), stats: st};
+}
+
+function blocSuggestionsPatterns() {
+  const {phrases, stats} = suggestionsPatterns();
+  const entete = '<h5>Ce que les données suggèrent</h5>';
+  if (!phrases.length) {
+    let manque;
+    if (stats.total < 5) manque = 'Il faut au moins cinq évènements pour que des régularités aient un sens.';
+    else if (stats.categorises < 5) manque = 'Trop peu d\'évènements sont catégorisés dans Organiser : c\'est la catégorisation qui rend les régularités calculables.';
+    else manque = 'Aucun lien ne se détache pour l\'instant : rien qui revienne au moins ' + SUGG_MIN_OCCURRENCES + ' fois et nettement plus souvent qu\'à l\'ordinaire. Continuez le recueil, ou affinez la catégorisation.';
+    return '<div class="suggestions-patterns">' + entete +
+      '<div class="sp-avert">' + manque + '</div></div>';
+  }
+  return '<div class="suggestions-patterns">' + entete +
+    '<div class="sp-avert">L\'outil a relu votre catégorisation et compté ce qui revient. Ce sont des <b>co-occurrences observées dans du déclaratif, pas des causes</b> : un taux élevé peut reposer sur trois évènements, et le nombre compte autant que le pourcentage. Rien n\'est rempli à votre place — c\'est à vous de décider si une séquence fait un pattern.</div>' +
+    phrases.map(p => '<div class="sp-item">' + p + '</div>').join('') +
+  '</div>';
+}
+
 function renderM4() {
   ensureM4();
   const leg = document.getElementById('m4-legende');
   if (leg) leg.innerHTML = legendeVolets('Code couleur des volets');
+  const sug = document.getElementById('m4-suggestions');
+  if (sug) sug.innerHTML = blocSuggestionsPatterns();
   changerSousM4(state.m4.sous || 'pattern');
   renderPatterns();
   renderGradations();
@@ -8065,23 +8334,46 @@ function termesExploration() {
   return termes;
 }
 
+const EXPLORER_SELECTS = ['explorer-terme', 'explorer-terme2', 'explorer-terme3'];
+
 function remplirTermesExploration() {
-  const sel = document.getElementById('explorer-terme');
-  if (!sel) return;
+  const premier = document.getElementById('explorer-terme');
+  if (!premier) return;
   const termes = termesExploration();
-  const choix = sel.value;
   if (!termes.length) {
-    sel.innerHTML = '<option value="">— catégorisez d\'abord des éléments dans Organiser —</option>';
+    EXPLORER_SELECTS.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = '<option value="">— catégorisez d\'abord des éléments dans Organiser —</option>';
+    });
     document.getElementById('explorer-resultat').innerHTML = '';
     return;
   }
   const groupes = {};
   termes.forEach(t => { (groupes[t.groupe] = groupes[t.groupe] || []).push(t); });
-  sel.innerHTML = '<option value="">— choisir un élément —</option>' +
-    Object.entries(groupes).map(([g, liste]) =>
-      `<optgroup label="${esc(g)}">${liste.map(t => `<option value="${esc(t.cle)}" ${t.cle===choix?'selected':''}>${esc(t.libelle)}</option>`).join('')}</optgroup>`
-    ).join('');
-  if (choix) renderExploration();
+  EXPLORER_SELECTS.forEach((id, i) => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const choix = sel.value;
+    const vide = i === 0 ? '— choisir un élément —' : '— aucun —';
+    sel.innerHTML = '<option value="">' + vide + '</option>' +
+      Object.entries(groupes).map(([g, liste]) =>
+        `<optgroup label="${esc(g)}">${liste.map(t => `<option value="${esc(t.cle)}" ${t.cle===choix?'selected':''}>${esc(t.libelle)}</option>`).join('')}</optgroup>`
+      ).join('');
+  });
+  if (premier.value) renderExploration();
+}
+
+// Les termes retenus, sans doublon et sans case vide.
+function termesChoisisExploration() {
+  const vus = new Set();
+  const out = [];
+  EXPLORER_SELECTS.forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel || !sel.value || vus.has(sel.value)) return;
+    vus.add(sel.value);
+    out.push({cle: sel.value, libelle: sel.options[sel.selectedIndex].text});
+  });
+  return out;
 }
 
 // Les évènements concernés par un terme
@@ -8104,12 +8396,13 @@ function evenementsPourTerme(cle) {
 }
 
 // Ce qui accompagne le plus souvent ces évènements, volet par volet
-function voisinagePourTerme(sousEnsemble, cleExclue) {
+function voisinagePourTerme(sousEnsemble, clesExclues) {
   ensureM3();
+  const exclues = new Set([].concat(clesExclues || []));
   const compte = {};
   M3_SOUS.forEach(s => {
     Object.keys(state.m3.categories[s.id] || {}).forEach(catId => {
-      if (`cat:${s.id}:${catId}` === cleExclue) return;
+      if (exclues.has(`cat:${s.id}:${catId}`)) return;
       const cat = state.m3.categories[s.id][catId];
       const ids = cat.items || [];
       const n = sousEnsemble.filter(e => ids.some(id => id.startsWith(`e${e.id}_`))).length;
@@ -8123,22 +8416,35 @@ function voisinagePourTerme(sousEnsemble, cleExclue) {
 }
 
 function renderExploration() {
-  const sel = document.getElementById('explorer-terme');
   const el = document.getElementById('explorer-resultat');
-  if (!sel || !el) return;
-  const cle = sel.value;
-  if (!cle) { el.innerHTML = ''; return; }
+  if (!el) return;
+  const choisis = termesChoisisExploration();
+  if (!choisis.length) { el.innerHTML = ''; return; }
 
   const tous = state.m2.evenements || [];
-  const sousEns = evenementsPourTerme(cle);
-  const libelle = sel.options[sel.selectedIndex].text;
+  /* Croisement : on ne garde que les évènements qui réunissent tous les termes.
+     L'entonnoir est affiché étape par étape — à trois critères les effectifs
+     fondent vite, et savoir où ils ont fondu vaut mieux qu'un chiffre final
+     sans contexte. */
+  const etapes = [];
+  let sousEns = tous;
+  choisis.forEach(t => {
+    const ensT = evenementsPourTerme(t.cle);
+    const ids = new Set(ensT.map(e => e.id));
+    sousEns = sousEns.filter(e => ids.has(e.id));
+    etapes.push({libelle: t.libelle, seul: ensT.length, cumul: sousEns.length});
+  });
+  const libelle = choisis.map(t => t.libelle).join(' + ');
+  const clesChoisies = choisis.map(t => t.cle);
+
   if (!sousEns.length) {
-    el.innerHTML = `<div class="card"><div style="font-style:italic;color:var(--ink-soft);">Aucun évènement ne correspond à « ${esc(libelle)} ».</div></div>`;
+    const detail = etapes.map(e => '« ' + esc(e.libelle) + ' » : ' + e.seul + ' seul, ' + e.cumul + ' en cumul').join(' · ');
+    el.innerHTML = `<div class="card"><div style="font-style:italic;color:var(--ink-soft);">Aucun évènement ne réunit ces critères.</div><div class="explorer-entonnoir" style="margin-top:10px;">${detail}</div></div>`;
     return;
   }
 
   const pct = Math.round(sousEns.length / tous.length * 100);
-  const voisins = voisinagePourTerme(sousEns, cle);
+  const voisins = voisinagePourTerme(sousEns, clesChoisies);
   const NOMS = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
   const joursSous = {};
   sousEns.forEach(e => { if (!e.date) return; const d = new Date(e.date); if (!isNaN(d)) { const j = NOMS[d.getDay()]; joursSous[j] = (joursSous[j]||0)+1; } });
@@ -8149,7 +8455,8 @@ function renderExploration() {
 
   // Fiche rédigée : des décomptes mis en phrases, jamais une conclusion.
   const phrases = [];
-  phrases.push(`<b>${sousEns.length}</b> évènement${sousEns.length>1?'s':''} sur ${tous.length} (${pct}%) ${sousEns.length>1?'concernent':'concerne'} « ${esc(libelle)} ».`);
+  phrases.push(`<b>${sousEns.length}</b> évènement${sousEns.length>1?'s':''} sur ${tous.length} (${pct}%) ${sousEns.length>1?'réunissent':'réunit'} ${choisis.length>1?'ces critères':'ce critère'} : « ${esc(libelle)} ».`);
+  if (sousEns.length < 5) phrases.push('<i>Sur un effectif aussi faible, ce qui suit se lit comme une série de cas, pas comme une tendance.</i>');
   if (jourTop) phrases.push(`Le jour le plus représenté est <b>${esc(jourTop[0])}</b> (${jourTop[1]} fois).`);
   if (momentTop) phrases.push(`Le moment le plus représenté est <b>${esc(momentTop[0])}</b> (${momentTop[1]} fois).`);
   Object.entries(voisins).forEach(([label, liste]) => {
@@ -8160,6 +8467,7 @@ function renderExploration() {
   el.innerHTML = `
     <div class="card">
       <h4 style="font-size:15px;margin-bottom:10px;">Autour de « ${esc(libelle)} »</h4>
+      ${choisis.length > 1 ? `<div class="explorer-entonnoir">Entonnoir : ${etapes.map((e,i) => (i ? ' puis ' : '') + '« <b>' + esc(e.libelle) + '</b> » → ' + e.cumul).join('')} évènement${sousEns.length>1?'s':''} au bout.</div>` : ''}
       <div class="explorer-fiche">${phrases.map(p=>`<p>${p}</p>`).join('')}</div>
       <div class="explorer-avert">Ce sont des décomptes sur vos catégorisations, pas des liens de cause à effet.</div>
     </div>
