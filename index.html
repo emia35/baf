@@ -2780,7 +2780,7 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
 
     <div class="intro-card">
       <div class="ethique" style="margin-top:0;">
-        <b>Avant de commencer :</b> n'inscrivez aucun nom de famille, ville, structure ou tout élément qui permettrait d'identifier la personne ou son entourage. Utilisez un prénom seul, fictif si besoin. Cet outil ne pense pas et ne pose pas de diagnostic : il accompagne une réflexion clinique déjà à l'œuvre. Tout ce qu'il fait apparaître — catégories, patterns, hypothèses — est à prendre au conditionnel, comme matériau de discussion, jamais comme conclusion.
+        <b>Avant de commencer :</b> pas de nom de famille, pas de ville, pas de structure nommée. Un prénom seul suffit — fictif si besoin. Cet outil ne pense pas et ne pose pas de diagnostic : il accompagne une réflexion clinique déjà à l'œuvre. Tout ce qu'il fait apparaître — catégories, patterns, hypothèses — est à prendre au conditionnel, comme matériau de discussion, jamais comme conclusion.
         <div style="margin-top:12px;">
           <button class="btn btn-ghost btn-sm" onclick="route('reperes')">Repères et lexique →</button>
         </div>
@@ -2956,7 +2956,7 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
     <div id="m1-rapide-content">
     <div class="card">
       <div class="ethique" style="background:var(--sauge-pale);border-left:3px solid var(--sauge);padding:14px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;text-align:justify;text-justify:inter-word;">
-        Ne renseignez aucun nom de famille, aucune ville, aucune structure nommément. Un prénom seul suffit — fictif si besoin.
+        Pas de nom de famille, pas de ville, pas de structure nommée. Un prénom seul suffit — fictif si besoin.
       </div>
 
       <div class="field">
@@ -3073,18 +3073,18 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
         <div class="help">Avant même de regarder les évènements : d'après ce que vous connaissez de cette personne, qu'est-ce qui fait monter la tension, qu'est-ce qui la fait redescendre ? Ce sont des hypothèses de départ — le module Interpréter les remettra plus tard face à ce que les données auront montré.</div>
         <div class="vase-connu-grille">
           <div>
-            <label for="m1-vase-interieur" class="vase-connu-titre">🔺 Ce qui vient d'elle</label>
-            <div class="help">Son fonctionnement, ses angoisses, son histoire, sa santé — ce qui remplit le vase de l'intérieur.</div>
+            <label for="m1-vase-interieur" class="vase-connu-titre">🔺 Ce qui vient d'elle ou de lui</label>
+            <div class="help">Son fonctionnement, son angoisse, son histoire, sa santé — ce qui remplit le vase de l'intérieur.</div>
             <textarea id="m1-vase-interieur" placeholder="ex : supporte mal l'imprévu, angoisse montante en fin de semaine, douleurs dentaires récurrentes..." oninput="saveM1()"></textarea>
           </div>
           <div>
             <label for="m1-vase-exterieur" class="vase-connu-titre">🔺 Ce qui vient du dehors</label>
-            <div class="help">L'environnement, les évènements qui lui tombent dessus — ce qui remplit le vase de l'extérieur.</div>
+            <div class="help">L'environnement, l'organisation, les personnes, les évènements — ce qui remplit le vase de l'extérieur.</div>
             <textarea id="m1-vase-exterieur" placeholder="ex : bruit du réfectoire, changement d'éducateur, absence de sa mère, travaux dans le bâtiment..." oninput="saveM1()"></textarea>
           </div>
           <div>
             <label for="m1-vase-descend" class="vase-connu-titre">🔻 Ce qui le fait redescendre</label>
-            <div class="help">Ce qui apaise, même partiellement, même provisoirement.</div>
+            <div class="help">Ce qui apaise, ce qui régule — même partiellement, même provisoirement.</div>
             <textarea id="m1-vase-descend" placeholder="ex : musique au casque, marcher dehors, retrouver sa routine, présence d'une personne précise..." oninput="saveM1()"></textarea>
           </div>
         </div>
@@ -3115,7 +3115,7 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
 
     <div id="m2-rapide-content">
     <div class="card" id="m2-intro-card">
-      <p style="font-size:14px;color:var(--ink-soft);">Pour chaque évènement, on vous guide pas à pas — un peu comme si l'équipe de l'EMIA était face à vous et vous posait les questions, une à la fois. Le but : rester factuel, décrire ce qui s'est passé comme une caméra l'aurait filmé, sans chercher à interpréter ou analyser tout de suite. Ça viendra après.</p>
+      <p style="font-size:14px;color:var(--ink-soft);">On vous guide pas à pas, une question à la fois — un peu comme si l'équipe était face à vous.</p>
       <button class="btn btn-primary" onclick="ouvrirFormulaireEvenement()">+ Ajouter un évènement</button>
     </div>
 
@@ -3125,7 +3125,6 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
         Une famille, un foyer, un accueil de jour voient des choses que vous ne voyez pas. Exportez un <b>kit déclarant</b> :
         il contient le préambule, aucun évènement, et rien du travail d'analyse. La personne qui le reçoit ouvre la BAF,
         charge ce fichier, relit le préambule, décrit ce qu'elle a observé, puis vous renvoie sa contribution.
-        Vous la fusionnerez ici, chaque évènement gardant la trace de sa provenance.
       </p>
       <button class="btn btn-secondary" onclick="exporterKitDeclarant()">✉ Exporter un kit déclarant</button>
     </div>
@@ -3185,7 +3184,7 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
     <div class="mod-header">
       <span class="temps-tag tag-m2">Module 2 · Temps de comprendre</span>
       <h2>Organiser les données</h2>
-      <div class="sub">Reprendre ce qui a été décrit dans le module 1 et l'associer à des catégories que <b>vous</b> définissez — pour faire apparaître des regroupements, sans rien figer. Pas de catégories imposées : vous créez les vôtres.</div>
+      <div class="sub">Pas de catégories imposées : vous créez les vôtres, pour faire apparaître des regroupements sans rien figer.</div>
     </div>
 
     <div id="m3-rapide-content">
@@ -3307,7 +3306,7 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
       <div class="vase-section">
         <div class="vase-card monte">
           <h4>🔺 Ce qui vient d'elle ou de lui</h4>
-          <div class="help field">Le fonctionnement, l'angoisse, l'histoire, la santé — ce qui remplit le vase de l'intérieur, indépendamment de ce qui se passe autour.</div>
+          <div class="help field">Son fonctionnement, son angoisse, son histoire, sa santé — ce qui remplit le vase de l'intérieur.</div>
           <div class="vase-tags" id="vase-interieur-tags"></div>
           <div class="vase-input-row monte">
             <input type="text" id="vase-interieur-input" placeholder="ex : anticipation anxieuse, douleurs, sommeil court...">
@@ -3389,7 +3388,7 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
     <div class="mod-header">
       <span class="temps-tag tag-m4">Lecture transversale</span>
       <h2>Synthèse de l'analyse fonctionnelle</h2>
-      <div class="sub">Se met à jour automatiquement à mesure que vous remplissez les modules. Exportable pour reprise, imprimable pour un partage clinique.</div>
+      <div class="sub">Se met à jour à mesure que vous remplissez les modules.</div>
     </div>
 
     <div class="card synth-block">
@@ -5183,7 +5182,7 @@ const ETAPES = [
       <div class="card">
         <div class="field">
           <label for="f-declarant">Votre prénom <span style="font-weight:400;color:var(--ink-soft);">(pour traçabilité)</span></label>
-          <div class="help">Pas de nom de famille, pas d'identification de la structure.</div>
+          <div class="help">Pas de nom de famille, pas de ville, pas de structure nommée.</div>
           <input type="text" id="f-declarant" placeholder="ex : Sophie, l'éducatrice du soir..." value="${esc(d.declarant||'')}">
         </div>
         <div class="field">
@@ -11723,7 +11722,7 @@ const SITUER = {
     repart: "Vers les moments et les lieux dans lesquels chaque évènement viendra se ranger."
   },
   m2: {
-    ici: "Des évènements décrits un par un, comme une caméra les aurait filmés.",
+    ici: "Des évènements décrits un par un, tels qu'ils se sont passés.",
     vient: "De vous, et des contributions que d'autres personnes vous renvoient.",
     repart: "Vers Organiser : chaque phrase écrite ici y devient un élément à catégoriser."
   },
