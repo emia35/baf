@@ -246,6 +246,34 @@ header.top{
   padding:5px;
 }
 .subbar-menu-liste[hidden]{display:none;}
+
+/* ── Téléphone : la barre dossier ne rentrait pas ──────────────────────
+   Mesuré : à 390 px de large, .subbar-actions occupe 279 px de boutons qui
+   refusent de rétrécir — choix assumé de la passe 29, pour qu'ils restent
+   cliquables. Avec le bouton de retour, ça dépassait de 116 px, et c'est le
+   DOCUMENT ENTIER qui s'élargissait : chaque page défilait latéralement sur
+   un téléphone, y compris son texte courant. Le pied de page, large de 506 px
+   lui aussi, n'était qu'un symptôme.
+   Sous 620 px, les trois actions passent donc dans un menu unique. Un mot
+   lisible — « Dossier » — plutôt que trois pictogrammes seuls : sur un écran
+   étroit, deviner ce que fait une icône coûte plus cher que la place gagnée. */
+.subbar-compact{display:none;}
+.subbar-menu-etat{
+  display:block;padding:7px 10px 9px;margin:0 0 3px;
+  border-bottom:1px solid var(--line-soft);
+  font-size:11.5px;color:var(--ink-soft);line-height:1.45;
+}
+.subbar-menu-etat b{color:var(--ink);font-weight:700;}
+.subbar-menu-liste button.danger b{color:var(--rose-deep);}
+@media(max-width:620px){
+  .subbar-large{display:none !important;}
+  .subbar-compact{display:inline-block;}
+  .subbar-inner{padding:8px 12px;gap:8px;}
+  .subbar-back{min-width:0;}
+  #subbar-retour-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .subbar-menu-liste{min-width:0;width:min(80vw,268px);}
+}
+
 .subbar-menu-liste button{
   display:flex;flex-direction:column;gap:2px;align-items:flex-start;
   background:none;border:none;border-radius:7px;
@@ -514,6 +542,18 @@ footer.bottom a{color:var(--ink-soft);text-decoration:underline;}
   footer.bottom .footer-inner{font-size:9.5px;padding:5px 14px;}
 }
 body{padding-bottom:38px;}
+/* Sous 620 px, les deux lignes du pied ne tiennent plus cote a cote : la
+   gauche se reduisait a treize pixels, c'est-a-dire que les noms des
+   auteurs disparaissaient purement et simplement. Elles s'empilent. */
+@media(max-width:620px){
+  footer.bottom .footer-inner{
+    flex-direction:column;align-items:flex-start;gap:1px;padding:5px 12px;
+  }
+  footer.bottom .footer-line{width:100%;}
+  footer.bottom .footer-left{text-align:left;flex:0 0 auto;}
+  footer.bottom .footer-right{text-align:left;flex:0 0 auto;}
+  body{padding-bottom:52px;}
+}
 
 /* ── BOUTON FLOTTANT "REMONTER EN HAUT" ── */
 .scrolltop-btn{
@@ -2382,8 +2422,8 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
     </button>
     <div class="subbar-dossier" id="subbar-dossier"></div>
     <div class="subbar-actions">
-      <button class="subbar-btn" id="subbar-export" onclick="exporterDossierCourant()" title="Enregistrer le dossier en cours">💾 Exporter</button>
-      <span class="subbar-menu">
+      <button class="subbar-btn subbar-large" id="subbar-export" onclick="exporterDossierCourant()" title="Enregistrer le dossier en cours">💾 Exporter</button>
+      <span class="subbar-menu subbar-large">
         <button class="subbar-btn" id="subbar-import-btn" aria-haspopup="true" aria-expanded="false"
                 onclick="basculerMenuImport(event)" title="Charger un dossier dans l'outil">📂 Importer ▾</button>
         <span class="subbar-menu-liste" id="subbar-import-menu" hidden>
@@ -2396,7 +2436,27 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
         </span>
       </span>
       <input type="file" id="import-file-subbar" accept=".json" onchange="importerDepuisSubbar(event)" style="display:none;">
-      <button class="subbar-btn danger" onclick="effacerDossierCourant()" title="Effacer le dossier en cours">🗑 Effacer</button>
+      <span class="subbar-menu subbar-compact">
+        <button class="subbar-btn" id="subbar-dossier-btn" aria-haspopup="true" aria-expanded="false"
+                onclick="basculerMenu('subbar-dossier-menu','subbar-dossier-btn',event)"
+                title="Agir sur le dossier en cours">🗂 Dossier ▾</button>
+        <span class="subbar-menu-liste" id="subbar-dossier-menu" hidden>
+          <span class="subbar-menu-etat" id="subbar-dossier-compact"></span>
+          <button type="button" onclick="fermerTousLesMenus(); exporterDossierCourant();">
+            <b>💾 Exporter</b><i>Enregistrer le dossier en cours</i>
+          </button>
+          <button type="button" onclick="importDepuisFichier()">
+            <b>📄 Importer un fichier</b><i>Un dossier .json exporté de la BAF</i>
+          </button>
+          <button type="button" onclick="importDepuisSimulation()">
+            <b>🧪 Simuler un dossier</b><i>Des données fictives, pour découvrir l'outil</i>
+          </button>
+          <button type="button" class="danger" onclick="fermerTousLesMenus(); effacerDossierCourant();">
+            <b>🗑 Effacer</b><i>Repartir d'un dossier vide</i>
+          </button>
+        </span>
+      </span>
+      <button class="subbar-btn danger subbar-large" onclick="effacerDossierCourant()" title="Effacer le dossier en cours">🗑 Effacer</button>
     </div>
   </div>
 </div>
@@ -3575,7 +3635,16 @@ function etatOutil2() {
   try { return S; } catch (e) { return null; }
 }
 
+/* La barre dossier masque son etat sous 760 px, faute de place. Le menu
+   compact le reprend en tete : sur un telephone, savoir quel dossier est
+   ouvert compte autant qu'ailleurs. Une seule source, recopiee. */
 function majBarreDossier(outil, surAccueilOutil) {
+  majBarreDossierInterne(outil, surAccueilOutil);
+  const zone = document.getElementById('subbar-dossier');
+  const compact = document.getElementById('subbar-dossier-compact');
+  if (zone && compact) compact.innerHTML = zone.innerHTML;
+}
+function majBarreDossierInterne(outil, surAccueilOutil) {
   outilCourant = outil;
   subbarSurAccueilOutil = !!surAccueilOutil;
   const label = document.getElementById('subbar-retour-label');
@@ -3633,38 +3702,47 @@ function exporterDossierCourant() {
   if (outilCourant === 'idc') { saveJ(); return; }
   exporterJSON();
 }
-let fermerMenuImportDehors = null;
-function basculerMenuImport(ev) {
-  if (ev) ev.stopPropagation();
-  const menu = document.getElementById('subbar-import-menu');
-  const btn = document.getElementById('subbar-import-btn');
-  if (!menu) return;
-  const ouvrir = menu.hidden;
-  menu.hidden = !ouvrir;
-  if (btn) btn.setAttribute('aria-expanded', ouvrir ? 'true' : 'false');
-  if (ouvrir && !fermerMenuImportDehors) {
-    fermerMenuImportDehors = (e) => { if (!menu.contains(e.target)) fermerMenuImport(); };
-    setTimeout(() => document.addEventListener('click', fermerMenuImportDehors), 0);
-  } else if (!ouvrir) {
-    fermerMenuImport();
-  }
-}
-function fermerMenuImport() {
-  const menu = document.getElementById('subbar-import-menu');
-  const btn = document.getElementById('subbar-import-btn');
+/* Deux menus vivent maintenant dans la barre dossier — « Importer » en large,
+   « Dossier » en étroit — et un seul doit être ouvert à la fois. Le mécanisme
+   est donc générique plutôt que dupliqué. */
+const fermerMenuDehors = {};
+function fermerMenu(idMenu, idBtn) {
+  const menu = document.getElementById(idMenu);
+  const btn = idBtn ? document.getElementById(idBtn) : null;
   if (menu) menu.hidden = true;
   if (btn) btn.setAttribute('aria-expanded', 'false');
-  if (fermerMenuImportDehors) {
-    document.removeEventListener('click', fermerMenuImportDehors);
-    fermerMenuImportDehors = null;
+  if (fermerMenuDehors[idMenu]) {
+    document.removeEventListener('click', fermerMenuDehors[idMenu]);
+    delete fermerMenuDehors[idMenu];
   }
 }
+const MENUS_SUBBAR = [
+  ['subbar-import-menu', 'subbar-import-btn'],
+  ['subbar-dossier-menu', 'subbar-dossier-btn']
+];
+function fermerTousLesMenus() {
+  MENUS_SUBBAR.forEach(([m, b]) => fermerMenu(m, b));
+}
+function basculerMenu(idMenu, idBtn, ev) {
+  if (ev) ev.stopPropagation();
+  const menu = document.getElementById(idMenu);
+  if (!menu) return;
+  const ouvrir = menu.hidden;
+  fermerTousLesMenus();
+  if (!ouvrir) return;
+  menu.hidden = false;
+  const btn = document.getElementById(idBtn);
+  if (btn) btn.setAttribute('aria-expanded', 'true');
+  fermerMenuDehors[idMenu] = (e) => { if (!menu.contains(e.target)) fermerMenu(idMenu, idBtn); };
+  setTimeout(() => document.addEventListener('click', fermerMenuDehors[idMenu]), 0);
+}
+function basculerMenuImport(ev) { basculerMenu('subbar-import-menu', 'subbar-import-btn', ev); }
 function importDepuisFichier() {
-  fermerMenuImport();
+  fermerTousLesMenus();
   document.getElementById('import-file-subbar').click();
 }
 function importDepuisSimulation() {
-  fermerMenuImport();
+  fermerTousLesMenus();
   ouvrirSimModal();
 }
 
@@ -7496,6 +7574,16 @@ function _bancEgal(nom, attendu, obtenu, tolerance) {
 
 // Recalculs indépendants, écrits sans réutiliser les fonctions de production.
 const _CONTROLES = [
+
+  {nom:'Aucun debordement horizontal a la largeur courante', test: () => {
+    /* Ne couvre que la largeur ou tourne le banc : on ne peut pas emuler
+       un autre viewport depuis la page, les media queries suivent la
+       fenetre reelle. Utile quand on lance le banc sur un telephone ou
+       une fenetre reduite, ce que personne ne pensait a faire. */
+    const de = document.documentElement;
+    const trop = de.scrollWidth - de.clientWidth;
+    return _bancEgal('Debordement horizontal (px)', 0, trop > 1 ? trop : 0);
+  }},
 
   {nom:'Les notes de version se rendent sans exception', test: () => {
     let souci = '';
