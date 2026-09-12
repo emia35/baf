@@ -3550,17 +3550,110 @@ function migrerIdsCategorisation() {
   migrerSeparationContexte();
 }
 
-const STORAGE_KEY = 'baf_emia35_state_v1';
+/* ══════════════════════════════════════════════════════════════════════
+   LE DÉPÔT, ET L'IDENTITÉ DU DOSSIER
+   ══════════════════════════════════════════════════════════════════════
+   Un seul endroit sait où les données sont rangées. Aujourd'hui c'est le
+   navigateur ; le jour où ce sera autre chose, c'est ce bloc qu'on réécrit et
+   rien d'autre. Aucun appel direct à localStorage ailleurs dans l'outil.
+
+   Le dossier porte une identité : un numéro qui ne change plus, une date de
+   création, une date de dernière modification, et le numéro du schéma de
+   données. Sans ça on ne peut ni reconnaître deux fichiers du même dossier,
+   ni refuser proprement un fichier étranger. */
+
+const SCHEMA_DOSSIER = 2;
+
+const DEPOT = {
+  CLE: 'baf_emia35_state_v1',
+  lire() {
+    try {
+      const brut = localStorage.getItem(this.CLE);
+      return brut ? JSON.parse(brut) : null;
+    } catch (e) { return null; }
+  },
+  ecrire(objet) {
+    try { localStorage.setItem(this.CLE, JSON.stringify(objet)); return true; }
+    catch (e) { return false; }
+  },
+  oublier(cle) {
+    try { localStorage.removeItem(cle || this.CLE); } catch (e) {}
+  }
+};
+
+function nouvelIdentifiant(prefixe) {
+  return (prefixe || 'id') + '_' + Date.now().toString(36) + '_' +
+         Math.random().toString(36).slice(2, 8);
+}
+
+/* Idempotente : un dossier qui a déjà son identité traverse sans changer.
+   `neuf` force une identité nouvelle — pour un dossier qu'on vient d'effacer,
+   qui ne doit pas hériter du numéro du précédent. */
+function migrerIdentiteDossier(neuf) {
+  if (neuf || !state.idDossier) state.idDossier = nouvelIdentifiant('dos');
+  if (neuf || !state.cree) state.cree = new Date().toISOString();
+  state.schema = SCHEMA_DOSSIER;
+}
 
 function persist(){
-  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+  migrerIdentiteDossier();
+  state.modifie = new Date().toISOString();
+  DEPOT.ecrire(state);
 }
 function loadPersisted(){
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw){ state = Object.assign(state, JSON.parse(raw)); }
-  }catch(e){}
+  const enregistre = DEPOT.lire();
+  if (enregistre) state = Object.assign(state, enregistre);
+  migrerIdentiteDossier();
   migrerIdsCategorisation();
+}
+
+/* ── Le format d'échange ───────────────────────────────────────────────
+   Un fichier annonce ce qu'il est. Sans ça, importer un fichier qui n'a rien
+   à faire là écrase silencieusement un dossier en cours — et on ne peut pas
+   distinguer un dossier complet d'un envoi de déclarant. L'enveloppe est une
+   CLÉ du fichier, pas un emballage autour : les anciens exports, qui n'en ont
+   pas, restent lisibles, et le contenu garde sa forme. */
+
+const TYPES_FICHIER = {
+  dossier:      'un dossier complet',
+  kit:          'un kit déclarant',
+  contribution: 'une contribution de déclarant'
+};
+
+function enveloppeBAF(type) {
+  return {
+    schema: SCHEMA_DOSSIER,
+    type: type || 'dossier',
+    outil: (typeof versionCourante === 'function') ? versionCourante() : '',
+    exporte: new Date().toISOString(),
+    idDossier: state.idDossier || null,
+    prenom: (state.m1 && state.m1.prenom) || ''
+  };
+}
+
+/* Pure : ne touche à rien, se contente de dire ce qu'on a sous la main.
+   C'est ce qui permet au banc de l'éprouver sans écraser le dossier ouvert. */
+function lireFichierBAF(objet, typesAcceptes) {
+  if (!objet || typeof objet !== 'object' || Array.isArray(objet)) {
+    return {ok:false, raison:"Ce fichier n'est pas un export de la BAF."};
+  }
+  const env = objet.baf && typeof objet.baf === 'object' ? objet.baf : null;
+  // Un fichier d'avant l'enveloppe : on le reconnaît à sa forme, et c'est
+  // forcément un dossier complet — les autres types n'existaient pas.
+  const type = env ? String(env.type || 'dossier') : 'dossier';
+  if (!env) {
+    const ressemble = objet.m1 && objet.m2 && typeof objet.m2 === 'object';
+    if (!ressemble) return {ok:false, raison:"Ce fichier n'est pas un export de la BAF."};
+  }
+  const attendus = typesAcceptes || ['dossier'];
+  if (attendus.indexOf(type) === -1) {
+    const quoi = TYPES_FICHIER[type] || 'un fichier d\'un autre type';
+    const veut = attendus.map(t => TYPES_FICHIER[t] || t).join(' ou ');
+    return {ok:false, raison:'Ce fichier est ' + quoi + '. Ici on attend ' + veut + '.'};
+  }
+  const dossier = Object.assign({}, objet);
+  delete dossier.baf;
+  return {ok:true, type, enveloppe:env, dossier, schema: env ? (env.schema || 1) : 1};
 }
 
 function route(name, fromHistory){
@@ -6564,7 +6657,8 @@ function refreshAccueilBadges(){
 // (ancienne refreshSynthese supprimée — voir la version complète plus haut)
 
 function exporterJSON(){
-  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const fichier = Object.assign({}, state, {baf: enveloppeBAF('dossier')});
+  const blob = new Blob([JSON.stringify(fichier, null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   const prenom = state.m1.prenom ? state.m1.prenom.replace(/[^a-zA-Z0-9]/g,'_') : 'sans_nom';
@@ -6860,8 +6954,9 @@ function importerJSON(event, versOutil2){
   const reader = new FileReader();
   reader.onload = function(e){
     try{
-      const imported = JSON.parse(e.target.result);
-      replaceState(imported);
+      const lu = lireFichierBAF(JSON.parse(e.target.result), ['dossier']);
+      if (!lu.ok) { alert(lu.raison); return; }
+      replaceState(lu.dossier);
       // On retient d'où vient le dossier, pour que la barre puisse le dire.
       state.fichierDossier = file.name;
       state.origineDossier = 'fichier';
@@ -6874,7 +6969,7 @@ function importerJSON(event, versOutil2){
       if (versOutil2) { chargerDossierOuvertDansOutil2(); return; }
       route('baf-accueil');
     }catch(err){
-      alert('Le fichier sélectionné ne semble pas être un export valide de la BAF.');
+      alert("Le fichier n'a pas pu être lu : il n'est pas au format JSON, ou il est abîmé.");
     }
   };
   reader.readAsText(file);
@@ -6892,6 +6987,8 @@ function confirmReset(){
     });
     state.fichierDossier = null;
     state.origineDossier = null;
+    // Identité neuve : un dossier vide n'hérite pas du numéro du précédent.
+    migrerIdentiteDossier(true);
     persist();
     loadM1FromState();
     refreshM2List();
@@ -7460,6 +7557,10 @@ function simuler(idx){
   // ── Application au dossier ────────────────────────────────────────────
   state.fichierDossier = null;
   state.origineDossier = 'simulation';
+  // Une simulation est un AUTRE dossier : sans ça elle héritait du numéro de
+  // celui qu'elle remplace, et deux dossiers sans rapport portaient la même
+  // identité. simuler() n'appelle pas replaceState, l'identité survivait donc.
+  migrerIdentiteDossier(true);
   state.m1 = {
     prenom: P.prenom, age: P.age, diag: P.diag,
     lieux: P.lieux, lieuxCustom: P.lieuxCustom || [], lieuxDetail: {},
@@ -7574,6 +7675,65 @@ function _bancEgal(nom, attendu, obtenu, tolerance) {
 
 // Recalculs indépendants, écrits sans réutiliser les fonctions de production.
 const _CONTROLES = [
+
+  {nom:'Le dossier porte une identité stable', test: () => {
+    /* Premier appel : pose l'identité si elle manque — c'est le cas des jeux
+       d'épreuve, fabriqués à la main. Second appel : ne doit RIEN changer,
+       sinon chaque enregistrement renommerait le dossier. */
+    migrerIdentiteDossier();
+    const premier = state.idDossier, creeAvant = state.cree;
+    migrerIdentiteDossier();
+    const ok = !!premier && state.idDossier === premier &&
+               !!creeAvant && state.cree === creeAvant &&
+               state.schema === SCHEMA_DOSSIER;
+    return _bancEgal('Identité du dossier (posée une fois, puis stable)', true, ok);
+  }},
+
+  {nom:'Un dossier neuf reçoit une identité neuve', test: () => {
+    const avant = state.idDossier, creeAvant = state.cree;
+    migrerIdentiteDossier(true);
+    const neuf = state.idDossier;
+    state.idDossier = avant; state.cree = creeAvant;
+    return _bancEgal('Identité renouvelée pour un dossier neuf', true, !!neuf && neuf !== avant);
+  }},
+
+  {nom:'Aller-retour d\'export : rien ne se perd', test: () => {
+    /* Exporté puis relu, un dossier doit être identique au caractère près.
+       Comparaison sur une forme canonique (clés triées) : l'ordre des clés
+       n'est pas une donnée. */
+    const canon = (o) => {
+      const tri = (v) => {
+        if (Array.isArray(v)) return v.map(tri);
+        if (v && typeof v === 'object') {
+          const r = {}; Object.keys(v).sort().forEach(k => { r[k] = tri(v[k]); }); return r;
+        }
+        return v;
+      };
+      return JSON.stringify(tri(o));
+    };
+    const fichier = JSON.parse(JSON.stringify(Object.assign({}, state, {baf: enveloppeBAF('dossier')})));
+    const lu = lireFichierBAF(fichier);
+    return _bancEgal('Dossier relu identique', canon(state), lu.ok ? canon(lu.dossier) : 'REFUSÉ : ' + lu.raison);
+  }},
+
+  {nom:'Un fichier étranger est refusé, pas avalé', test: () => {
+    const essais = [
+      lireFichierBAF(null),
+      lireFichierBAF({quelquechose: 1}),
+      lireFichierBAF([1,2,3]),
+      lireFichierBAF({baf:{type:'kit',schema:2}, m1:{}, m2:{}})   // bon outil, mauvais type
+    ];
+    const refuses = essais.filter(r => !r.ok && r.raison).length;
+    return _bancEgal('Fichiers refusés avec une raison', 4, refuses);
+  }},
+
+  {nom:'Un export d\'avant l\'enveloppe reste lisible', test: () => {
+    /* Les fichiers d'Émilie n'ont pas de clé baf. Ils doivent passer, et être
+       reconnus comme des dossiers complets. */
+    const ancien = {version:1, m1:{prenom:'Test'}, m2:{evenements:[]}, m3:{}, m4:{}};
+    const lu = lireFichierBAF(ancien);
+    return _bancEgal('Ancien export accepté comme dossier', 'dossier|1', (lu.ok ? lu.type : 'REFUSÉ') + '|' + (lu.schema || ''));
+  }},
 
   {nom:'Aucun debordement horizontal a la largeur courante', test: () => {
     /* Ne couvre que la largeur ou tourne le banc : on ne peut pas emuler
