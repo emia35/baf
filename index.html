@@ -63,9 +63,12 @@
      Source unique, à employer partout où un volet de l'analyse est désigné —
      et nulle part ailleurs. Le contexte partage la couleur de l'antécédent :
      c'est l'antécédent lointain, pas un sixième volet. */
-  --vol-contexte:       var(--ocre);
-  --vol-contexte-deep:  var(--ocre-deep);
-  --vol-contexte-pale:  var(--ocre-pale);
+  /* Le contexte reste dans la famille de l ocre — c est l antecedent lointain,
+     pas un cinquieme volet — mais d un ton plus clair : deux volets distincts
+     doivent se distinguer d un coup d oeil. */
+  --vol-contexte:       #E4D49B;
+  --vol-contexte-deep:  #BCA152;
+  --vol-contexte-pale:  #FAF3E0;
   --vol-contexte-texte: #7A6220;
   --vol-antecedent:       var(--ocre);
   --vol-antecedent-deep:  var(--ocre-deep);
@@ -1138,10 +1141,21 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
   position:relative;
 }
 .m3-item:hover{border-color:var(--ocre);}
+/* Un item classé prenait le jaune de l'antécédent quel que soit le volet.
+   Il prend maintenant la couleur du sien : la colonne se lit d'un coup d'œil.
+   La teinte est posée en ligne par renderM3Sous, qui seul connaît le volet. */
 .m3-item.categorise{
-  border-color:var(--ocre);
-  background:var(--ocre-pale);
+  border-color:var(--slate);
+  background:var(--paper-deep);
 }
+/* Un item classé prend la couleur de son volet : la colonne se lit d'un coup
+   d'œil. En règles de feuille et non en style en ligne, pour que le repère
+   bleu puisse passer par-dessus le temps de l'animation. */
+.m3-item.categorise[data-volet="contexte"]{border-color:var(--vol-contexte);background:var(--vol-contexte-pale);}
+.m3-item.categorise[data-volet="antecedent"]{border-color:var(--vol-antecedent);background:var(--vol-antecedent-pale);}
+.m3-item.categorise[data-volet="comportement"]{border-color:var(--vol-comportement);background:var(--vol-comportement-pale);}
+.m3-item.categorise[data-volet="consequence"]{border-color:var(--vol-consequence);background:var(--vol-consequence-pale);}
+.m3-item.categorise[data-volet="intervention"]{border-color:var(--vol-intervention);background:var(--vol-intervention-pale);}
 .m3-item-text{flex:1;font-size:13.5px;color:var(--ink);line-height:1.45;}
 .m3-item-tag-post{
   display:inline-block;margin-bottom:4px;
@@ -1151,6 +1165,38 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
   padding:2px 7px;border-radius:999px;
 }
 .m3-item-source{font-size:11px;color:var(--ink-soft);margin-top:3px;font-style:italic;}
+/* Aide repliable : un bouton qui dit ce qu'il ouvre, plutôt qu'un chevron seul. */
+.aide-repliable{
+  display:flex;align-items:center;gap:8px;width:100%;
+  background:var(--paper);border:1px solid var(--line);
+  border-radius:var(--radius-sm);
+  padding:7px 11px;margin-bottom:10px;
+  font-family:inherit;font-size:12.5px;font-weight:600;
+  color:var(--ink-soft);cursor:pointer;text-align:left;
+  transition:border-color .14s,color .14s;
+}
+.aide-repliable:hover{border-color:var(--slate);color:var(--ink);}
+.aide-repliable .ar-ico{
+  flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;
+  width:17px;height:17px;border-radius:50%;
+  background:var(--paper-deep);border:1px solid var(--line);
+  font-size:10.5px;font-weight:700;
+}
+.aide-repliable .ar-titre{flex:1;}
+.aide-repliable .ar-chevron{flex-shrink:0;font-size:11px;transition:transform .16s;}
+.aide-repliable.ouvert .ar-chevron{transform:rotate(180deg);}
+.aide-repliable-corps{
+  font-family:'Source Serif 4',serif;font-size:12.5px;font-style:italic;
+  color:var(--ink-soft);line-height:1.6;
+  background:var(--paper);border-left:3px solid var(--line);
+  border-radius:0 6px 6px 0;
+  padding:9px 13px;margin:-4px 0 12px;
+}
+.note-colonne{
+  font-family:'Source Serif 4',serif;font-size:12.5px;font-style:italic;
+  color:var(--ink-soft);line-height:1.6;margin-bottom:12px;
+}
+
 .m3-item-cat-badge{
   display:inline-block;
   /* Couleur neutre : la couleur réelle vient de la catégorie, posée en ligne.
@@ -2133,13 +2179,37 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
 }
 .m3-item.item-vide .m3-item-text{color:var(--ink-soft);font-style:italic;}
 
-/* Signalement passager d'un item qu'on vient de rejoindre depuis une catégorie */
+/* Signalement d'un item qu'on vient de rejoindre depuis une catégorie.
+   L'ancienne version posait un halo ocre qui s'effaçait en 1,6 s : sur un item
+   déjà teinté d'ocre, on ne voyait rien. Trois pulsations franches en bleu
+   ardoise — une couleur qui n'est celle d'aucun volet — plus un léger
+   agrandissement. */
 @keyframes viser{
-  0%{box-shadow:0 0 0 0 var(--ocre);}
-  25%{box-shadow:0 0 0 4px var(--ocre-pale);}
-  100%{box-shadow:0 0 0 0 rgba(0,0,0,0);}
+  0%  {box-shadow:0 0 0 0 rgba(61,79,107,.50); transform:scale(1);}
+  10% {box-shadow:0 0 0 8px rgba(61,79,107,.20); transform:scale(1.03);}
+  28% {box-shadow:0 0 0 0 rgba(61,79,107,0);    transform:scale(1);}
+  40% {box-shadow:0 0 0 8px rgba(61,79,107,.20); transform:scale(1.03);}
+  58% {box-shadow:0 0 0 0 rgba(61,79,107,0);    transform:scale(1);}
+  70% {box-shadow:0 0 0 8px rgba(61,79,107,.20); transform:scale(1.025);}
+  100%{box-shadow:0 0 0 0 rgba(61,79,107,0);    transform:scale(1);}
 }
-.m3-item.item-vise{animation:viser 1.6s ease-out;border-color:var(--ocre);}
+/* Couleur littérale et non var() : un raccourci comme border-color dont la
+   valeur contient un var() devient une « valeur en attente de substitution »,
+   que Blink ne fait pas gagner de façon fiable contre une autre règle du même
+   genre. Le repère doit passer devant la teinte du volet à coup sûr. */
+.m3-item.m3-item.m3-item.item-vise{
+  animation:viser 2.2s ease-out;
+  position:relative;z-index:3;
+  border-color:#3D4F6B;
+}
+/* Sans animation, le repère reste : un contour franc et une pastille. */
+@media (prefers-reduced-motion: reduce){
+  .m3-item.item-vise{animation:none;box-shadow:0 0 0 4px rgba(61,79,107,.28);}
+}
+.m3-item.item-vise::before{
+  content:'';position:absolute;left:-5px;top:10px;bottom:10px;width:4px;
+  border-radius:3px;background:var(--slate);
+}
 
 /* ── REPÈRES : questions/réponses repliées ── */
 .repere-q{
@@ -2760,7 +2830,14 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
             <span class="m3-col-title" id="m3-items-title">Ce qui a été décrit</span>
             <span class="m3-col-count" id="m3-items-count"></span>
           </div>
-          <div class="help" style="margin-bottom:12px;" id="m3-items-help"></div>
+          <button type="button" class="aide-repliable" id="m3-aide-bouton"
+                  aria-expanded="false" aria-controls="m3-items-help"
+                  onclick="basculerAideVolet()">
+            <span class="ar-ico">?</span>
+            <span class="ar-titre">Comment catégoriser ce volet</span>
+            <span class="ar-chevron">▾</span>
+          </button>
+          <div class="aide-repliable-corps" id="m3-items-help" hidden></div>
           <div id="m3-items-list"></div>
         </div>
 
@@ -2769,7 +2846,7 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
           <div class="m3-col-header">
             <span class="m3-col-title">Catégories</span>
           </div>
-          <div class="help" style="margin-bottom:12px;">Créez vos propres catégories. Pas de bonne réponse — juste ce qui vous semble faire sens pour cette personne.</div>
+          <div class="note-colonne">Créez vos propres catégories. Pas de bonne réponse — juste ce qui vous semble faire sens pour cette personne.</div>
           <div id="m3-cats-suggestions"></div>
           <div id="m3-cats-list"></div>
           <button class="btn btn-secondary btn-sm" style="margin-top:10px;width:100%;" onclick="ajouterCategorie()">+ Ajouter une catégorie</button>
@@ -3272,6 +3349,7 @@ function migrerIdsCategorisation() {
   migrerVocabulaireEffet();
   migrerLieuAutre();
   migrerAntecedents();
+  migrerSeparationContexte();
 }
 
 const STORAGE_KEY = 'baf_emia35_state_v1';
@@ -6255,6 +6333,7 @@ function preparerPourExport(racine) {
    '.m3-item-cat-badge'
   ].forEach(sel => racine.querySelectorAll(sel).forEach(el => el.remove()));
 
+  racine.querySelectorAll('.aide-repliable-corps[hidden]').forEach(el => el.removeAttribute('hidden'));
   racine.querySelectorAll('textarea').forEach(el => {
     const div = document.createElement('div');
     div.textContent = el.value || '';
@@ -6968,7 +7047,7 @@ function simuler(idx){
   // ── Génération des évènements ─────────────────────────────────────────
   // On mémorise, pour chaque texte produit, la catégorie dont il vient : la
   // catégorisation sera reconstituée à partir de ça, sans identifiant positionnel.
-  const indexCat = {cp:{}, antecedents:{}, consequences:{}, interventions:{}};
+  const indexCat = {cp:{}, contexte:{}, antecedents:{}, consequences:{}, interventions:{}};
   const noter = (volet, texte, cat) => { if (texte && cat) indexCat[volet][texte.trim()] = cat; };
 
   const evts = [];
@@ -6988,7 +7067,7 @@ function simuler(idx){
       antes.push({id:'ant_sim_'+i+'_'+k, texte:a.texte, declencheurPresume: k === nbAnte-1 && alea() < 0.6});
     }
     const contexte = alea() < 0.45 ? piocher(P.contextes) : '';
-    if (contexte) noter('antecedents', '(contexte) ' + contexte, P.catContexte);
+    if (contexte) noter('contexte', '(contexte) ' + contexte, P.catContexte);
 
     const cp = piocher(P.comportements);
     noter('cp', cp.texte, cp.cat);
@@ -7112,14 +7191,14 @@ function simuler(idx){
   };
   state.m2.evenements = evts;
   state.m2.brouillons = [];
-  state.m3 = {sous:'cp', categories:{cp:{},antecedents:{},declencheurs:{},consequences:{},interventions:{}}, _idsMigratedV2:true, _antecedentsFusionnes:true};
+  state.m3 = {sous:'cp', categories:{cp:{},contexte:{},antecedents:{},declencheurs:{},consequences:{},interventions:{}}, _idsMigratedV2:true, _antecedentsFusionnes:true, _contexteSepare:true};
   state.m4 = {sous:'pattern', patterns:[], gradations:[], vase:{monte:[],descend:[],texte:''}, paliers:{}, courbeJour:null};
 
   // ── Catégorisation calculée ───────────────────────────────────────────
   // On relit les items comme le fait le module Organiser, et on range chacun
   // dans la catégorie d'où venait son texte. Aucun identifiant en dur.
   const couleurs = ['#1F7A6C','#C2431F','#D69A1F','#46566B','#7B4EA0','#2563EB','#D97706','#059669'];
-  ['cp','antecedents','consequences','interventions'].forEach(volet => {
+  ['cp','contexte','antecedents','consequences','interventions'].forEach(volet => {
     const parNom = {};
     let n = 0;
     extraireItems(volet).forEach(item => {
@@ -7365,6 +7444,45 @@ const _CONTROLES = [
     return _bancEgal('Forme du retour des corrélations', 'ante_cons:ok|cp_cons:ok|triplets:ok', formes.join('|'));
   }},
 
+  {nom:'Séparation contexte / antécédent : les catégorisations suivent', test: () => {
+    /* Un dossier d'avant la séparation, dont les items désignent l'ancien
+       ordre. Après migration, chaque catégorie doit désigner exactement les
+       mêmes textes qu'avant — sinon toute catégorisation existante glisse
+       d'un cran et pointe l'élément voisin. */
+    const avant = JSON.parse(JSON.stringify(state));
+    let obtenu = '';
+    try {
+      replaceState({version:1,
+        m1:{prenom:'Migration', journeeCreneaux:[]},
+        m2:{evenements:[
+          {id:'A', date:'2026-09-07', avantLoin:'CTX-A', comportement:'x',
+           antecedents:[{id:'a',texte:'ANTE-A1'},{id:'b',texte:'ANTE-A2'}], etatAvant:'ETAT-A', interventions:[]},
+          {id:'B', date:'2026-09-08', comportement:'y',
+           antecedents:[{id:'c',texte:'ANTE-B1'}], etatAvant:'ETAT-B', interventions:[]}
+        ], brouillons:[]},
+        m3:{sous:'cp', _idsMigratedV2:true, _antecedentsFusionnes:true, categories:{
+          cp:{}, antecedents:{
+            k1:{nom:'K1', items:['eA_0','eB_0']},
+            k2:{nom:'K2', items:['eA_2','eA_3','eB_1']}
+          }, consequences:{}, interventions:{}}},
+        m4:{patterns:[],gradations:[],vase:{monte:[],descend:[],texte:''}}});
+      const textes = (volet) => {
+        const parId = {}; extraireItems(volet).forEach(i => { parId[i.id] = i.texte; });
+        const out = [];
+        Object.keys(state.m3.categories[volet] || {}).sort().forEach(k => {
+          const c = state.m3.categories[volet][k];
+          (c.items || []).forEach(id => out.push(c.nom + '=' + (parId[id] || 'PERDU')));
+        });
+        return out.join(' | ');
+      };
+      obtenu = textes('contexte') + ' // ' + textes('antecedents');
+    } finally {
+      replaceState(avant);
+    }
+    const attendu = 'K1=(contexte) CTX-A // K1=ANTE-B1 | K2=ANTE-A2 | K2=État avant : ETAT-A | K2=État avant : ETAT-B';
+    return _bancEgal('Remappage contexte / antécédent', attendu, obtenu);
+  }},
+
   {nom:'Paliers du vase : bornes basses incluses', test: () => {
     const attendu = ['tranquille','tranquille','normal','normal','tendu','tendu','angoissé','angoissé','débordé','débordé'];
     const obtenu = [0, 19, 20, 39, 40, 59, 60, 79, 80, 100].map(v => nomPalier(v));
@@ -7556,11 +7674,17 @@ const CATEGORIES_SUGGEREES = {
             'Agitation psychomotrice', 'Stéréotypies envahissantes', 'Retrait et repli',
             'Opposition verbale', 'Fugue et départ']
   },
+  contexte: {
+    aide: "Ce qui pèse de loin, avant que la séquence ne commence. Ça ne déclenche rien tout seul : ça remplit le vase, et fait qu'un même antécédent ne produit pas le même effet d'un jour à l'autre.",
+    liste: ['Sommeil insuffisant', 'Retour de week-end ou de vacances', 'Douleur ou état somatique',
+            'Absence ou remplacement d\'un référent', 'Changement dans l\'environnement',
+            'Modification de traitement', 'Évènement familial']
+  },
   antecedents: {
-    aide: "Ce qui précède le plus souvent un comportement-défi. Le contexte lointain et l'antécédent immédiat se rangent ici tous les deux.",
+    aide: "Ce qui se passe dans les secondes ou les minutes qui précèdent. Le contexte, plus lointain, se range désormais dans son propre volet.",
     liste: ['Consigne ou demande', "Transition ou fin d'activité", 'Attente sans repère',
-            'Surcharge sensorielle', 'Douleur ou état somatique',
-            "Modification de l'environnement social", "Frustration d'un accès"]
+            'Surcharge sensorielle', "Modification de l'environnement social",
+            "Frustration d'un accès", 'Approche ou contact physique']
   },
   consequences: {
     aide: "Les quatre fonctions classiquement décrites en analyse fonctionnelle. Un même comportement peut en servir plusieurs à la fois, et dans le même contexte — n'hésitez pas à en assigner deux.",
@@ -7628,14 +7752,28 @@ const M3_SOUS = [
     }
   },
   {
-    id: 'antecedents',
-    label: 'Antécédents', icon: '⏮', couleur: 'antecedent',
-    help: 'Tout ce qui précède le comportement : le contexte (setting events) et les antécédents. Le badge « présumé déclencheur » signale ce que le déclarant a coché — c\'est son avis, vous restez libre d\'en juger autrement. Un CD apparu après une intervention (badge « post-intervention ») est aussi affiché ici : il devient le contexte de la suite de la crise.',
-    placeholder: 'ex : Transition, Fin d\'activité appréciée, Changement de routine, Fatigue…',
+    /* Le contexte a son propre volet. Il se catégorise autrement que
+       l'antécédent : « nuit courte » et « on lui a demandé de ranger » ne se
+       situent pas du tout au même endroit dans le temps, et les regrouper
+       forçait à inventer des catégories qui recouvraient les deux. */
+    id: 'contexte',
+    label: 'Contexte', icon: '🕰', couleur: 'contexte',
+    help: 'Ce qui précède de loin : la nuit, le week-end, un traitement modifié, un remplacement, une douleur signalée la veille. Ça ne déclenche rien tout seul, mais ça remplit le vase — et un même antécédent ne produit pas le même effet selon le contexte.',
+    placeholder: 'ex : Sommeil court, Retour de week-end, Absence d\'un référent, Douleur signalée…',
     extract: (evt) => {
       const parts = [];
       if (evt.avantLoin && evt.avantLoin.toLowerCase() !== 'ras' && evt.avantLoin.trim()) parts.push('(contexte) ' + evt.avantLoin);
       else if (resumeEtape(evt, 'contexte')) parts.push('§RESU§(contexte) ' + resumeEtape(evt, 'contexte'));
+      return parts;
+    }
+  },
+  {
+    id: 'antecedents',
+    label: 'Antécédents', icon: '⏮', couleur: 'antecedent',
+    help: 'Ce qui s\'est passé juste avant le comportement, dans les secondes ou les minutes. Le badge « présumé déclencheur » signale ce que le déclarant a coché — c\'est son avis, vous restez libre d\'en juger autrement. Un CD apparu après une intervention (badge « post-intervention ») est aussi affiché ici : il devient l\'antécédent de la suite de la crise. Le contexte, lui, a désormais son propre volet.',
+    placeholder: 'ex : Transition, Fin d\'activité appréciée, Consigne, Attente…',
+    extract: (evt) => {
+      const parts = [];
       (evt.antecedents || []).forEach(a => {
         if (a.texte && a.texte.trim()) parts.push((a.declencheurPresume ? '§DECL§' : '') + a.texte.trim());
       });
@@ -7687,9 +7825,65 @@ function catColorFor(idx) {
 }
 
 // Initialiser m3.categories si besoin
+/* Séparer le contexte de l'antécédent décale les indices : l'ancien volet
+   « antécédents » commençait par le contexte quand il y en avait un. Sans
+   remappage, chaque catégorisation existante glisserait d'un cran et
+   désignerait l'élément voisin. On déplace donc l'item de contexte vers le
+   nouveau volet, dans une catégorie de même nom, et on recule les autres. */
+function migrerSeparationContexte() {
+  if (!state.m3) return;
+  // ⚠ Ce remappage n'est PAS idempotent : le rejouer décalerait une seconde
+  // fois. Le drapeau est indispensable, ne pas le retirer. Il voyage dans le
+  // JSON du dossier, donc un export d'aujourd'hui ne sera pas re-migré demain.
+  if (state.m3._contexteSepare) return;
+  const cats = state.m3.categories;
+  if (!cats || !cats.antecedents) { state.m3._contexteSepare = true; return; }
+  if (!cats.contexte) cats.contexte = {};
+
+  const avaitContexte = {};
+  (state.m2.evenements || []).forEach(evt => {
+    if (!evt.id) return;
+    const brut = (evt.avantLoin || '').trim();
+    avaitContexte[evt.id] = !!((brut && brut.toLowerCase() !== 'ras') || resumeEtape(evt, 'contexte'));
+  });
+
+  const versContexte = {};
+  Object.keys(cats.antecedents).forEach(catId => {
+    const cat = cats.antecedents[catId];
+    const restants = [];
+    (cat.items || []).forEach(id => {
+      const m = /^e(.+)_(\d+)$/.exec(id);
+      if (!m || !avaitContexte[m[1]]) { restants.push(id); return; }
+      const evtId = m[1], idx = parseInt(m[2], 10);
+      if (idx === 0) {
+        if (!versContexte[catId]) {
+          versContexte[catId] = {nom: cat.nom, color: cat.color, items: []};
+          if (cat.parent) versContexte[catId].parent = cat.parent;
+        }
+        versContexte[catId].items.push('e' + evtId + '_0');
+      } else {
+        restants.push('e' + evtId + '_' + (idx - 1));
+      }
+    });
+    cat.items = restants;
+  });
+
+  Object.keys(versContexte).forEach(catId => {
+    cats.contexte[catId] = versContexte[catId];
+    // Une sous-catégorie déplacée sans sa parente rendrait son chemin illisible :
+    // on recrée la parente, vide, pour que « Parent › Enfant » reste vrai.
+    const p = versContexte[catId].parent;
+    if (p && !cats.contexte[p] && cats.antecedents[p]) {
+      cats.contexte[p] = {nom: cats.antecedents[p].nom, color: cats.antecedents[p].color, items: []};
+    }
+  });
+
+  state.m3._contexteSepare = true;
+}
+
 function ensureM3() {
   if (!state.m3.categories) {
-    state.m3.categories = {cp:{},antecedents:{},declencheurs:{},consequences:{},interventions:{}};
+    state.m3.categories = {cp:{},contexte:{},antecedents:{},declencheurs:{},consequences:{},interventions:{}};
   }
   M3_SOUS.forEach(s => {
     if (!state.m3.categories[s.id]) state.m3.categories[s.id] = {};
@@ -7871,7 +8065,7 @@ function renderM3Sous(sousId) {
       const dateStr = item.date ? formatDate(item.date) : '';
       const src = [dateStr, item.moment].filter(Boolean).join(' · ');
       const cpLabel = cpLabels && cpLabels[item.id] ? `<span class="m3-item-tag-post" style="background:var(--vol-comportement-deep);" title="Repère de crise : CP1, CP2 pour deux évènements du même jour ; CP1.2 pour un CD apparu après une intervention du même évènement.">${cpLabels[item.id]}</span>` : '';
-      return `<div class="m3-item${catIds.length>0?' categorise':''}${item.vide?' item-vide':''}" data-item-id="${esc(item.id)}" onclick="ouvrirAssign('${sousId}','${item.id}',event)">
+      return `<div class="m3-item${catIds.length>0?' categorise':''}${item.vide?' item-vide':''}" data-volet="${sous.couleur || ''}" data-item-id="${esc(item.id)}" onclick="ouvrirAssign('${sousId}','${item.id}',event)">
         <div style="flex:1">
           ${cpLabel}
           ${item.tag==='post-intervention' ? `<span class="m3-item-tag-post">post-intervention</span>` : ''}
@@ -8186,14 +8380,31 @@ function retirerDeUneCat(sousId, itemId, catId, event) {
 // Depuis une catégorie, retrouver l'élément d'origine dans la colonne de
 // gauche : quand une catégorie contient vingt items, les relire un par un dans
 // la liste complète est fastidieux.
+let minuteurVise = null;
+function rendreBordureVise(el) {
+  if (el) el.classList.remove('item-vise');
+}
+function basculerAideVolet() {
+  const corps = document.getElementById('m3-items-help');
+  const btn = document.getElementById('m3-aide-bouton');
+  if (!corps || !btn) return;
+  const ouvrir = corps.hidden;
+  corps.hidden = !ouvrir;
+  btn.setAttribute('aria-expanded', ouvrir ? 'true' : 'false');
+  btn.classList.toggle('ouvert', ouvrir);
+}
+
 function allerVersItem(itemId) {
   const el = document.querySelector(`.m3-item[data-item-id="${itemId}"]`);
   if (!el) return;
+  // Un seul item signalé à la fois : sinon deux clics rapides laissent deux
+  // repères allumés et on ne sait plus lequel on cherchait.
+  document.querySelectorAll('.m3-item.item-vise').forEach(rendreBordureVise);
+  if (minuteurVise) clearTimeout(minuteurVise);
   el.scrollIntoView({block:'center', behavior:'smooth'});
-  el.classList.remove('item-vise');
   void el.offsetWidth; // relancer l'animation si on reclique sur le même item
   el.classList.add('item-vise');
-  setTimeout(() => el.classList.remove('item-vise'), 1600);
+  minuteurVise = setTimeout(() => { rendreBordureVise(el); minuteurVise = null; }, 2300);
 }
 
 function ajouterCategorie() {
