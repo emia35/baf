@@ -262,6 +262,14 @@ header.top{
    Sobre par construction : un fond de papier, pas de couleur de volet — elle
    ne désigne aucun volet — et trois lignes d'étiquette/valeur qui se lisent
    en diagonale. Elle se replie d'un clic, et la préférence vaut partout. */
+.reprise{
+  display:flex;gap:14px;align-items:center;flex-wrap:wrap;
+  border:1px solid var(--ocre);background:var(--ocre-pale);
+  border-radius:var(--radius-sm);padding:12px 16px;margin:0 0 18px;
+}
+.reprise-texte{flex:1;min-width:220px;font-size:13.5px;line-height:1.55;color:var(--ink);}
+.reprise-actions{display:flex;gap:8px;flex-shrink:0;}
+
 .situer{
   border:1px solid var(--line);border-radius:var(--radius-sm);
   background:var(--paper);margin:0 0 18px;overflow:hidden;
@@ -2605,7 +2613,7 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
     <div class="intro-card">
       <p style="margin:0;">Un comportement-défi n'est jamais là pour rien : il est une tentative, souvent coûteuse, de répondre à un besoin. La BAF ne vise pas à l'éteindre, mais à le décrypter — elle structure le recueil, organise les données et rend visible le niveau de confiance du travail produit. Elle ne pense pas à votre place.</p>
       <div class="ethique">
-        <b>Aucune donnée n'est collectée.</b> Cet outil fonctionne entièrement dans votre navigateur : rien n'est envoyé, stocké ou transmis à un serveur, de quelque façon que ce soit. Vos saisies restent sur l'appareil que vous utilisez, sous votre seule responsabilité.
+        <b>Aucune donnée n'est collectée.</b> Cet outil fonctionne entièrement dans votre navigateur : rien n'est envoyé, stocké ou transmis à un serveur, de quelque façon que ce soit. <b>En revanche, le dossier en cours reste enregistré dans ce navigateur</b> — c'est ce qui vous permet de fermer l'onglet sans rien perdre, et c'est aussi ce qui fait que, sur un poste partagé, la personne suivante le retrouvera. Exportez votre dossier et effacez-le en quittant.
         <div style="margin-top:12px;">
           <button class="btn btn-ghost btn-sm" onclick="route('reperes')">Comprendre la démarche et le vocabulaire →</button>
         </div>
@@ -2770,6 +2778,7 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
   </section>
 
   <section id="view-baf-accueil" class="view">
+    <div id="dossier-en-cours" hidden></div>
     <div class="hero">
       <svg class="bigrose" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="1">
 <circle cx="100" cy="100" r="96"/>
@@ -2808,11 +2817,12 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
           <p><b>Comment démarrer une AF en équipe avec la BAF.</b></p>
           <ol>
             <li><strong>Réunion de lancement (collective).</strong> Avant tout recueil, réunissez l'équipe — ou a minima un représentant de chaque espace de vie. Remplissez ensemble le module <i>Apprenons à nous connaître</i> : qui est la personne, quel est le contexte, quels sont les comportements-défis identifiés. Ce moment pose les bases d'une démarche clinique partagée. Il évite que chacun parte dans une direction différente.</li>
-            <li><strong>Partage du fichier JSON (multi-postes).</strong> Une fois le préambule complété, exportez le fichier JSON via le bouton correspondant. Placez-le dans un dossier partagé accessible à tous les déclarants (intranet, serveur commun). Chaque personne qui souhaite saisir un évènement téléchargera ce fichier, ajoutera ses observations, puis le re-déposera à l'emplacement partagé.</li>
-            <li><strong>Convention collective indispensable.</strong> Définissez ensemble qui dépose quoi et quand. Sans convention, le fichier risque d'être écrasé par deux personnes en même temps. Une règle simple : chacun exporte, ajoute, réimporte — et signale qu'il a terminé avant qu'un autre commence.</li>
+            <li><strong>Validation du préambule par chaque partie.</strong> Exportez un <i>kit déclarant</i> depuis Recueillir et envoyez-le à chaque espace de vie. Il contient le préambule, aucun évènement, et rien du travail d'analyse. Chacun le relit et signale, section par section, ce qui lui paraît faux ou incomplet. Vous corrigez, puis vous renvoyez le kit consolidé.</li>
+            <li><strong>Recueil par chacun, de son côté.</strong> Chaque déclarant décrit ce qu'il a observé dans sa propre copie, puis vous renvoie sa <i>contribution</i> : un fichier qui ne contient que son déclaratif. Vous la versez dans le dossier depuis Recueillir, chaque évènement gardant la trace de sa provenance, et les envois successifs d'une même personne ne se dupliquant pas.</li>
+            <li><strong>Ce qui ne circule pas.</strong> Le dossier complet reste chez le référent. Il contient l'ensemble du matériau et le travail d'analyse : le faire tourner donnerait à chaque déclarant accès aux observations de tous les autres — y compris entre parties qui peuvent être en désaccord. Ce qui circule vers l'extérieur, c'est le bilan, pas le fichier.</li>
             <li><strong>Synthèse et interprétation (collective).</strong> Après plusieurs semaines de recueil, relisez la synthèse en équipe. Les corrélations, le scatterplot et les patterns ne sont pas des conclusions — ce sont des matériaux à discuter, à confronter avec l'expérience clinique de chacun.</li>
           </ol>
-          <p><b>À retenir :</b> le fichier JSON est la mémoire partagée de l'analyse. Chaque membre de l'équipe y contribue depuis son propre espace d'observation. La BAF ne remplace pas la réunion clinique — elle l'alimente et la structure.</p>
+          <p><b>À retenir :</b> le dossier est la mémoire de l'analyse, et il a un gardien. Chaque déclarant y contribue depuis son propre espace d'observation, sans voir celui des autres. La BAF ne remplace pas la réunion clinique — elle l'alimente et la structure.</p>
         </div>
       </details>
       <button class="mod-btn m1" onclick="route('m1')">
@@ -3890,6 +3900,7 @@ function route(name, fromHistory){
   if(name === 'notes') renderNotes();
   if(name === 'declarant') renderDeclarant();
   if(name === 'parcours') renderParcours();
+  if(name === 'baf-accueil') majDossierEnCours();
   poserSituer(name);
   appliquerModeDeclarant();
 
@@ -11798,6 +11809,30 @@ refreshM2List();
 refreshAccueilBadges();
 // Le hash d'arrivée fait foi : écraser systématiquement par #accueil rendait
 // tout lien partagé inopérant, il ouvrait toujours la page d'accueil.
+/* Sur un poste partagé — la situation ordinaire en institution — la personne
+   qui ouvre l'outil tombe sur le dossier de la précédente sans le savoir. Le
+   dire à l'entrée, avec de quoi le refermer proprement. */
+function majDossierEnCours(){
+  const el = document.getElementById('dossier-en-cours');
+  if (!el) return;
+  const nb = ((state.m2 && state.m2.evenements) || []).length;
+  const prenom = ((state.m1 && state.m1.prenom) || '').trim();
+  if (!nb && !prenom) { el.hidden = true; el.innerHTML = ''; return; }
+  el.hidden = false;
+  el.innerHTML =
+    '<div class="reprise">' +
+      '<div class="reprise-texte">' +
+        '<b>Un dossier est déjà ouvert sur ce poste</b> — ' +
+        esc(prenom || 'sans prénom') + (nb ? ' · ' + nb + ' évènement' + (nb>1?'s':'') : '') + '. ' +
+        'Il reprendra là où il en était. Si ce n\'est pas le vôtre, exportez-le avant de l\'effacer.' +
+      '</div>' +
+      '<div class="reprise-actions">' +
+        '<button class="btn btn-secondary btn-sm" onclick="exporterDossierCourant()">💾 Exporter</button>' +
+        '<button class="btn btn-ghost btn-sm" onclick="effacerDossierCourant()">🗑 Effacer</button>' +
+      '</div>' +
+    '</div>';
+}
+
 /* ══════════════════════════════════════════════════════════════════════
    SITUER — la même bande sur chaque module
    ══════════════════════════════════════════════════════════════════════
