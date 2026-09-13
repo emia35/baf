@@ -13698,6 +13698,64 @@ function renderRemarquesRecues() {
 const NOTES_VERSION = [
 
   {
+    date: '2026-09-13',
+    titre: 'Ce que l\'audit a changé : des chiffres justes, les journées sans incident, et le double codage',
+    corps: `
+<p><i>Un audit indépendant de la BAF a été conduit le 13 septembre, à la demande d'Arthur, sur le fond clinique et sur le code. Il a trouvé trois défauts de calcul sérieux et plusieurs manques de méthode. Cette note dit ce qui a été corrigé.</i></p>
+
+<h4>Trois chiffres étaient faux</h4>
+<ul>
+<li><b>Le plus grave était invisible.</b> Dans la synthèse, le tableau « Antécédent → Conséquence » annonçait un taux conditionnel et divisait par le nombre total d'évènements du dossier. Un lien réel à 47 % s'affichait à 15 %. Ce tableau ouvre la synthèse et part dans l'export Word, donc dans les bilans. Le calcul est corrigé, et le <b>taux d'ensemble est affiché à côté</b> : un pourcentage seul ne dit rien, c'est la comparaison qui informe.</li>
+<li>Une dimension de l'indice de confiance pouvait s'afficher à <b>200 %</b>.</li>
+<li>Le même dossier ne donnait pas le même indice selon qu'on le cotait depuis la page ou depuis un fichier importé.</li>
+<li>Une cotation partielle affichait un indice effondré, sans un mot. Désormais, <b>aucun indice global ne s'affiche tant que les six dimensions n'ont pas été regardées</b>, et chaque dimension porte sa couverture — « 5 cotés sur 28 ».</li>
+</ul>
+
+<h4>Les journées sans comportement-défi existent enfin</h4>
+<p>C'était le manque central. La BAF ne savait enregistrer qu'un évènement où quelque chose s'était passé : elle ne pouvait donc pas distinguer « il ne s'est rien passé » de « personne n'a rempli », et la fréquence qu'elle affichait mesurait les <b>signalements</b>, pas les comportements.</p>
+<p>On déclare maintenant une journée ou une plage de dates, avec deux états : <b>observé sans comportement-défi</b>, ou <b>personne n'était en situation d'observer</b>. Ce ne sont pas la même information, et la première est celle qui a de la valeur clinique — les contextes de non-apparition orientent l'intervention.</p>
+<p>Et surtout : <b>la chronologie repère ses trous et vous relance.</b> Pour chaque période sans information, deux boutons. Avec la consigne qui va avec : si vous ne savez pas, allez le demander plutôt que de deviner.</p>
+
+<h4>Le double codage de la catégorisation</h4>
+<p>Catégoriser, c'est mesurer : c'est ce geste qui transforme un texte en une variable qui sera comptée. Fait par une seule personne, il portait toute la statistique de l'outil sans contrôle.</p>
+<p>Le mode approfondi d'Organiser permet maintenant d'exporter un <b>kit de codage</b> — la grille, les évènements, aucune catégorisation — pour qu'un collègue code en aveugle de son côté. Au retour, l'outil montre les écarts item par item, et un taux d'accord <b>si les deux ont codé contre la même grille</b>. Sinon il le dit, plutôt que de calculer un chiffre qui ne voudrait rien dire.</p>
+<p>L'outil ne tranche rien : vous discutez, et la catégorisation de synthèse est celle qui reste affichée.</p>
+
+<h4>Le vase de tension change de nature</h4>
+<p>Ce n'est plus une échelle qu'on applique, c'est un <b>résultat d'analyse</b>. Le déclarant pose un palier parmi cinq — la valeur libre de 0 à 100 disparaît, une impression subjective ne porte pas cent degrés de discrimination — et ce palier sert surtout à ranger l'observation associée.</p>
+<p>C'est l'équipe qui, à partir de ces signaux, écrit <b>l'échelle décrite de cette personne</b> : à quoi on reconnaît chaque palier chez elle. Cette échelle est une pièce du document d'analyse fonctionnelle, et elle peut être <b>figée</b> pour servir de repère au recueil suivant — jamais en cours de route, sinon l'unité de mesure se déplacerait pendant qu'on mesure.</p>
+<p>En attendant, cinq descriptions génériques servent de repère. Vos cotations d'avant ne changent pas : les paliers étaient déjà des tranches de l'ancienne échelle.</p>
+<p>La <b>moyenne disparaît</b> des statistiques, le pic reste. Une moyenne suppose que l'écart entre « normal » et « tendu » vaut celui entre « angoissé » et « débordé », ce que rien n'établit. Un maximum, lui, se calcule sur une échelle à paliers.</p>
+
+<h4>La piste somatique, avant l'analyse</h4>
+<p>Une douleur non identifiée est une cause fréquente de comportement-défi, et les recommandations françaises placent le bilan médical <b>avant</b> l'analyse fonctionnelle. Le préambule pose maintenant deux questions : une cause somatique a-t-elle été recherchée, par qui et quand — et ce qui est connu côté corps. Avec un renvoi aux échelles d'hétéro-évaluation de la douleur utilisables chez une personne qui ne la dit pas avec des mots (ESDDA, GED-DI).</p>
+
+<h4>Ce que l'ICAF cote, et ce qu'il ne cote pas</h4>
+<p>Le barème évalue une <b>analyse fonctionnelle complète</b>. Un recueil de données seul n'alimente qu'une partie de ses items. Quand vous lancez une cotation sur un dossier, l'outil vous dit désormais lesquels — et vous demande de laisser les autres <b>non cotés</b> : les coter à zéro ne dirait pas que le travail est mauvais, ça dirait que l'objet n'existe pas encore.</p>
+<div class="nv-corps" style="padding:0;">
+<p><b>AF</b> = RDAF + analyse clinique<br>
+<b>AF consolidée</b> = AF + ICAF + ce que la cotation fait aller chercher</p>
+</div>
+
+<h4>Les sources</h4>
+<p>Chaque outil emprunté à la littérature nomme sa source là où il sert, et <b>dit quand la BAF l'adapte</b>. La carte jour × moment porte ainsi sa propre limite, et un rappel utile : sur quinze jeux de données, l'inspection visuelle d'une telle carte n'a fait apparaître aucun pattern fiable. Elle se regarde, elle ne conclut pas. La page Références est remplie.</p>
+
+<h4>Deux points de sécurité</h4>
+<ul>
+<li>L'ancien circuit de partage — faire tourner le dossier complet — a été retiré : il donnait à chaque déclarant accès aux observations de tous les autres. Le circuit kit/contribution le remplace partout.</li>
+<li>Le dossier reste enregistré dans votre navigateur. C'est ce qui vous évite de perdre votre travail, et c'est aussi ce qui fait que <b>sur un poste partagé, la personne suivante le retrouve</b>. Un bandeau le signale à l'entrée, avec de quoi l'exporter et l'effacer.</li>
+</ul>
+
+<h4>Pas encore stabilisé</h4>
+<ul>
+<li>La carte jour × moment demande une couverture au créneau, pas à la journée, pour distinguer case par case l'absence de comportement de l'absence d'observation.</li>
+<li>Les cinq descriptions génériques des paliers sont une première proposition, à ajuster.</li>
+<li>Le protocole s'arrête à la cotation : il n'y a pas encore d'étape « de l'hypothèse au plan d'intervention ».</li>
+<li>L'outil ne mesure pas encore l'accord entre deux déclarants décrivant le même évènement.</li>
+</ul>`
+  },
+
+  {
     date: '2026-09-12',
     version: 'v2026.09.12-2',
     titre: 'Le téléphone, le circuit des déclarants, et un repère sur chaque page',
