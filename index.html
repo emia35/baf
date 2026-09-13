@@ -2070,6 +2070,7 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
   background:var(--sauge);border-radius:3px;
   transition:width .3s;
 }
+.corr-base{font-size:11.5px;color:var(--ink-soft);font-style:italic;padding-left:8px;}
 .corr-pct{
   font-size:11px;color:var(--ink-soft);flex-shrink:0;
   min-width:28px;text-align:right;
@@ -2157,6 +2158,7 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
 /* ── SCORE GLOBAL ── */
 .global-row{display:flex;gap:24px;align-items:center;margin-bottom:22px;flex-wrap:wrap;}
 .global-row .bar-block{flex:1;min-width:200px;}
+.cotation-partielle{font-size:13px;color:var(--ink-soft);font-style:italic;line-height:1.5;padding:6px 0;}
 .global-label{font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;}
 .prog{background:var(--paper-deep);border-radius:999px;height:26px;position:relative;overflow:hidden;border:1px solid var(--line);}
 .prog .fl{height:100%;border-radius:999px;transition:width .35s;}
@@ -2171,6 +2173,7 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
 .dim-header.closed{border-radius:var(--radius);}
 .dim-header:hover{opacity:.92;}
 .dim-header .dh-la{font-weight:700;font-size:14px;}
+.dim-header .dh-couv{margin-left:auto;margin-right:12px;font-size:11.5px;font-weight:600;opacity:.82;}
 .dim-header .dh-bdg{background:rgba(255,255,255,.22);padding:2px 11px;border-radius:999px;font-size:13px;font-weight:700;}
 .dim-body{padding:8px 12px;}
 
@@ -2204,6 +2207,8 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
 .score-btn{width:36px;height:28px;border:1px solid var(--line);border-radius:5px;cursor:pointer;font-weight:700;font-size:13px;transition:.1s;font-family:inherit;}
 .score-btn.sn{background:var(--card);color:var(--ink-soft);}
 .score-btn.s1{background:#5A9E72;color:#fff;border-color:#5A9E72;}
+/* Bordure pointillée : posé par la règle, pas par le cotateur. */
+.score-btn.auto{border-style:dashed;border-width:2px;}
 .score-btn.s0{background:#f4d4cc;color:#c04040;border-color:#e0a0a0;}
 
 /* ── BAF ENCART ── */
@@ -6725,7 +6730,7 @@ function catsDeEvt(sousId, evtId) {
 function computeCorrelations() {
   ensureM3();
   const evts = state.m2.evenements || [];
-  if (evts.length === 0) return {ante_cons:[], cp_cons:[], triplets:[]};
+  if (evts.length === 0) return {ante_cons:[], cp_cons:[], triplets:[], baseCons:{}, nEvts:0};
 
   // Compter les paires. Les anciennes paires impliquant un volet "déclencheur"
   // distinct ont disparu avec la fusion : ce qui était un déclencheur est
@@ -6733,12 +6738,19 @@ function computeCorrelations() {
   const pairsAnteCons = {};
   const pairsCpCons = {};
   const triplets = {};
+  /* Les effectifs de base, sans lesquels un taux conditionnel ne peut pas se
+     calculer : combien d'évènements portent CET antécédent, CE comportement,
+     CETTE conséquence. */
+  const baseAnte = {}, baseCp = {}, baseCons = {};
 
   evts.forEach((evt, idx) => {
     if (!evt.id) evt.id = 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
-    const antes = catsDeEvt('antecedents', evt.id);
-    const cps   = catsDeEvt('cp', evt.id);
-    const conss = catsDeEvt('consequences', evt.id);
+    const antes = [...new Set(catsDeEvt('antecedents', evt.id))];
+    const cps   = [...new Set(catsDeEvt('cp', evt.id))];
+    const conss = [...new Set(catsDeEvt('consequences', evt.id))];
+    antes.forEach(a => { baseAnte[a] = (baseAnte[a] || 0) + 1; });
+    cps.forEach(b   => { baseCp[b]   = (baseCp[b]   || 0) + 1; });
+    conss.forEach(c => { baseCons[c] = (baseCons[c] || 0) + 1; });
 
     // antécédent × conséquence
     antes.forEach(a => conss.forEach(c => {
@@ -6758,17 +6770,19 @@ function computeCorrelations() {
     })));
   });
 
-  const toSorted = (obj) => Object.entries(obj)
+  const toSorted = (obj, base) => Object.entries(obj)
     .map(([pair, n]) => {
       const [left, right] = pair.split(' ‣ ');
-      return {left, right, n};
+      return {left, right, n, base: base[left] || 0};
     })
     .filter(p => p.n >= CORR_MIN)
     .sort((a, b) => b.n - a.n);
 
   return {
-    ante_cons: toSorted(pairsAnteCons),
-    cp_cons: toSorted(pairsCpCons),
+    nEvts: evts.length,
+    baseCons,
+    ante_cons: toSorted(pairsAnteCons, baseAnte),
+    cp_cons: toSorted(pairsCpCons, baseCp),
     triplets: Object.entries(triplets)
       .map(([k, n]) => { const [a,b,c] = k.split(' ‣ '); return {a,b,c,n}; })
       .filter(t => t.n >= CORR_MIN)
@@ -6794,15 +6808,29 @@ function renderCorrelations() {
   card.style.display = '';
 
   // Construire une ligne de corrélation
+  /* Le taux affiché est CONDITIONNEL : sur les évènements qui portent le terme
+     de gauche, quelle part porte aussi celui de droite. Il divisait par le
+     nombre total d'évènements du dossier, donc il sous-estimait
+     systématiquement, d'autant plus que la catégorisation était partielle :
+     9 fois sur 12 s'affichait 23 % au lieu de 75 %. Le taux de base est donné
+     à côté, faute de quoi un pourcentage seul ne dit rien — c'est déjà ce que
+     fait le module de suggestions, dans le même outil. */
   const corrLine = (item, colorA, colorB, icon) => {
-    const pct = Math.min(100, Math.round(item.n / evts.length * 100));
+    const base = item.base || 0;
+    const pct = base ? Math.min(100, Math.round(item.n / base * 100)) : 0;
+    const nTot = correl.nEvts || evts.length;
+    const baseDroite = (correl.baseCons || {})[item.right] || 0;
+    const pctBase = nTot ? Math.round(baseDroite / nTot * 100) : 0;
+    const comparaison = baseDroite
+      ? `<span class="corr-base">contre ${pctBase}% en général</span>` : '';
     return `<div class="corr-row">
       <span class="corr-tag" style="background:${colorA};">${esc(item.left)}</span>
       <span class="corr-arrow">${icon}</span>
       <span class="corr-tag" style="background:${colorB};">${esc(item.right)}</span>
-      <span class="corr-count">${item.n}×</span>
+      <span class="corr-count">${item.n} sur ${base}</span>
       <span class="corr-bar-wrap"><span class="corr-bar" style="width:${pct}%;"></span></span>
       <span class="corr-pct">${pct}%</span>
+      ${comparaison}
     </div>`;
   };
 
@@ -6811,7 +6839,7 @@ function renderCorrelations() {
   if (ante_cons.length > 0) {
     html += `<div class="corr-section">
       <div class="corr-section-title">⏮ Antécédent → ⏭ Conséquence</div>
-      <div class="corr-note">Quand cet antécédent est présent, cette conséquence apparaît dans X% des évènements où l'antécédent est catégorisé.</div>
+      <div class="corr-note">Lecture : sur les évènements qui portent cet antécédent, quelle part porte aussi cette conséquence. Le second chiffre dit à quelle fréquence cette conséquence apparaît dans l'ensemble du dossier — c'est la comparaison qui donne du sens au premier, pas le pourcentage seul.</div>
       ${ante_cons.map(p => corrLine(p, 'var(--ocre-pale)', 'var(--rose-pale)', '→')).join('')}
     </div>`;
   }
@@ -6834,7 +6862,7 @@ function renderCorrelations() {
   if (cp_cons.length > 0) {
     html += `<div class="corr-section">
       <div class="corr-section-title">🎥 Comportement → ⏭ Conséquence</div>
-      <div class="corr-note">Le comportement et la conséquence co-apparaissent dans ces évènements. C'est souvent là que la fonction du comportement se lit.</div>
+      <div class="corr-note">Sur les évènements qui portent ce comportement, quelle part porte aussi cette conséquence. C'est souvent là que la fonction se lit — à condition de comparer au taux d'ensemble donné à côté.</div>
       ${cp_cons.map(p => corrLine(p, 'var(--sauge-pale)', 'var(--rose-pale)', '→')).join('')}
     </div>`;
   }
@@ -7925,6 +7953,77 @@ const _CONTROLES = [
       } catch (e) { soucis.push(nom + ' : ' + e.message); }
     });
     return _bancEgal('Documents en défaut', '', soucis.join(' | '));
+  }},
+
+  {nom:'Le pourcentage de corrélation est bien un taux conditionnel', test: () => {
+    /* Le chiffre affiché annonce « quand cet antécédent est là, cette
+       conséquence apparaît dans X % des cas ». Il divisait par le nombre TOTAL
+       d'évènements, donc il sous-estimait systématiquement — d'autant plus que
+       la catégorisation était partielle. Recalcul naïf, à la main, sur les
+       évènements eux-mêmes. */
+    const c = computeCorrelations() || {};
+    const evts = state.m2.evenements || [];
+    const ecarts = [];
+    (c.ante_cons || []).slice(0, 5).forEach(p => {
+      let base = 0, ensemble = 0;
+      evts.forEach(e => {
+        const a = catsDeEvt('antecedents', e.id);
+        const cs = catsDeEvt('consequences', e.id);
+        if (a.indexOf(p.left) !== -1) {
+          base++;
+          if (cs.indexOf(p.right) !== -1) ensemble++;
+        }
+      });
+      if (base !== p.base || ensemble !== p.n) {
+        ecarts.push(p.left + '→' + p.right + ' : ' + p.n + '/' + p.base + ' au lieu de ' + ensemble + '/' + base);
+      }
+    });
+    return _bancEgal('Taux conditionnels recalculés', '', ecarts.join(' | '));
+  }},
+
+  {nom:'La pré-cotation reste dans l\'échelle du barème', test: () => {
+    /* Le bouton de cotation ne produit que null, 1 et 0. Les règles de
+       pré-cotation distinguaient trois niveaux et écrivaient 2 sans borne :
+       une dimension pouvait s'afficher à 200 %. */
+    const metas = [
+      {n:0, decls:[], espaces:[], dureeJours:0, temoinRens:0, ctxComplet:0},
+      {n:1, decls:['a'], espaces:['x'], dureeJours:1, temoinRens:0, ctxComplet:0},
+      {n:12, decls:['a','b'], espaces:['x'], dureeJours:20, temoinRens:8, ctxComplet:7},
+      {n:52, decls:['a','b','c','d'], espaces:['x','y'], dureeJours:180, temoinRens:52, ctxComplet:50}
+    ];
+    const hors = [];
+    Object.entries(PRECOTATION_OBJECTIVABLE).forEach(([nom, regle]) => {
+      metas.forEach((m, i) => {
+        const v = bornerPreCotation(regle(m));
+        if (!(v === null || v === 0 || v === 1)) hors.push(nom.slice(0, 24) + ' [jeu ' + i + '] → ' + v);
+      });
+    });
+    return _bancEgal('Valeurs hors échelle', '', hors.join(' | '));
+  }},
+
+  {nom:'Aucune dimension de cotation ne peut dépasser 100 %', test: () => {
+    const dimsTest = [
+      {code:'A', name:'A', items:[{scores:[1,1,null]}, {scores:[0,1]}]},
+      {code:'B', name:'B', items:[{scores:[null,null]}]},
+      {code:'C', name:'C', items:[{scores:[0,0]}]}
+    ];
+    const sc = calcScores(dimsTest);
+    const hors = sc.dims.filter(d => d.score > 1 || d.score < 0).map(d => d.code + '=' + d.score);
+    return _bancEgal('Dimensions hors bornes', '', hors.join(','));
+  }},
+
+  {nom:'Une dimension non cotée ne compte pas comme un zéro', test: () => {
+    /* Deux règles se contredisaient : un item sans cotation était exclu de sa
+       dimension, mais une dimension entière sans cotation valait 0 et pesait
+       dans la moyenne. Le même vide, non pertinent en bas, échec en haut : une
+       cotation partielle affichait un indice effondré sans le dire. */
+    const dims = [
+      {code:'A', name:'A', items:[{scores:[1,1]}]},   // cotée, parfaite
+      {code:'B', name:'B', items:[{scores:[null]}]},  // pas cotée du tout
+      {code:'C', name:'C', items:[{scores:[null]}]}
+    ];
+    const sc = calcScores(dims);
+    return _bancEgal('Global sur les seules dimensions cotées', '1|1|3', sc.global + '|' + sc.dimsCotees + '|' + sc.dimsTotal);
   }},
 
   {nom:'Fusionner deux fois le même envoi ne duplique rien', test: () => {
@@ -13107,6 +13206,19 @@ const PRECOTATION_OBJECTIVABLE = {
     },
 };
 
+/* Le barème est binaire : le bouton de cotation ne produit que null, 1 et 0.
+   Les règles ci-dessus distinguent trois niveaux et renvoyaient 2, écrit sans
+   borne dans le tableau des scores — d'où une dimension affichée à 200 %, un
+   bouton sans style, et un sous-item compté « non coté » tout en pesant 2.
+   Le niveau intermédiaire n'entre pas par la porte de derrière : c'est un
+   JUGEMENT, pas un fait objectivable, donc la règle s'abstient et laisse la
+   main au cotateur. C'était la justification même de la pré-cotation. */
+function bornerPreCotation(v) {
+  if (v === 2) return 1;
+  if (v === 0) return 0;
+  return null;
+}
+
 function preCoterObjectivables(){
   const m = S.bafMeta;
   if (!m || !m.n || !S.raters.length) return;
@@ -13122,7 +13234,9 @@ function preCoterObjectivables(){
         if (valeur === null || valeur === undefined) return;
         // Ne jamais écraser une cotation déjà posée par un humain.
         if (item.scores[si] !== null && item.scores[si] !== undefined) return;
-        item.scores[si] = valeur;
+        const borne = bornerPreCotation(valeur);
+        if (borne === null) return;
+        item.scores[si] = borne;
         cot.autoCotes[di + '-' + ii + '-' + si] = true;
         n++;
       });
@@ -13191,6 +13305,28 @@ document.querySelectorAll('.idc-nav-btn').forEach(btn=>{
 // ============================================================
 // ENTRÉES
 // ============================================================
+/* Les deux chemins d'entrée — un fichier importé, le dossier ouvert —
+   faisaient le même travail à une ligne près : seul le second pré-cotait.
+   Le même dossier ne donnait donc pas le même indice selon la porte
+   empruntée, ce qui atteint la fonction même d'un instrument censé comparer.
+   Un seul endroit ouvre désormais une cotation : la divergence ne peut plus
+   revenir par distraction. */
+function ouvrirCotation(baf){
+  S.mode = 'baf';
+  S.baf = baf;
+  S.bafMeta = computeBafMeta(baf);
+  const prenom = (baf && baf.m1 && baf.m1.prenom) || '';
+  if (!S.raters.length) {
+    S.raters = [{id:1, label:'Cotation 1', dims:initDims(), meta:{id:prenom, rater:'', date:new Date().toISOString().slice(0,10)}, coll:DIMS.map(()=>false)}];
+  } else if (prenom && !S.raters[0].meta.id) {
+    S.raters[0].meta.id = prenom;
+  }
+  S.tab = 0;
+  preCoterObjectivables();
+  updateBafBadge();
+  goMain();
+}
+
 function demarrerBAF(){
   const inp=document.createElement('input');
   inp.type='file';inp.accept='.json';
@@ -13202,19 +13338,7 @@ function demarrerBAF(){
         const baf=JSON.parse(ev.target.result);
         // Validation légère : doit avoir version et m2
         if(!baf.m2||!baf.m1){alert('Ce fichier ne semble pas être un export BAF valide (champs m1/m2 manquants).');return;}
-        S.mode='baf';
-        S.baf=baf;
-        S.bafMeta=computeBafMeta(baf);
-        // Pré-remplir l'identifiant avec le prénom BAF si disponible
-        const prenom=baf.m1?.prenom||'';
-        if(!S.raters.length){
-          S.raters=[{id:1,label:'Cotation 1',dims:initDims(),meta:{id:prenom,rater:'',date:new Date().toISOString().slice(0,10)},coll:DIMS.map(()=>false)}];
-        } else {
-          if(prenom&&!S.raters[0].meta.id) S.raters[0].meta.id=prenom;
-        }
-        S.tab=0;
-        updateBafBadge();
-        goMain();
+        ouvrirCotation(baf);
       }catch(err){alert('Erreur de lecture du fichier : '+err.message);}
     };
     rd.readAsText(f);
@@ -13230,19 +13354,7 @@ function demarrerDepuisDossierOuvert(){
     alert("Aucun dossier n'est ouvert dans le Recueil des données.\n\nRemplissez un dossier, lancez une simulation, ou importez un fichier.");
     return;
   }
-  S.mode = 'baf';
-  S.baf = JSON.parse(JSON.stringify(state));
-  S.bafMeta = computeBafMeta(S.baf);
-  const prenom = state.m1.prenom || '';
-  if (!S.raters.length) {
-    S.raters = [{id:1, label:'Cotation 1', dims:initDims(), meta:{id:prenom, rater:'', date:new Date().toISOString().slice(0,10)}, coll:DIMS.map(()=>false)}];
-  } else if (prenom && !S.raters[0].meta.id) {
-    S.raters[0].meta.id = prenom;
-  }
-  S.tab = 0;
-  preCoterObjectivables();
-  updateBafBadge();
-  goMain();
+  ouvrirCotation(JSON.parse(JSON.stringify(state)));
 }
 
 // Sur l'accueil de l'outil 2, dire ce qu'on s'apprête à coter.
@@ -13324,6 +13436,32 @@ function bindTooltips(){
 // ============================================================
 // COTATION
 // ============================================================
+/* Un score global n'a de sens que si les six dimensions ont été regardées.
+   Avec l'ancienne règle, une cotation partielle affichait un indice effondré —
+   un sixième du score réel, sans un mot. Avec la règle juste, elle afficherait
+   100 % dès le premier sous-item pré-coté, ce qui est pire : le chiffre est
+   exact et la lecture est fausse. Tant que la cotation est partielle, on ne
+   montre donc aucun chiffre global. On dit où on en est. */
+function barreOuMention(sc){
+  if (sc.dimsCotees >= sc.dimsTotal) return mkPbar(sc.global);
+  const d = document.createElement('div');
+  d.className = 'cotation-partielle';
+  d.textContent = sc.dimsCotees
+    ? "Cotation partielle : pas d'indice global tant que les six dimensions n'ont pas été regardées. Les scores par dimension, eux, sont à jour."
+    : "Rien n'est encore coté.";
+  return d;
+}
+
+/* Combien de sous-items ont réellement reçu une cotation dans cette dimension.
+   Sans ce nombre, un pourcentage de dimension ne se lit pas. */
+function couvertureDim(dim){
+  let cotes=0, total=0;
+  (dim.items||[]).forEach(it=>{
+    (it.scores||[]).forEach(v=>{ total++; if(v!==null&&v!==undefined) cotes++; });
+  });
+  return {cotes, total};
+}
+
 function calcScores(dims){
   let itm={};
   let dr=dims.map((d,di)=>{
@@ -13336,7 +13474,20 @@ function calcScores(dims){
     });
     return{code:d.code,name:d.name,score:vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:0,has:vs.length>0};
   });
-  return{global:dr.reduce((a,d)=>a+d.score,0)/dr.length,dims:dr,items:itm};
+  /* Deux règles se contredisaient : un item sans cotation était EXCLU de la
+     moyenne de sa dimension, mais une dimension entière sans cotation valait
+     ZÉRO et pesait dans la moyenne globale. Le même vide, non pertinent en
+     bas, échec en haut. Un cotateur qui s'arrêtait après la dimension A
+     obtenait un sixième de son score réel, sans un mot. Une seule règle : ce
+     qui n'est pas coté ne compte nulle part, et le nombre de dimensions
+     réellement cotées est affiché à côté du score. */
+  const cotees=dr.filter(d=>d.has);
+  return{
+    global: cotees.length ? cotees.reduce((a,d)=>a+d.score,0)/cotees.length : 0,
+    dimsCotees: cotees.length,
+    dimsTotal: dr.length,
+    dims:dr, items:itm
+  };
 }
 
 function mkCotation(){
@@ -13396,8 +13547,12 @@ function mkCotation(){
   const sc=calcScores(rater.dims);
   const gr=document.createElement('div');gr.className='global-row';
   const bw=document.createElement('div');bw.className='bar-block';
-  const gl=document.createElement('div');gl.className='global-label';gl.textContent='Indice de confiance global';bw.appendChild(gl);
-  bw.appendChild(mkPbar(sc.global));gr.appendChild(bw);
+  const gl=document.createElement('div');gl.className='global-label';
+  gl.textContent = (sc.dimsCotees < sc.dimsTotal)
+    ? 'Indice de confiance — ' + sc.dimsCotees + ' dimension' + (sc.dimsCotees>1?'s':'') + ' cotée' + (sc.dimsCotees>1?'s':'') + ' sur ' + sc.dimsTotal
+    : 'Indice de confiance global';
+  bw.appendChild(gl);
+  bw.appendChild(barreOuMention(sc));gr.appendChild(bw);
   gr.appendChild(mkRadar(sc.dims,200));
   f.appendChild(gr);
 
@@ -13419,7 +13574,14 @@ function mkCotation(){
     const hd=document.createElement('div');
     hd.className='dim-header'+(rater.coll[di]?' closed':'');
     hd.style.background=DC[di%DC.length];
-    hd.innerHTML='<span class="dh-la">'+(rater.coll[di]?'▸':'▾')+' '+dim.code+'. '+dim.name+'</span><span class="dh-bdg">'+Math.round(sc.dims[di].score*100)+'%</span>';
+    /* Le pourcentage d'une dimension est la moyenne de ses sous-items COTÉS.
+       Cinq sous-items pré-cotés à 1 sur trente affichent donc 100 %, ce qui est
+       exact et se lit à l'envers. La couverture est donnée à côté : c'est elle
+       qui dit ce que le pourcentage vaut. */
+    const couv = couvertureDim(dim);
+    hd.innerHTML='<span class="dh-la">'+(rater.coll[di]?'▸':'▾')+' '+dim.code+'. '+dim.name+'</span>'+
+      '<span class="dh-couv">'+couv.cotes+' coté'+(couv.cotes>1?'s':'')+' sur '+couv.total+'</span>'+
+      '<span class="dh-bdg">'+(couv.cotes?Math.round(sc.dims[di].score*100)+'%':'—')+'</span>';
     hd.onclick=()=>{rater.coll[di]=!rater.coll[di];renderMain('cotation');};
     blk.appendChild(hd);
 
@@ -13475,9 +13637,15 @@ function mkCotation(){
             // Score
             const t2=document.createElement('td');t2.className='si-score';
             const btn=document.createElement('button');
-            btn.className='score-btn s'+(it.scores[siI]===null?'n':it.scores[siI]);
+            // Un sous-item posé par la règle automatique se signale : le cotateur
+            // doit savoir ce qu'il n'a pas coté lui-même. Dès qu'il y touche, la
+            // marque disparaît — ce n'est plus une pré-cotation.
+            const estAuto=!!(rater.autoCotes&&rater.autoCotes[di+'-'+ii+'-'+siI]);
+            btn.className='score-btn s'+(it.scores[siI]===null?'n':it.scores[siI])+(estAuto?' auto':'');
+            if(estAuto) btn.title='Pré-coté à partir des données du dossier — à vérifier, et modifiable';
             btn.textContent=it.scores[siI]===null?'·':it.scores[siI];
             btn.onclick=()=>{
+              if(rater.autoCotes) delete rater.autoCotes[di+'-'+ii+'-'+siI];
               if(it.scores[siI]===null)it.scores[siI]=1;
               else if(it.scores[siI]===1)it.scores[siI]=0;
               else it.scores[siI]=null;
@@ -13567,8 +13735,12 @@ function mkSynth(){
     const h=document.createElement('h2');h.textContent='Synthèse de la cotation';sec.appendChild(h);
     const gr=document.createElement('div');gr.className='global-row';
     const bw=document.createElement('div');bw.className='bar-block';
-    const gl=document.createElement('div');gl.className='global-label';gl.textContent='Indice de confiance global';bw.appendChild(gl);
-    bw.appendChild(mkPbar(sc.global));gr.appendChild(bw);
+    const gl=document.createElement('div');gl.className='global-label';
+  gl.textContent = (sc.dimsCotees < sc.dimsTotal)
+    ? 'Indice de confiance — ' + sc.dimsCotees + ' dimension' + (sc.dimsCotees>1?'s':'') + ' cotée' + (sc.dimsCotees>1?'s':'') + ' sur ' + sc.dimsTotal
+    : 'Indice de confiance global';
+  bw.appendChild(gl);
+    bw.appendChild(barreOuMention(sc));gr.appendChild(bw);
     gr.appendChild(mkRadar(sc.dims,230));sec.appendChild(gr);
   }
 
