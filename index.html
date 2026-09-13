@@ -262,6 +262,23 @@ header.top{
    Sobre par construction : un fond de papier, pas de couleur de volet — elle
    ne désigne aucun volet — et trois lignes d'étiquette/valeur qui se lisent
    en diagonale. Elle se replie d'un clic, et la préférence vaut partout. */
+.perimetre{
+  border:1px solid var(--ocre);background:var(--ocre-pale);
+  border-radius:var(--radius-sm);padding:14px 18px;margin:0 0 20px;
+}
+.perim-tete{font-size:14.5px;font-weight:700;color:var(--ink);margin-bottom:8px;}
+.perim-corps{font-size:13.5px;line-height:1.65;color:var(--ink);margin:0 0 10px;}
+.perim-detail summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--slate);}
+.perim-groupe{margin-top:12px;}
+.perim-titre{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--ink-soft);margin-bottom:5px;}
+.perim-detail ul{margin:0;padding-left:20px;}
+.perim-detail li{font-size:13px;line-height:1.55;margin-bottom:4px;}
+.perim-note{color:var(--ink-soft);font-style:italic;}
+.perim-equation{
+  margin-top:12px;padding-top:10px;border-top:1px solid var(--ocre);
+  font-size:13px;line-height:1.8;color:var(--ink);
+}
+
 .reprise{
   display:flex;gap:14px;align-items:center;flex-wrap:wrap;
   border:1px solid var(--ocre);background:var(--ocre-pale);
@@ -2877,7 +2894,16 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
         </svg>
         <div class="kicker">Outil de recherche — EMIA35</div>
         <h1>Indice de confiance</h1>
-        <p class="sub">Évaluer la qualité du processus méthodologique.</p>
+        <p class="sub">Évaluer la qualité méthodologique d'une analyse fonctionnelle — le travail produit, pas la personne accompagnée, pas les déclarants.</p>
+      </div>
+
+      <div class="ethique" style="margin-bottom:18px;">
+        <b>Ce que l'ICAF cote, et ce qu'il ne cote pas.</b> Le barème évalue un bilan d'analyse fonctionnelle <b>complet</b> : le recueil, mais aussi le profil global de la personne, les hypothèses, les préconisations, la diffusabilité du document. Un recueil de données seul — un RDAF — n'alimente qu'une partie de ces items. Le coter en entier ne dirait pas si le travail est bon : ça mesurerait le recouvrement entre deux périmètres.
+        <div style="margin-top:11px;font-weight:700;line-height:1.9;">
+          AF = RDAF + analyse clinique<br>
+          AF consolidée = AF + ICAF + ce que la cotation fait aller chercher
+        </div>
+        <div style="margin-top:9px;">L'ICAF ne consolide rien par lui-même : il mesure, et il dit où le matériau est mince. Ce qui consolide, c'est ce qu'on va chercher après l'avoir lu.</div>
       </div>
 
       <div class="intro-card">
@@ -7966,6 +7992,14 @@ const _CONTROLES = [
     return _bancEgal('Documents en défaut', '', soucis.join(' | '));
   }},
 
+  {nom:'Chaque item du barème sait si un RDAF peut l alimenter', test: () => {
+    /* La carte du périmètre est une liste tenue à la main. Un item ajouté au
+       barème sans entrée correspondante passerait en silence, et la phrase
+       « X items sur Y » deviendrait fausse. */
+    const par = perimetreCotation(initDims());
+    return _bancEgal('Items du barème sans périmètre déclaré', '', par.inconnu.map(x => x.code).join(','));
+  }},
+
   {nom:'Le pourcentage de corrélation est bien un taux conditionnel', test: () => {
     /* Le chiffre affiché annonce « quand cet antécédent est là, cette
        conséquence apparaît dans X % des cas ». Il divisait par le nombre TOTAL
@@ -12891,6 +12925,101 @@ function gf(text){
 // ============================================================
 // DONNÉES DIMENSIONS
 // ============================================================
+/* ══════════════════════════════════════════════════════════════════════
+   CE QUE L'ICAF COTE, ET CE QU'UN RDAF NE PRODUIT PAS
+   ══════════════════════════════════════════════════════════════════════
+   L'ICAF est un barème de bilan d'analyse fonctionnelle COMPLET : il évalue le
+   recueil, mais aussi le profil global de la personne, la formulation
+   d'hypothèses réfutables, la dérivation de préconisations opérationnelles et
+   la diffusabilité du document final.
+
+   Le RDAF, lui, produit un corpus d'évènements structuré, organisé,
+   partiellement interprété. Coter un RDAF nu avec l'ICAF ne mesure donc pas la
+   qualité du travail : ça mesure le recouvrement entre le périmètre de l'outil
+   et le périmètre du barème. De bons scores en A1-A3 et B2-B3, des scores nuls
+   en D, E et F — non parce que le travail est mauvais, mais parce que l'outil
+   ne fabrique pas ces objets.
+
+   L'outil rendait cette erreur facile : un bouton « Coter le dossier ouvert »
+   mène droit dessus. On ne retire pas le bouton — lire le recueil à travers le
+   barème est utile — on dit ce qu'on cote.
+
+       AF                = RDAF + analyse clinique
+       AF consolidée     = AF + ICAF + ce que la cotation fait aller chercher
+
+   L'ICAF ne consolide rien par lui-même : il mesure, et ce qui consolide est ce
+   qu'on va chercher après l'avoir lu. */
+
+const PERIMETRE_RDAF = {
+  A1: {etat:'oui'},
+  A2: {etat:'oui'},
+  A3: {etat:'partiel', note:"Le statut de témoin est recueilli ; la critique des sources, elle, s'écrit."},
+  A4: {etat:'non', note:"Profil sensoriel, communicationnel, somatique : le RDAF ne les recueille pas encore."},
+  B1: {etat:'non', note:"Le RDAF n'a pas d'étape de définition opérationnelle du comportement-cible."},
+  B2: {etat:'oui'},
+  B3: {etat:'oui'},
+  C1: {etat:'partiel', note:"La carte jour × moment existe, mais sans périodes observées sans comportement elle ne distingue pas l'absence de comportement de l'absence d'observation."},
+  C2: {etat:'partiel', note:"Les co-occurrences sont calculées ; l'analyse des contingences se rédige."},
+  C3: {etat:'partiel', note:"Les gradations sont saisies à la main, pas calculées."},
+  D1: {etat:'non'}, D2: {etat:'non'}, D3: {etat:'non'},
+  E1: {etat:'non'}, E2: {etat:'non'},
+  F1: {etat:'non'}, F2: {etat:'non'}, F3: {etat:'non'}
+};
+
+const PERIMETRE_LIBELLE = {
+  oui: "Le dossier fournit le matériau",
+  partiel: "Le dossier fournit une partie du matériau",
+  non: "Demande un écrit que le RDAF ne produit pas"
+};
+
+/* Parcourt le barème réellement chargé plutôt qu'une liste figée : si un item
+   est ajouté ou supprimé par le cotateur, le compte suit. */
+function perimetreCotation(dims) {
+  const par = {oui: [], partiel: [], non: [], inconnu: []};
+  (dims || []).forEach(d => (d.items || []).forEach(it => {
+    const p = PERIMETRE_RDAF[it.code];
+    const etat = p ? p.etat : 'inconnu';
+    par[etat].push({code: it.code, name: it.name, note: p && p.note});
+  }));
+  return par;
+}
+
+function renderPerimetre(rater) {
+  if (!S || S.mode !== 'baf') return null;
+  const par = perimetreCotation(rater.dims);
+  const total = par.oui.length + par.partiel.length + par.non.length + par.inconnu.length;
+  if (!total) return null;
+  const ligne = (x) =>
+    '<li><b>' + esc(x.code) + '</b> ' + esc(x.name) +
+    (x.note ? '<span class="perim-note"> — ' + esc(x.note) + '</span>' : '') + '</li>';
+
+  const d = document.createElement('div');
+  d.className = 'perimetre';
+  d.innerHTML =
+    '<div class="perim-tete">Vous cotez un <b>recueil de données</b>, pas une analyse fonctionnelle complète</div>' +
+    '<p class="perim-corps">' +
+      'Le barème évalue un bilan d\'analyse fonctionnelle entier. Sur les ' + total + ' items, ' +
+      '<b>' + par.oui.length + '</b> trouvent leur matériau dans ce dossier, ' +
+      '<b>' + par.partiel.length + '</b> en partie, et <b>' + par.non.length + '</b> portent sur un écrit ' +
+      'que le RDAF ne produit pas. Les coter à zéro ne dirait pas que le travail est mauvais : ' +
+      'ça dirait que l\'objet n\'existe pas encore. <b>Laissez-les non cotés</b> — l\'indice global ' +
+      'ne s\'affiche que lorsque les six dimensions ont été regardées.' +
+    '</p>' +
+    '<details class="perim-detail"><summary>Voir le détail item par item</summary>' +
+      '<div class="perim-groupe"><div class="perim-titre">' + esc(PERIMETRE_LIBELLE.non) + '</div><ul>' +
+        par.non.map(ligne).join('') + '</ul></div>' +
+      (par.partiel.length ? '<div class="perim-groupe"><div class="perim-titre">' + esc(PERIMETRE_LIBELLE.partiel) + '</div><ul>' +
+        par.partiel.map(ligne).join('') + '</ul></div>' : '') +
+      '<div class="perim-groupe"><div class="perim-titre">' + esc(PERIMETRE_LIBELLE.oui) + '</div><ul>' +
+        par.oui.map(ligne).join('') + '</ul></div>' +
+    '</details>' +
+    '<div class="perim-equation">' +
+      '<div><b>AF</b> = RDAF + analyse clinique</div>' +
+      '<div><b>AF consolidée</b> = AF + ICAF + ce que la cotation fait aller chercher</div>' +
+    '</div>';
+  return d;
+}
+
 const DIMS=[
 {code:"A",name:"Qualité du recueil des données",items:[
 {code:"A1",name:"Pluralité et diversité des sources",
@@ -13590,6 +13719,10 @@ function mkCotation(){
   bw.appendChild(barreOuMention(sc));gr.appendChild(bw);
   gr.appendChild(mkRadar(sc.dims,200));
   f.appendChild(gr);
+
+  // Dire ce qu'on cote avant de le coter.
+  const perim = renderPerimetre(rater);
+  if (perim) f.appendChild(perim);
 
   // Lien discret déplier/replier tout
   const allOpen=rater.coll.every(c=>!c);
