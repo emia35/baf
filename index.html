@@ -262,6 +262,35 @@ header.top{
    Sobre par construction : un fond de papier, pas de couleur de volet — elle
    ne désigne aucun volet — et trois lignes d'étiquette/valeur qui se lisent
    en diagonale. Elle se replie d'un clic, et la préférence vaut partout. */
+.vase-boutons{display:flex;flex-direction:column;gap:4px;width:100%;}
+.vase-btn{
+  background:var(--card);border:1.5px solid var(--line);border-radius:7px;
+  padding:6px 10px;font-family:inherit;font-size:12.5px;font-weight:600;
+  color:var(--ink-soft);cursor:pointer;text-align:left;transition:.12s;
+}
+.vase-btn:hover{border-color:var(--pal);color:var(--ink);}
+.vase-btn.actif{background:var(--pal);border-color:var(--pal);color:#fff;}
+.echelle-aide{margin:0 0 12px;}
+.echelle-aide summary{cursor:pointer;font-size:12.5px;font-weight:600;color:var(--slate);}
+.echelle-tag{
+  display:inline-block;background:var(--sauge-pale);color:var(--sauge-deep);
+  font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:10px;margin-left:8px;
+  text-transform:uppercase;letter-spacing:.3px;
+}
+.echelle-tag.generique{background:var(--paper-deep);color:var(--ink-soft);}
+.echelle-corps{margin-top:8px;}
+.echelle-ligne{border-left:3px solid var(--line);padding:5px 0 5px 10px;margin-bottom:7px;}
+.echelle-nom{font-size:12.5px;font-weight:700;color:var(--ink);text-transform:capitalize;}
+.echelle-critere{font-size:12.5px;color:var(--ink);line-height:1.5;}
+.echelle-signes{font-size:11.5px;color:var(--ink-soft);line-height:1.5;font-style:italic;margin-top:2px;}
+.echelle-figer{
+  display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:16px;
+  border:1px solid var(--vase-descend);background:var(--vase-descend-pale);
+  border-radius:var(--radius-sm);padding:12px 16px;
+}
+.echelle-figer-texte{flex:1;min-width:240px;font-size:13px;line-height:1.55;color:var(--ink);}
+.echelle-figer-actions{display:flex;gap:8px;flex-wrap:wrap;}
+
 .cov-chiffres{
   display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--ink-soft);
   padding:10px 14px;background:var(--paper);border-radius:var(--radius-sm);margin:0 0 14px;
@@ -3399,6 +3428,7 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
         <div class="vase-prudence">⚠ Ce que vous écrivez ici devient l'aide affichée aux déclarants au moment de coter. Si vous réécrivez un palier plus tard, les cotations passées gardent leur chiffre mais changent un peu de sens — le nombre reste la donnée, la description est une aide à la lecture.</div>
       </div>
       <div id="vase-paliers-liste"></div>
+      <div id="vase-figer"></div>
 
       <h4 class="vase-part-titre">2 · Ce qui le remplit, ce qui le vide</h4>
       <div id="vase-apriori"></div>
@@ -4909,6 +4939,131 @@ const PALIERS_VASE = [
   {id:'deborde',    min:80, nom:'débordé',    couleur:'#7B4EA0'}
 ];
 
+/* ══════════════════════════════════════════════════════════════════════
+   LES ANCRES DU VASE
+   ══════════════════════════════════════════════════════════════════════
+   Une ancre, c'est la description observable accrochée à un niveau, pour que
+   deux personnes qui voient la même scène posent le même palier. « Tendu »
+   n'est pas une ancre : c'est une étiquette.
+
+   Deux étages, et c'est ce découpage qui rend la personnalisation possible
+   sans que l'échelle devienne molle :
+   · le CRITÈRE ne bouge pas d'une personne à l'autre ;
+   · les SIGNES sont des exemples, que le travail d'analyse remplacera par ceux
+     de la personne — c'est le livrable du module Interpréter.
+
+   Trois décisions à connaître :
+   · « Débordé » ne se définit PAS par le comportement-défi. Sinon le vase ne
+     ferait que redire la colonne comportement. Le critère porte sur la perte
+     de prise et la non-réversibilité, souvent visibles AVANT le CD — et c'est
+     ce qui rend le vase utile en prévention.
+   · Les paliers hauts décrivent les DEUX sens. Une échelle qui ne décrit que
+     l'escalade cote « tranquille » quelqu'un qui se fige à 80.
+   · Le palier « angoissé » porte sur la capacité de la personne à redescendre
+     seule, et non sur « il faut l'intervention d'un tiers » : ce dernier
+     dépend des habitudes de l'entourage, pas de la personne, et deux
+     déclarants qui n'interviennent pas au même moment coteraient
+     différemment. */
+
+const ANCRES_VASE = {
+  tranquille: {
+    critere: "Disponible. L'imprévu passe sans effort visible.",
+    signes: "Accepte une proposition nouvelle, tolère l'attente, revient seul à son activité après une interruption, accepte ou sollicite le contact."
+  },
+  normal: {
+    critere: "La charge ordinaire d'une journée. Les contrariétés se produisent et se résorbent seules, sans que personne ait à intervenir.",
+    signes: "Râle, soupire, hausse le ton, puis passe à autre chose. Garde ses habitudes, répond aux consignes courantes."
+  },
+  tendu: {
+    critere: "La tension se voit, et la personne la régule encore par elle-même, éventuellement avec un étayage léger.",
+    signes: "Agitation motrice ou au contraire immobilité inhabituelle. Stéréotypies plus fréquentes ou plus amples. Voix plus forte, ou parole qui se raréfie. Vérifications répétées, questions en boucle, tolérance à l'attente qui baisse."
+  },
+  angoisse: {
+    critere: "Ses stratégies habituelles ne suffisent plus. Elle ne parvient plus à redescendre seule ; une consigne simple ne passe plus telle quelle.",
+    signes: "Recherche insistante d'un adulte ou retrait marqué. Refus, opposition, pleurs. Premiers gestes dirigés contre soi, autrui ou les objets, sans dommage. Alimentation ou sommeil perturbés dans la journée qui suit."
+  },
+  deborde: {
+    critere: "Plus rien d'extérieur n'a prise dans l'immédiat, et la redescente prend du temps même quand la cause a disparu.",
+    signes: "Comportement-défi installé, ou imminent. Le langage disponible se perd. Gestes de forte intensité, ou sidération et arrêt complet. Épuisement au décours, parfois plusieurs heures."
+  }
+};
+
+/* L'échelle en vigueur pour la cotation. Générique tant que l'équipe n'a pas
+   figé la sienne ; propre à la personne ensuite.
+
+   L'échelle se personnalise ENTRE deux cycles de recueil, jamais PENDANT. Si
+   la description changeait en cours de route, l'unité de mesure se déplacerait
+   pendant qu'on mesure — c'est le reproche le plus solide qu'on puisse faire à
+   ce genre d'outil. La description travaillée dans Interpréter reste donc une
+   lecture clinique jusqu'à ce qu'on la fige explicitement. */
+function echelleEnVigueur() {
+  const figee = state.m1 && state.m1.echelleVase;
+  if (figee && figee.paliers && Object.keys(figee.paliers).some(k => (figee.paliers[k] || '').trim())) {
+    return {propre: true, figeeLe: figee.figeeLe || '', paliers: figee.paliers};
+  }
+  return {propre: false, paliers: null};
+}
+
+function descriptionPalier(idPalier) {
+  const e = echelleEnVigueur();
+  if (e.propre && (e.paliers[idPalier] || '').trim()) return e.paliers[idPalier].trim();
+  const a = ANCRES_VASE[idPalier];
+  return a ? a.critere : '';
+}
+
+function figerEchelleVase() {
+  const p = (state.m4 && state.m4.paliers) || {};
+  const remplis = PALIERS_VASE.filter(x => (p[x.id] || '').trim()).length;
+  if (!remplis) { alert("Aucun palier n'est décrit pour l'instant. Décrivez-les à partir des signes récoltés, puis figez l'échelle."); return; }
+  if (remplis < PALIERS_VASE.length &&
+      !confirm(remplis + ' palier' + (remplis > 1 ? 's' : '') + ' sur ' + PALIERS_VASE.length + ' seulement ' +
+               (remplis > 1 ? 'sont décrits' : 'est décrit') + '.\n\nLes paliers non décrits garderont la description générique. Figer quand même ?')) return;
+  if (!confirm("Figer cette échelle pour les recueils à venir ?\n\n" +
+               "Les déclarants verront désormais VOS descriptions au moment de coter, à la place des descriptions génériques. " +
+               "Les cotations déjà posées gardent leur palier : ce sont les prochaines qui changent de repère.\n\n" +
+               "C'est une décision de cycle : on ne déplace pas l'unité de mesure pendant qu'on mesure.")) return;
+  if (!state.m1) state.m1 = {};
+  state.m1.echelleVase = {
+    paliers: JSON.parse(JSON.stringify(state.m4.paliers || {})),
+    figeeLe: new Date().toISOString()
+  };
+  persist();
+  renderVasePaliers();
+  showToast('Échelle figée. Elle sert désormais de repère aux déclarants.');
+}
+
+function libererEchelleVase() {
+  if (!confirm("Revenir aux descriptions génériques pour la cotation ?\n\nVotre échelle reste écrite dans Interpréter, elle cesse simplement de servir de repère aux déclarants.")) return;
+  if (state.m1) delete state.m1.echelleVase;
+  persist();
+  renderVasePaliers();
+  showToast('Retour aux descriptions génériques.');
+}
+
+/* L'aide affichée au moment de coter : les cinq paliers et ce à quoi on les
+   reconnaît. C'est ce qui remplace la fausse précision d'une échelle à cent
+   niveaux — une impression subjective ne porte pas cent degrés de
+   discrimination, elle en porte cinq, nommés. */
+function aideEchelle() {
+  const e = echelleEnVigueur();
+  return '<details class="echelle-aide">' +
+    '<summary>À quoi reconnaît-on chaque palier ?' +
+      (e.propre ? '<span class="echelle-tag">échelle de cette personne</span>'
+                : '<span class="echelle-tag generique">repères génériques</span>') +
+    '</summary>' +
+    '<div class="echelle-corps">' +
+      PALIERS_VASE.slice().reverse().map(p => {
+        const perso = e.propre && (e.paliers[p.id] || '').trim();
+        const a = ANCRES_VASE[p.id] || {};
+        return '<div class="echelle-ligne" style="border-left-color:' + p.couleur + ';">' +
+          '<div class="echelle-nom">' + esc(p.nom) + '</div>' +
+          '<div class="echelle-critere">' + esc(perso || a.critere || '') + '</div>' +
+          (!perso && a.signes ? '<div class="echelle-signes">' + esc(a.signes) + '</div>' : '') +
+        '</div>';
+      }).join('') +
+    '</div></details>';
+}
+
 // Borne basse incluse : 40 est « tendu », pas « normal ».
 function palierDe(v) {
   if (v === null || v === undefined || v === '') return null;
@@ -4994,10 +5149,18 @@ const VASE_HAUT = 14, VASE_BAS = 170, VASE_H = 156;
 function vaseY(v) { return VASE_BAS - (v / 100) * VASE_H; }
 
 function vaseSVG(id) {
+  /* Cinq cibles, plus cent-une. Une impression subjective ne porte pas cent
+     degrés de discrimination : en demander cent produit du bruit qui
+     ressemble à du signal. La valeur enregistrée reste numérique — le milieu
+     du palier — pour que tout ce qui lit ces données continue de marcher, et
+     pour qu'un ancien 68 désigne toujours le même palier qu'avant. */
   const bandes = PALIERS_VASE.map(p => {
     const y1 = vaseY(p.min + 20), y2 = vaseY(p.min);
-    return '<rect x="18" y="' + y1.toFixed(1) + '" width="86" height="' + (y2 - y1).toFixed(1) +
-           '" fill="' + p.couleur + '" fill-opacity="0.16" clip-path="url(#vclip-' + id + ')"/>';
+    return '<rect class="vase-bande" data-palier="' + p.id + '" x="18" y="' + y1.toFixed(1) +
+           '" width="86" height="' + (y2 - y1).toFixed(1) +
+           '" fill="' + p.couleur + '" fill-opacity="0.16" clip-path="url(#vclip-' + id + ')"' +
+           ' style="cursor:pointer;" onclick="vaseChoisir(\'' + id + '\',' + (p.min + 10) + ')">' +
+           '<title>' + esc(p.nom + ' — ' + (ANCRES_VASE[p.id] ? ANCRES_VASE[p.id].critere : '')) + '</title></rect>';
   }).join('');
   const reperes = PALIERS_VASE.map(p => {
     const sep = p.min === 0 ? '' :
@@ -5025,12 +5188,15 @@ function vaseWidget(id, mesure, question, aide, compact) {
   return '<div class="vase-mesure' + (compact ? ' compact' : '') + '">' +
     '<div class="vase-question">💧 ' + question + '</div>' +
     (aide ? '<div class="vase-aide">' + aide + '</div>' : '') +
+    aideEchelle() +
     '<div class="vase-corps">' + vaseSVG(id) +
       '<div class="vase-cote">' +
-        '<div class="vase-chiffre">' +
-          '<input type="number" id="vase-val-' + id + '" min="0" max="100" step="1" value="' + v +
-            '" placeholder="—" oninput="majVase(\'' + id + '\');vaseChange(\'' + id + '\')">' +
-          '<span class="vase-unite">/ 100</span>' +
+        '<input type="hidden" id="vase-val-' + id + '" value="' + v + '">' +
+        '<div class="vase-boutons">' +
+          PALIERS_VASE.slice().reverse().map(p =>
+            '<button type="button" class="vase-btn" data-palier="' + p.id + '" id="vbtn-' + id + '-' + p.id + '"' +
+            ' style="--pal:' + p.couleur + ';" title="' + esc((ANCRES_VASE[p.id] || {}).critere || '') + '"' +
+            ' onclick="vaseChoisir(\'' + id + '\',' + (p.min + 10) + ')">' + p.nom + '</button>').join('') +
         '</div>' +
         '<div class="vase-palier vide" id="vpalier-' + id + '">pas encore coté</div>' +
         '<button type="button" class="vase-effacer" onclick="vaseEffacer(\'' + id + '\')">je ne sais pas</button>' +
@@ -5042,6 +5208,21 @@ function vaseWidget(id, mesure, question, aide, compact) {
       '<textarea id="vase-note-' + id + '" placeholder="ex : se balance d\'un pied sur l\'autre, parle plus fort, regarde souvent vers la porte...">' + esc(note) + '</textarea>' +
     '</div>' +
   '</div>';
+}
+
+/* Un clic = un palier. La valeur stockée est le milieu du palier : les
+   lectures en aval ne changent pas, et les cotations d'avant restent
+   valides puisque les paliers ÉTAIENT déjà des tranches de cette échelle —
+   un 68 affichait « angoissé » et l'affiche toujours. Rien à convertir. */
+function vaseChoisir(id, valeur) {
+  const el = document.getElementById('vase-val-' + id);
+  if (!el) return;
+  const actuel = el.value === '' ? null : Number(el.value);
+  const palActuel = palierDe(actuel), palVise = palierDe(valeur);
+  // Re-cliquer le palier déjà posé le retire : pas besoin de chercher le bouton « je ne sais pas ».
+  el.value = (palActuel && palVise && palActuel.id === palVise.id) ? '' : valeur;
+  majVase(id);
+  vaseChange(id);
 }
 
 function majVase(id) {
@@ -5077,9 +5258,16 @@ function majVase(id) {
     if (v === null) trait.setAttribute('stroke-dasharray', '4,3');
     else trait.removeAttribute('stroke-dasharray');
   }
+  const pal2 = palierDe(v);
+  PALIERS_VASE.forEach(p => {
+    const b = document.getElementById('vbtn-' + id + '-' + p.id);
+    if (b) b.classList.toggle('actif', !!(pal2 && pal2.id === p.id));
+  });
   const pEl = document.getElementById('vpalier-' + id);
   if (pEl) {
-    pEl.textContent = v === null ? 'pas encore coté' : (pal.nom + ' — ' + v + '/100');
+    // Le chiffre ne s'affiche plus : il n'a jamais rien dit de plus que le
+    // palier, et il laissait croire à une précision qui n'existe pas.
+    pEl.textContent = v === null ? 'pas encore coté' : pal.nom;
     pEl.className = 'vase-palier' + (v === null ? ' vide' : '');
   }
 }
@@ -8219,6 +8407,56 @@ const _CONTROLES = [
     return _bancEgal('Organisation et interprétation inchangées', empreinteAvant, empreinteApres);
   }},
 
+  {nom:'Le vase ne produit que cinq valeurs', test: () => {
+    /* Cent niveaux de discrimination sur une impression subjective, c'est du
+       bruit qui ressemble à du signal. La saisie ne propose plus que les cinq
+       paliers ; la valeur stockée est le milieu du palier, ce qui laisse tout
+       ce qui lit ces données fonctionner sans rien convertir. */
+    const attendus = PALIERS_VASE.map(p => p.min + 10).join(',');
+    const produits = PALIERS_VASE.map(p => {
+      const pal = palierDe(p.min + 10);
+      return pal && pal.id === p.id ? (p.min + 10) : 'ERREUR:' + p.id;
+    }).join(',');
+    return _bancEgal('Valeurs produites par les cinq paliers', attendus, produits);
+  }},
+
+  {nom:'Les cotations d\'avant gardent leur palier', test: () => {
+    /* Contrairement à l'intensité 1-5, il n'y a rien à convertir : les paliers
+       ÉTAIENT déjà des tranches de l'échelle 0-100. Un 68 affichait
+       « angoissé » et doit continuer de l'afficher. */
+    const cas = [[0,'tranquille'],[19,'tranquille'],[20,'normal'],[40,'tendu'],[52,'tendu'],[68,'angoisse'],[80,'deborde'],[100,'deborde']];
+    const faux = cas.filter(([v, attendu]) => { const p = palierDe(v); return !p || p.id !== attendu; })
+                    .map(([v]) => v);
+    return _bancEgal('Valeurs d\'avant mal reclassées', '', faux.join(','));
+  }},
+
+  {nom:'Chaque palier a son ancre observable', test: () => {
+    /* Une ancre décrit ce qu'on VOIT, pas ce qu'on déduit. Un palier sans ancre
+       n'est qu'une étiquette, et deux personnes qui voient la même scène
+       posent alors deux chiffres différents. */
+    const sans = PALIERS_VASE.filter(p => {
+      const a = ANCRES_VASE[p.id];
+      return !a || !(a.critere || '').trim() || !(a.signes || '').trim();
+    }).map(p => p.id);
+    return _bancEgal('Paliers sans ancre', '', sans.join(','));
+  }},
+
+  {nom:'L\'échelle décrite ne redescend au recueil que si on la fige', test: () => {
+    /* Si la description travaillée dans Interpréter servait aussitôt de repère
+       aux déclarants, l'unité de mesure se déplacerait pendant qu'on mesure.
+       Elle ne descend qu'au moment où l'équipe la fige, entre deux cycles. */
+    const sauveM1 = state.m1.echelleVase;
+    const sauveM4 = state.m4.paliers;
+    state.m4.paliers = {tendu: 'Description de travail, pas encore figée.'};
+    delete state.m1.echelleVase;
+    const avant = descriptionPalier('tendu');
+    state.m1.echelleVase = {paliers: {tendu: 'Description figée.'}, figeeLe: '2026-01-01'};
+    const apres = descriptionPalier('tendu');
+    state.m1.echelleVase = sauveM1; state.m4.paliers = sauveM4;
+    return _bancEgal('Repère avant puis après avoir figé',
+      ANCRES_VASE.tendu.critere + '|Description figée.', avant + '|' + apres);
+  }},
+
   {nom:'Une période observée n\'est pas un évènement', test: () => {
     /* Si un « RAS » était enregistré comme un évènement avec une case cochée,
        il faudrait l'exclure d'une cinquantaine de comptages — et le jour où on
@@ -8601,14 +8839,18 @@ const _CONTROLES = [
     return _bancEgal('Part d\'observation directe', attendu, crit ? crit.valeur : null);
   }},
 
-  {nom:'Niveau de tension moyen de l\'outil 2 lisible', test: () => {
+  {nom:'Médiane des pics de tension, pour l\'outil 2', test: () => {
     const evts = state.m2.evenements||[];
     // Sur un dossier vide, computeBafMeta sort tôt et renvoie {} : rien à
     // comparer, et c'est le comportement attendu.
-    if (!evts.length) return _bancEgal('Tension moyenne : dossier vide', true, true);
-    // Recalcul indépendant : on relit les trois points de la montée à la main,
-    // sans passer par niveauxMontee().
-    const vals = [];
+    if (!evts.length) return _bancEgal('Médiane des pics : dossier vide', true, true);
+    /* Recalcul indépendant : on relit les trois points de la montée à la main,
+       sans passer par niveauxMontee(). Ce n'est plus une MOYENNE : une moyenne
+       d'appréciations ordinales suppose des intervalles égaux, que rien
+       n'établit — rien ne garantit que l'écart entre « normal » et « tendu »
+       vaille celui entre « angoissé » et « débordé ». La médiane des pics est
+       définie sur une échelle ordinale, elle. */
+    const pics = [];
     evts.forEach(e => {
       const t = e.tension || {};
       const pts = [];
@@ -8616,11 +8858,12 @@ const _CONTROLES = [
         const m = t[k];
         if (m && m.v !== null && m.v !== undefined && m.v !== '' && !isNaN(Number(m.v))) pts.push(Number(m.v));
       });
-      if (pts.length) vals.push(pts.reduce((a,b)=>a+b,0)/pts.length);
+      if (pts.length) pics.push(Math.max.apply(null, pts));
     });
-    const attendu = vals.length ? (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1) : null;
+    pics.sort((a, b) => a - b);
+    const attendu = pics.length ? pics[Math.floor(pics.length / 2)] : null;
     const meta = computeBafMeta(state);
-    return _bancEgal('Tension moyenne (outil 2)', attendu, meta.intensMoy);
+    return _bancEgal('Médiane des pics de tension (outil 2)', attendu, meta.intensMoy);
   }},
 
   {nom:'La barre dossier de l\'outil 2 se rend sans exception', test: () => {
@@ -10395,6 +10638,36 @@ function renderVasePaliers() {
       '</div>' +
     '</div>';
   }).join('');
+  renderFigerEchelle();
+}
+
+/* L'échelle décrite est le LIVRABLE du module : ce que l'équipe a compris des
+   paliers de cette personne, construit à partir des signes que les déclarants
+   ont notés. Elle part dans le document d'analyse fonctionnelle avec le reste
+   d'Interpréter, et elle peut devenir le repère du recueil suivant. */
+function renderFigerEchelle() {
+  const el = document.getElementById('vase-figer');
+  if (!el) return;
+  const e = echelleEnVigueur();
+  const decrits = PALIERS_VASE.filter(p => ((state.m4.paliers || {})[p.id] || '').trim()).length;
+  el.innerHTML =
+    '<div class="echelle-figer">' +
+      '<div class="echelle-figer-texte">' +
+        (e.propre
+          ? '<b>Les déclarants cotent avec votre échelle.</b> Figée le ' + esc(e.figeeLe ? formatDate(e.figeeLe.slice(0,10)) : '—') + '. ' +
+            'Si vous la retravaillez ci-dessus, les changements ne redescendront au recueil que lorsque vous la figerez à nouveau — ' +
+            'on ne déplace pas l\'unité de mesure pendant qu\'on mesure.'
+          : '<b>Les déclarants cotent avec les repères génériques.</b> ' + decrits + ' palier' + (decrits > 1 ? 's' : '') + ' sur ' + PALIERS_VASE.length +
+            ' ' + (decrits > 1 ? 'sont décrits' : 'est décrit') + ' ici. Quand la description vous semble juste, figez-la : elle deviendra le repère du prochain recueil, ' +
+            'à la place des descriptions génériques.') +
+      '</div>' +
+      '<div class="echelle-figer-actions">' +
+        (e.propre
+          ? '<button class="btn btn-ghost btn-sm" onclick="libererEchelleVase()">Revenir aux repères génériques</button>' +
+            '<button class="btn btn-secondary btn-sm" onclick="figerEchelleVase()">Mettre à jour l\'échelle</button>'
+          : '<button class="btn btn-secondary btn-sm" onclick="figerEchelleVase()">Figer cette échelle pour le prochain recueil</button>') +
+      '</div>' +
+    '</div>';
 }
 
 function savePalier(id) {
@@ -10833,7 +11106,7 @@ function buildScatterplot(evts) {
       const r = cell.count > 0 ? Math.max(4, Math.round(R_MAX * Math.sqrt(cell.count / maxCount))) : 0;
       const moyCell = cell.moys.length ? cell.moys.reduce((a, v) => a + v, 0) / cell.moys.length : null;
       const picCell = cell.pics.length ? Math.max.apply(null, cell.pics) : null;
-      const valeur = modeTension === 'pic' ? picCell : moyCell;
+      const valeur = picCell;
       const color = couleurTension(valeur) || 'none';
       const label = SCATTER_JOURS_LONG[ji];
       const chiffres = moyCell === null
@@ -10877,14 +11150,13 @@ function buildScatterplot(evts) {
 
   const choixMode = `<div class="bloc-controles no-print">
       <select onchange="setModeScatterTension(this.value)" title="Ce que le rond représente">
-        <option value="moyenne" ${modeTension === 'moyenne' ? 'selected' : ''}>Moyenne de la montée</option>
-        <option value="pic" ${modeTension === 'pic' ? 'selected' : ''}>Pic</option>
+        <option value="pic" selected>Palier le plus haut atteint</option>
       </select>
     </div>`;
 
   el.innerHTML = `
     <div style="display:flex;justify-content:flex-end;">${choixMode}</div>
-    <div class="scatter-sub">Fond de la case = nombre d'évènements · rond = niveau de tension, ${modeTension === 'pic' ? 'au pic' : 'en moyenne sur la montée'} · survolez pour le détail.<br>La moyenne porte sur le contexte, l'antécédent et le pic — pas sur les niveaux d'après intervention, qui feraient passer pour calme un évènement bien désamorcé. C'est une hétéro-évaluation déclarative, pas une mesure.</div>
+    <div class="scatter-sub">Fond de la case = nombre d'évènements · rond = <b>palier le plus haut atteint</b> · survolez pour le détail.<br>Le maximum, et non une moyenne : sur une échelle à paliers nommés, rien ne garantit que l'écart entre « normal » et « tendu » vaille celui entre « angoissé » et « débordé ». Une moyenne supposerait des intervalles égaux, un maximum non. Les niveaux d'après intervention sont exclus, sinon un évènement bien désamorcé passerait pour calme. C'est une hétéro-évaluation déclarative, pas une mesure.</div>
     <div class="scatter-svg-outer">${svg}</div>
     <div class="scatter-legend">${legend}</div>`;
   equiperGraphiques(el);
@@ -13954,8 +14226,11 @@ function computeBafMeta(baf){
   // alors que le formulaire produit "3 — Modérée" : la conversion échouait
   // toujours et cette moyenne n'a jamais pu s'afficher. On réutilise
   // intensNum(), la lecture déjà employée partout ailleurs.
-  const intensVals = evts.map(e => tensionMoyenneEvt(e)).filter(v => v !== null);
-  const intensMoy = intensVals.length ? (intensVals.reduce((a,b)=>a+b,0)/intensVals.length).toFixed(1) : null;
+  /* Plus de moyenne : une moyenne d'appréciations ordinales suppose des
+     intervalles égaux, que rien n'établit. La MÉDIANE des pics est définie
+     sur une échelle ordinale, elle. */
+  const picsTries = evts.map(e => tensionPicEvt(e)).filter(v => v !== null).sort((a, b) => a - b);
+  const intensMoy = picsTries.length ? picsTries[Math.floor(picsTries.length / 2)] : null;
 
   // Période couverte
   const dates = evts.map(e=>e.date).filter(Boolean).sort();
