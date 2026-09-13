@@ -262,6 +262,12 @@ header.top{
    Sobre par construction : un fond de papier, pas de couleur de volet — elle
    ne désigne aucun volet — et trois lignes d'étiquette/valeur qui se lisent
    en diagonale. Elle se replie d'un clic, et la préférence vaut partout. */
+.soma-bloc{
+  border:1px solid var(--line);border-radius:var(--radius-sm);
+  padding:16px 18px;margin:0 0 20px;background:var(--paper);
+}
+.soma-tete{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:10px;}
+
 .vase-boutons{display:flex;flex-direction:column;gap:4px;width:100%;}
 .vase-btn{
   background:var(--card);border:1.5px solid var(--line);border-radius:7px;
@@ -3215,6 +3221,30 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
         </div>
       </div>
 
+      <div class="soma-bloc">
+        <div class="soma-tete">🩺 Avant l'analyse fonctionnelle : la piste somatique</div>
+        <div class="ethique" style="margin:0 0 14px;">
+          <b>Une douleur non identifiée est une cause fréquente de comportement-défi</b>, et c'est la première à écarter.
+          Les recommandations françaises placent le bilan médical <b>avant</b> l'analyse fonctionnelle, pas après.
+          Un outil d'analyse fonctionnelle qui ne pose pas la question expose l'équipe qui s'en sert.
+        </div>
+        <div class="field">
+          <label for="m1-soma-recherche">Une cause somatique a-t-elle été recherchée ?</label>
+          <div class="help">Par qui, quand, et avec quelle conclusion. C'est une question de traçabilité, pas un avis médical : on note ce qui a été fait, pas ce qu'on en pense.</div>
+          <textarea id="m1-soma-recherche" placeholder="ex : consultation médecin traitant le 12/03, bilan dentaire demandé, en attente de l'ORL..." oninput="saveM1()"></textarea>
+        </div>
+        <div class="field">
+          <label for="m1-soma-points">Ce qui est connu, côté corps</label>
+          <div class="help">Douleur, sommeil, transit, sphère dentaire et ORL, épilepsie, traitement modifié récemment, cycle menstruel. Ce qui est su, ce qui est suspecté, ce qui n'a jamais été exploré.</div>
+          <textarea id="m1-soma-points" placeholder="ex : constipation chronique, réveils nocturnes depuis janvier, traitement modifié en février, jamais vu de dentiste..." oninput="saveM1()"></textarea>
+        </div>
+        <div class="help" style="margin-top:-4px;">
+          Chez une personne qui ne dit pas sa douleur avec des mots, l'évaluation passe par une hétéro-évaluation.
+          Deux échelles utilisables ici : <b>ESDDA</b>, conçue pour les personnes dyscommunicantes avec troubles du spectre de l'autisme,
+          et <b>GED-DI</b>, pour la déficience intellectuelle. Elles s'utilisent avec un professionnel de santé — la BAF ne les remplace pas et n'évalue rien.
+        </div>
+      </div>
+
       <div class="field">
         <label for="m1-libre">Autre chose qui pourrait nous être utile par la suite ?</label>
         <textarea id="m1-libre" placeholder="Tout élément de contexte qui vous semble pertinent..." oninput="saveM1()"></textarea>
@@ -4594,6 +4624,8 @@ function saveM1(){
   state.m1.prenom = document.getElementById('m1-prenom').value;
   state.m1.age = document.getElementById('m1-age').value;
   state.m1.diag = document.getElementById('m1-diag').value;
+  const sr = document.getElementById('m1-soma-recherche'); if (sr) state.m1.somaRecherche = sr.value;
+  const sp = document.getElementById('m1-soma-points');    if (sp) state.m1.somaPoints = sp.value;
   const lieuxAvant = lieuxDeclares();
   // input[value] : la case « Autre lieu… » n'en a pas, elle ouvre une saisie.
   state.m1.lieux = Array.from(document.querySelectorAll('#m1-lieux input[value]:checked')).map(i=>i.value);
@@ -4868,6 +4900,8 @@ function loadM1FromState(){
   document.getElementById('m1-prenom').value = state.m1.prenom || '';
   document.getElementById('m1-age').value = state.m1.age || '';
   document.getElementById('m1-diag').value = state.m1.diag || '';
+  const sr = document.getElementById('m1-soma-recherche'); if (sr) sr.value = state.m1.somaRecherche || '';
+  const sp = document.getElementById('m1-soma-points');    if (sp) sp.value = state.m1.somaPoints || '';
   document.querySelectorAll('#m1-lieux input[value]').forEach(i=>{ i.checked = (state.m1.lieux||[]).includes(i.value); });
   basculerSaisieLieu(false);
   renderLieuxCustom();
@@ -11672,25 +11706,40 @@ function corpsPreambule() {
     tableauVide(['Prénom', 'Âge'], [4819, 4819], 1) +
     champ('Éléments de diagnostic, de fonctionnement, de communication', 900) +
 
-    docxIntertitre('2 · Les espaces de vie', DOCX_C.papierFonce, DOCX_C.slate) +
+    docxIntertitre('2 · La piste somatique', DOCX_C.consequence, DOCX_C.consequenceTrait) +
+    docxP([
+      {t: 'À remplir avant l\'analyse fonctionnelle, pas après. ', gras: true, couleur: DOCX_C.consequenceTexte},
+      {t: 'Une douleur non identifiée est une cause fréquente de comportement-défi, et c\'est la première à écarter. On note ce qui a été fait, pas ce qu\'on en pense : la BAF n\'évalue rien de médical.'}
+    ], {fond: DOCX_C.consequence, traitGauche: DOCX_C.consequenceTrait, apres: 100}) +
+    champ('Une cause somatique a-t-elle été recherchée ? Par qui, quand, avec quelle conclusion', 700) +
+    champ('Ce qui est connu côté corps : douleur, sommeil, transit, dents et ORL, épilepsie, traitement modifié récemment, cycle', 900) +
+    docxP([
+      {t: 'Chez une personne qui ne dit pas sa douleur avec des mots, l\'évaluation passe par une hétéro-évaluation : '},
+      {t: 'ESDDA', gras: true},
+      {t: ' (personnes dyscommunicantes avec troubles du spectre de l\'autisme) ou '},
+      {t: 'GED-DI', gras: true},
+      {t: ' (déficience intellectuelle), avec un professionnel de santé.'}
+    ], {taille: 17, couleur: DOCX_C.inkSoft, apres: 160}) +
+
+    docxIntertitre('3 · Les espaces de vie', DOCX_C.papierFonce, DOCX_C.slate) +
     docxP('Tous les lieux où la personne passe du temps : famille, institution, école, libéral, taxi, séjours. Un comportement observé à l\'atelier n\'a pas forcément le même sens qu\'à la maison.', {taille: 18, couleur: DOCX_C.inkSoft, apres: 100}) +
     tableauVide(['Lieu', 'Jours de présence', 'De … à …'], [3500, 3400, 2738], 4) +
 
-    docxIntertitre('3 · La journée type', DOCX_C.papierFonce, DOCX_C.slate) +
+    docxIntertitre('4 · La journée type', DOCX_C.papierFonce, DOCX_C.slate) +
     docxP('Les temps qui structurent une journée ordinaire, avec leurs horaires. C\'est ce découpage qui servira ensuite à situer chaque évènement.', {taille: 18, couleur: DOCX_C.inkSoft, apres: 100}) +
     tableauVide(['Moment de la journée', 'Début', 'Fin'], [5638, 2000, 2000], 7) +
 
-    docxIntertitre('4 · La nuit et les trajets', DOCX_C.papierFonce, DOCX_C.slate) +
+    docxIntertitre('5 · La nuit et les trajets', DOCX_C.papierFonce, DOCX_C.slate) +
     tableauVide(['Heure de coucher habituelle', 'Heure de lever habituelle'], [4819, 4819], 1) +
     tableauVide(['Trajet avant l\'accueil (mode, durée)', 'Trajet après l\'accueil (mode, durée)'], [4819, 4819], 1) +
 
-    docxIntertitre('5 · Son vase de tension, ce qu\'on en sait déjà', DOCX_C.antecedent, DOCX_C.antecedentTrait) +
+    docxIntertitre('6 · Son vase de tension, ce qu\'on en sait déjà', DOCX_C.antecedent, DOCX_C.antecedentTrait) +
     docxP('Tout le monde a un vase qui se remplit de ce qu\'il vit. Avant même de regarder les évènements : d\'après ce que vous connaissez de cette personne, qu\'est-ce qui le remplit, qu\'est-ce qui le vide ? Ce sont des hypothèses de départ — les données les confirmeront ou non.', {taille: 18, couleur: DOCX_C.inkSoft, apres: 100}) +
     champ('Ce qui vient d\'elle ou de lui — fonctionnement, angoisse, histoire, santé', 800) +
     champ('Ce qui vient du dehors — environnement, organisation, personnes, évènements', 800) +
     champ('Ce qui le fait redescendre — même partiellement, même provisoirement', 800) +
 
-    docxIntertitre('6 · Autre chose', DOCX_C.papierFonce, DOCX_C.slate) +
+    docxIntertitre('7 · Autre chose', DOCX_C.papierFonce, DOCX_C.slate) +
     champ('Tout ce qui pourrait être utile par la suite', 1100);
 }
 
@@ -11861,6 +11910,7 @@ function corpsModeEmploi() {
     etape(1, "Ouvrir le dossier et remplir le préambule",
       "Se connaître",
       ["Renseignez ce que l'équipe sait déjà : la personne, ses espaces de vie, sa journée type avec ses horaires réels, la nuit, les trajets.",
+       "La piste somatique d'abord : une cause somatique a-t-elle été recherchée, par qui, quand, avec quelle conclusion ? Les recommandations françaises placent le bilan médical AVANT l'analyse fonctionnelle. Une douleur non identifiée est une cause fréquente de comportement-défi, et la première à écarter.",
        "La journée type n'est pas décorative : c'est elle qui fournit les moments dans lesquels tous les évènements viendront se ranger. Un créneau oublié ici, et des observations n'auront nulle part où se poser.",
        "Le vase de tension connu : ce qui la fait monter, ce qui vient du dehors, ce qui la fait redescendre — avant même de regarder les données."],
       "Remplir le préambule au fil de l'eau, pendant que les évènements arrivent. Il doit être stable avant de partir chez les déclarants.") +
@@ -13909,7 +13959,7 @@ const PERIMETRE_RDAF = {
   A1: {etat:'oui'},
   A2: {etat:'oui'},
   A3: {etat:'partiel', note:"Le statut de témoin est recueilli ; la critique des sources, elle, s'écrit."},
-  A4: {etat:'non', note:"Profil sensoriel, communicationnel, somatique : le RDAF ne les recueille pas encore."},
+  A4: {etat:'partiel', note:"Le préambule recueille la piste somatique et sa traçabilité ; le profil sensoriel et communicationnel, lui, s'écrit."},
   B1: {etat:'non', note:"Le RDAF n'a pas d'étape de définition opérationnelle du comportement-cible."},
   B2: {etat:'oui'},
   B3: {etat:'oui'},
