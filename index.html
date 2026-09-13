@@ -262,6 +262,32 @@ header.top{
    Sobre par construction : un fond de papier, pas de couleur de volet — elle
    ne désigne aucun volet — et trois lignes d'étiquette/valeur qui se lisent
    en diagonale. Elle se replie d'un clic, et la préférence vaut partout. */
+.cov-chiffres{
+  display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--ink-soft);
+  padding:10px 14px;background:var(--paper);border-radius:var(--radius-sm);margin:0 0 14px;
+}
+.cov-chiffres b{color:var(--ink);font-size:15px;}
+.cov-manque b{color:var(--rose-deep);}
+.cov-saisie{display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--ink-soft);}
+.cov-saisie input[type=date]{margin-left:5px;}
+.cov-saisie input[type=text]{flex:1;min-width:150px;}
+.cov-trous{margin-top:18px;padding-top:14px;border-top:1px solid var(--line-soft);}
+.cov-trous-tete{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:4px;}
+.cov-trous-note{font-size:12.5px;color:var(--ink-soft);line-height:1.55;margin:0 0 10px;}
+.cov-trou{
+  display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+  padding:7px 0;border-bottom:1px solid var(--line-soft);font-size:13px;
+}
+.cov-trou-plage{font-weight:600;color:var(--ink);min-width:180px;}
+.cov-trou-n{color:var(--ink-soft);font-size:12px;flex:1;}
+.cov-reste{font-size:12px;color:var(--ink-soft);font-style:italic;padding-top:8px;}
+.cov-liste{margin-top:16px;display:flex;flex-direction:column;gap:2px;}
+.cov-item{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13px;padding:5px 0;border-bottom:1px solid var(--line-soft);}
+.cov-pastille{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.cov-item-plage{font-weight:600;color:var(--ink);min-width:170px;}
+.cov-item-etat{color:var(--ink-soft);font-size:12px;}
+.cov-item-note{color:var(--ink-soft);font-style:italic;font-size:12px;flex:1;}
+
 .dc-tag{
   display:inline-block;background:var(--paper-deep);color:var(--ink-soft);
   font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;margin-left:8px;
@@ -3189,6 +3215,8 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
       <button class="btn btn-primary" onclick="ouvrirFormulaireEvenement()">+ Ajouter un évènement</button>
     </div>
 
+    <div id="m2-couverture"></div>
+
     <div class="card" id="m2-partager-card">
       <h4 style="font-size:16px;color:var(--ink);margin-bottom:6px;">Faire participer d'autres personnes</h4>
       <p style="font-size:14px;color:var(--ink-soft);line-height:1.65;margin:0 0 12px;">
@@ -3816,6 +3844,17 @@ function migrerIdsCategorisation() {
    ni refuser proprement un fichier étranger. */
 
 const SCHEMA_DOSSIER = 2;
+
+/* Déclarées ICI, et pas avec les fonctions qui s'en servent : refreshM2List()
+   tourne à l'initialisation et descend jusqu'au rendu de la couverture. Une
+   const lue par une fonction de rendu doit être déclarée avant le premier
+   rendu, sans quoi la zone morte temporelle arrête tout le script. */
+const NOMS_JOURS = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+
+const ETATS_COUVERTURE = {
+  'observe-sans-cd': {nom: 'Observé, aucun comportement-défi', court: 'observé, RAS', couleur: 'var(--sauge)'},
+  'non-observe':     {nom: "Personne n'était en situation d'observer", court: 'non observé', couleur: 'var(--line)'}
+};
 
 const DEPOT = {
   CLE: 'baf_emia35_state_v1',
@@ -6193,6 +6232,7 @@ function refreshM2List(){
   });
   list.innerHTML = html;
   renderContributions();
+  renderCouverture();
 }
 
 // "Semaine du 7 au 13 septembre" — semaine calendaire, lundi comme premier jour.
@@ -6328,13 +6368,27 @@ function computeFrequence() {
   const NOMS = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
   const debut = dates[0], fin = dates[dates.length-1];
 
-  // On compte les jours d'accueil du calendrier entre le premier et le dernier
-  // évènement. Sans jours d'accueil déclarés, on retombe sur les jours calendaires.
-  let denominateur = 0;
-  const curseur = new Date(debut);
-  while (curseur <= fin) {
-    if (joursAccueil.length === 0 || joursAccueil.includes(NOMS[curseur.getDay()])) denominateur++;
-    curseur.setDate(curseur.getDate() + 1);
+  /* Deux dénominateurs possibles, et ils ne mesurent pas la même chose.
+     Avec une couverture déclarée : les jours RÉELLEMENT observés — c'est un
+     taux de comportement. Sans : les jours d'accueil du calendrier, en
+     supposant que le recueil a été actif et complet sur toute la période, ce
+     que rien ne vérifie — c'est un taux de SIGNALEMENT, et l'outil le dit. */
+  const st = statsCouverture();
+  let denominateur, base, reserve = '';
+
+  if (st.declaree && st.observes) {
+    denominateur = st.observes;
+    base = 'jours observés';
+    if (st.joursSansInfo) reserve = ' · ' + st.joursSansInfo + ' jour' + (st.joursSansInfo > 1 ? 's' : '') + ' sans information';
+  } else {
+    denominateur = 0;
+    const curseur = new Date(debut);
+    while (curseur <= fin) {
+      if (joursAccueil.length === 0 || joursAccueil.includes(NOMS[curseur.getDay()])) denominateur++;
+      curseur.setDate(curseur.getDate() + 1);
+    }
+    base = joursAccueil.length === 0 ? 'jours' : 'jours d\'accueil';
+    reserve = ' · taux de signalement : aucune période d\'observation déclarée';
   }
   if (denominateur === 0) return {libelle: '—', detail: 'Aucun jour d\'accueil sur la période'};
 
@@ -6342,8 +6396,7 @@ function computeFrequence() {
   const libelle = parJour >= 1
     ? parJour.toFixed(1).replace('.', ',') + ' / jour'
     : '1 tous les ' + Math.round(1 / parJour) + ' j';
-  const base = joursAccueil.length === 0 ? 'jours' : 'jours d\'accueil';
-  return {libelle, detail: `${evts.length} CD sur ${denominateur} ${base}`};
+  return {libelle, detail: `${evts.length} CD sur ${denominateur} ${base}${reserve}`};
 }
 
 function modeArray(arr) {
@@ -8166,6 +8219,65 @@ const _CONTROLES = [
     return _bancEgal('Organisation et interprétation inchangées', empreinteAvant, empreinteApres);
   }},
 
+  {nom:'Une période observée n\'est pas un évènement', test: () => {
+    /* Si un « RAS » était enregistré comme un évènement avec une case cochée,
+       il faudrait l'exclure d'une cinquantaine de comptages — et le jour où on
+       en oublie un, l'outil affiche une statistique fausse sans rien dire. */
+    const sauve = JSON.parse(JSON.stringify(state.m2.couverture || []));
+    const n0 = (state.m2.evenements || []).length;
+    ajouterCouverture('2026-01-05', '2026-01-09', 'observe-sans-cd', 'banc');
+    const n1 = (state.m2.evenements || []).length;
+    state.m2.couverture = sauve;
+    return _bancEgal('Nombre d\'évènements après une période déclarée', n0, n1);
+  }},
+
+  {nom:'Un jour portant un évènement est observé sans qu\'on ait à le dire', test: () => {
+    const sauve = JSON.parse(JSON.stringify(state.m2.couverture || []));
+    state.m2.couverture = [];
+    const couv = couvertureParJour();
+    const datesEvts = [...new Set(((state.m2.evenements) || []).map(e => e.date).filter(Boolean))];
+    const oublies = datesEvts.filter(d => couv.get(d) !== 'observe-sans-cd');
+    state.m2.couverture = sauve;
+    return _bancEgal('Jours avec évènement non comptés comme observés', '', oublies.slice(0, 3).join(','));
+  }},
+
+  {nom:'Un trou ne recouvre jamais un jour déjà connu', test: () => {
+    const connus = couvertureParJour();
+    const chevauche = [];
+    trousCouverture().forEach(t => {
+      const d = new Date(t.debut), fin = new Date(t.fin);
+      let garde = 0;
+      while (d <= fin && garde++ < 400) {
+        const iso = d.toISOString().slice(0, 10);
+        if (connus.has(iso)) chevauche.push(iso);
+        d.setDate(d.getDate() + 1);
+      }
+    });
+    return _bancEgal('Jours à la fois connus et signalés comme trous', '', chevauche.slice(0, 3).join(','));
+  }},
+
+  {nom:'La fréquence annonce sur quoi elle porte', test: () => {
+    /* Sans couverture déclarée, ce qu'on mesure est un taux de SIGNALEMENT : il
+       suppose que le recueil a été actif sur toute la période, ce que rien ne
+       vérifie. L'outil doit le dire plutôt que de laisser croire à un taux de
+       comportement. */
+    const sauve = JSON.parse(JSON.stringify(state.m2.couverture || []));
+    state.m2.couverture = [];
+    const sans = computeFrequence();
+    const evtsDates = ((state.m2.evenements) || []).filter(e => e.date);
+    let verdict = 'ok';
+    if (evtsDates.length >= 2) {
+      if (!/signalement/.test(sans.detail || '')) verdict = 'réserve absente sans couverture';
+      else {
+        ajouterCouverture('2026-01-05', '2026-01-06', 'observe-sans-cd', 'banc');
+        const avec = computeFrequence();
+        if (!/jours observés/.test(avec.detail || '')) verdict = 'dénominateur non mis à jour avec couverture';
+      }
+    }
+    state.m2.couverture = sauve;
+    return _bancEgal('Libellé du dénominateur', 'ok', verdict);
+  }},
+
   {nom:'Le kit de codage ne transporte aucune catégorisation', test: () => {
     /* « En aveugle » est tenu par la machine, pas par la bonne volonté : si le
        kit portait le codage du référent, le second codeur le verrait et
@@ -8441,7 +8553,14 @@ const _CONTROLES = [
   }},
 
   {nom:'Fréquence : dénominateur = jours d\'accueil écoulés', test: () => {
+    /* Ce contrôle porte sur le cas HISTORIQUE, sans couverture déclarée. Dès
+       qu'une période observée existe, le dénominateur devient les jours
+       réellement observés — c'est tout le propos de la passe 51 — et la réserve
+       ajoutée au libellé n'entre pas dans la comparaison. */
+    const sauveCouv = JSON.parse(JSON.stringify(state.m2.couverture || []));
+    state.m2.couverture = [];
     const f = computeFrequence();
+    state.m2.couverture = sauveCouv;
     const evts = (state.m2.evenements||[]).filter(e=>e.date);
     if (evts.length < 2) return _bancEgal('Fréquence sans assez de dates', '—', f.libelle);
     const NOMS = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
@@ -8452,7 +8571,7 @@ const _CONTROLES = [
       if (!jours.length || jours.indexOf(NOMS[d.getDay()]) !== -1) n++;
     }
     const attendu = n + ' ' + (jours.length ? 'jours d\'accueil' : 'jours');
-    return _bancEgal('Détail de la fréquence', evts.length + ' CD sur ' + attendu, f.detail);
+    return _bancEgal('Détail de la fréquence', evts.length + ' CD sur ' + attendu, String(f.detail || '').split(' · ')[0]);
   }},
 
   {nom:'Indice de confiance dans [0,100]', test: () => {
@@ -12278,7 +12397,10 @@ function exporterContribution() {
       nbEvenements: evts.length,
       envoye: new Date().toISOString()
     },
-    m2: { evenements: JSON.parse(JSON.stringify(evts)) }
+    m2: {
+      evenements: JSON.parse(JSON.stringify(evts)),
+      couverture: JSON.parse(JSON.stringify(ensureCouverture()))
+    }
   };
   const qui = (d.provenance || 'contribution').replace(/[^a-zA-Z0-9]/g, '_').slice(0, 24) || 'contribution';
   telechargerTexte(JSON.stringify(contribution, null, 2),
@@ -12438,6 +12560,230 @@ function appliquerModeDeclarant() {
   const carte = document.getElementById('m2-partager-card');
   if (carte) carte.style.display = actif ? 'none' : '';
   document.body.classList.toggle('mode-declarant', actif);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   LA COUVERTURE D'OBSERVATION
+   ══════════════════════════════════════════════════════════════════════
+   La BAF ne savait enregistrer qu'une chose : un évènement où un
+   comportement-défi a eu lieu. Aucun moyen de déclarer une journée observée
+   sans comportement. Toute la statistique mesurait donc un taux de SIGNALEMENT
+   et non un taux de comportement, et la carte jour × moment ne pouvait pas
+   distinguer une case vide qui veut dire « rien ne s'est passé » d'une case
+   vide qui veut dire « personne n'observait ».
+
+   Deux informations, pas une. « Personne n'observait » et « quelqu'un observait
+   et il ne s'est rien passé » ne se confondent pas — et c'est la seconde qui a
+   de la valeur clinique, puisque les contextes de non-apparition orientent
+   directement l'intervention.
+
+   OBJET SÉPARÉ, et c'est délibéré. Un « RAS » enregistré comme un évènement
+   avec une case cochée obligerait à l'exclure d'une cinquantaine de comptages ;
+   le jour où on en oublie un, l'outil affiche une statistique fausse sans rien
+   dire. Ici rien de ce qui existe ne bouge, et les nouveaux dénominateurs se
+   calculent explicitement.
+
+   Conséquence assumée : le mot « fréquence » change de sens. Avant, c'était
+   évènements / jours d'accueil du calendrier. Avec une couverture déclarée,
+   c'est évènements / jours réellement observés. Deux nombres différents sur le
+   même dossier — l'outil dit lequel il affiche. */
+
+function ensureCouverture() {
+  if (!state.m2) state.m2 = {evenements: []};
+  if (!Array.isArray(state.m2.couverture)) state.m2.couverture = [];
+  return state.m2.couverture;
+}
+
+function isoDe(d) { return d.toISOString().slice(0, 10); }
+
+function estJourAccueil(iso) {
+  const jours = (state.m1 && state.m1.jours) || [];
+  if (!jours.length) return true;                 // aucun jour déclaré : tous comptent
+  const d = new Date(iso);
+  return !isNaN(d) && jours.includes(NOMS_JOURS[d.getDay()]);
+}
+
+/* date ISO → 'observe-sans-cd' | 'non-observe'. Les jours portant un évènement
+   sont observés par construction et n'ont pas besoin d'être déclarés. */
+function couvertureParJour() {
+  const m = new Map();
+  ensureCouverture().forEach(p => {
+    const d = new Date(p.debut), fin = new Date(p.fin || p.debut);
+    if (isNaN(d) || isNaN(fin)) return;
+    let garde = 0;
+    while (d <= fin && garde++ < 800) { m.set(isoDe(d), p.etat); d.setDate(d.getDate() + 1); }
+  });
+  ((state.m2 && state.m2.evenements) || []).forEach(e => {
+    if (e.date) m.set(e.date, 'observe-sans-cd');   // un évènement prouve l'observation
+  });
+  return m;
+}
+
+/* La fenêtre de recueil : du premier au dernier jour dont on sait quelque chose. */
+function fenetreRecueil() {
+  const dates = [];
+  ((state.m2 && state.m2.evenements) || []).forEach(e => { if (e.date) dates.push(e.date); });
+  ensureCouverture().forEach(p => { if (p.debut) dates.push(p.debut); if (p.fin) dates.push(p.fin); });
+  if (!dates.length) return null;
+  dates.sort();
+  return {debut: dates[0], fin: dates[dates.length - 1]};
+}
+
+/* Les jours d'accueil de la fenêtre dont on ne sait rien, groupés en plages
+   consécutives — c'est la liste de ce qu'il reste à demander. */
+function trousCouverture() {
+  const f = fenetreRecueil();
+  if (!f) return [];
+  const connus = couvertureParJour();
+  const trous = [];
+  const d = new Date(f.debut), fin = new Date(f.fin);
+  let courant = null, garde = 0;
+  while (d <= fin && garde++ < 800) {
+    const iso = isoDe(d);
+    const manquant = estJourAccueil(iso) && !connus.has(iso);
+    if (manquant) {
+      if (courant) courant.fin = iso;
+      else courant = {debut: iso, fin: iso, jours: 0};
+      courant.jours++;
+    } else if (courant) { trous.push(courant); courant = null; }
+    d.setDate(d.getDate() + 1);
+  }
+  if (courant) trous.push(courant);
+  return trous;
+}
+
+function statsCouverture() {
+  const connus = couvertureParJour();
+  let observes = 0, nonObserves = 0, avecCD = 0;
+  const joursAvecEvt = new Set(((state.m2 && state.m2.evenements) || []).map(e => e.date).filter(Boolean));
+  connus.forEach((etat, iso) => {
+    if (!estJourAccueil(iso)) return;
+    if (etat === 'non-observe') nonObserves++;
+    else { observes++; if (joursAvecEvt.has(iso)) avecCD++; }
+  });
+  const trous = trousCouverture();
+  return {
+    observes, nonObserves, avecCD,
+    sansCD: observes - avecCD,
+    joursSansInfo: trous.reduce((a, t) => a + t.jours, 0),
+    declaree: ensureCouverture().length > 0
+  };
+}
+
+function ajouterCouverture(debut, fin, etat, note) {
+  ensureCouverture();
+  if (!debut) return null;
+  const p = {
+    id: nouvelIdentifiant('cov'),
+    debut, fin: fin || debut, etat: etat || 'observe-sans-cd',
+    note: (note || '').trim(),
+    saisi: new Date().toISOString(),
+    source: (state.declarant && state.declarant.actif) ? (state.declarant.idContribution || null) : null
+  };
+  state.m2.couverture.push(p);
+  state.m2.couverture.sort((a, b) => (a.debut || '').localeCompare(b.debut || ''));
+  persist();
+  return p;
+}
+
+function supprimerCouverture(id) {
+  ensureCouverture();
+  state.m2.couverture = state.m2.couverture.filter(p => p.id !== id);
+  persist();
+  renderCouverture();
+  refreshSynthese();
+}
+
+function repondreTrou(debut, fin, etat) {
+  ajouterCouverture(debut, fin, etat, '');
+  renderCouverture();
+  refreshSynthese();
+  showToast('Période enregistrée.');
+}
+
+function ajouterCouvertureDepuisFormulaire() {
+  const d = document.getElementById('cov-debut'), f = document.getElementById('cov-fin');
+  const e = document.getElementById('cov-etat'), n = document.getElementById('cov-note');
+  if (!d || !d.value) { showToast('Indiquez au moins une date.'); return; }
+  if (f && f.value && f.value < d.value) { showToast('La date de fin est avant la date de début.'); return; }
+  ajouterCouverture(d.value, (f && f.value) || d.value, e ? e.value : 'observe-sans-cd', n ? n.value : '');
+  if (n) n.value = '';
+  renderCouverture();
+  refreshSynthese();
+  showToast('Période enregistrée.');
+}
+
+function formatPlage(debut, fin) {
+  if (!debut) return '';
+  if (!fin || fin === debut) return formatDate(debut);
+  return 'du ' + formatDate(debut) + ' au ' + formatDate(fin);
+}
+
+function renderCouverture() {
+  const el = document.getElementById('m2-couverture');
+  if (!el) return;
+  const st = statsCouverture();
+  const trous = trousCouverture();
+  const liste = ensureCouverture();
+
+  const aujourdhui = new Date().toISOString().slice(0, 10);
+  let html = '<div class="card" id="carte-couverture">' +
+    '<h4 style="font-size:16px;color:var(--ink);margin-bottom:6px;">Périodes observées</h4>' +
+    '<p style="font-size:14px;color:var(--ink-soft);line-height:1.65;margin:0 0 14px;">' +
+      'Une journée sans comportement-défi est une donnée, pas un vide. Sans elle, l\'outil ne peut ' +
+      'pas distinguer « il ne s\'est rien passé » de « personne n\'a rempli », et la fréquence qu\'il ' +
+      'affiche mesure les signalements plutôt que les comportements. ' +
+      '<b>Déclarez une journée, ou une plage de plusieurs jours.</b>' +
+    '</p>';
+
+  if (st.declaree || st.observes) {
+    html += '<div class="cov-chiffres">' +
+      '<span><b>' + st.observes + '</b> jour' + (st.observes > 1 ? 's' : '') + ' observé' + (st.observes > 1 ? 's' : '') + '</span>' +
+      '<span><b>' + st.sansCD + '</b> sans comportement-défi</span>' +
+      '<span><b>' + st.avecCD + '</b> avec</span>' +
+      (st.nonObserves ? '<span><b>' + st.nonObserves + '</b> non observé' + (st.nonObserves > 1 ? 's' : '') + '</span>' : '') +
+      (st.joursSansInfo ? '<span class="cov-manque"><b>' + st.joursSansInfo + '</b> sans information</span>' : '') +
+      '</div>';
+  }
+
+  html += '<div class="cov-saisie">' +
+    '<label>Du <input type="date" id="cov-debut" max="' + aujourdhui + '"></label>' +
+    '<label>au <input type="date" id="cov-fin" max="' + aujourdhui + '"></label>' +
+    '<select id="cov-etat">' +
+      Object.entries(ETATS_COUVERTURE).map(([k, v]) => '<option value="' + k + '">' + esc(v.nom) + '</option>').join('') +
+    '</select>' +
+    '<input type="text" id="cov-note" placeholder="Remarque (facultatif)">' +
+    '<button class="btn btn-secondary btn-sm" onclick="ajouterCouvertureDepuisFormulaire()">Enregistrer</button>' +
+    '</div>';
+
+  if (trous.length) {
+    html += '<div class="cov-trous">' +
+      '<div class="cov-trous-tete">Ces journées n\'ont pas d\'information — ni évènement, ni période déclarée</div>' +
+      '<p class="cov-trous-note">Pour chacune : quelqu\'un observait-il ? Si vous ne savez pas, allez le demander plutôt que de deviner — une case laissée vide vaut mieux qu\'une réponse inventée.</p>' +
+      trous.slice(0, 8).map(t =>
+        '<div class="cov-trou">' +
+          '<span class="cov-trou-plage">' + esc(formatPlage(t.debut, t.fin)) + '</span>' +
+          '<span class="cov-trou-n">' + t.jours + ' jour' + (t.jours > 1 ? 's' : '') + '</span>' +
+          '<button class="btn btn-ghost btn-sm" onclick="repondreTrou(\'' + t.debut + '\',\'' + t.fin + '\',\'observe-sans-cd\')">Observé, rien à signaler</button>' +
+          '<button class="btn btn-ghost btn-sm" onclick="repondreTrou(\'' + t.debut + '\',\'' + t.fin + '\',\'non-observe\')">Personne n\'observait</button>' +
+        '</div>').join('') +
+      (trous.length > 8 ? '<div class="cov-reste">… et ' + (trous.length - 8) + ' autre' + (trous.length - 8 > 1 ? 's' : '') + ' période' + (trous.length - 8 > 1 ? 's' : '') + '.</div>' : '') +
+      '</div>';
+  }
+
+  if (liste.length) {
+    html += '<div class="cov-liste">' + liste.map(p =>
+      '<div class="cov-item">' +
+        '<span class="cov-pastille" style="background:' + (ETATS_COUVERTURE[p.etat] || {}).couleur + ';"></span>' +
+        '<span class="cov-item-plage">' + esc(formatPlage(p.debut, p.fin)) + '</span>' +
+        '<span class="cov-item-etat">' + esc((ETATS_COUVERTURE[p.etat] || {}).court || p.etat) + '</span>' +
+        (p.note ? '<span class="cov-item-note">' + esc(p.note) + '</span>' : '') +
+        '<button class="btn btn-ghost btn-sm no-print" onclick="supprimerCouverture(\'' + p.id + '\')" title="Supprimer">🗑</button>' +
+      '</div>').join('') + '</div>';
+  }
+
+  html += '</div>';
+  el.innerHTML = html;
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -12749,6 +13095,22 @@ function fusionnerContribution(lu, nomFichier) {
     else { parId.set(e.id, state.m2.evenements.length); state.m2.evenements.push(e); ajoutes++; }
   });
 
+  /* Les périodes observées remontent aussi : c'est la moitié la plus rare du
+     déclaratif, et celle qu'on n'obtient jamais si on ne la demande pas. */
+  const couvEntrantes = ((lu.dossier && lu.dossier.m2 && lu.dossier.m2.couverture) || []);
+  ensureCouverture();
+  const dejaLa = new Set(state.m2.couverture.map(p => p.id));
+  let couvAjoutees = 0;
+  couvEntrantes.forEach(p => {
+    if (!p || !p.debut || dejaLa.has(p.id)) return;
+    const copie = JSON.parse(JSON.stringify(p));
+    copie.source = idC;
+    state.m2.couverture.push(copie);
+    dejaLa.add(copie.id);
+    couvAjoutees++;
+  });
+  state.m2.couverture.sort((a, b) => (a.debut || '').localeCompare(b.debut || ''));
+
   // Chronologie : la liste groupe par mois et par semaine, elle suppose l'ordre.
   state.m2.evenements.sort((a, b) =>
     ((a.date || '') + (a.heure || '')).localeCompare((b.date || '') + (b.heure || '')));
@@ -12782,6 +13144,7 @@ function fusionnerContribution(lu, nomFichier) {
            ' par la version la plus récente\n  ⚠ Si vous les aviez déjà catégorisés, vérifiez que les catégories correspondent toujours au texte.\n';
   }
   if (dejaVue && !remplaces) msg += '· Cet envoi avait déjà été reçu.\n';
+  if (couvAjoutees) msg += '· ' + couvAjoutees + ' période' + (couvAjoutees > 1 ? 's' : '') + ' observée' + (couvAjoutees > 1 ? 's' : '') + ' sans comportement-défi\n';
   if (nbRemarques) msg += '· ' + nbRemarques + ' remarque' + (nbRemarques > 1 ? 's' : '') + ' sur le préambule, à relire dans « Se connaître ».\n';
   if (ignorees.length) msg += '· Ignoré : ' + ignorees.join(', ') + ' — une contribution ne remonte que le déclaratif.\n';
   alert(msg);
