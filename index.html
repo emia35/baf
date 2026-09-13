@@ -262,6 +262,30 @@ header.top{
    Sobre par construction : un fond de papier, pas de couleur de volet — elle
    ne désigne aucun volet — et trois lignes d'étiquette/valeur qui se lisent
    en diagonale. Elle se replie d'un clic, et la préférence vaut partout. */
+.source-note{margin:0 0 10px;}
+.source-note summary{
+  cursor:pointer;font-size:11.5px;font-weight:600;color:var(--ink-soft);
+  font-style:italic;list-style:none;
+}
+.source-note summary::-webkit-details-marker{display:none;}
+.source-note summary::before{content:'📖 ';font-style:normal;}
+.source-note summary:hover{color:var(--slate);}
+.source-corps{
+  margin-top:6px;padding:8px 12px;border-left:2px solid var(--line);
+  font-size:12px;line-height:1.55;color:var(--ink-soft);
+}
+.source-adapt{color:var(--ink);margin-bottom:5px;}
+.source-ref{font-style:italic;}
+.ref-groupe{margin:0 0 22px;}
+.ref-titre{
+  font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;
+  color:var(--ink-soft);margin:0 0 8px;
+}
+.ref-item{padding:9px 0;border-top:1px solid var(--line-soft);}
+.ref-item:first-of-type{border-top:none;}
+.ref-complet{font-size:13px;line-height:1.6;color:var(--ink);}
+.ref-adapt{font-size:12.5px;line-height:1.6;color:var(--ink-soft);margin-top:4px;}
+
 .soma-bloc{
   border:1px solid var(--line);border-radius:var(--radius-sm);
   padding:16px 18px;margin:0 0 20px;background:var(--paper);
@@ -2877,10 +2901,14 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
       </div>
     </div>
 
-    <div class="construction" style="margin-top:20px;">
-      <span class="ico">🧰</span>
-      <h3>La suite</h3>
-      <p>Les références sur lesquelles s'appuie la BAF viendront ici, ainsi que les supports que vos retours feront apparaître.</p>
+    <div class="card" style="margin-top:24px;">
+      <h3 style="font-size:17px;margin-bottom:6px;">Sur quoi la BAF s'appuie</h3>
+      <p style="font-size:14px;color:var(--ink-soft);line-height:1.65;margin:0 0 18px;">
+        Chaque outil emprunté à la littérature nomme sa source là où il sert, et dit quand la BAF
+        l'adapte plutôt que de le reproduire. <b>Les écarts sont indiqués</b> : c'est là que se lisent
+        les limites de ce que l'outil permet de conclure.
+      </p>
+      <div id="references-liste"></div>
     </div>
   </section>
 
@@ -3903,6 +3931,113 @@ function migrerIdsCategorisation() {
    données. Sans ça on ne peut ni reconnaître deux fichiers du même dossier,
    ni refuser proprement un fichier étranger. */
 
+/* ══════════════════════════════════════════════════════════════════════
+   LES SOURCES
+   ══════════════════════════════════════════════════════════════════════
+   Une règle plutôt que du cas par cas : tout élément emprunté à la littérature
+   nomme sa source À L'ENDROIT OÙ IL SERT, en une ligne, et la référence
+   complète vit sur la page Références.
+
+   Et surtout : quand la BAF ADAPTE plutôt qu'elle ne reproduit, elle le dit. La
+   note devient alors l'endroit où l'outil énonce ses propres limites, là
+   précisément où elles jouent — ce qui vaut mieux qu'une bibliographie de
+   vitrine. */
+
+const SOURCES = {
+  scatterplot: {
+    court: 'Touchette, MacDonald & Langer (1985)',
+    complet: "Touchette, P. E., MacDonald, R. F., & Langer, S. N. (1985). A scatter plot for identifying stimulus control of problem behavior. <i>Journal of Applied Behavior Analysis</i>, 18, 343-351.",
+    adaptation: "Adapté. Le scatterplot d'origine note l'occurrence ET la non-occurrence sur des blocs de temps définis à l'avance. La BAF recueille les périodes observées à la journée, pas au créneau : une case vide peut donc encore vouloir dire « rien à ce moment-là » aussi bien que « rien de noté à ce moment-là ».",
+    groupe: 'Distributions temporelles'
+  },
+  kahng: {
+    court: 'Kahng et al. (1998)',
+    complet: "Kahng, S., Iwata, B. A., Fischer, S. M., Page, T. J., Treadwell, K. R. H., Williams, D. E., & Smith, R. G. (1998). Temporal distributions of problem behavior based on scatter plot analysis. <i>Journal of Applied Behavior Analysis</i>, 31, 593-604.",
+    adaptation: "Réplication à grande échelle de Touchette : sur quinze jeux de données, l'inspection visuelle d'une carte n'a fait apparaître aucun pattern temporel fiable, là où un critère statistique en trouvait dans douze cas sur quinze. À lire en sachant cela : cette carte se regarde, elle ne conclut pas.",
+    groupe: 'Distributions temporelles'
+  },
+  fonctions: {
+    court: 'Iwata et al. (1982/1994)',
+    complet: "Iwata, B. A., Dorsey, M. F., Slifer, K. J., Bauman, K. E., & Richman, G. S. (1994). Toward a functional analysis of self-injury. <i>Journal of Applied Behavior Analysis</i>, 27, 197-209. (Publication originale : 1982.)",
+    groupe: 'Évaluation fonctionnelle'
+  },
+  attention: {
+    court: 'Thompson & Iwata (2001, 2007) ; St. Peter et al. (2005)',
+    complet: "Thompson, R. H., & Iwata, B. A. (2007). A comparison of outcomes from descriptive and functional analyses of problem behavior. <i>Journal of Applied Behavior Analysis</i>, 40(2), 333-338. — St. Peter, C. C., et al. (2005). On the role of attention in naturally occurring matching relations. <i>Journal of Applied Behavior Analysis</i>, 38, 429-443.",
+    adaptation: "L'analyse descriptive SUR-IDENTIFIE l'attention, non parce que les observateurs se trompent, mais parce que l'attention suit à peu près tout ce que fait une personne en difficulté. Quand cette conséquence domine dans un dossier, la prudence est de mise.",
+    groupe: 'Limites des évaluations descriptives'
+  },
+  conditionnel: {
+    court: 'Lerman & Iwata (1993) ; Pence et al. (2009)',
+    complet: "Lerman, D. C., & Iwata, B. A. (1993). Descriptive and experimental analyses of variables maintaining self-injurious behavior. <i>Journal of Applied Behavior Analysis</i>, 26. — Pence, S. T., Roscoe, E. M., Bourret, J. C., & Ahearn, W. H. (2009). Relative contributions of three descriptive methods: Implications for behavioral assessment. <i>Journal of Applied Behavior Analysis</i>, 42.",
+    adaptation: "Méthode des probabilités conditionnelles et de fond : un taux ne dit rien seul, il se compare à ce que fait cette catégorie d'ordinaire. C'est pourquoi les deux chiffres sont toujours donnés ici.",
+    groupe: 'Évaluation fonctionnelle'
+  },
+  contexte: {
+    court: 'Michael (1982, 1993) ; Smith & Iwata (1997) ; Horner et al. (1996)',
+    complet: "Michael, J. (1993). Establishing operations. <i>The Behavior Analyst</i>, 16. — Smith, R. G., & Iwata, B. A. (1997). Antecedent influences on behavior disorders. <i>Journal of Applied Behavior Analysis</i>, 30. — Horner, R. H., Vaughn, B. J., Day, H. M., & Ard, W. R. (1996). The relationship between setting events and problem behavior. In <i>Positive Behavioral Support</i>. Brookes.",
+    adaptation: "C'est la distinction entre l'opération motivante — ce qui pèse de loin — et l'évènement déclencheur. La BAF en fait deux volets séparés.",
+    groupe: 'Antécédents et contexte'
+  },
+  precurseurs: {
+    court: 'Smith & Churchill (2002) ; Fritz et al. (2013) ; Heath & Smith (2019)',
+    complet: "Smith, R. G., & Churchill, R. M. (2002). Identification of environmental determinants of behavior disorders through functional analysis of precursor behaviors. <i>Journal of Applied Behavior Analysis</i>, 35(2), 125-136. — Fritz, J. N., Iwata, B. A., Hammond, J. L., & Bloom, S. E. (2013). Experimental analysis of precursors to severe problem behavior. <i>Journal of Applied Behavior Analysis</i>, 46. — Heath, H., & Smith, R. G. (2019). Precursor behavior and functional analysis: A brief review. <i>Journal of Applied Behavior Analysis</i>, 52.",
+    adaptation: "Ces travaux montrent aussi que le rapport des accompagnants identifie mal un précurseur constant, et plaident pour l'identifier par probabilité conditionnelle. La BAF demande encore la séquence au clinicien : elle ne la calcule pas.",
+    groupe: 'Antécédents et contexte'
+  },
+  accord: {
+    court: 'Cooper, Heron & Heward (2020)',
+    complet: "Cooper, J. O., Heron, T. E., & Heward, W. L. (2020). <i>Applied Behavior Analysis</i> (3e éd.). Pearson.",
+    adaptation: "L'accord inter-observateurs est le premier contrôle de toute donnée comportementale, avec une convention de seuil minimal à 80 %. Ajouter des déclarants sans mesurer leur accord n'augmente pas la fiabilité : ça augmente la variance et ça la rend invisible.",
+    groupe: 'Mesure et méthode'
+  },
+  abc: {
+    court: "O'Neill et al. (2015)",
+    complet: "O'Neill, R. E., Albin, R. W., Storey, K., Horner, R. H., & Sprague, J. R. (2015). <i>Functional Assessment and Program Development for Problem Behavior</i> (3e éd.). Cengage.",
+    groupe: 'Évaluation fonctionnelle'
+  },
+  descriptif: {
+    court: 'Contreras et al. (2023) ; Call et al. (2024)',
+    complet: "Contreras, B. P., Tate, S. A., Morris, S. L., & Kahng, S. (2023). A systematic review of the correspondence between descriptive assessment and functional analysis. <i>Journal of Applied Behavior Analysis</i>, 56(1), 146-165. — Call, N. A., et al. (2024). A comparative effectiveness trial of functional behavioral assessment methods. <i>Journal of Applied Behavior Analysis</i>, 57(1), 166-183.",
+    adaptation: "La BAF est une évaluation INDIRECTE structurée au format ABC, distribuée sur plusieurs déclarants et plusieurs lieux. Elle ne recueille pas une observation mais un récit d'observation, produit après coup. C'est la position de l'immense majorité des praticiens, et rien n'indique qu'elle conduise à des interventions moins efficaces — mais elle ne permet pas d'affirmer une fonction.",
+    groupe: 'Évaluation fonctionnelle'
+  },
+  has: {
+    court: 'HAS / ANESM',
+    complet: "ANESM / Haute Autorité de Santé (2016). <i>Les « comportements-problèmes » au sein des établissements et services accueillant des enfants et adultes handicapés : prévention et réponses.</i> — Haute Autorité de Santé (2026). <i>Trouble du spectre de l'autisme : interventions et parcours de vie du nourrisson, de l'enfant et de l'adolescent.</i> Recommandation de bonne pratique. — Haute Autorité de Santé (2017). <i>Qualité de vie : handicap, les problèmes somatiques et les phénomènes douloureux.</i>",
+    adaptation: "Le bilan médical vient AVANT l'analyse fonctionnelle, pas après.",
+    groupe: 'Cadre français'
+  }
+};
+
+/* La note au point d'usage : courte, dépliable, et elle dit l'adaptation. */
+function noteSource(id) {
+  const s = SOURCES[id];
+  if (!s) return '';
+  return '<details class="source-note">' +
+    '<summary>D\'après ' + s.court + '</summary>' +
+    '<div class="source-corps">' +
+      (s.adaptation ? '<div class="source-adapt">' + esc(s.adaptation) + '</div>' : '') +
+      '<div class="source-ref">' + s.complet + '</div>' +
+    '</div></details>';
+}
+
+function renderReferences() {
+  const el = document.getElementById('references-liste');
+  if (!el) return;
+  const groupes = {};
+  Object.values(SOURCES).forEach(s => { (groupes[s.groupe] = groupes[s.groupe] || []).push(s); });
+  el.innerHTML = Object.entries(groupes).map(([g, liste]) =>
+    '<div class="ref-groupe">' +
+      '<h4 class="ref-titre">' + esc(g) + '</h4>' +
+      liste.map(s =>
+        '<div class="ref-item">' +
+          '<div class="ref-complet">' + s.complet + '</div>' +
+          (s.adaptation ? '<div class="ref-adapt"><b>Ce que la BAF en fait :</b> ' + esc(s.adaptation) + '</div>' : '') +
+        '</div>').join('') +
+    '</div>').join('');
+}
+
 const SCHEMA_DOSSIER = 2;
 
 /* Déclarées ICI, et pas avec les fonctions qui s'en servent : refreshM2List()
@@ -4058,6 +4193,7 @@ function route(name, fromHistory){
   if(name === 'notes') renderNotes();
   if(name === 'declarant') renderDeclarant();
   if(name === 'parcours') renderParcours();
+  if(name === 'ressources') renderReferences();
   if(name === 'baf-accueil') majDossierEnCours();
   poserSituer(name);
   appliquerModeDeclarant();
@@ -7184,7 +7320,7 @@ function renderCorrelations() {
   if (ante_cons.length > 0) {
     html += `<div class="corr-section">
       <div class="corr-section-title">⏮ Antécédent → ⏭ Conséquence</div>
-      <div class="corr-note">Lecture : sur les évènements qui portent cet antécédent, quelle part porte aussi cette conséquence. Le second chiffre dit à quelle fréquence cette conséquence apparaît dans l'ensemble du dossier — c'est la comparaison qui donne du sens au premier, pas le pourcentage seul.</div>
+      ${noteSource('conditionnel')}${noteSource('attention')}<div class="corr-note">Lecture : sur les évènements qui portent cet antécédent, quelle part porte aussi cette conséquence. Le second chiffre dit à quelle fréquence cette conséquence apparaît dans l'ensemble du dossier — c'est la comparaison qui donne du sens au premier, pas le pourcentage seul.</div>
       ${ante_cons.map(p => corrLine(p, 'var(--ocre-pale)', 'var(--rose-pale)', '→')).join('')}
     </div>`;
   }
@@ -8441,6 +8577,23 @@ const _CONTROLES = [
     return _bancEgal('Organisation et interprétation inchangées', empreinteAvant, empreinteApres);
   }},
 
+  {nom:'Chaque source citée est complète et classée', test: () => {
+    /* Une source citée au point d'usage mais absente de la page Références,
+       ou sans référence complète, c'est de la bibliographie de vitrine. */
+    const soucis = [];
+    Object.entries(SOURCES).forEach(([id, s]) => {
+      if (!s.court || !s.complet || !s.groupe) soucis.push(id);
+    });
+    return _bancEgal('Sources incomplètes', '', soucis.join(','));
+  }},
+
+  {nom:'Les notes de source se rendent sans exception', test: () => {
+    let souci = '';
+    try { Object.keys(SOURCES).forEach(id => { if (!noteSource(id)) throw new Error('note vide : ' + id); }); renderReferences(); }
+    catch (e) { souci = e.message; }
+    return _bancEgal('Rendu des sources', '', souci);
+  }},
+
   {nom:'Le vase ne produit que cinq valeurs', test: () => {
     /* Cent niveaux de discrimination sur une impression subjective, c'est du
        bruit qui ressemble à du signal. La saisie ne propose plus que les cinq
@@ -9152,7 +9305,7 @@ const CATEGORIES_SUGGEREES = {
             'Opposition verbale', 'Fugue et départ']
   },
   contexte: {
-    aide: "Ce qui pèse de loin, avant que la séquence ne commence. Ça ne déclenche rien tout seul : ça remplit le vase, et fait qu'un même antécédent ne produit pas le même effet d'un jour à l'autre.",
+    aide: "Ce qui pèse de loin, avant que la séquence ne commence. Ça ne déclenche rien tout seul : ça remplit le vase, et fait qu'un même antécédent ne produit pas le même effet d'un jour à l'autre. C'est la distinction entre l'opération motivante et l'évènement déclencheur — voir les références en Ressources.",
     liste: ['Sommeil insuffisant', 'Retour de week-end ou de vacances', 'Douleur ou état somatique',
             'Absence ou remplacement d\'un référent', 'Changement dans l\'environnement',
             'Modification de traitement', 'Évènement familial']
@@ -9164,7 +9317,7 @@ const CATEGORIES_SUGGEREES = {
             "Frustration d'un accès", 'Approche ou contact physique']
   },
   consequences: {
-    aide: "Les quatre fonctions classiquement décrites en analyse fonctionnelle. Un même comportement peut en servir plusieurs à la fois, et dans le même contexte — n'hésitez pas à en assigner deux.",
+    aide: "Les quatre fonctions classiquement décrites en analyse fonctionnelle, d'après Iwata et ses collègues (1982). Un même comportement peut en servir plusieurs à la fois, et dans le même contexte — n'hésitez pas à en assigner deux. Attention à « Obtient de l'attention » : l'analyse descriptive la sur-identifie, parce que l'attention suit à peu près tout ce que fait une personne en difficulté.",
     liste: ["Obtient de l'attention", 'Échappe ou évite', 'Obtient un objet ou une activité',
             'Auto-stimulation sensorielle']
   },
@@ -11190,6 +11343,7 @@ function buildScatterplot(evts) {
 
   el.innerHTML = `
     <div style="display:flex;justify-content:flex-end;">${choixMode}</div>
+    ${noteSource('scatterplot')}${noteSource('kahng')}
     <div class="scatter-sub">Fond de la case = nombre d'évènements · rond = <b>palier le plus haut atteint</b> · survolez pour le détail.<br>Le maximum, et non une moyenne : sur une échelle à paliers nommés, rien ne garantit que l'écart entre « normal » et « tendu » vaille celui entre « angoissé » et « débordé ». Une moyenne supposerait des intervalles égaux, un maximum non. Les niveaux d'après intervention sont exclus, sinon un évènement bien désamorcé passerait pour calme. C'est une hétéro-évaluation déclarative, pas une mesure.</div>
     <div class="scatter-svg-outer">${svg}</div>
     <div class="scatter-legend">${legend}</div>`;
@@ -13305,7 +13459,8 @@ function renderDoubleCodage() {
       'au référent du dossier.</p>' +
       '<button class="btn btn-primary" onclick="exporterMonCodage()">✉ Exporter mon codage</button>';
   } else {
-    html += '<p class="dc-texte">La catégorisation est un acte de mesure : c\'est elle qui transforme un texte en ' +
+    html += noteSource('accord') +
+      '<p class="dc-texte">La catégorisation est un acte de mesure : c\'est elle qui transforme un texte en ' +
       'une variable qui sera comptée. Faite à deux, elle se vérifie. <b>Chacun code de son côté, puis vous comparez ' +
       'et vous produisez ensemble la catégorisation de synthèse</b> — celle qui restera affichée ici et qui alimentera l\'analyse.</p>' +
       '<p class="dc-texte"><b>Définissez la grille ensemble avant de coder séparément.</b> Si chacun invente ses ' +
