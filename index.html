@@ -361,9 +361,7 @@ header.top{
 .trous-modal-liste{max-height:48vh;overflow:auto;}
 .cov-deja{margin-top:14px;font-size:13px;}
 .cov-deja summary{cursor:pointer;font-weight:600;color:var(--ink-soft);}
-.event-niveau-tag{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 7px;border-radius:10px;margin-left:6px;}
-.event-niveau-tag.detaille{background:var(--slate);color:#FFFFFF;}
-.event-niveau-tag.rapide{background:var(--ocre-pale);color:var(--ocre-deep);}
+.event-niveau-ico{flex-shrink:0;font-size:15px;line-height:1;padding:0 2px;cursor:help;}
 .cov-reste{font-size:12px;color:var(--ink-soft);font-style:italic;padding-top:8px;}
 .cov-liste{margin-top:16px;display:flex;flex-direction:column;gap:2px;}
 .cov-item{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13px;padding:5px 0;border-bottom:1px solid var(--line-soft);}
@@ -6877,15 +6875,18 @@ function refreshM2List(){
     const brouillonTag = idsAvecBrouillon.has(e.id) ? '<span class="event-brouillon-tag" title="Modifications non validées">brouillon</span>' : '';
     const indirectTag = (e.temoin && e.temoin !== 'Témoin direct') ? `<span class="event-indirect-tag" title="${esc(e.temoin)}">${e.temoin === 'Rapporté par un tiers' ? 'rapporté' : 'après coup'}</span>` : '';
     const niveau = niveauDetailEvt(e);
-    const niveauTag = `<span class="event-niveau-tag ${niveau}" title="${niveau === 'detaille' ? 'Saisi en mode détaillé' : 'Saisi en mode rapide'}">${niveau === 'detaille' ? 'détaillé' : 'rapide'}</span>`;
+    // Une icône plutôt qu'un mot (Arthur, 15/09/2026) : ⚡ rapide, 🔬 détaillé, comme les boutons du formulaire.
+    const libNiveau = niveau === 'detaille' ? 'Saisi en mode détaillé' : 'Saisi en mode rapide';
+    const niveauTag = `<span class="event-niveau-ico ${niveau}" role="img" aria-label="${libNiveau}" title="${libNiveau}">${niveau === 'detaille' ? '🔬' : '⚡'}</span>`;
     const prov = provenanceEvt(e);
     const sourceTag = prov ? `<span class="event-source-tag" title="Déclaré depuis : ${esc(prov)}">${esc(prov)}</span>` : '';
     html += `<div class="event-item" onclick="ouvrirFormulaireEvenement(${i})">
       <div class="ev-num">${i+1}</div>
       <div class="ev-info">
-        <div class="ev-date">${esc(dateStr)}${esc(heureStr)}${e.moment ? ' · '+esc(e.moment) : ''} ${niveauTag}${brouillonTag}${indirectTag}${sourceTag}</div>
+        <div class="ev-date">${esc(dateStr)}${esc(heureStr)}${e.moment ? ' · '+esc(e.moment) : ''} ${brouillonTag}${indirectTag}${sourceTag}</div>
         <div class="ev-desc">${esc(desc)}</div>
       </div>
+      ${niveauTag}
       <button class="btn btn-ghost btn-sm no-print" onclick="supprimerEvt(${i},event)" style="flex-shrink:0;padding:6px 10px;font-size:12px;border-color:transparent;" title="Supprimer">🗑</button>
       <div class="ev-arrow">→</div>
     </div>`;
