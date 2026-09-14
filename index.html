@@ -2179,6 +2179,27 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
 .vase-signe b{font-weight:700;color:var(--ink-soft);margin-left:4px;}
 .vase-signes-vide{font-size:12.5px;color:var(--ink-soft);font-style:italic;margin-bottom:10px;}
 .vase-palier-bloc textarea{min-height:54px;}
+/* Le vase à côté des paliers. */
+.vase-duo{display:grid;grid-template-columns:minmax(150px,210px) minmax(0,1fr);gap:22px;align-items:start;}
+.vase-duo-dessin{position:sticky;top:90px;}
+.vduo-svg{width:100%;height:auto;display:block;margin:0 auto 6px;}
+.vduo-bande{fill-opacity:.14;cursor:pointer;}
+.vduo-bande.rempli{fill-opacity:.9;transform-box:fill-box;transform-origin:50% 100%;animation:vduo-monte .35s ease-out both;}
+@keyframes vduo-monte{from{transform:scaleY(0);}to{transform:scaleY(1);}}
+@media (prefers-reduced-motion:reduce){.vduo-bande.rempli{animation:none;}}
+.vduo-nom{font-size:10.5px;fill:var(--ink-soft);cursor:pointer;}
+.vduo-nom.choisi{fill:var(--ink);font-weight:700;}
+.vduo-repere{fill:var(--ink);}
+.vduo-legende{font-size:12px;color:var(--ink-soft);line-height:1.5;margin-top:3px;}
+.vduo-legende b{color:var(--ink);}
+.vduo-fleche{font-size:10px;color:var(--ink);}
+button.vase-palier-tete{width:100%;font:inherit;text-align:left;background:none;border:none;padding:0;cursor:pointer;color:inherit;}
+button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-visible .vase-palier-nom{text-decoration:underline;}
+.vase-palier-bloc.choisi{border-color:var(--ink-soft);background:var(--card);box-shadow:var(--shadow-soft);}
+@media (max-width:720px){
+  .vase-duo{grid-template-columns:1fr;gap:8px;}
+  .vase-duo-dessin{position:static;max-width:200px;margin:0 auto;}
+}
 .vase-apriori{
   background:var(--ocre-pale);border-left:3px solid var(--ocre);
   border-radius:8px;padding:12px 15px;margin-bottom:14px;font-size:13px;line-height:1.6;
@@ -3675,7 +3696,10 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
         Chaque palier rassemble ce que les déclarants ont écrit sous « à quoi ça se voyait », rangé selon le niveau qu'ils avaient posé. Vous n'avez rien à ressaisir : vous lisez, vous regroupez, vous écrivez la synthèse.
         <div class="vase-prudence">⚠ Ce que vous écrivez ici devient l'aide affichée aux déclarants au moment de coter. Si vous réécrivez un palier plus tard, les cotations passées gardent leur chiffre mais changent un peu de sens — le nombre reste la donnée, la description est une aide à la lecture.</div>
       </div>
-      <div id="vase-paliers-liste"></div>
+      <div class="vase-duo">
+        <div class="vase-duo-dessin" id="vase-duo-dessin"></div>
+        <div class="vase-duo-paliers" id="vase-paliers-liste"></div>
+      </div>
       <div id="vase-figer"></div>
 
       <h4 class="vase-part-titre">2 · Ce qui le remplit, ce qui le vide</h4>
@@ -8794,6 +8818,12 @@ const _CONTROLES = [
       'base 2/3 · Insister 1/1 · Calmer 0/1 · Refus 1 tendu 1 débordé · Refus→Taper 1 après Insister', obtenu);
   }},
 
+  {nom:'Le pic le plus fréquent du vase, le plus haut en cas d\'égalité', test: () => {
+    const evts = [30, 50, 55, 90, 85].map(v => ({tension: {pic: {v}}})).concat([{tension: {}}, {}]);
+    const p = picLePlusFrequent(evts);
+    return _bancEgal('Palier le plus fréquent, effectif', 'deborde 2/5', p.id + ' ' + p.nb + '/' + p.total);
+  }},
+
   {nom:'Chaque volet a sa couleur, distincte des autres', test: () => {
     /* Le contexte et l'antécédent ont longtemps partagé le même jaune : on ne
        distinguait plus, à l'œil, deux volets que l'outil sépare. */
@@ -11463,11 +11493,92 @@ function recolteParPalier() {
   return res;
 }
 
+/* ── Le vase à côté des paliers ────────────────────────────────────────
+   Un dessin à gauche, les paliers à droite (Arthur, 14/09/2026). Cliquer un
+   palier remplit le vase jusqu'à lui ; un repère marque le palier le plus
+   souvent atteint au plus fort des évènements. Rien n'est enregistré : c'est
+   une aide à la lecture. */
+let vasePalierChoisi = null;
+
+/* Sur les évènements cotés, le palier atteint au plus fort — contexte,
+   antécédent, pic, pas l'après-intervention (voir niveauxMontee). En cas
+   d'égalité, le plus haut : c'est celui qu'il faut avoir en tête. */
+function picLePlusFrequent(evts) {
+  const compte = {};
+  let total = 0;
+  (evts || []).forEach(evt => {
+    const pal = palierDe(tensionPicEvt(evt));
+    if (!pal) return;
+    compte[pal.id] = (compte[pal.id] || 0) + 1;
+    total++;
+  });
+  let id = null;
+  PALIERS_VASE.forEach(p => {
+    if ((compte[p.id] || 0) > 0 && (id === null || compte[p.id] >= compte[id])) id = p.id;
+  });
+  return {id, nb: id ? compte[id] : 0, total};
+}
+
+function dessinerVaseDuo(pic) {
+  const el = document.getElementById('vase-duo-dessin');
+  if (!el) return;
+  const iChoisi = PALIERS_VASE.findIndex(p => p.id === vasePalierChoisi);
+  const choisi = PALIERS_VASE[iChoisi];
+  const palPic = PALIERS_VASE.find(p => p.id === pic.id);
+  // Les couches se remplissent par le bas, l'une après l'autre.
+  const couches = PALIERS_VASE.map((p, i) => {
+    const y1 = vaseY(p.min + 20), y2 = vaseY(p.min);
+    return '<rect class="vduo-bande' + (i <= iChoisi ? ' rempli' : '') + '" x="18" y="' + y1.toFixed(1) +
+      '" width="86" height="' + (y2 - y1).toFixed(1) + '" fill="' + p.couleur + '" style="animation-delay:' + (i * 70) + 'ms;"' +
+      ' onclick="choisirPalierVase(\'' + p.id + '\')"><title>' + esc(p.nom) + '</title></rect>';
+  }).join('');
+  const traits = PALIERS_VASE.filter(p => p.min > 0).map(p =>
+    '<line x1="18" x2="104" y1="' + vaseY(p.min).toFixed(1) + '" y2="' + vaseY(p.min).toFixed(1) + '" stroke="var(--card)" stroke-width="1.2"/>').join('');
+  const noms = PALIERS_VASE.map(p =>
+    '<text class="vduo-nom' + (p === choisi ? ' choisi' : '') + '" x="112" y="' + (vaseY(p.min + 10) + 3.5).toFixed(1) + '"' +
+    ' onclick="choisirPalierVase(\'' + p.id + '\')">' + esc(p.nom) + '</text>').join('');
+  const yPic = palPic ? vaseY(palPic.min + 10) : 0;
+  const repere = palPic
+    ? '<path class="vduo-repere" d="M2 ' + (yPic - 5).toFixed(1) + ' L12 ' + yPic.toFixed(1) + ' L2 ' + (yPic + 5).toFixed(1) + ' Z"><title>Pic le plus fréquent</title></path>'
+    : '';
+  el.innerHTML =
+    '<svg class="vduo-svg" viewBox="0 0 170 186" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' +
+      esc(choisi ? 'Vase rempli jusqu\'au palier ' + choisi.nom : 'Vase vide') + '">' +
+      '<defs><clipPath id="vduo-clip"><path d="' + VASE_PATH + '"/></clipPath></defs>' +
+      // Le découpage porte sur le groupe, pas sur les couches : une couche qui
+      // s'anime à l'échelle entraînerait sinon sa découpe avec elle.
+      '<g clip-path="url(#vduo-clip)">' +
+        '<rect x="18" y="12" width="86" height="160" fill="var(--paper-deep)"/>' + couches + traits +
+      '</g>' +
+      '<path d="' + VASE_PATH + '" fill="none" stroke="var(--ink)" stroke-width="2"/>' +
+      noms + repere +
+    '</svg>' +
+    '<div class="vduo-legende">' + (choisi ? 'Rempli jusqu\'à <b>' + esc(choisi.nom) + '</b>' : 'Cliquez un palier pour remplir le vase.') + '</div>' +
+    '<div class="vduo-legende">' + (palPic
+      ? '<span class="vduo-fleche">▶</span> Pic le plus fréquent : <b>' + esc(palPic.nom) + '</b>, ' +
+        pic.nb + ' évènement' + (pic.nb > 1 ? 's' : '') + ' sur ' + pic.total + ' coté' + (pic.total > 1 ? 's' : '')
+      : 'Aucun évènement coté pour l\'instant : pas de pic à situer.') + '</div>';
+}
+
+function choisirPalierVase(id) {
+  vasePalierChoisi = id;
+  document.querySelectorAll('#vase-paliers-liste .vase-palier-bloc').forEach(b => {
+    const on = b.dataset.palier === id;
+    b.classList.toggle('choisi', on);
+    const tete = b.querySelector('.vase-palier-tete');
+    if (tete) tete.setAttribute('aria-pressed', String(on));
+  });
+  dessinerVaseDuo(picLePlusFrequent(state.m2.evenements || []));
+}
+
 function renderVasePaliers() {
   const el = document.getElementById('vase-paliers-liste');
   if (!el) return;
   const recolte = recolteParPalier();
   const paliers = state.m4.paliers || {};
+  const pic = picLePlusFrequent(state.m2.evenements || []);
+  // Par défaut, le vase montre le pic le plus fréquent : c'est la première chose à regarder.
+  if (!PALIERS_VASE.some(p => p.id === vasePalierChoisi)) vasePalierChoisi = pic.id;
   el.innerHTML = PALIERS_VASE.slice().reverse().map(p => {
     const groupes = Object.values(recolte[p.id] || {})
       .sort((a, b) => b.occurrences.length - a.occurrences.length);
@@ -11483,12 +11594,13 @@ function renderVasePaliers() {
                  (g.occurrences.length > 1 ? '<b>× ' + g.occurrences.length + '</b>' : '') + '</span>';
         }).join('') + '</div>'
       : '<div class="vase-signes-vide">Aucun signe rapporté à ce palier pour l\'instant. Les déclarants n\'ont pas encore coté d\'évènement à ce niveau, ou n\'ont pas rempli « à quoi ça se voyait ».</div>';
-    return '<div class="vase-palier-bloc" style="border-left-color:' + p.couleur + ';">' +
-      '<div class="vase-palier-tete">' +
+    return '<div class="vase-palier-bloc' + (p.id === vasePalierChoisi ? ' choisi' : '') + '" data-palier="' + p.id + '" style="border-left-color:' + p.couleur + ';">' +
+      '<button type="button" class="vase-palier-tete" aria-pressed="' + (p.id === vasePalierChoisi) + '" ' +
+        'onclick="choisirPalierVase(\'' + p.id + '\')" title="Remplir le vase jusqu\'à ce palier">' +
         '<span class="vase-palier-nom">' + p.nom + '</span>' +
         '<span class="vase-palier-plage">' + p.min + ' à ' + (p.min + 20) + '</span>' +
         '<span class="vase-palier-compte">' + (total ? total + ' signe' + (total > 1 ? 's' : '') + ' rapporté' + (total > 1 ? 's' : '') : 'rien rapporté') + '</span>' +
-      '</div>' + signes +
+      '</button>' + signes +
       '<div class="field" style="margin-bottom:0;">' +
         '<label for="palier-' + p.id + '">Ce que ce palier donne à voir chez ' + esc(state.m1.prenom || 'cette personne') + '</label>' +
         '<textarea id="palier-' + p.id + '" oninput="savePalier(\'' + p.id + '\')" placeholder="Une ou deux phrases, à partir des signes ci-dessus : à quoi reconnaît-on ce palier ?">' +
@@ -11496,6 +11608,7 @@ function renderVasePaliers() {
       '</div>' +
     '</div>';
   }).join('');
+  dessinerVaseDuo(pic);
   renderFigerEchelle();
 }
 
