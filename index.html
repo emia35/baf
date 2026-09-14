@@ -3080,7 +3080,7 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
         <b>Ce que l'ICAF cote, et ce qu'il ne cote pas.</b> Le barème évalue un bilan d'analyse fonctionnelle <b>complet</b> : le recueil, mais aussi le profil global de la personne, les hypothèses, les préconisations, la diffusabilité du document. Un recueil de données seul — un RDAF — n'alimente qu'une partie de ces items. Le coter en entier ne dirait pas si le travail est bon : ça mesurerait le recouvrement entre deux périmètres.
         <div style="margin-top:11px;font-weight:700;line-height:1.9;">
           AF = RDAF + analyse clinique<br>
-          AF consolidée = AF + ICAF + ce que la cotation fait aller chercher
+          AF évaluée = AF + ICAF + ce que la cotation fait aller chercher
         </div>
         <div style="margin-top:9px;">L'ICAF ne consolide rien par lui-même : il mesure, et il dit où le matériau est mince. Ce qui consolide, c'est ce qu'on va chercher après l'avoir lu.</div>
       </div>
@@ -12529,7 +12529,7 @@ function corpsModeEmploiGeneral() {
     puce("Un indice bas n'invalide rien. ", "Il dit où le matériel est mince, donc ce qu'il faudrait aller chercher.") +
     encadre([
       {t: 'AF = RDAF + analyse clinique', gras: true},
-      {t: '\nAF consolidée = AF + ICAF + ce que la cotation fait aller chercher', gras: true}
+      {t: '\nAF évaluée = AF + ICAF + ce que la cotation fait aller chercher', gras: true}
     ], DOCX_C.papierFonce, bleu) +
     encadre([
       {t: "Le dossier complet ne sort pas de l'équipe. ", gras: true},
@@ -14204,7 +14204,7 @@ const NOTES_VERSION = [
 <p>Le barème évalue une <b>analyse fonctionnelle complète</b>. Un recueil de données seul n'alimente qu'une partie de ses items. Quand vous lancez une cotation sur un dossier, l'outil vous dit désormais lesquels — et vous demande de laisser les autres <b>non cotés</b> : les coter à zéro ne dirait pas que le travail est mauvais, ça dirait que l'objet n'existe pas encore.</p>
 <div class="nv-corps" style="padding:0;">
 <p><b>AF</b> = RDAF + analyse clinique<br>
-<b>AF consolidée</b> = AF + ICAF + ce que la cotation fait aller chercher</p>
+<b>AF évaluée</b> = AF + ICAF + ce que la cotation fait aller chercher</p>
 </div>
 
 <h4>Les sources</h4>
@@ -14518,7 +14518,7 @@ const REPERES = [
        r: `<p><b>Un matériel déclaratif de qualité</b>, venu des différents lieux de vie de la personne : des comportements décrits avec précision, dans leur contexte, avec ce qui les précède et ce qui les suit — et aussi les périodes où rien ne se passe.</p>
            <p><b>Le raisonnement clinique.</b> Formuler des hypothèses fonctionnelles à partir de ces données est un acte clinique, qui se fait à plusieurs et sous le regard d'un clinicien. Aucun outil ne le fait à votre place.</p>
            <p><b>Un regard sur la qualité du travail produit.</b> Une analyse n'a pas la même solidité selon ce sur quoi elle repose.</p>
-           <p class="repere-equation">AF = RDAF + analyse clinique<br>AF consolidée = AF + ICAF + ce que la cotation fait aller chercher</p>`},
+           <p class="repere-equation">AF = RDAF + analyse clinique<br>AF évaluée = AF + ICAF + ce que la cotation fait aller chercher</p>`},
     ]
   },
   {
@@ -14743,7 +14743,7 @@ function gf(text){
    barème est utile — on dit ce qu'on cote.
 
        AF                = RDAF + analyse clinique
-       AF consolidée     = AF + ICAF + ce que la cotation fait aller chercher
+       AF évaluée     = AF + ICAF + ce que la cotation fait aller chercher
 
    L'ICAF ne consolide rien par lui-même : il mesure, et ce qui consolide est ce
    qu'on va chercher après l'avoir lu. */
@@ -14813,7 +14813,7 @@ function renderPerimetre(rater) {
     '</details>' +
     '<div class="perim-equation">' +
       '<div><b>AF</b> = RDAF + analyse clinique</div>' +
-      '<div><b>AF consolidée</b> = AF + ICAF + ce que la cotation fait aller chercher</div>' +
+      '<div><b>AF évaluée</b> = AF + ICAF + ce que la cotation fait aller chercher</div>' +
     '</div>';
   return d;
 }
