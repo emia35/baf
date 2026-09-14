@@ -2598,6 +2598,12 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
 }
 
 /* ── REPÈRES : questions/réponses repliées ── */
+.lexique-groupe{margin-top:18px;}
+.lexique-groupe:first-of-type{margin-top:8px;}
+.lexique-titre{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--ink-soft);margin:0 0 3px;}
+.lexique-sous{font-size:13px;font-style:italic;color:var(--ink-soft);margin:0 0 8px;line-height:1.55;}
+.repere-equation{font-weight:700;line-height:1.9;padding:8px 12px;background:var(--paper);border-left:3px solid var(--slate);border-radius:0 6px 6px 0;}
+
 .repere-q{
   border-bottom:1px solid var(--line-soft);
   padding:2px 0;
@@ -2980,23 +2986,6 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
            dossier est une seule action, que les données viennent d'un fichier ou
            d'un profil fictif. -->
 
-      <!-- Mode d'emploi multi-poste -->
-      <details class="multiposte-info">
-        <summary>📋 Utilisation partagée entre plusieurs postes</summary>
-        <div class="multiposte-body">
-          <p><b>La BAF est un outil d'équipe avant d'être un outil individuel.</b> Avant que chaque professionnel ou membre de la famille remplisse sa part, il faut d'abord construire un point de départ commun. C'est exactement le rôle du module <i>Apprenons à nous connaître</i>.</p>
-          <p><b>Pourquoi le pluridisciplinaire et le pluriprofessionnel sont indispensables.</b> Un comportement-défi observé à l'atelier n'a pas forcément la même signification que le même comportement observé en famille ou à la cantine. Les contextes diffèrent, les déclencheurs diffèrent, les conséquences diffèrent. Une analyse fonctionnelle sérieuse ne peut pas reposer sur le regard d'une seule personne depuis un seul espace. Elle suppose des déclarants multiples — professionnels de terrain, paramédicaux, familles, parfois la personne elle-même — qui ont accès à des situations différentes.</p>
-          <p><b>Comment démarrer une AF en équipe avec la BAF.</b></p>
-          <ol>
-            <li><strong>Réunion de lancement (collective).</strong> Avant tout recueil, réunissez l'équipe — ou a minima un représentant de chaque espace de vie. Remplissez ensemble le module <i>Apprenons à nous connaître</i> : qui est la personne, quel est le contexte, quels sont les comportements-défis identifiés. Ce moment pose les bases d'une démarche clinique partagée. Il évite que chacun parte dans une direction différente.</li>
-            <li><strong>Validation du préambule par chaque partie.</strong> Exportez un <i>kit déclarant</i> depuis Recueillir et envoyez-le à chaque espace de vie. Il contient le préambule, aucun évènement, et rien du travail d'analyse. Chacun le relit et signale, section par section, ce qui lui paraît faux ou incomplet. Vous corrigez, puis vous renvoyez le kit consolidé.</li>
-            <li><strong>Recueil par chacun, de son côté.</strong> Chaque déclarant décrit ce qu'il a observé dans sa propre copie, puis vous renvoie sa <i>contribution</i> : un fichier qui ne contient que son déclaratif. Vous la versez dans le dossier depuis Recueillir, chaque évènement gardant la trace de sa provenance, et les envois successifs d'une même personne ne se dupliquant pas.</li>
-            <li><strong>Ce qui ne circule pas.</strong> Le dossier complet reste chez le référent. Il contient l'ensemble du matériau et le travail d'analyse : le faire tourner donnerait à chaque déclarant accès aux observations de tous les autres — y compris entre parties qui peuvent être en désaccord. Ce qui circule vers l'extérieur, c'est le bilan, pas le fichier.</li>
-            <li><strong>Synthèse et interprétation (collective).</strong> Après plusieurs semaines de recueil, relisez la synthèse en équipe. Les corrélations, le scatterplot et les patterns ne sont pas des conclusions — ce sont des matériaux à discuter, à confronter avec l'expérience clinique de chacun.</li>
-          </ol>
-          <p><b>À retenir :</b> le dossier est la mémoire de l'analyse, et il a un gardien. Chaque déclarant y contribue depuis son propre espace d'observation, sans voir celui des autres. La BAF ne remplace pas la réunion clinique — elle l'alimente et la structure.</p>
-        </div>
-      </details>
       <button class="mod-btn m1" onclick="route('m1')">
         <span class="num">Préambule</span>
         <span class="titre">Apprenons à se connaître</span>
@@ -8614,6 +8603,15 @@ const _CONTROLES = [
     return _bancEgal('Organisation et interprétation inchangées', empreinteAvant, empreinteApres);
   }},
 
+  {nom:'Chaque mot du lexique est rangé dans un des deux lexiques', test: () => {
+    /* Littérature ou outil : un mot sans classement disparaîtrait du rendu en
+       silence, et un classement sans mot trahirait une définition perdue. */
+    const termes = tousLesTermes();
+    const sansClasse = Object.keys(termes).filter(k => LEXIQUE_CLASSE[k] !== 'litterature' && LEXIQUE_CLASSE[k] !== 'outil');
+    const sansMot = Object.keys(LEXIQUE_CLASSE).filter(k => !(k in termes));
+    return _bancEgal('Mots non classés | classements orphelins', '|', sansClasse.join(',') + '|' + sansMot.join(','));
+  }},
+
   {nom:'Chaque source citée est complète et classée', test: () => {
     /* Une source citée au point d'usage mais absente de la page Références,
        ou sans référence complète, c'est de la bibliographie de vitrine. */
@@ -14020,6 +14018,208 @@ function renderNotes() {
 }
 
 
+/* ══════════════════════════════════════════════════════════════════════
+   REPÈRES ET LEXIQUE
+   ══════════════════════════════════════════════════════════════════════
+   Déclarés ICI, avant le routage initial, et non plus loin comme avant :
+   renderReperes() s'exécute dès l'ouverture d'un lien direct vers #reperes,
+   et lisait des const déclarées six cents lignes plus bas. Zone morte
+   temporelle, script arrêté. Même piège que l'outil 2 à la passe R. */
+
+// Glossaire partagé avec l'outil 2 (info-bulles de la cotation) : forme inchangée.
+const GL={
+"comportement":"Tout comportement observable, qu'il soit fonctionnel, adapté ou défi. Ce n'est pas uniquement le trouble — c'est l'ensemble des nuances comportementales : signaux précurseurs, comportements de régulation, comportements adaptés. Fait objectif, sans jugement.",
+"comportement-défi":"Comportement d'une intensité, fréquence ou durée telle que la sécurité physique de la personne ou d'autrui est mise en danger, ou susceptible de limiter l'accès aux services (Emerson, 2001).",
+"comportement-cible":"Comportement(s) spécifiquement étudiés dans l'analyse fonctionnelle, qu'ils soient des comportements-défis ou non.",
+"déclarant":"Personne qui rapporte des observations ou informations : professionnel, famille, la personne elle-même, etc.",
+"source":"Tout matériel déclaratif pouvant servir de base à une analyse : transmissions, grilles ABC, entretiens, observations directes, scatterplots, questionnaires (MAS, IMPACT…).",
+"contexte":"Circonstances entourant l'apparition d'un comportement : lieu, moment, personnes présentes, activité en cours, état interne estimé.",
+"espace":"Tous les lieux de vie : famille, institution(s) médico-sociales, scolaires, sanitaires, professionnelles, PEC libérales, taxi, SAT, séjour, loisirs…",
+"biais potentiels":"Facteurs déformant l'interprétation : mémorisation, confirmation, interprétation, halo, fatigue du déclarant, passif institutionnel, surreprésentation de certains contextes…",
+"environnement":"Facteurs matériels (agencement, charge sensorielle, rythme, transport, multiplicité des lieux) et affectifs (dynamique institutionnelle, familiale : décès, changements, départs, ruptures).",
+"typologie":"Description factuelle et observable : pas « crise » ou « violence » mais « donne des coups de poing au visage », « se mord le dos de la main jusqu'à laisser une marque rouge visible ».",
+"contingences synthétiques":"Un même comportement maintenu simultanément par plusieurs fonctions dans un même contexte (ex : obtenir de l'attention ET éviter une tâche).",
+"analyse environnementale":"Évaluation structurée de l'environnement matériel et affectif : espaces, organisation du quotidien, dynamiques relationnelles, charges sensorielles, transitions."
+};
+
+const REPERES = [
+  {
+    titre: "Questions sur l'analyse fonctionnelle",
+    questions: [
+      {q: "Qu'est-ce qu'une analyse fonctionnelle ?",
+       r: `<p>Prenons l'image d'un iceberg. La partie émergée, ce sont les comportements : ce qu'on voit. Dessous, il y a tout ce qui les détermine — c'est complexe, et difficile d'accès. Mais cela dit une chose essentielle : <b>un comportement n'est pas là pour rien</b>. Il sert à quelque chose.</p>
+           <p>L'analyse fonctionnelle cherche à répondre à une question : <i>à quoi sert ce comportement ?</i> C'est un processus, une méthode, et son but est d'abord de comprendre — avant de savoir ce qu'on va en faire.</p>`},
+      {q: "Pourquoi parle-t-on de « comportement-défi » ?",
+       r: `<p>Parce qu'il fait défi <i>pour nous</i> — pour l'entourage, l'institution, l'équipe — et pas nécessairement pour la personne elle-même.</p>
+           <p>Pour elle, c'est une tentative de répondre à un besoin, de façon plus ou moins adaptée. Un comportement-défi est une alerte : il n'est pas là pour déranger, il est là pour dire quelque chose.</p>`},
+      {q: "Pourquoi est-ce si difficile à décrypter ?",
+       r: `<p>Sans handicap, on peut parler de la partie immergée de l'iceberg : expliquer pourquoi on s'est comporté de telle ou telle façon. Avec une déficience intellectuelle, un trouble psychique ou des difficultés de communication, c'est beaucoup moins simple. <b>Si la personne ne peut pas dire que ça ne va pas, ce sont ses comportements qui parlent pour elle.</b></p>
+           <p>D'où une règle de prudence : plus le handicap est important, plus le message est difficile à décrypter, et plus il faut être prudent dans ce qu'on en conclut.</p>`},
+      {q: "Pourquoi faut-il la faire à plusieurs ?",
+       r: `<p>Parce que c'est un travail du regard, et qu'on se fait très vite avoir par ses propres interprétations, ses a priori, ses préjugés. Ce que chacun voit depuis sa place ne suffit jamais.</p>
+           <p>C'est aussi pour cela qu'on ne produit pas des certitudes, mais des <b>hypothèses fonctionnelles</b> : il est si facile de se tromper qu'on doit se le rappeler jusque dans le mot.</p>`},
+      {q: "Comment se déroule une analyse fonctionnelle ?",
+       r: `<p>Si le comportement est un puzzle, il faut réunir les pièces avant de les assembler. Trois temps, dans cet ordre.</p>
+           <p><b>Observer.</b> On choisit d'abord un comportement en particulier — celui qui pose problème, pour la personne ou pour son entourage —, pour ne pas partir dans tous les sens. Puis on rassemble les pièces : à quel moment de la journée, de la semaine ? Dans quel contexte ? Avec qui ? Qu'est-ce qui fait que ça arrive plus ou moins ? Qu'est-ce que la personne a déjà bricolé pour y faire face ? On cherche ce qui se répète.</p>
+           <p><b>Analyser.</b> On pose les pièces sur la table, à plusieurs, et on essaie de faire le puzzle ensemble : prendre de la hauteur pour voir ce qu'on ne voit plus quand on est pris dans le quotidien. C'est là qu'on formule des hypothèses fonctionnelles.</p>
+           <p><b>Préconiser.</b> Seulement à la fin, on réfléchit à ce qu'on va proposer.</p>`},
+      {q: "Qu'est-ce qu'une hypothèse fonctionnelle ?",
+       r: `<p>Une proposition de lecture, formulée à partir des données. Par exemple : la personne jette son assiette parce qu'il y a trop de bruit et de mouvement — ou parce qu'elle n'arrive pas à interpeller quelqu'un, parce qu'elle en a assez, parce qu'elle aime aller au magasin en racheter une. Il y en a souvent plusieurs, et un même comportement peut servir plusieurs fonctions à la fois.</p>
+           <p>Une hypothèse se <b>teste</b>. Si l'on pense que c'est le bruit, on diminue le bruit et on regarde ce qui se passe. Si le comportement diminue, l'hypothèse tient ; sinon, on l'ajuste. L'analyse fonctionnelle, c'est de l'essai-erreur.</p>`},
+      {q: "Que vise une préconisation ?",
+       r: `<p>Pas forcément à faire disparaître le comportement, mais à proposer à la personne <b>un comportement fonctionnellement équivalent</b> : qui remplisse la même fonction, à moindre coût pour elle comme pour les autres.</p>
+           <p>Pour cela, on part de l'analyse, mais aussi de ce que la personne fait déjà d'elle-même. Elle ne nous a pas attendus pour essayer des choses, et il est toujours moins coûteux d'ajuster un comportement que de partir de rien.</p>
+           <p>Une préconisation prend deux formes : ajuster l'environnement et l'accompagnement, ou mettre de nouveaux outils à la disposition de la personne.</p>`},
+      {q: "Faut-il écarter une cause somatique d'abord ?",
+       r: `<p>Oui. Une douleur non identifiée est une cause fréquente de comportement-défi, et c'est la première à écarter : les recommandations françaises placent le bilan médical <b>avant</b> l'analyse fonctionnelle.</p>
+           <p>Chez une personne qui ne dit pas sa douleur avec des mots, l'évaluation passe par une hétéro-évaluation, avec un professionnel de santé.</p>`},
+      {q: "Faut-il attendre la crise pour commencer à observer ?",
+       r: `<p>Non, c'est même l'inverse. L'analyse fonctionnelle ne commence pas au moment du pic.</p>
+           <p>Un comportement-défi est souvent précédé de signaux plus discrets, qui montent bien avant l'explosion visible : une agitation, un retrait, une stéréotypie inhabituelle, que personne ne repère comme des « défis ». Ce sont les premières marches de la montée en tension. Les ignorer, c'est arriver trop tard.</p>`},
+      {q: "Pourquoi parler de tension plutôt que de comportement ?",
+       r: `<p>Plutôt que d'étudier isolément un comportement-défi, on cherche à lire <i>la tension qui s'accumule</i> chez la personne : ce qui la fait monter, ce qui la fait redescendre, ce qui la régule ou l'amplifie. C'est ce que la BAF appelle le vase de tension.</p>
+           <p>Ce déplacement du regard rend l'analyse utile pour proposer des accompagnements durables : on n'attend plus le débordement, on apprend à reconnaître le remplissage.</p>`},
+      {q: "Sur quoi repose une analyse fonctionnelle solide ?",
+       r: `<p><b>Un matériel déclaratif de qualité</b>, venu des différents lieux de vie de la personne : des comportements décrits avec précision, dans leur contexte, avec ce qui les précède et ce qui les suit — et aussi les périodes où rien ne se passe.</p>
+           <p><b>Le raisonnement clinique.</b> Formuler des hypothèses fonctionnelles à partir de ces données est un acte clinique, qui se fait à plusieurs et sous le regard d'un clinicien. Aucun outil ne le fait à votre place.</p>
+           <p><b>Un regard sur la qualité du travail produit.</b> Une analyse n'a pas la même solidité selon ce sur quoi elle repose.</p>
+           <p class="repere-equation">AF = RDAF + analyse clinique<br>AF consolidée = AF + ICAF + ce que la cotation fait aller chercher</p>`},
+    ]
+  },
+  {
+    titre: "Questions sur l'outil",
+    questions: [
+      {q: "Est-ce que la BAF pense à ma place ?",
+       r: `<p>Non. Elle ne pose aucun diagnostic et ne formule aucune hypothèse. Elle vous aide à structurer la démarche <b>avant</b> l'analyse — le recueil, l'organisation et la lecture des données (outil 1) — et à en évaluer la qualité <b>après</b> (outil 2).</p>
+           <p>Ce qui se passe entre les deux — formuler des hypothèses, décider quoi proposer — reste votre travail. Tout ce que l'outil fait apparaître, catégories, régularités, pourcentages, est un matériau de discussion, jamais une conclusion.</p>`},
+      {q: "Qui fait quoi dans la BAF ?",
+       r: `<p>La BAF réunit deux outils : le <b>RDAF</b> (outil 1), qui recueille et prépare les données en trois étapes — Recueillir, Organiser, Interpréter —, et l'<b>ICAF</b> (outil 2), qui évalue la qualité d'une analyse fonctionnelle terminée.</p>
+           <p><b>Le déclarant</b> remplit le recueil : il décrit ce qu'il observe là où il accompagne la personne. <b>L'analyste</b> organise et interprète les données, puis fait l'analyse fonctionnelle — dans la démarche proposée, c'est le binôme formé par le référent et le clinicien. <b>Le cotateur</b> remplit l'ICAF.</p>`},
+      {q: "Où sont stockées les données ? Qui peut les voir ?",
+       r: `<p>Tout fonctionne dans votre navigateur. <b>Rien n'est envoyé, stocké ou transmis à un serveur</b>, de quelque façon que ce soit.</p>
+           <p>Le dossier en cours reste enregistré dans ce navigateur, sur cet appareil. C'est ce qui vous évite de perdre votre travail en fermant l'onglet — et c'est aussi ce qui fait que, <b>sur un poste partagé, la personne suivante le retrouve</b>. Exportez votre dossier, et effacez-le en quittant. Si vous videz les données du navigateur sans avoir exporté, le travail est perdu.</p>`},
+      {q: "Que ne faut-il jamais écrire dans la BAF ?",
+       r: `<p>Pas de nom de famille, pas de ville, pas de structure nommée, ni aucun élément permettant d'identifier la personne ou son entourage. Un prénom seul suffit — fictif si besoin.</p>`},
+      {q: "Est-ce qu'on retouche ce que les déclarants ont écrit ?",
+       r: `<p>Jamais. Le déclaratif est la donnée de base : c'est le discours d'un professionnel ou d'une famille, avec son point de vue et ses biais propres, et il doit garder ce caractère.</p>
+           <p>Le travail de l'analyste ne commence qu'à l'étape <b>Organiser</b>. Tout ce qui y est produit — catégories, regroupements — se lit par-dessus et n'est jamais réécrit dans l'évènement. On peut donc toujours revenir au matériau d'origine.</p>`},
+      {q: "Comment travailler à plusieurs sur la même analyse ?",
+       r: `<p><b>Pour recueillir</b>, le référent envoie à chaque déclarant un <i>kit déclarant</i> : un fichier qui contient le préambule, sans aucun évènement ni travail d'analyse. Le déclarant l'ouvre dans la BAF, décrit ce qu'il observe, peut commenter le préambule, puis renvoie sa <i>contribution</i>. Le référent la verse dans le dossier : chaque évènement garde sa provenance, et les envois successifs ne se dupliquent pas. Ceux qui ne peuvent pas utiliser l'outil numérique remplissent une grille ABC papier, disponible dans Ressources.</p>
+           <p><b>Pour organiser</b>, référent et clinicien catégorisent chacun de leur côté, grâce à un <i>kit de codage</i>, puis comparent leurs écarts et arrêtent ensemble une catégorisation de synthèse.</p>
+           <p>Le dossier complet, lui, ne circule pas : il reste chez le référent. Ce qui part vers l'extérieur, c'est le document d'analyse fonctionnelle.</p>`},
+      {q: "Pourquoi déclarer les journées où il ne se passe rien ?",
+       r: `<p>Parce qu'une journée sans comportement-défi est une donnée, pas un vide. Sans elle, l'outil ne peut pas distinguer « il ne s'est rien passé » de « personne n'a rempli » : la fréquence qu'il affiche mesure alors les signalements, pas les comportements.</p>
+           <p>Et les moments où le comportement n'apparaît pas sont souvent les plus instructifs : ils disent ce qui aide la personne.</p>`},
+    ]
+  },
+];
+
+/* ── Les deux lexiques ──────────────────────────────────────────────────
+   La frontière compte. Certains mots appartiennent à l'analyse fonctionnelle
+   elle-même, et on les retrouve dans toute la littérature et dans toute
+   démarche, avec ou sans la BAF. D'autres sont des mots d'usage de l'outil :
+   ils n'ont pas cours ailleurs, ou pas dans ce sens précis. Les mélanger
+   laisserait croire qu'un « kit déclarant » est une notion de la littérature,
+   ou qu'une « fonction » est une invention de l'outil.
+
+   Les définitions restent là où elles vivaient : GL sert aussi aux info-bulles
+   de l'outil 2 et ne change pas de forme. Le classement est une table à part,
+   et un contrôle de banc vérifie qu'aucun mot n'y échappe. */
+
+const LEXIQUE_BAF = {
+  "évènement": "Une entrée déclarative : une situation décrite par une personne qui l'a observée. Un évènement peut se rapporter à un ou plusieurs comportements-défis. C'est l'unité de base du recueil.",
+  "volet": "Les différentes faces d'un même évènement : contexte, antécédent, comportement, conséquence, intervention. On parle de volet plutôt que d'étape, parce qu'ils ne se suivent pas toujours dans cet ordre.",
+  "antécédent": "Ce qui s'est passé juste avant le comportement, dans les secondes ou minutes précédentes. Il y en a souvent plusieurs. Le déclarant peut signaler celui qui lui semble avoir déclenché — c'est un avis, pas un verdict.",
+  "conséquence": "Ce qui change pour la personne après le comportement : ce qu'elle obtient, ce qu'elle évite. C'est souvent là que la fonction du comportement se lit. À ne pas confondre avec l'intervention, qui est ce que l'entourage a fait.",
+  "intervention": "Ce que l'entourage a fait en réponse au comportement, et avec quel effet sur la tension. Une intervention peut apaiser, ne rien changer, ou produire à son tour un nouveau comportement-défi.",
+  "CD post-intervention": "Un nouveau comportement-défi apparu après une intervention. Il appartient à la même crise, et se lit à la fois comme conséquence de l'intervention et comme contexte de la suite.",
+  "crise": "L'ensemble des comportements-défis d'une même journée. Ils sont numérotés CP1, CP2… pour des évènements distincts, et CP1.2, CP1.3… pour les comportements apparus après une intervention sur le même évènement.",
+  "pattern": "Une séquence qui semble se répéter, composée à partir des catégories créées dans Organiser. Ce n'est pas une certitude : c'est une hypothèse de lecture, à discuter.",
+  "gradation": "La façon dont la tension monte chez la personne : un signe discret d'abord, puis ça s'intensifie. Repérer la gradation permet d'intervenir avant le pic.",
+  "indice de confiance": "Dans la synthèse, un indicateur de la robustesse du recueil — volume, pluralité des regards, durée, complétude, part d'observation directe. À ne pas confondre avec l'ICAF, qui évalue l'analyse fonctionnelle entière.",
+  "BAF": "Boussole pour une Analyse Fonctionnelle. L'enveloppe : elle réunit le RDAF (outil 1) et l'ICAF (outil 2).",
+  "RDAF": "L'outil 1, le recueil de données. Il se déroule en trois étapes — Recueillir, Organiser, Interpréter. Il prépare l'analyse fonctionnelle, il ne la produit pas.",
+  "ICAF": "L'outil 2, l'indice de confiance. Il évalue la qualité méthodologique d'une analyse fonctionnelle terminée — pas la personne, pas les déclarants.",
+  "préambule": "Ce que l'équipe sait déjà de la personne avant toute observation : lieux de vie, journée type, piste somatique, vase de tension connu. C'est le point de départ commun à tous les déclarants.",
+  "analyste": "Celui ou celle qui organise et interprète les données, puis fait l'analyse fonctionnelle. Dans la démarche proposée, c'est le binôme formé par le référent et le clinicien.",
+  "référent": "Le professionnel qui porte la démarche : il la prépare, lance le recueil, reçoit les contributions et fait l'analyse avec le clinicien qui la supervise.",
+  "cotateur": "Celui ou celle qui remplit l'ICAF sur une analyse fonctionnelle terminée. Coter à plusieurs, séparément, est plus instructif que la note elle-même.",
+  "kit déclarant": "Le fichier envoyé à un déclarant : le préambule, sans aucun évènement ni travail d'analyse. Il l'ouvre dans la BAF, décrit ce qu'il observe et renvoie une contribution.",
+  "contribution": "Le fichier renvoyé par un déclarant : ses évènements, ses périodes observées et ses remarques sur le préambule. Le référent la verse dans le dossier, chaque évènement gardant sa provenance.",
+  "période observée": "Une journée ou une plage de jours déclarée comme observée, avec ou sans comportement-défi. Sans elle, l'outil ne peut pas distinguer « il ne s'est rien passé » de « personne n'a rempli ».",
+  "vase de tension": "L'image qu'emploie la BAF pour la tension qui s'accumule chez la personne, en cinq paliers. Le déclarant pose un palier et note à quoi ça se voyait ; l'équipe en tire l'échelle décrite propre à la personne.",
+  "double codage": "La catégorisation faite séparément par deux personnes — le référent et le clinicien, par exemple —, puis comparée et discutée, pour aboutir à une catégorisation de synthèse.",
+};
+
+const LEXIQUE_AF = {
+  "fonction": "Ce à quoi sert un comportement pour la personne : obtenir quelque chose — une attention, un objet, une activité, une sensation — ou échapper à quelque chose — une demande, une situation, un inconfort. Un même comportement peut en servir plusieurs.",
+  "hypothèse fonctionnelle": "Une proposition de lecture sur la fonction d'un comportement, formulée à partir des données et discutée à plusieurs. Elle se teste : si elle est juste, agir sur ce qu'elle désigne doit modifier le comportement.",
+  "précurseur": "Un comportement plus discret qui précède régulièrement le comportement-défi, et qui appartient souvent à la même famille. Le repérer permet d'intervenir avant le pic.",
+  "comportement fonctionnellement équivalent": "Un comportement qui remplit la même fonction que le comportement-défi, à moindre coût pour la personne et son entourage. C'est ce que vise une préconisation, plutôt que la seule disparition du comportement.",
+  "analyse ABC": "Le recueil qui décrit un comportement (B, pour behavior) entre ce qui le précède (A, antecedent) et ce qui le suit (C, consequence). La BAF en reprend la logique, en séparant le contexte de l'antécédent, et l'intervention de la conséquence.",
+};
+
+const LEXIQUE_CLASSE = {
+  // Les mots de l'analyse fonctionnelle
+  "comportement": "litterature", "comportement-défi": "litterature", "comportement-cible": "litterature",
+  "contexte": "litterature", "antécédent": "litterature", "conséquence": "litterature",
+  "fonction": "litterature", "hypothèse fonctionnelle": "litterature", "précurseur": "litterature",
+  "comportement fonctionnellement équivalent": "litterature", "analyse ABC": "litterature",
+  "contingences synthétiques": "litterature", "typologie": "litterature", "biais potentiels": "litterature",
+  "environnement": "litterature", "analyse environnementale": "litterature",
+  // Les mots de la BAF
+  "évènement": "outil", "volet": "outil", "intervention": "outil", "CD post-intervention": "outil",
+  "crise": "outil", "pattern": "outil", "gradation": "outil", "indice de confiance": "outil",
+  "déclarant": "outil", "source": "outil", "espace": "outil",
+  "BAF": "outil", "RDAF": "outil", "ICAF": "outil", "préambule": "outil",
+  "analyste": "outil", "référent": "outil", "cotateur": "outil",
+  "kit déclarant": "outil", "contribution": "outil", "période observée": "outil",
+  "vase de tension": "outil", "double codage": "outil",
+};
+
+function tousLesTermes() {
+  return Object.assign({}, GL, LEXIQUE_AF, LEXIQUE_BAF);
+}
+
+function renderReperes() {
+  const el = document.getElementById('reperes-contenu');
+  if (!el) return;
+  let html = REPERES.map(cat => `
+    <div class="card">
+      <h3 style="font-size:17px;margin-bottom:14px;">${esc(cat.titre)}</h3>
+      ${cat.questions.map(item => `
+        <details class="repere-q">
+          <summary>${esc(item.q)}</summary>
+          <div class="repere-r">${item.r}</div>
+        </details>`).join('')}
+    </div>`).join('');
+
+  const termes = tousLesTermes();
+  const majuscule = (k) => k.charAt(0).toUpperCase() + k.slice(1);
+  const groupe = (classe, titre, sous) => {
+    const cles = Object.keys(termes).filter(k => LEXIQUE_CLASSE[k] === classe)
+      .sort((a, b) => a.localeCompare(b, 'fr', {sensitivity: 'base'}));
+    return `<div class="lexique-groupe">
+        <h4 class="lexique-titre">${esc(titre)}</h4>
+        <p class="lexique-sous">${esc(sous)}</p>
+        ${cles.map(k => `
+          <details class="repere-q">
+            <summary>${esc(majuscule(k))}</summary>
+            <div class="repere-r"><p>${esc(termes[k])}</p></div>
+          </details>`).join('')}
+      </div>`;
+  };
+  html += `
+    <div class="card">
+      <h3 style="font-size:17px;margin-bottom:6px;">Lexique</h3>
+      ${groupe('litterature', "Les mots de l'analyse fonctionnelle",
+        "Ceux qu'on retrouve dans la littérature et dans toute démarche d'analyse fonctionnelle, avec ou sans la BAF.")}
+      ${groupe('outil', "Les mots de la BAF",
+        "Ceux que l'outil emploie pour organiser son travail. Ils n'ont pas cours ailleurs, ou pas dans ce sens précis.")}
+    </div>`;
+  el.innerHTML = html;
+}
+
 const vueInitiale = vueDepuisAdresse(location.hash) || 'accueil';
 history.replaceState({route:vueInitiale}, '', '#'+adresseDeVue(vueInitiale));
 route(vueInitiale, true);
@@ -14042,109 +14242,9 @@ function lightC(hex,op){
 // REPÈRES — théorie et lexique
 // Premier jet à partir des textes déjà validés des pages d'accueil.
 // ============================================================
-const REPERES = [
-  {
-    titre: 'Questions sur l\'analyse fonctionnelle',
-    questions: [
-      {q: 'Qu\'est-ce qu\'une analyse fonctionnelle ?',
-       r: `<p>Un comportement-défi n'est jamais là pour rien : il est une tentative, souvent coûteuse, de répondre à un besoin. Il est aussi un signal — le « thermomètre » d'une tension interne qui déborde.</p>
-           <p>L'analyse fonctionnelle cherche à comprendre <i>la fonction</i> que ce comportement remplit pour la personne. Elle ne vise donc pas à éteindre le comportement, mais à le décrypter pour lui trouver des alternatives qui remplissent la même fonction.</p>`},
-      {q: 'Pourquoi dit-on « comportement-défi » et pas « trouble du comportement » ?',
-       r: `<p>Un comportement est qualifié de « défi » parce qu'il fait défi <i>pour nous</i> — pour l'entourage, l'institution, l'équipe — pas nécessairement pour la personne elle-même.</p>
-           <p>Cette distinction est centrale : le comportement répond à un besoin, exprime quelque chose, remplit une fonction. Il n'est pas une erreur à corriger, mais un signal à comprendre.</p>`},
-      {q: 'Faut-il attendre la crise pour commencer à observer ?',
-       r: `<p>Non, et c'est même l'inverse. L'analyse fonctionnelle ne commence pas au moment du pic.</p>
-           <p>Chaque comportement-défi s'inscrit dans une galaxie de comportements : certains sont des précurseurs discrets, des signaux faibles qui montent bien avant l'explosion visible. Une agitation, un retrait, une stéréotypie inhabituelle — que personne ne repère comme des « défis » — peuvent être les premières marches d'une montée en tension. Les ignorer, c'est arriver trop tard.</p>`},
-      {q: 'Pourquoi parler de tension interne plutôt que de comportement ?',
-       r: `<p>Nous proposons de faire glisser le regard : plutôt que d'étudier isolément un comportement-défi ponctuel, cherchons à lire <i>la tension interne qui s'accumule</i> chez la personne — ce qui la fait monter, ce qui la fait descendre, ce qui la régule ou au contraire l'amplifie.</p>
-           <p>C'est ce déplacement de focale qui rend l'analyse fonctionnelle réellement utile pour proposer des accompagnements durables. Une tension positive ou négative reste une tension : quelle que soit sa valence, elle sature.</p>`},
-      {q: 'Sur quoi repose une analyse fonctionnelle solide ?',
-       r: `<p>Sur trois piliers.</p>
-           <p><b>1. Un bon recueil des données.</b> L'analyse part de l'observation : décrire avec précision les comportements, leurs contextes, leurs antécédents et leurs conséquences.</p>
-           <p><b>2. Le raisonnement clinique.</b> Poser des hypothèses fonctionnelles à partir des données est un acte clinique. Aucun outil ne le fait à votre place : c'est le professionnel, par son analyse et son expérience, qui formule et discute ces hypothèses.</p>
-           <p><b>3. Un regard sur l'indice de confiance du travail produit.</b> Une analyse n'a pas la même robustesse selon la qualité et la quantité des données disponibles. Objectiver ce niveau de confiance fait partie du travail.</p>`},
-    ]
-  },
-  {
-    titre: 'Questions sur l\'outil',
-    questions: [
-      {q: 'Est-ce que la BAF pense à ma place ?',
-       r: `<p>Non. Elle ne pose aucun diagnostic et ne formule aucune conclusion. Elle structure le recueil, organise les données et rend visible le niveau de confiance du travail produit.</p>
-           <p>Tout ce qu'elle fait apparaître — catégories, patterns, hypothèses — est à prendre au conditionnel, comme matériau de discussion. Aucun outil ne remplace le raisonnement d'une équipe : la méthode et l'éthique sont au service du sens clinique, jamais l'inverse, et la décision demeure humaine.</p>`},
-      {q: 'Où sont stockées les données ? Qui peut les voir ?',
-       r: `<p>Tout fonctionne dans votre navigateur. <b>Rien n'est envoyé, stocké ou transmis à un serveur</b>, de quelque façon que ce soit.</p>
-           <p>Vos saisies restent uniquement sur l'appareil que vous utilisez, sous votre seule responsabilité — à vous de les exporter, sauvegarder ou supprimer comme vous l'entendez. Corollaire : si vous videz les données de votre navigateur sans avoir exporté, le travail est perdu. Exportez régulièrement.</p>`},
-      {q: 'Que ne faut-il jamais écrire dans la BAF ?',
-       r: `<p>Aucun nom de famille, aucune ville, aucune structure nommée, ni aucun élément permettant d'identifier la personne ou son entourage. Un prénom seul suffit — fictif si besoin.</p>`},
-      {q: 'Est-ce qu\'on retouche ce que les professionnels ont déclaré ?',
-       r: `<p>Jamais. Le déclaratif est la donnée de base : c'est le discours d'un professionnel ou d'une famille, avec son point de vue et ses biais propres, et il doit garder ce caractère.</p>
-           <p>Notre travail d'analyse ne commence qu'au module <b>Organiser</b>. Tout ce qui y est produit — catégories, regroupements, qualifications — est calculé à la lecture et n'est jamais réécrit dans l'évènement. On peut donc toujours revenir au matériau d'origine en cas de doute.</p>`},
-      {q: 'Comment travailler à plusieurs sur la même analyse ?',
-       r: `<p>Réunissez d'abord l'équipe — ou a minima un représentant de chaque espace de vie — pour remplir ensemble le préambule. Ce moment pose les bases d'une démarche partagée et évite que chacun parte dans une direction différente.</p>
-           <p>Ensuite, le fichier <code>.json</code> exporté sert de mémoire commune : déposez-le dans un dossier partagé, chacun le télécharge, ajoute ses observations et le redépose. <b>Définissez qui dépose quoi et quand</b> : sans convention, deux personnes écrasent leurs saisies mutuelles.</p>
-           <p>La BAF ne remplace pas la réunion clinique — elle l'alimente et la structure.</p>`},
-    ]
-  },
-];
-
-// Termes propres à la BAF, en complément du glossaire partagé avec l'outil 2.
-const LEXIQUE_BAF = {
-  "évènement": "Une entrée déclarative : une situation décrite par une personne qui l'a observée. Un évènement peut se rapporter à un ou plusieurs comportements-défis. C'est l'unité de base du recueil.",
-  "volet": "Les différentes faces d'un même évènement : contexte, antécédent, comportement, conséquence, intervention. On parle d'un volet plutôt que d'une étape, parce qu'ils ne se suivent pas toujours dans cet ordre.",
-  "antécédent": "Ce qui s'est passé juste avant le comportement, dans les secondes ou minutes précédentes. Il y en a souvent plusieurs. Le déclarant peut signaler celui qui lui semble avoir déclenché — c'est un avis, pas un verdict.",
-  "conséquence": "Ce qui change pour la personne après le comportement : ce qu'elle obtient, ce qu'elle évite. C'est souvent là que la fonction du comportement se lit. À ne pas confondre avec l'intervention, qui est ce que l'entourage a fait.",
-  "intervention": "Ce que l'entourage a fait en réponse au comportement, et avec quel effet sur la tension. Une intervention peut apaiser, ne rien changer, ou produire à son tour un nouveau comportement-défi.",
-  "CD post-intervention": "Un nouveau comportement-défi apparu après une intervention. Il appartient à la même crise, et se lit à la fois comme conséquence de l'intervention et comme contexte de la suite.",
-  "crise": "L'ensemble des comportements-défis d'une même journée. Ils sont numérotés CP1, CP2… pour des évènements distincts, et CP1.2, CP1.3… pour les comportements apparus après une intervention sur le même évènement.",
-  "pattern": "Une séquence qui semble se répéter, composée à partir des catégories créées dans Organiser. Ce n'est pas une certitude : c'est une hypothèse de lecture, à discuter.",
-  "gradation": "La façon dont la tension monte : la personne commence par un signe discret, puis ça s'intensifie. Repérer la gradation permet d'intervenir avant le pic.",
-  "indice de confiance": "Une mesure de la robustesse du recueil — volume, pluralité des regards, durée, complétude, part d'observation directe. Il ne juge ni la personne, ni les professionnels : il dit ce sur quoi on peut s'appuyer.",
-};
-
-function renderReperes() {
-  const el = document.getElementById('reperes-contenu');
-  if (!el) return;
-  let html = REPERES.map(cat => `
-    <div class="card">
-      <h3 style="font-size:17px;margin-bottom:14px;">${esc(cat.titre)}</h3>
-      ${cat.questions.map(item => `
-        <details class="repere-q">
-          <summary>${esc(item.q)}</summary>
-          <div class="repere-r">${item.r}</div>
-        </details>`).join('')}
-    </div>`).join('');
-
-  const termes = Object.assign({}, LEXIQUE_BAF, GL);
-  const cles = Object.keys(termes).sort((a, b) => a.localeCompare(b, 'fr'));
-  html += `
-    <div class="card">
-      <h3 style="font-size:17px;margin-bottom:14px;">Lexique <span style="font-weight:400;font-style:italic;font-size:13.5px;color:var(--ink-soft);">— les mots qu'on emploie dans la BAF, et ce qu'on met derrière</span></h3>
-      ${cles.map(k => `
-        <details class="repere-q">
-          <summary style="text-transform:capitalize;">${esc(k)}</summary>
-          <div class="repere-r"><p>${esc(termes[k])}</p></div>
-        </details>`).join('')}
-    </div>`;
-  el.innerHTML = html;
-}
-
 // ============================================================
 // GLOSSAIRE
 // ============================================================
-const GL={
-"comportement":"Tout comportement observable, qu'il soit fonctionnel, adapté ou défi. Ce n'est pas uniquement le trouble — c'est l'ensemble des nuances comportementales : signaux précurseurs, comportements de régulation, comportements adaptés. Fait objectif, sans jugement.",
-"comportement-défi":"Comportement d'une intensité, fréquence ou durée telle que la sécurité physique de la personne ou d'autrui est mise en danger, ou susceptible de limiter l'accès aux services (Emerson, 2001).",
-"comportement-cible":"Comportement(s) spécifiquement étudiés dans l'analyse fonctionnelle, qu'ils soient des comportements-défis ou non.",
-"déclarant":"Personne qui rapporte des observations ou informations : professionnel, famille, la personne elle-même, etc.",
-"source":"Tout matériel déclaratif pouvant servir de base à une analyse : transmissions, grilles ABC, entretiens, observations directes, scatterplots, questionnaires (MAS, IMPACT…).",
-"contexte":"Circonstances entourant l'apparition d'un comportement : lieu, moment, personnes présentes, activité en cours, état interne estimé.",
-"espace":"Tous les lieux de vie : famille, institution(s) médico-sociales, scolaires, sanitaires, professionnelles, PEC libérales, taxi, SAT, séjour, loisirs…",
-"biais potentiels":"Facteurs déformant l'interprétation : mémorisation, confirmation, interprétation, halo, fatigue du déclarant, passif institutionnel, surreprésentation de certains contextes…",
-"environnement":"Facteurs matériels (agencement, charge sensorielle, rythme, transport, multiplicité des lieux) et affectifs (dynamique institutionnelle, familiale : décès, changements, départs, ruptures).",
-"typologie":"Description factuelle et observable : pas « crise » ou « violence » mais « donne des coups de poing au visage », « se mord le dos de la main jusqu'à laisser une marque rouge visible ».",
-"contingences synthétiques":"Un même comportement maintenu simultanément par plusieurs fonctions dans un même contexte (ex : obtenir de l'attention ET éviter une tâche).",
-"analyse environnementale":"Évaluation structurée de l'environnement matériel et affectif : espaces, organisation du quotidien, dynamiques relationnelles, charges sensorielles, transitions."
-};
 
 function gf(text){
   if(!text)return"";
