@@ -2703,7 +2703,7 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
     </div>
     <nav class="main" id="nav">
       <span id="baf-nav-group" style="display:none;">
-        <button data-go="m1" class="nav-btn">Se connaître</button>
+        <button data-go="m1" class="nav-btn">Préambule</button>
         <button data-go="m2" class="nav-btn">Recueillir</button>
         <button data-go="m3" class="nav-btn">Organiser</button>
         <button data-go="m4" class="nav-btn">Interpréter</button>
@@ -2985,7 +2985,7 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
 
       <div class="res-doc">
         <div class="res-doc-tete"><span class="res-doc-ico">🧭</span><span class="res-doc-titre">Préambule</span></div>
-        <div class="res-doc-desc">Le module « Se connaître » sur papier : la personne, ses espaces de vie, sa journée type, la nuit et les trajets, et ce qu'on sait déjà de son vase de tension. À remplir une fois, ensemble, avant tout recueil.</div>
+        <div class="res-doc-desc">Le préambule sur papier : la personne, ses espaces de vie, sa journée type, la nuit et les trajets, et ce qu'on sait déjà de son vase de tension. À remplir une fois, ensemble, avant tout recueil.</div>
         <button class="btn btn-secondary btn-sm" onclick="telechargerPreambulePapier()">⬇ Télécharger (.docx)</button>
       </div>
 
@@ -3023,8 +3023,8 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
            d'un profil fictif. -->
 
       <button class="mod-btn m1" onclick="route('m1')">
-        <span class="num">Préambule</span>
-        <span class="titre">Apprenons à se connaître</span>
+        <span class="num">Avant le recueil</span>
+        <span class="titre">Préambule</span>
         <span class="desc">Le contexte : qui, où, quand on peut observer.</span>
         <span class="badge-count" id="count-m1" style="display:none;"></span>
       </button>
@@ -3135,8 +3135,8 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
   </section>
   <section id="view-m1" class="view">
     <div class="mod-header">
-      <span class="temps-tag tag-m1">Préambule</span>
-      <h2>Apprenons à se connaître</h2>
+      <span class="temps-tag tag-m1">Avant le recueil</span>
+      <h2>Préambule</h2>
       <div class="sub">Quelques informations de contexte avant de commencer le recueil. Elles serviront tout au long de l'outil.</div>
       <div class="m1-progress-wrap no-print">
         <div class="m1-progress-bar"><div class="m1-progress-fill" id="m1-progress-fill" style="width:0%;"></div></div>
@@ -3720,7 +3720,7 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
     <h3>📄 Exporter les données</h3>
     <p class="sim-modal-sub">Choisissez ce qui doit figurer dans le document Word. Les onglets d'Organiser et d'Interpréter sont tous repris, pas seulement celui affiché à l'écran.</p>
     <div style="text-align:left;margin:16px 0;display:flex;flex-direction:column;gap:10px;">
-      <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;cursor:pointer;"><input type="checkbox" id="exp-m1" checked> Préambule — apprenons à se connaître</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;cursor:pointer;"><input type="checkbox" id="exp-m1" checked> Préambule</label>
       <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;cursor:pointer;"><input type="checkbox" id="exp-m2" checked> Recueil des évènements</label>
       <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;cursor:pointer;"><input type="checkbox" id="exp-m3" checked> Organisation des données</label>
       <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;cursor:pointer;"><input type="checkbox" id="exp-m4" checked> Interprétation</label>
@@ -4487,7 +4487,7 @@ const ADRESSES_VUES = {
   'declarant':    'participer',
   'reserve':      'reserve-a-l-equipe',
   'baf-accueil':  'recueil-des-donnees',
-  'm1':           'se-connaitre',
+  'm1':           'preambule',
   'm2':           'recueillir',
   'm2-form':      'nouvel-evenement',
   'm3':           'organiser',
@@ -4497,13 +4497,17 @@ const ADRESSES_VUES = {
   'idc-main':     'cotation',
 };
 function adresseDeVue(name) { return ADRESSES_VUES[name] || name; }
+/* Les adresses renommées restent valables : un lien déjà partagé ou mis en
+   favori ne doit pas tomber sur l'accueil sans explication. */
+const ANCIENNES_ADRESSES = {'se-connaitre': 'm1'};
+
 function vueDepuisAdresse(adresse) {
   const a = (adresse || '').replace(/^#/, '');
   if (!a) return null;
   const trouve = Object.keys(ADRESSES_VUES).find(k => ADRESSES_VUES[k] === a);
   // On accepte aussi les anciens identifiants : les liens déjà partagés
   // continuent de fonctionner.
-  return trouve || (ADRESSES_VUES[a] ? a : null);
+  return trouve || (ADRESSES_VUES[a] ? a : null) || ANCIENNES_ADRESSES[a] || null;
 }
 
 window.addEventListener('popstate', (e)=>{
@@ -6266,7 +6270,7 @@ function retirerInterventionEvt(i) {
   renderEtape(currentEtapeIdx);
 }
 
-// Les créneaux de la journée type (module Apprenons à se connaître) servent
+// Les créneaux de la journée type (le préambule) servent
 // directement d\'options pour le "moment de la journée" d\'un évènement.
 function momentOptions() {
   const reels = (state.m1.journeeCreneaux || []).filter(c => c.nom && c.nom.trim());
@@ -7503,7 +7507,7 @@ function exporterJSON(){
 // directement dans un bilan.
 // Sections proposées à l'export. La vue est clonée telle qu'elle est rendue.
 const SECTIONS_EXPORT = [
-  {cle:'m1',       label:'Préambule — apprenons à se connaître', vue:'view-m1'},
+  {cle:'m1',       label:'Préambule', vue:'view-m1'},
   {cle:'m2',       label:'Recueil des évènements',               vue:'view-m2'},
   {cle:'m3',       label:'Organisation des données',             vue:'view-m3'},
   {cle:'m4',       label:'Interprétation',                       vue:'view-m4'},
@@ -11980,7 +11984,7 @@ function corpsPreambule() {
     docxP([
       {t: 'Ce document se remplit une fois, ensemble, avant tout recueil d\'évènements. '},
       {t: 'Il pose ce que tout le monde doit savoir de la personne et de son quotidien pour que les observations de chacun se comparent. '},
-      {t: 'Il correspond au module « Se connaître » de la BAF : ', },
+      {t: 'Il correspond au préambule de la BAF : ', },
       {t: LIEN_BAF, gras: true}
     ], {fond: DOCX_C.papierFonce, traitGauche: DOCX_C.slate, apres: 120}) +
 
@@ -12832,7 +12836,7 @@ function poserSituer(nomVue) {
 }
 
 const SITUER_ENCHAINEMENT = [
-  {de: 'Se connaître → Recueillir :', quoi: "les moments de la journée type et les lieux, qui deviennent les cases où chaque évènement se range."},
+  {de: 'Préambule → Recueillir :', quoi: "les moments de la journée type et les lieux, qui deviennent les cases où chaque évènement se range."},
   {de: 'Recueillir → Organiser :', quoi: "chaque réponse écrite devient un élément à catégoriser, texte pour texte."},
   {de: 'Organiser → Interpréter :', quoi: "les catégories deviennent les termes des séquences et des croisements."},
   {de: 'Interpréter → Synthèse :', quoi: "les patterns et les paliers du vase rejoignent les chiffres du recueil."},
@@ -12846,7 +12850,7 @@ function renderParcours() {
   const el = document.getElementById('parcours-contenu');
   if (!el) return;
   const etapes = [
-    {x: 40,  nom: 'Se connaître', sous: 'le préambule'},
+    {x: 40,  nom: 'Préambule', sous: "ce qu'on sait déjà"},
     {x: 196, nom: 'Recueillir',   sous: 'les évènements'},
     {x: 352, nom: 'Organiser',    sous: 'les catégories'},
     {x: 508, nom: 'Interpréter',  sous: 'les hypothèses'},
@@ -13819,7 +13823,7 @@ function fusionnerContribution(lu, nomFichier) {
   }
   if (dejaVue && !remplaces) msg += '· Cet envoi avait déjà été reçu.\n';
   if (couvAjoutees) msg += '· ' + couvAjoutees + ' période' + (couvAjoutees > 1 ? 's' : '') + ' observée' + (couvAjoutees > 1 ? 's' : '') + ' sans comportement-défi\n';
-  if (nbRemarques) msg += '· ' + nbRemarques + ' remarque' + (nbRemarques > 1 ? 's' : '') + ' sur le préambule, à relire dans « Se connaître ».\n';
+  if (nbRemarques) msg += '· ' + nbRemarques + ' remarque' + (nbRemarques > 1 ? 's' : '') + ' sur le préambule, à relire dans le préambule.\n';
   if (ignorees.length) msg += '· Ignoré : ' + ignorees.join(', ') + ' — une contribution ne remonte que le déclaratif.\n';
   alert(msg);
 }
