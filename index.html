@@ -382,6 +382,62 @@ header.top{
 }
 .dc-bouton:hover{border-color:var(--slate);}
 .dc-bouton.copie{background:var(--ocre-pale);border-color:var(--ocre);color:var(--ocre-deep);}
+
+/* ── Comparer les deux primo codages ── */
+section .cmp-petit-ecran{display:none;}
+.cmp-petit-ecran p, .cmp-message p{margin:0;font-size:14px;line-height:1.65;color:var(--ink-soft);}
+.cmp-onglets{margin-bottom:14px;}
+.cmp-barre{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px;}
+.cmp-filtres, .cmp-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+.cmp-filtre{
+  font:inherit;font-size:12.5px;font-weight:600;color:var(--ink-soft);
+  background:var(--paper);border:1.5px solid var(--line);border-radius:999px;padding:4px 12px;cursor:pointer;
+}
+.cmp-filtre:hover{border-color:var(--slate);color:var(--ink);}
+.cmp-filtre.on{background:var(--slate);border-color:var(--slate);color:#fff;}
+.cmp-legende{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12px;color:var(--ink-soft);margin:0 0 10px;}
+.cmp-legende i{display:inline-block;width:12px;height:12px;border-radius:3px;}
+.cmp-legende .cmp-sep{margin:0 4px;}
+.cmp-i-identique{background:var(--sauge-pale);border:1px solid var(--sauge);}
+.cmp-i-desaccord{background:var(--rose);}
+.cmp-wrap{max-height:72vh;overflow:auto;border:1.5px solid var(--line);border-radius:var(--radius-sm);background:var(--card);}
+.cmp-table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;font-size:13px;}
+.cmp-th{
+  position:sticky;top:0;z-index:1;background:var(--paper);text-align:left;vertical-align:top;
+  padding:10px 12px;border-bottom:1.5px solid var(--line);font-size:13px;font-weight:700;color:var(--ink);
+}
+.cmp-th-el{width:28%;}
+.cmp-th-copie{width:22%;}
+.cmp-th-synth{width:28%;background:var(--sauge-pale);}
+.cmp-th + .cmp-th, .cmp-cell + .cmp-cell{border-left:1px solid var(--line-soft);}
+.cmp-slot{display:flex;align-items:center;gap:8px;min-width:0;}
+.cmp-slot-lettre{
+  flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;
+  width:24px;height:24px;border-radius:50%;background:var(--slate);color:#fff;font-size:12px;font-weight:700;
+}
+.cmp-lettre-s{background:var(--sauge-deep);}
+.cmp-nom{
+  flex:1;min-width:0;font:inherit;font-weight:700;color:var(--ink);
+  background:transparent;border:1px solid transparent;border-radius:6px;padding:2px 6px;
+}
+.cmp-nom:hover, .cmp-nom:focus{border-color:var(--line);background:var(--card);}
+.cmp-fichier{font-size:11px;font-weight:400;color:var(--ink-soft);margin:4px 0 0 32px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cmp-lien{font:inherit;font-size:11.5px;font-weight:400;color:var(--slate);background:none;border:none;padding:0;margin:3px 0 0 32px;cursor:pointer;text-decoration:underline;}
+.cmp-lien-seul{margin:0;font-size:11px;}
+.cmp-cell{padding:9px 12px;vertical-align:top;border-bottom:1px solid var(--line-soft);}
+.cmp-synth{background:rgba(154,181,168,.10);}
+.cmp-el-texte{color:var(--ink);line-height:1.5;overflow-wrap:anywhere;}
+.cmp-el-source{font-size:11px;color:var(--ink-soft);margin-top:3px;}
+.cmp-tag{display:inline-block;font-size:10.5px;font-weight:700;color:var(--ink-soft);background:var(--paper-deep);border-radius:999px;padding:1px 7px;margin-bottom:3px;}
+.cmp-chip{display:inline-block;color:#fff;font-size:11px;font-weight:700;border-radius:999px;padding:2px 9px;margin:0 4px 4px 0;overflow-wrap:anywhere;}
+.cmp-rien{font-size:11.5px;color:var(--ink-soft);font-style:italic;}
+.cmp-identique .cmp-copie{background:var(--sauge-pale);}
+.cmp-desaccord .cmp-el{box-shadow:inset 3px 0 0 var(--rose);}
+.cmp-vide{padding:22px 16px;text-align:center;color:var(--ink-soft);font-style:italic;}
+@media (max-width:720px){
+  section .cmp-ordi{display:none;}
+  section .cmp-petit-ecran{display:block;}
+}
 .dc-etapes{margin:0 0 14px;padding-left:22px;font-size:14px;color:var(--ink-soft);line-height:1.65;}
 .dc-etapes li{margin-bottom:6px;}
 .dc-etapes b{color:var(--ink);}
@@ -3500,6 +3556,24 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
     </div>
   </section>
 
+  <section id="view-comparer" class="view">
+    <div class="mod-header">
+      <span class="temps-tag tag-m2">Module 2 · Temps de comprendre</span>
+      <h2>Comparer les deux primo codages</h2>
+      <div class="sub">Chaque codeur a catégorisé sa copie de son côté. Ici, à deux, vous lisez les deux codages élément par élément et vous arbitrez la synthèse, qui s'écrit dans Organiser.</div>
+    </div>
+
+    <div class="card cmp-petit-ecran">
+      <p>Le comparateur s'utilise sur un ordinateur ou une tablette : trois colonnes de texte ne tiennent pas sur un téléphone.</p>
+    </div>
+    <div class="cmp-ordi" id="cmp-zone"></div>
+    <input type="file" id="cmp-fichier" accept=".json" style="display:none;" onchange="importerCopieCodage(event)">
+
+    <div class="actions-row" style="margin-top:28px;">
+      <button class="btn btn-secondary" onclick="route('m3')">← Organiser</button>
+    </div>
+  </section>
+
   <section id="view-m4" class="view">
     <div class="mod-header">
       <span class="temps-tag tag-m2">Module 3 · Moment de conclure</span>
@@ -4330,7 +4404,7 @@ function route(name, fromHistory){
   /* Sans kit ouvert, la page Participer n'appartient à aucun outil : pas de
      menu, rien d'autre qu'un bouton pour ouvrir son fichier. */
   const entreeParticiper = name === 'declarant' && !modeDeclarantActif();
-  const isBaf = ['baf-accueil','m1','m2','m2-form','m3','m4','synthese','declarant','reserve'].includes(name) && !entreeParticiper;
+  const isBaf = ['baf-accueil','m1','m2','m2-form','m3','comparer','m4','synthese','declarant','reserve'].includes(name) && !entreeParticiper;
   const isIdc = ['idc-accueil','idc-main'].includes(name);
   const isGlobal = ['accueil','reperes','ressources','apropos','notes','parcours'].includes(name);
   const bafNavGroup = document.getElementById('baf-nav-group');
@@ -4343,6 +4417,12 @@ function route(name, fromHistory){
   if(name === 'notes') renderNotes();
   if(name === 'declarant') renderDeclarant();
   if(name === 'parcours') renderParcours();
+  if(name === 'comparer') {
+    renderComparateur();
+    // Pas de bouton à elle dans le menu : la page appartient à Organiser.
+    const btnOrganiser = document.querySelector('.nav-btn[data-go="m3"]');
+    if (btnOrganiser) btnOrganiser.classList.add('on');
+  }
   if(name === 'reperes') renderReferences();
   poserSituer(name);
   appliquerModeDeclarant();
@@ -4567,6 +4647,7 @@ const ADRESSES_VUES = {
   'm2':           'recueillir',
   'm2-form':      'nouvel-evenement',
   'm3':           'organiser',
+  'comparer':     'comparer-les-codages',
   'm4':           'interpreter',
   'synthese':     'synthese',
   'idc-accueil':  'indice-de-confiance',
@@ -8584,6 +8665,41 @@ const _CONTROLES = [
     const trous = Object.keys(SITUER).filter(v =>
       SITUER_LIBELLES.some(([c]) => !SITUER[v][c] || !SITUER[v][c].trim()));
     return _bancEgal('Modules sans repère', '', manquants.concat(trous).join(','));
+  }},
+
+  {nom:'Le comparateur ne prend qu\'une copie de primo codage du même dossier', test: () => {
+    migrerIdentiteDossier();
+    const avant = state.comparaison;
+    const copie = (idDossier, categories) => ({
+      baf: {schema: SCHEMA_DOSSIER, type: 'dossier', idDossier, exporte: '2026-09-14T10:00:00.000Z'},
+      m1: {}, m2: {evenements: []}, m3: {categories: categories || {}}, m4: {}, codage: {actif: true}
+    });
+    delete state.comparaison;
+    const dossierOfficiel = accueillirCopieCodage('A',
+      {baf: {type: 'dossier', idDossier: state.idDossier}, m1: {}, m2: {evenements: []}, m3: {}, m4: {}}, 'RDAF_x.json').ok;
+    const autreDossier = accueillirCopieCodage('A', copie('dos_autre'), 'RDAF-primo-codage_x.json').ok;
+    const prise = accueillirCopieCodage('A', copie(state.idDossier, {cp: {c1: {nom: 'X', items: []}}}), 'RDAF-primo-codage_a.json').ok;
+    const gardee = !!(state.comparaison && state.comparaison.A && state.comparaison.A.categories.cp.c1);
+    const memeCopieEnB = accueillirCopieCodage('B', copie(state.idDossier, {cp: {c1: {nom: 'X', items: []}}}), 'RDAF-primo-codage_a.json').ok;
+    if (avant === undefined) delete state.comparaison; else state.comparaison = avant;
+    return _bancEgal('Dossier refusé, autre dossier refusé, copie prise et gardée, doublon refusé',
+      'false,false,true,true,false', [dossierOfficiel, autreDossier, prise, gardee, memeCopieEnB].join(','));
+  }},
+
+  {nom:'Deux codages identiques se reconnaissent malgré des noms tapés autrement', test: () => {
+    /* Chaque copie crée ses propres identifiants : on compare les chemins de
+       noms, sans accents, sans casse, sans ponctuation. Une sous-catégorie
+       n'est pas la catégorie du même nom posée à la racine. */
+    const A = {c1: {nom: 'Hétéro-agressivité', items: ['i1', 'i2']}, c2: {nom: 'Opposition', items: ['i3']},
+               c3: {nom: 'Taper', items: []}, c4: {nom: 'Pair', parent: 'c3', items: ['i5']}};
+    const B = {k9: {nom: ' hetero  agressivite', items: ['i1']}, k8: {nom: 'Refus', items: ['i2']},
+               k7: {nom: 'Pair', items: ['i5']}};
+    const lire = (a, b, id) => {
+      const l = lectureLigneCodage(a, b, {}, id);
+      return (l.identiques ? 'I' : '') + (l.desaccord ? 'D' : '') || '-';
+    };
+    return _bancEgal('i1 identique ; i2, i3, i5 en désaccord ; i4 vide ; copie B absente',
+      'I,D,D,-,D,-', [lire(A, B, 'i1'), lire(A, B, 'i2'), lire(A, B, 'i3'), lire(A, B, 'i4'), lire(A, B, 'i5'), lire(A, null, 'i2')].join(','));
   }},
 
   {nom:'Chaque volet a sa couleur, distincte des autres', test: () => {
@@ -13017,6 +13133,11 @@ const SITUER = {
     vient: "De vos catégories, et des notes écrites par les déclarants à chaque mesure de tension.",
     repart: "Vers le bilan, et vers l'indice de confiance qui cote la solidité du tout."
   },
+  comparer: {
+    ici: "Les deux primo codages côte à côte, élément par élément, et la synthèse que vous arbitrez.",
+    vient: "Des deux copies de primo codage, faites chacune de son côté à partir du seul déclaratif.",
+    repart: "Vers Organiser : la synthèse devient le seul codage, celui qu'Interpréter exploite."
+  },
   synthese: {
     ici: "Ce que l'ensemble des évènements donne à voir, en chiffres et en graphiques.",
     vient: "De tout ce qui précède. Rien ne se saisit ici.",
@@ -13211,6 +13332,11 @@ const VUES_RESERVEES = {
     titre: 'Interpréter',
     quoi: "Formuler des hypothèses sur ce que le comportement cherche à obtenir ou à éviter, et décrire à quoi ressemblent les paliers de tension de la personne.",
     qui: "C'est un travail clinique, mené par l'équipe de l'EMIA une fois toutes les observations réunies."
+  },
+  comparer: {
+    titre: 'Comparer les deux primo codages',
+    quoi: "Lire côte à côte deux catégorisations faites séparément, et arbitrer à deux celle qui est retenue.",
+    qui: "C'est l'équipe de l'EMIA qui s'en charge, en réunion, une fois toutes les observations réunies."
   },
   synthese: {
     titre: 'La synthèse',
@@ -14021,13 +14147,14 @@ function renderDoubleCodage() {
         '<li><b>Primo codage, séparément.</b> « Exporter un kit de codage » produit une copie vierge : le préambule et les ' +
           'évènements, aucune catégorie, rien dans Interpréter. Une copie par codeur ; chacun catégorise dans la sienne, ' +
           'à partir du seul déclaratif.</li>' +
-        '<li><b>Synthèse, à deux.</b> En réunion, chacun ouvre sa copie sur son poste, et vous saisissez ensemble la ' +
-          'catégorisation de synthèse ici, dans le fichier officiel — y compris les signes qui entrent dans le vase de tension. ' +
-          'Interpréter se fait directement en synthèse.</li>' +
+        '<li><b>Synthèse, à deux.</b> En réunion, sur un seul poste : ouvrez le fichier officiel, puis « Comparer les deux copies », ' +
+          'et importez-les. Chaque élément se lit sur une ligne, le codage A à côté du codage B, et vous arbitrez la synthèse, qui s\'écrit ici. ' +
+          'Les signes qui entrent dans le vase de tension s\'arbitrent aussi en synthèse, et Interpréter se fait directement en synthèse.</li>' +
         '<li><b>La synthèse est le seul codage.</b> Supprimez ensuite les deux copies.</li>' +
       '</ol>' +
       '<div class="dc-actions">' +
         '<button class="btn btn-secondary btn-sm" onclick="exporterKitCodage()">📄 Exporter un kit de codage</button>' +
+        '<button class="btn btn-primary btn-sm" onclick="fermerFenetre(\'dc-overlay\'); route(\'comparer\')">⚖️ Comparer les deux copies</button>' +
         effacer +
       '</div>';
     if (anciens) {
@@ -14037,6 +14164,291 @@ function renderDoubleCodage() {
     }
   }
   corps.innerHTML = html;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   COMPARER LES DEUX PRIMO CODAGES
+   ══════════════════════════════════════════════════════════════════════
+   En réunion, sur un seul poste : le fichier officiel est ouvert, on importe
+   les deux copies de primo codage, et chaque élément du déclaratif se lit sur
+   une ligne — le codage A, le codage B, la synthèse qu'on arbitre. Comme un
+   comparateur de produits (Arthur, 14/09/2026).
+
+   Aucun taux d'accord, volontairement : chacun crée ses catégories à partir
+   du seul déclaratif, sans grille commune. Un taux supposerait la grille, et
+   pousserait à coder pour tomber d'accord. On montre ce qui diffère, on n'en
+   fait pas une note.
+
+   Les deux copies restent dans le fichier officiel (state.comparaison) tant
+   que la synthèse n'est pas terminée : une réunion peut s'interrompre et
+   reprendre un autre jour. Ordinateur ou tablette seulement. */
+
+let cmpSous = 'cp';
+let cmpFiltre = 'tous';
+let cmpSlot = 'A';
+
+/* Deux codeurs n'écrivent jamais « Hétéro-agressivité » tout à fait pareil :
+   on compare les noms sans accents, sans casse et sans ponctuation. Les
+   identifiants, eux, diffèrent toujours — chaque copie crée les siens. */
+function normNomCat(nom) {
+  return String(nom || '').normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+function catsDeItemDans(cats, itemId) {
+  return Object.keys(cats || {}).filter(id => (cats[id].items || []).includes(itemId));
+}
+function cheminCatDans(cats, catId) {
+  const cat = cats && cats[catId];
+  if (!cat) return '';
+  const parent = cat.parent && cats[cat.parent];
+  return parent ? parent.nom + ' › ' + cat.nom : cat.nom;
+}
+// Une sous-catégorie n'est pas la catégorie du même nom posée à la racine : on compare les chemins.
+function cleCodage(cats, itemId) {
+  return catsDeItemDans(cats, itemId).map(id => {
+    const cat = cats[id];
+    const parent = cat.parent && cats[cat.parent];
+    return (parent ? normNomCat(parent.nom) + ' > ' : '') + normNomCat(cat.nom);
+  }).sort().join(' | ');
+}
+
+/* Pure : ce que dit une ligne du comparateur, sans rien afficher.
+   catsA ou catsB à null = copie pas encore importée. */
+function lectureLigneCodage(catsA, catsB, catsS, itemId) {
+  const a = catsA ? catsDeItemDans(catsA, itemId) : null;
+  const b = catsB ? catsDeItemDans(catsB, itemId) : null;
+  const s = catsDeItemDans(catsS, itemId);
+  const deux = !!(catsA && catsB);
+  const cleA = catsA ? cleCodage(catsA, itemId) : '';
+  const cleB = catsB ? cleCodage(catsB, itemId) : '';
+  return {
+    a, b, s, cleA, cleB,
+    cleS: cleCodage(catsS, itemId),
+    identiques: deux && a.length > 0 && cleA === cleB,
+    desaccord: deux && cleA !== cleB,
+    arbitre: s.length > 0
+  };
+}
+function ligneAArbitrer(l) {
+  return !l.arbitre && ((l.a && l.a.length > 0) || (l.b && l.b.length > 0));
+}
+
+function lignesComparateur(sousId) {
+  const comp = state.comparaison || {};
+  const catsA = comp.A ? ((comp.A.categories || {})[sousId] || {}) : null;
+  const catsB = comp.B ? ((comp.B.categories || {})[sousId] || {}) : null;
+  const catsS = (state.m3.categories || {})[sousId] || {};
+  return extraireItems(sousId)
+    .map(item => ({item, l: lectureLigneCodage(catsA, catsB, catsS, item.id)}))
+    // Un volet non renseigné n'a rien à comparer, sauf si quelqu'un l'a quand même codé.
+    .filter(x => !x.item.vide || (x.l.a && x.l.a.length) || (x.l.b && x.l.b.length) || x.l.s.length);
+}
+
+/* N'écrit que dans state.comparaison, sans enregistrer : le banc l'éprouve
+   sans toucher au dossier ouvert. */
+function accueillirCopieCodage(slot, objet, nomFichier) {
+  const lu = lireFichierBAF(objet, ['dossier']);
+  if (!lu.ok) return lu;
+  const d = lu.dossier;
+  if (!(d.codage && d.codage.actif)) {
+    return {ok:false, raison:"Ce fichier est un dossier, pas une copie de primo codage. La copie est celle que chaque codeur a exportée depuis son kit de codage : son nom commence par « RDAF-primo-codage_ »."};
+  }
+  const idCopie = (lu.enveloppe && lu.enveloppe.idDossier) || d.idDossier || null;
+  if (idCopie && state.idDossier && idCopie !== state.idDossier) {
+    return {ok:false, raison:"Cette copie a été faite à partir d'un autre dossier. Ouvrez le fichier officiel dont vient le kit de codage, puis importez-la."};
+  }
+  const categories = JSON.parse(JSON.stringify((d.m3 && d.m3.categories) || {}));
+  const exporte = (lu.enveloppe && lu.enveloppe.exporte) || '';
+  const autreSlot = slot === 'A' ? 'B' : 'A';
+  const autre = state.comparaison && state.comparaison[autreSlot];
+  if (autre && autre.exporte === exporte && JSON.stringify(autre.categories) === JSON.stringify(categories)) {
+    return {ok:false, raison:'Cette copie est déjà importée en ' + autreSlot + ' (« ' + (autre.nom || autreSlot) + ' »). Importez celle de l\'autre codeur.'};
+  }
+  if (!state.comparaison) state.comparaison = {};
+  const avant = state.comparaison[slot];
+  state.comparaison[slot] = {
+    nom: (avant && avant.nom) || ('Codeur ' + slot),
+    fichier: String(nomFichier || ''),
+    exporte,
+    importe: new Date().toISOString(),
+    evenements: ((d.m2 && d.m2.evenements) || []).map(e => e && e.id).filter(Boolean),
+    categories
+  };
+  return {ok:true};
+}
+
+function choisirCopieCodage(slot) {
+  cmpSlot = slot === 'B' ? 'B' : 'A';
+  const champ = document.getElementById('cmp-fichier');
+  if (champ) champ.click();
+}
+
+function importerCopieCodage(ev) {
+  const f = ev.target.files && ev.target.files[0];
+  ev.target.value = '';
+  if (!f) return;
+  const slot = cmpSlot;
+  const lecteur = new FileReader();
+  lecteur.onload = (e) => {
+    let objet;
+    try { objet = JSON.parse(e.target.result); }
+    catch (err) {
+      alert("Ce fichier n'a pas pu être lu. Vérifiez que c'est bien une copie de primo codage exportée en .json.");
+      return;
+    }
+    const r = accueillirCopieCodage(slot, objet, f.name);
+    if (!r.ok) { alert(r.raison); return; }
+    persist();
+    renderComparateur();
+    showToast('Copie ' + slot + ' importée.');
+  };
+  lecteur.readAsText(f);
+}
+
+function renommerCopieCodage(slot, nom) {
+  const c = state.comparaison && state.comparaison[slot];
+  if (!c) return;
+  c.nom = String(nom || '').trim() || ('Codeur ' + slot);
+  persist();
+  renderComparateur();
+}
+
+function cmpChangerSous(sousId) { cmpSous = sousId; renderComparateur(); }
+function cmpChangerFiltre(filtre) { cmpFiltre = filtre; renderComparateur(); }
+
+function puceCatCmp(cats, catId) {
+  const cat = cats[catId];
+  return '<span class="cmp-chip" style="background:' + esc((cat && cat.color) || '#3D4F6B') + ';">' +
+    esc(cheminCatDans(cats, catId)) + '</span>';
+}
+
+function celluleSyntheseCmp(sousId, item, l) {
+  const cats = state.m3.categories[sousId] || {};
+  return '<td class="cmp-cell cmp-synth">' +
+    (l.s.length ? l.s.map(id => puceCatCmp(cats, id)).join('') : '<span class="cmp-rien">Pas encore arbitré</span>') +
+  '</td>';
+}
+
+function renderComparateur() {
+  const zone = document.getElementById('cmp-zone');
+  if (!zone) return;
+  ensureM3();
+  if (state.codage && state.codage.actif) {
+    zone.innerHTML = '<div class="card cmp-message"><p>Vous êtes dans une <b>copie de primo codage</b>. ' +
+      'Le comparateur s\'ouvre dans le fichier officiel du dossier : c\'est là qu\'on importe les deux copies et qu\'on écrit la synthèse.</p></div>';
+    return;
+  }
+  if (!M3_SOUS.some(s => s.id === cmpSous)) cmpSous = 'cp';
+  const sousId = cmpSous;
+  const comp = state.comparaison || {};
+  const deux = !!(comp.A && comp.B);
+  const evts = state.m2.evenements || [];
+
+  const onglets = '<div class="m3-tabs cmp-onglets">' + M3_SOUS.map(s => {
+    const n = deux ? lignesComparateur(s.id).filter(x => x.l.desaccord).length : 0;
+    const titre = deux ? n + ' désaccord' + (n > 1 ? 's' : '') + ' entre A et B' : '';
+    return '<button class="m3-tab' + (s.id === sousId ? ' on' : '') + '" data-volet="' + esc(s.couleur || '') + '" ' +
+      'onclick="cmpChangerSous(\'' + s.id + '\')"' + (titre ? ' title="' + esc(titre) + '"' : '') + '>' +
+      '<span class="m3-tab-ligne">' + s.icon + ' ' + esc(s.label) +
+        (n ? ' <span class="m3-tab-count">≠ ' + n + '</span>' : '') + '</span>' +
+      '<span class="m3-tab-bulle" aria-hidden="true"></span></button>';
+  }).join('') + '</div>';
+
+  const toutes = lignesComparateur(sousId);
+  const nDesaccords = toutes.filter(x => x.l.desaccord).length;
+  const nAArbitrer = toutes.filter(x => ligneAArbitrer(x.l)).length;
+  if (['tous', 'desaccords', 'a-arbitrer'].indexOf(cmpFiltre) === -1) cmpFiltre = 'tous';
+  const lignes = cmpFiltre === 'desaccords' ? toutes.filter(x => x.l.desaccord)
+    : cmpFiltre === 'a-arbitrer' ? toutes.filter(x => ligneAArbitrer(x.l))
+    : toutes;
+
+  const filtre = (cle, libelle, n) =>
+    '<button type="button" class="cmp-filtre' + (cmpFiltre === cle ? ' on' : '') + '" aria-pressed="' + (cmpFiltre === cle) + '" ' +
+      'onclick="cmpChangerFiltre(\'' + cle + '\')">' + libelle + (n === null ? '' : ' <b>' + n + '</b>') + '</button>';
+  const barre = '<div class="cmp-barre">' +
+    '<div class="cmp-filtres" role="group" aria-label="Lignes affichées">' +
+      filtre('tous', 'Toutes les lignes', null) +
+      filtre('desaccords', 'Désaccords', deux ? nDesaccords : null) +
+      filtre('a-arbitrer', 'Pas encore arbitrées', (comp.A || comp.B) ? nAArbitrer : null) +
+    '</div>' +
+  '</div>' +
+  (deux ? '<p class="cmp-legende"><i class="cmp-i-identique"></i> A et B ont codé à l\'identique' +
+    '<span class="cmp-sep">·</span><i class="cmp-i-desaccord"></i> A et B diffèrent</p>' : '');
+
+  const enteteCopie = (slot) => {
+    const c = comp[slot];
+    if (!c) {
+      return '<th class="cmp-th cmp-th-copie"><div class="cmp-slot">' +
+        '<span class="cmp-slot-lettre">' + slot + '</span>' +
+        '<button type="button" class="btn btn-secondary btn-sm" onclick="choisirCopieCodage(\'' + slot + '\')">📂 Importer la copie ' + slot + '</button>' +
+      '</div></th>';
+    }
+    return '<th class="cmp-th cmp-th-copie"><div class="cmp-slot">' +
+        '<span class="cmp-slot-lettre">' + slot + '</span>' +
+        '<input class="cmp-nom" value="' + esc(c.nom) + '" aria-label="Nom du codeur ' + slot + '" title="Cliquez pour nommer le codeur" ' +
+          'onchange="renommerCopieCodage(\'' + slot + '\', this.value)">' +
+      '</div>' +
+      '<div class="cmp-fichier" title="' + esc(c.fichier) + '">' + esc(c.fichier || 'Copie importée') + '</div>' +
+      '<button type="button" class="cmp-lien" onclick="choisirCopieCodage(\'' + slot + '\')">Remplacer cette copie</button>' +
+    '</th>';
+  };
+  const celluleCopie = (slot, item, ids) => {
+    const c = comp[slot];
+    if (!c) return '<td class="cmp-cell cmp-copie"></td>';
+    const evt = evts[item.evtIdx];
+    // Un évènement reçu après l'export du kit n'existe pas dans la copie : ce n'est pas un « non catégorisé ».
+    if (c.evenements && c.evenements.length && evt && evt.id && c.evenements.indexOf(evt.id) === -1) {
+      return '<td class="cmp-cell cmp-copie"><span class="cmp-rien">Évènement arrivé après cette copie</span></td>';
+    }
+    const cats = (c.categories || {})[sousId] || {};
+    return '<td class="cmp-cell cmp-copie">' +
+      (ids.length ? ids.map(id => puceCatCmp(cats, id)).join('') : '<span class="cmp-rien">Non catégorisé</span>') +
+    '</td>';
+  };
+  const celluleElement = (item) => {
+    const src = [item.date ? formatDate(item.date) : '', item.moment].filter(Boolean).join(' · ');
+    const tag = item.vide ? 'non renseigné'
+      : ({'post-intervention': 'post-intervention', 'presume-declencheur': 'déclencheur présumé', 'resume': 'résumé rapide'})[item.tag] || '';
+    return '<td class="cmp-cell cmp-el">' +
+      (tag ? '<span class="cmp-tag">' + tag + '</span>' : '') +
+      '<div class="cmp-el-texte">' + esc(item.texte) + '</div>' +
+      '<div class="cmp-el-source">Évt. ' + (item.evtIdx + 1) + (src ? ' — ' + esc(src) : '') + ' · ' +
+        '<button type="button" class="cmp-lien cmp-lien-seul" onclick="ouvrirDetailEvt(' + item.evtIdx + ',\'' + sousId + '\',event)">détail</button>' +
+      '</div>' +
+    '</td>';
+  };
+
+  let corps;
+  if (!comp.A && !comp.B) {
+    corps = '<tr><td colspan="4" class="cmp-vide">Importez les deux copies de primo codage, celle de chaque codeur. ' +
+      'Leur nom commence par « RDAF-primo-codage_ ».</td></tr>';
+  } else if (!lignes.length) {
+    const pourquoi = {
+      tous: 'Aucun élément décrit pour ce volet.',
+      desaccords: deux ? 'Aucun désaccord sur ce volet.' : 'Importez la seconde copie pour voir les désaccords.',
+      'a-arbitrer': 'Rien à arbitrer sur ce volet.'
+    };
+    corps = '<tr><td colspan="4" class="cmp-vide">' + pourquoi[cmpFiltre] + '</td></tr>';
+  } else {
+    corps = lignes.map(({item, l}) =>
+      '<tr class="cmp-ligne' + (l.identiques ? ' cmp-identique' : '') + (l.desaccord ? ' cmp-desaccord' : '') + '" data-item-id="' + esc(item.id) + '">' +
+        celluleElement(item) +
+        celluleCopie('A', item, l.a || []) +
+        celluleCopie('B', item, l.b || []) +
+        celluleSyntheseCmp(sousId, item, l) +
+      '</tr>').join('');
+  }
+
+  zone.innerHTML = onglets + barre +
+    '<div class="cmp-wrap"><table class="cmp-table">' +
+      '<thead><tr>' +
+        '<th class="cmp-th cmp-th-el">Élément décrit</th>' +
+        enteteCopie('A') + enteteCopie('B') +
+        '<th class="cmp-th cmp-th-synth"><div class="cmp-slot"><span class="cmp-slot-lettre cmp-lettre-s">✓</span>Synthèse</div>' +
+          '<div class="cmp-fichier">Le fichier officiel : ce qui est retenu s\'écrit dans Organiser</div></th>' +
+      '</tr></thead>' +
+      '<tbody>' + corps + '</tbody>' +
+    '</table></div>';
 }
 
 /* ══════════════════════════════════════════════════════════════════════
