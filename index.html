@@ -14107,7 +14107,7 @@ const NOTES_VERSION = [
 
   {
     date: '2026-09-14',
-    titre: "Un accueil signé, des Repères en trois parties, et deux modes d'emploi",
+    titre: "Un accueil signé, un seul fichier pour les déclarants, et le double codage revu",
     corps: `
 <h4>Un nouvel accueil</h4>
 <p>La page d'accueil dit désormais en quelques lignes ce qu'est l'analyse fonctionnelle et ce que la BAF fait pour vous : un comportement-défi est une tentative, pour la personne, de répondre à un besoin ; l'analyse fonctionnelle est un travail d'élaboration clinique, qui se fait <b>à plusieurs</b> ; la BAF vous aide à structurer la démarche <b>avant</b> (outil 1) et <b>après</b> (outil 2). Ce qui se passe entre les deux, c'est à vous de jouer. Le texte est signé d'Émilie Musard et d'Arthur Guillieux.</p>
@@ -14116,6 +14116,25 @@ const NOTES_VERSION = [
 <h4>L'accueil de l'outil 1</h4>
 <p>Il s'intitule désormais <b>Recueil de Données pour une Analyse Fonctionnelle</b> — le RDAF —, sous « EMIA35 · BAF ». La phrase d'accroche, le bouton « Repères et lexique » et l'encart bleu autour de « Avant de commencer » ont disparu, et l'en-tête s'est resserré : en arrivant, on voit le préambule et les modules.</p>
 <p>La bande « Un dossier est déjà ouvert sur ce poste » a été retirée : la barre sous l'en-tête indique déjà le dossier en cours. Sur téléphone, où la place manque, elle en garde désormais l'essentiel : le prénom et le nombre d'évènements.</p>
+
+<h4>Le préambule</h4>
+<p>« Se connaître » s'appelle désormais <b>Préambule</b>, partout. Il ne se commente plus dans l'outil : il est vérifié au téléphone avec chaque partenaire avant le recueil, et seul le référent le modifie. Le déclarant le lit, et une note lui dit qui appeler s'il faut le corriger.</p>
+
+<h4>Pour les déclarants : un seul fichier, et une page pour l'ouvrir</h4>
+<ul>
+<li><b>Le lien du mail</b>, emia35.github.io/baf/#participer, ouvre une page sans menu, avec un bouton « Importer mon fichier » et une zone où glisser le fichier.</li>
+<li><b>Un seul fichier.</b> Le déclarant ouvre le kit la première fois, puis son dernier fichier sauvegardé. « 💾 Télécharger pour sauvegarder » télécharge le fichier à jour — le préambule reçu, ses évènements, ses périodes observées —, avec la date et l'heure dans son nom. C'est ce même fichier qu'il envoie à la fin.</li>
+<li><b>« 🗑 Effacer » remplace « Quitter »</b> : sur un poste partagé, on efface avant de partir. La BAF prévient s'il reste des modifications non sauvegardées, et quand le fichier qu'on ouvre est plus ancien que la dernière sauvegarde.</li>
+<li><b>Un kit corrigé</b> met à jour le préambule sans effacer les évènements déjà décrits.</li>
+<li><b>Sa page</b> explique comment la sauvegarde fonctionne, et dit clairement que rien n'est envoyé sur un serveur. Dans Recueillir, il ne voit plus « Recevoir une contribution » ni les boutons vers les parties réservées : seuls les référents voient l'ensemble des évènements.</li>
+</ul>
+
+<h4>Côté équipe</h4>
+<ul>
+<li><b>Recevoir une contribution</b> : chaque fichier contient tout ce que le déclarant a écrit ; les évènements déjà reçus sont mis à jour, les nouveaux s'ajoutent, et un fichier plus ancien que le dernier reçu ne remplace rien.</li>
+<li><b>Le double codage se fait sans comparaison automatique.</b> « Exporter un kit de codage » produit une copie vierge — aucune catégorie, rien dans Interpréter —, une par codeur. La synthèse se saisit à deux dans le fichier officiel, signes du vase compris, et Interpréter se fait directement en synthèse. « Effacer le codage » repart d'une page blanche.</li>
+<li>Les fichiers exportés portent la date et l'heure dans leur nom.</li>
+</ul>
 
 <h4>Les Repères réécrits, en trois parties</h4>
 <ul>
@@ -14127,8 +14146,8 @@ const NOTES_VERSION = [
 
 <h4>Deux modes d'emploi dans Ressources</h4>
 <ul>
-<li><b>« Mode d'emploi : faire une analyse fonctionnelle avec la BAF — Pour tous »</b>, pour toute équipe qui se lance : le vocabulaire, les quatre temps d'une analyse fonctionnelle, les questions à se poser avant de commencer, un modèle de courriel à envoyer aux déclarants, et ce que la BAF fait — ou ne fait pas — à chaque étape.</li>
-<li><b>« Mode d'emploi : faire une analyse fonctionnelle avec la BAF — Version EMIA »</b> : réécrit sur le modèle du mode d'emploi pour tous. Les mêmes quatre temps, avec ce qui est propre à l'EMIA 35 : le binôme, la relecture du préambule par les parties, le vase de tension que le binôme propose, la réunion d'équipe et le bilan d'intervention. Il est réservé à l'équipe : un code est demandé pour le télécharger.</li>
+<li><b>« Mode d'emploi : faire une analyse fonctionnelle avec la BAF — Pour tous »</b>, pour toute équipe qui se lance : une fiche process d'une page, puis la notice — les rôles, les quatre étapes, où la BAF garde votre travail et comment le sauvegarder, un modèle de courriel pour les déclarants, le double codage.</li>
+<li><b>« Mode d'emploi : faire une analyse fonctionnelle avec la BAF — Version EMIA »</b> : le document écrit par Arthur pour l'EMIA 35, fiche process en tête. Il est réservé à l'équipe : un code est demandé pour le télécharger.</li>
 </ul>
 <p>Les Ressources se rangent désormais en deux catégories : les modes d'emploi d'abord, puis la version papier.</p>
 
@@ -14144,7 +14163,7 @@ const NOTES_VERSION = [
 <h4>Pas encore stabilisé</h4>
 <ul>
 <li>La page À propos et le mode d'emploi pour tous sont des premiers jets, appelés à être relus.</li>
-<li>Le mode d'emploi Version EMIA va être remplacé par le texte qu'Arthur est en train de reprendre.</li>
+<li>La page Participer et le fichier du déclarant sont nouveaux : ils doivent être éprouvés avec une famille et une institution avant l'ouverture de la bêta.</li>
 </ul>`
   },
 
