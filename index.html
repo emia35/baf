@@ -659,6 +659,32 @@ section.view.show{display:block;animation:fadein .25s ease;}
   font-style:italic;
 }
 
+/* ── Accueil global ─────────────────────────────────────────────────────
+   Deux rappels visuels demandés par Arthur. Le A et le F de BAF reprennent la
+   couleur d'« Analyse Fonctionnelle » juste au-dessus. « Outil 1 » et « outil 2 »
+   reprennent la teinte de leur encart, juste en dessous — mais dans le ton
+   foncé de chaque teinte : le sauge et le rosé des encarts, écrits tels quels
+   sur le fond de la carte, tombent sous 3 pour 1 de contraste et ne se lisent
+   plus comme du texte. */
+.accueil-texte p{font-size:15px;line-height:1.75;margin:0 0 12px;text-align:justify;text-justify:inter-word;}
+.sigle-baf{font-weight:700;letter-spacing:.02em;}
+.lettre-echo{color:var(--sauge-deep);}
+.outil-echo{font-weight:700;}
+.outil-echo.outil-1{color:var(--vol-comportement-texte, #46685A);}
+.outil-echo.outil-2{color:var(--rose-deep);}
+.signatures{text-align:right;margin-top:16px;font-size:13.5px;line-height:1.7;color:var(--ink);font-weight:600;}
+/* Le bouton Repères reprend exactement celui de l'en-tête : il est posé sur
+   un fond de la couleur de l'en-tête, sinon ses teintes claires — pensées pour
+   un fond sombre — disparaîtraient sur le papier. */
+.accueil-plus{
+  display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;
+  margin:-18px 0 30px;font-size:14.5px;color:var(--ink-soft);
+}
+.accueil-fleche{font-size:17px;line-height:1;}
+.accueil-bouton-entete{display:inline-flex;background:var(--hdr-bg);padding:5px;border-radius:11px;}
+.accueil-bouton-entete .nav-btn-ressource{font-size:12.5px;color:rgba(255,255,255,.82);}
+.accueil-donnees{margin-top:30px;}
+
 .intro-card{
   background:var(--card);
   border:1px solid var(--line);
@@ -2741,15 +2767,22 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
       <h1>Boussole pour une <i>Analyse Fonctionnelle</i></h1>
     </div>
 
-    <div class="intro-card">
-      <p style="margin:0;">Un comportement-défi n'est jamais là pour rien : il est une tentative, souvent coûteuse, de répondre à un besoin. La BAF ne vise pas à l'éteindre, mais à le décrypter — elle structure le recueil, organise les données et rend visible le niveau de confiance du travail produit. Elle ne pense pas à votre place.</p>
-      <div class="ethique">
-        <b>Aucune donnée n'est collectée.</b> Cet outil fonctionne entièrement dans votre navigateur : rien n'est envoyé, stocké ou transmis à un serveur, de quelque façon que ce soit. <b>En revanche, le dossier en cours reste enregistré dans ce navigateur</b> — c'est ce qui vous permet de fermer l'onglet sans rien perdre, et c'est aussi ce qui fait que, sur un poste partagé, la personne suivante le retrouvera. Exportez votre dossier et effacez-le en quittant.
-        <div style="margin-top:12px;">
-          <button class="btn btn-ghost btn-sm" onclick="route('reperes')">Comprendre la démarche et le vocabulaire →</button>
-        </div>
+    <div class="intro-card accueil-texte">
+      <p>Au cœur de nos communautés de soin, certains comportements peuvent nous troubler, voire mettre à mal le quotidien. Ces « comportements-défis » sont une tentative, pour la personne accompagnée, de répondre à un besoin, de façon plus ou moins adaptée.</p>
+      <p>L'analyse fonctionnelle vise à décrypter la fonction d'un comportement qui n'est, de fait, pas là pour rien. C'est un travail d'élaboration clinique qui doit se faire <i>à plusieurs</i> et qui peut se soutenir d'outils. C'est pour cela que nous avons créé la <b class="sigle-baf">B<span class="lettre-echo">A</span><span class="lettre-echo">F</span></b>, pour vous aider à structurer la démarche d'analyse fonctionnelle avant (c'est l'<b class="outil-echo outil-1">outil 1</b>) et après (c'est l'<b class="outil-echo outil-2">outil 2</b>). Mais ce qui se passe entre les deux, c'est à vous de jouer.</p>
+      <div class="signatures">
+        <div>Émilie Musard — Éducatrice coordinatrice</div>
+        <div>Arthur Guillieux — Psychologue clinicien</div>
       </div>
     </div>
+
+    <p class="accueil-plus">
+      <i>Pour en savoir plus</i>
+      <span class="accueil-fleche" aria-hidden="true">→</span>
+      <span class="accueil-bouton-entete">
+        <button type="button" class="nav-btn-ressource" onclick="route('reperes')">Repères</button>
+      </span>
+    </p>
 
     <div class="modules-stack">
       <div class="mod-row">
@@ -2764,6 +2797,10 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
           <span class="desc">Évaluer la qualité du processus d'analyse fonctionnelle produit.</span>
         </button>
       </div>
+    </div>
+
+    <div class="ethique accueil-donnees">
+      <b>Aucune donnée n'est collectée.</b> Cet outil fonctionne entièrement dans votre navigateur : rien n'est envoyé, stocké ou transmis à un serveur, de quelque façon que ce soit. <b>En revanche, le dossier en cours reste enregistré dans ce navigateur</b> — c'est ce qui vous permet de fermer l'onglet sans rien perdre, et c'est aussi ce qui fait que, sur un poste partagé, la personne suivante le retrouvera. Exportez votre dossier et effacez-le en quittant.
     </div>
   </section>
 
