@@ -3070,7 +3070,7 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
       <div class="crumb"><button onclick="route('accueil')">← Accueil</button></div>
       <span class="temps-tag tag-m4">Le parcours</span>
       <h2>Comment la BAF s'enchaîne</h2>
-      <div class="sub">Cinq étapes, et une boucle vers les personnes qui observent. Rien ne se ressaisit d'une étape à l'autre : ce qui est écrit une fois traverse tout l'outil.</div>
+      <div class="sub">Trois temps : construire un déclaratif de qualité, écrire l'analyse fonctionnelle, l'évaluer. Dans le premier, rien ne se ressaisit d'une étape à l'autre : ce qui est écrit une fois traverse tout l'outil.</div>
     </div>
     <div id="parcours-contenu"></div>
   </section>
@@ -13516,7 +13516,7 @@ const SITUER = {
   m4: {
     ici: "Les hypothèses, les séquences qui reviennent, les paliers du vase de tension.",
     vient: "De vos catégories, et des notes écrites par les déclarants à chaque mesure de tension.",
-    repart: "Vers le bilan, et vers l'indice de confiance qui cote la solidité du tout."
+    repart: "Vers la Synthèse, puis vers l'analyse fonctionnelle que vous écrirez à partir d'elle."
   },
   comparer: {
     ici: "Les deux primo codages côte à côte, élément par élément, et la synthèse que vous arbitrez.",
@@ -13526,11 +13526,11 @@ const SITUER = {
   synthese: {
     ici: "Ce que l'ensemble des évènements donne à voir, en chiffres et en graphiques.",
     vient: "De tout ce qui précède. Rien ne se saisit ici.",
-    repart: "Vers l'export Word, pour l'intégrer à un bilan."
+    repart: "Vers l'analyse fonctionnelle, que vous écrivez à partir d'elle — et vers l'export Word, pour la joindre au bilan."
   },
   'idc-main': {
     ici: "La qualité méthodologique de l'analyse — pas la personne, pas les déclarants.",
-    vient: "Du dossier ouvert, et de votre jugement clinique sur ce qui a été produit.",
+    vient: "De l'analyse fonctionnelle écrite, du dossier qui la fonde, et de votre jugement clinique.",
     repart: "Vers ce qu'il faudrait aller chercher pour que l'analyse tienne mieux."
   }
 };
@@ -13601,7 +13601,8 @@ const SITUER_ENCHAINEMENT = [
   {de: 'Recueillir → Organiser :', quoi: "chaque réponse écrite devient un élément à catégoriser, texte pour texte."},
   {de: 'Organiser → Interpréter :', quoi: "les catégories deviennent les termes des séquences et des croisements."},
   {de: 'Interpréter → Synthèse :', quoi: "les patterns et les paliers du vase rejoignent les chiffres du recueil."},
-  {de: 'Tout → Indice de confiance :', quoi: "la complétude du matériau produit dix critères, dont le niveau de détail du recueil."}
+  {de: 'Synthèse → Analyse fonctionnelle :', quoi: "une fois le recueil entièrement fait, le binôme écrit les hypothèses de fonction à partir de la synthèse."},
+  {de: 'Analyse fonctionnelle → Indice de confiance :', quoi: "l'ICAF cote l'analyse produite sur dix critères, dont la complétude du matériau et le niveau de détail du recueil. L'analyse, sa cotation et ce qu'elle fait aller chercher : c'est l'AF évaluée."}
 ];
 
 /* ── Le parcours, dessiné une fois ─────────────────────────────────────
@@ -13610,58 +13611,71 @@ const SITUER_ENCHAINEMENT = [
 function renderParcours() {
   const el = document.getElementById('parcours-contenu');
   if (!el) return;
+  /* Trois temps (Arthur, 15/09/2026). Les cinq étapes de la BAF construisent un
+     déclaratif de qualité ; l'analyse fonctionnelle s'écrit ensuite, à partir
+     de la synthèse ; l'ICAF la cote. Sans le temps du milieu, le schéma
+     laissait croire qu'on passait de la synthèse à la cotation. */
   const etapes = [
-    {x: 40,  nom: 'Préambule', sous: "ce qu'on sait déjà"},
-    {x: 196, nom: 'Recueillir',   sous: 'les évènements'},
-    {x: 352, nom: 'Organiser',    sous: 'les catégories'},
-    {x: 508, nom: 'Interpréter',  sous: 'les hypothèses'},
-    {x: 664, nom: 'Synthèse',     sous: 'la vue d\'ensemble'}
+    {x: 40,  nom: 'Préambule',   sous: "ce qu'on sait déjà"},
+    {x: 196, nom: 'Recueillir',  sous: 'les évènements'},
+    {x: 352, nom: 'Organiser',   sous: 'les catégories'},
+    {x: 508, nom: 'Interpréter', sous: 'ce qui revient'},
+    {x: 664, nom: 'Synthèse',    sous: 'la vue d\'ensemble'}
   ];
-  const L = 136, H = 58, Y = 96;
+  const L = 136, H = 58, Y = 64;
+  const texte = (x, y, t, taille, couleur, gras, ancre) =>
+    '<text x="' + x + '" y="' + y + '" text-anchor="' + (ancre || 'middle') + '" font-size="' + taille + '"' +
+      (gras ? ' font-weight="700"' : '') + ' fill="' + couleur + '">' + esc(t) + '</text>';
   const boite = (e) =>
     '<rect x="' + e.x + '" y="' + Y + '" width="' + L + '" height="' + H + '" rx="9" ' +
       'fill="var(--card)" stroke="var(--slate)" stroke-width="1.6"/>' +
-    '<text x="' + (e.x + L / 2) + '" y="' + (Y + 24) + '" text-anchor="middle" ' +
-      'font-size="14" font-weight="700" fill="var(--ink)">' + esc(e.nom) + '</text>' +
-    '<text x="' + (e.x + L / 2) + '" y="' + (Y + 42) + '" text-anchor="middle" ' +
-      'font-size="11.5" fill="var(--ink-soft)">' + esc(e.sous) + '</text>';
-  const fleche = (x1, x2, y) =>
-    '<line x1="' + x1 + '" y1="' + y + '" x2="' + (x2 - 7) + '" y2="' + y + '" ' +
-      'stroke="var(--slate)" stroke-width="1.6"/>' +
-    '<polygon points="' + x2 + ',' + y + ' ' + (x2 - 8) + ',' + (y - 4.5) + ' ' + (x2 - 8) + ',' + (y + 4.5) + '" fill="var(--slate)"/>';
+    texte(e.x + L / 2, Y + 24, e.nom, 14, 'var(--ink)', true) +
+    texte(e.x + L / 2, Y + 42, e.sous, 11.5, 'var(--ink-soft)');
+  const fleche = (x1, x2, y, couleur) =>
+    '<line x1="' + x1 + '" y1="' + y + '" x2="' + (x2 - 7) + '" y2="' + y + '" stroke="' + couleur + '" stroke-width="1.6"/>' +
+    '<polygon points="' + x2 + ',' + y + ' ' + (x2 - 8) + ',' + (y - 4.5) + ' ' + (x2 - 8) + ',' + (y + 4.5) + '" fill="' + couleur + '"/>';
+  const flecheBas = (x, y1, y2, couleur) =>
+    '<line x1="' + x + '" y1="' + y1 + '" x2="' + x + '" y2="' + (y2 - 7) + '" stroke="' + couleur + '" stroke-width="1.8"/>' +
+    '<polygon points="' + x + ',' + y2 + ' ' + (x - 4.5) + ',' + (y2 - 8) + ' ' + (x + 4.5) + ',' + (y2 - 8) + '" fill="' + couleur + '"/>';
 
   const svg =
-    '<svg class="graphique" viewBox="0 0 840 300" xmlns="http://www.w3.org/2000/svg" role="img" ' +
-      'aria-label="Le parcours d\'une analyse fonctionnelle dans la BAF">' +
-    '<text x="420" y="26" text-anchor="middle" font-size="13" font-weight="700" ' +
-      'fill="var(--ink-soft)" letter-spacing="0.6">L\'ÉQUIPE</text>' +
+    '<svg class="graphique" viewBox="0 0 840 420" xmlns="http://www.w3.org/2000/svg" role="img" ' +
+      'aria-label="Le parcours d\'une analyse fonctionnelle : construire un déclaratif de qualité, écrire l\'analyse fonctionnelle, l\'évaluer">' +
+
+    // 1 · Construire un déclaratif de qualité
+    '<rect x="14" y="10" width="812" height="262" rx="14" fill="var(--paper)" stroke="var(--slate)" stroke-width="1.8"/>' +
+    texte(34, 40, '1 · CONSTRUIRE UN DÉCLARATIF DE QUALITÉ', 13.5, 'var(--slate)', true, 'start') +
+    texte(806, 40, 'le RDAF, dans la BAF', 11.5, 'var(--ink-soft)', false, 'end') +
     etapes.map(boite).join('') +
-    etapes.slice(0, -1).map((e, i) => fleche(e.x + L, etapes[i + 1].x, Y + H / 2)).join('') +
+    etapes.slice(0, -1).map((e, i) => fleche(e.x + L, etapes[i + 1].x, Y + H / 2, 'var(--slate)')).join('') +
     // La boucle des déclarants, sous Recueillir
-    '<rect x="140" y="216" width="248" height="54" rx="9" fill="var(--sauge-pale)" ' +
-      'stroke="var(--sauge-deep)" stroke-width="1.6"/>' +
-    '<text x="264" y="238" text-anchor="middle" font-size="13.5" font-weight="700" ' +
-      'fill="var(--sauge-deep)">Familles, foyers, institutions</text>' +
-    '<text x="264" y="256" text-anchor="middle" font-size="11.5" fill="var(--ink-soft)">' +
-      'décrivent ce qu\'ils ont vu</text>' +
-    '<line x1="212" y1="' + (Y + H) + '" x2="212" y2="210" stroke="var(--sauge-deep)" ' +
-      'stroke-width="1.6" stroke-dasharray="5 4"/>' +
-    '<polygon points="212,216 207.5,208 216.5,208" fill="var(--sauge-deep)"/>' +
-    '<text x="222" y="188" font-size="11" fill="var(--sauge-deep)">le kit</text>' +
-    '<line x1="316" y1="216" x2="316" y2="' + (Y + H + 6) + '" stroke="var(--sauge-deep)" ' +
-      'stroke-width="1.6" stroke-dasharray="5 4"/>' +
+    '<rect x="140" y="196" width="248" height="54" rx="9" fill="var(--sauge-pale)" stroke="var(--sauge-deep)" stroke-width="1.6"/>' +
+    texte(264, 218, 'Familles, foyers, institutions', 13.5, 'var(--sauge-deep)', true) +
+    texte(264, 236, 'décrivent ce qu\'ils ont vu', 11.5, 'var(--ink-soft)') +
+    '<line x1="212" y1="' + (Y + H) + '" x2="212" y2="190" stroke="var(--sauge-deep)" stroke-width="1.6" stroke-dasharray="5 4"/>' +
+    '<polygon points="212,196 207.5,188 216.5,188" fill="var(--sauge-deep)"/>' +
+    texte(222, 164, 'le kit', 11, 'var(--sauge-deep)', false, 'start') +
+    '<line x1="316" y1="196" x2="316" y2="' + (Y + H + 6) + '" stroke="var(--sauge-deep)" stroke-width="1.6" stroke-dasharray="5 4"/>' +
     '<polygon points="316,' + (Y + H) + ' 311.5,' + (Y + H + 8) + ' 320.5,' + (Y + H + 8) + '" fill="var(--sauge-deep)"/>' +
-    '<text x="326" y="188" font-size="11" fill="var(--sauge-deep)">la contribution</text>' +
-    // L'ICAF, à part
-    '<rect x="664" y="216" width="136" height="54" rx="9" fill="var(--paper-deep)" ' +
-      'stroke="var(--ink-soft)" stroke-width="1.4" stroke-dasharray="4 3"/>' +
-    '<text x="732" y="238" text-anchor="middle" font-size="13" font-weight="700" ' +
-      'fill="var(--ink)">Indice de confiance</text>' +
-    '<text x="732" y="256" text-anchor="middle" font-size="11.5" fill="var(--ink-soft)">' +
-      'cote le travail produit</text>' +
-    '<line x1="732" y1="' + (Y + H) + '" x2="732" y2="210" stroke="var(--ink-soft)" ' +
-      'stroke-width="1.4" stroke-dasharray="4 3"/>' +
-    '<polygon points="732,216 727.5,208 736.5,208" fill="var(--ink-soft)"/>' +
+    texte(326, 164, 'la contribution', 11, 'var(--sauge-deep)', false, 'start') +
+
+    // 2 · Analyse fonctionnelle
+    flecheBas(185, 272, 318, 'var(--slate)') +
+    '<rect x="40" y="318" width="290" height="80" rx="12" fill="var(--card)" stroke="var(--slate)" stroke-width="1.8"/>' +
+    texte(185, 344, '2 · Analyse fonctionnelle', 14, 'var(--ink)', true) +
+    texte(185, 364, 'les hypothèses de fonction,', 11.5, 'var(--ink-soft)') +
+    texte(185, 381, 'écrites à partir de la synthèse', 11.5, 'var(--ink-soft)') +
+
+    // 3 · Indice de confiance
+    fleche(330, 392, 358, 'var(--slate)') +
+    '<rect x="392" y="318" width="250" height="80" rx="12" fill="var(--paper-deep)" stroke="var(--ink-soft)" stroke-width="1.6"/>' +
+    texte(517, 344, '3 · Indice de confiance', 14, 'var(--ink)', true) +
+    texte(517, 364, 'cote l\'analyse fonctionnelle', 11.5, 'var(--ink-soft)') +
+    texte(517, 381, 'et ce qui la fonde', 11.5, 'var(--ink-soft)') +
+
+    // Ce qu'on obtient
+    '<rect x="664" y="332" width="162" height="52" rx="26" fill="var(--slate)"/>' +
+    texte(745, 363, '= AF évaluée', 15, '#FFFFFF', true) +
     '</svg>';
 
   el.innerHTML =
