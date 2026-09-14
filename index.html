@@ -2145,8 +2145,9 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
   .sg-barre{width:80px;}
 }
 .vase-connu-grille{
-  display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:10px;
+  display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:10px;
 }
+.vase-connu-ancien{grid-column:1 / -1;}
 @media(max-width:760px){.vase-connu-grille{grid-template-columns:1fr;}}
 .vase-connu-titre{font-size:13px;font-weight:700;color:var(--ink);display:block;margin-bottom:2px;}
 .vase-connu-grille textarea{min-height:76px;}
@@ -2214,8 +2215,7 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
   font-family:inherit;font-size:11.5px;font-weight:700;padding:0 3px;
 }
 .vase-a-situer button.situer:hover{text-decoration:underline;}
-.vase-section{grid-template-columns:repeat(3,1fr);}
-@media(max-width:900px){.vase-section{grid-template-columns:1fr;}}
+.vase-a-situer-groupe{margin-top:8px;}
 .courbe-jour-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
 .courbe-jour-bar select{
   font-family:inherit;font-size:13px;padding:6px 9px;
@@ -3432,19 +3432,29 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
         <div class="help">Avant même de regarder les évènements : d'après ce que vous connaissez de cette personne, qu'est-ce qui fait monter la tension, qu'est-ce qui la fait redescendre ? Ce sont des hypothèses de départ — le module Interpréter les remettra plus tard face à ce que les données auront montré.</div>
         <div class="vase-connu-grille">
           <div>
-            <label for="m1-vase-interieur" class="vase-connu-titre">🔺 Ce qui vient d'elle ou de lui</label>
+            <label for="m1-vase-interieur" class="vase-connu-titre">🔺 Ce qui le fait monter — d'elle ou de lui</label>
             <div class="help">Son fonctionnement, son angoisse, son histoire, sa santé — ce qui remplit le vase de l'intérieur.</div>
             <textarea id="m1-vase-interieur" placeholder="ex : supporte mal l'imprévu, angoisse montante en fin de semaine, douleurs dentaires récurrentes..." oninput="saveM1()"></textarea>
           </div>
           <div>
-            <label for="m1-vase-exterieur" class="vase-connu-titre">🔺 Ce qui vient du dehors</label>
+            <label for="m1-vase-exterieur" class="vase-connu-titre">🔺 Ce qui le fait monter — du dehors</label>
             <div class="help">L'environnement, l'organisation, les personnes, les évènements — ce qui remplit le vase de l'extérieur.</div>
             <textarea id="m1-vase-exterieur" placeholder="ex : bruit du réfectoire, changement d'éducateur, absence de sa mère, travaux dans le bâtiment..." oninput="saveM1()"></textarea>
           </div>
           <div>
-            <label for="m1-vase-descend" class="vase-connu-titre">🔻 Ce qui le fait redescendre</label>
-            <div class="help">Ce qui apaise, ce qui régule — même partiellement, même provisoirement.</div>
-            <textarea id="m1-vase-descend" placeholder="ex : musique au casque, marcher dehors, retrouver sa routine, présence d'une personne précise..." oninput="saveM1()"></textarea>
+            <label for="m1-vase-descend-interieur" class="vase-connu-titre">🔻 Ce qui le fait redescendre — d'elle ou de lui</label>
+            <div class="help">Ce qu'elle ou il fait pour se réguler, ce qui l'apaise de l'intérieur — même partiellement, même provisoirement.</div>
+            <textarea id="m1-vase-descend-interieur" placeholder="ex : s'isoler dans sa chambre, se balancer, dormir, un rituel à soi..." oninput="saveM1()"></textarea>
+          </div>
+          <div>
+            <label for="m1-vase-descend-exterieur" class="vase-connu-titre">🔻 Ce qui le fait redescendre — du dehors</label>
+            <div class="help">Ce que l'environnement, l'organisation ou les personnes apportent — même partiellement, même provisoirement.</div>
+            <textarea id="m1-vase-descend-exterieur" placeholder="ex : musique au casque, marcher dehors, retrouver sa routine, présence d'une personne précise..." oninput="saveM1()"></textarea>
+          </div>
+          <div class="vase-connu-ancien" id="m1-vase-descend-ancien" hidden>
+            <label for="m1-vase-descend" class="vase-connu-titre">🔻 Ce qui le fait redescendre — écrit avant qu'on distingue l'intérieur du dehors</label>
+            <div class="help">Gardé tel quel. Vous pouvez le répartir dans les deux cases ci-dessus, puis vider celle-ci.</div>
+            <textarea id="m1-vase-descend" oninput="saveM1()"></textarea>
           </div>
         </div>
       </div>
@@ -3705,7 +3715,7 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
       <div id="vase-a-situer"></div>
       <div class="vase-section">
         <div class="vase-card monte">
-          <h4>🔺 Ce qui vient d'elle ou de lui</h4>
+          <h4>🔺 Ce qui le fait monter — d'elle ou de lui</h4>
           <div class="help field">Son fonctionnement, son angoisse, son histoire, sa santé — ce qui remplit le vase de l'intérieur.</div>
           <div class="vase-tags" id="vase-interieur-tags"></div>
           <div class="vase-input-row monte">
@@ -3714,7 +3724,7 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
           </div>
         </div>
         <div class="vase-card monte">
-          <h4>🔺 Ce qui vient du dehors</h4>
+          <h4>🔺 Ce qui le fait monter — du dehors</h4>
           <div class="help field">L'environnement, l'organisation, les personnes, les évènements — ce qui remplit le vase de l'extérieur.</div>
           <div class="vase-tags" id="vase-exterieur-tags"></div>
           <div class="vase-input-row monte">
@@ -3723,12 +3733,21 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
           </div>
         </div>
         <div class="vase-card descend">
-          <h4>🔻 Ce qui le fait redescendre</h4>
-          <div class="help field">Ce qui apaise, ce qui régule — même partiellement, même provisoirement.</div>
-          <div class="vase-tags" id="vase-descend-tags"></div>
+          <h4>🔻 Ce qui le fait redescendre — d'elle ou de lui</h4>
+          <div class="help field">Ce qu'elle ou il fait pour se réguler, ce qui l'apaise de l'intérieur — même partiellement, même provisoirement.</div>
+          <div class="vase-tags" id="vase-descend-interieur-tags"></div>
           <div class="vase-input-row descend">
-            <input type="text" id="vase-descend-input" placeholder="ex : musique, routines, espace calme, préavis...">
-            <button onclick="ajouterVaseTag('descend')">Ajouter</button>
+            <input type="text" id="vase-descend-interieur-input" placeholder="ex : s'isoler, se balancer, dormir, un rituel à soi...">
+            <button onclick="ajouterVaseTag('descend-interieur')">Ajouter</button>
+          </div>
+        </div>
+        <div class="vase-card descend">
+          <h4>🔻 Ce qui le fait redescendre — du dehors</h4>
+          <div class="help field">Ce que l'environnement, l'organisation ou les personnes apportent — même partiellement, même provisoirement.</div>
+          <div class="vase-tags" id="vase-descend-exterieur-tags"></div>
+          <div class="vase-input-row descend">
+            <input type="text" id="vase-descend-exterieur-input" placeholder="ex : préavis, espace calme, routine, présence d'une personne précise...">
+            <button onclick="ajouterVaseTag('descend-exterieur')">Ajouter</button>
           </div>
         </div>
       </div>
@@ -5115,6 +5134,9 @@ function saveM1(){
   state.m1.vaseConnu = {
     interieur: document.getElementById('m1-vase-interieur').value,
     exterieur: document.getElementById('m1-vase-exterieur').value,
+    descendInterieur: document.getElementById('m1-vase-descend-interieur').value,
+    descendExterieur: document.getElementById('m1-vase-descend-exterieur').value,
+    // L'ancienne case unique reste tant qu'elle n'est pas vidée : on ne la redécoupe pas à la place de l'équipe.
     descend:   document.getElementById('m1-vase-descend').value
   };
   state.m1.libre = document.getElementById('m1-libre').value;
@@ -5378,7 +5400,10 @@ function loadM1FromState(){
   const vc = state.m1.vaseConnu || {};
   document.getElementById('m1-vase-interieur').value = vc.interieur || '';
   document.getElementById('m1-vase-exterieur').value = vc.exterieur || '';
+  document.getElementById('m1-vase-descend-interieur').value = vc.descendInterieur || '';
+  document.getElementById('m1-vase-descend-exterieur').value = vc.descendExterieur || '';
   document.getElementById('m1-vase-descend').value = vc.descend || '';
+  document.getElementById('m1-vase-descend-ancien').hidden = !(vc.descend || '').trim();
   document.getElementById('m1-libre').value = state.m1.libre || '';
   refreshM1Progress();
   verifierCouvertureHoraire();
@@ -7204,7 +7229,9 @@ function refreshSynthese(){
           ${ligneVaseSynthese("Augmente — ce qui vient d'elle ou de lui", monte.filter(t=>t.source==='interieur'), 'coral')}
           ${ligneVaseSynthese('Augmente — ce qui vient du dehors', monte.filter(t=>t.source==='exterieur'), 'coral')}
           ${ligneVaseSynthese('Augmente — reste à situer', monte.filter(t=>!t.source), 'coral')}
-          ${ligneVaseSynthese('Diminue', descend, 'teal')}
+          ${ligneVaseSynthese("Diminue — ce qui vient d'elle ou de lui", descend.filter(t=>t.source==='interieur'), 'teal')}
+          ${ligneVaseSynthese('Diminue — ce qui vient du dehors', descend.filter(t=>t.source==='exterieur'), 'teal')}
+          ${ligneVaseSynthese('Diminue — reste à situer', descend.filter(t=>!t.source), 'teal')}
         </div>`;
       }
       synthM4El.innerHTML = html;
@@ -8113,7 +8140,8 @@ const PROFILS_SIM = [
     vaseConnu:{
       interieur:"Supporte mal l'imprévu. Anticipe beaucoup, se met la pression tout seul. Dort mal quand un changement approche.",
       exterieur:"Niveau sonore du foyer en fin de journée. Changements d'emploi du temps annoncés au dernier moment. Retours de week-end.",
-      descend:"Savoir ce qui va se passer et quand. Un préavis avant les transitions. Son magazine, son fauteuil habituel."
+      descendInterieur:"Se replonger dans son magazine, s'installer dans son fauteuil habituel.",
+      descendExterieur:"Savoir ce qui va se passer et quand. Un préavis avant les transitions."
     },
     lieuxConcrets:["Salle d'activité",'Couloir','Réfectoire','Gymnase','Vestiaires','Salle informatique','Hall'],
     declarants:[
@@ -8193,11 +8221,11 @@ const PROFILS_SIM = [
         {texte:'changement de professionnel', source:'exterieur'}
       ],
       descend:[
-        {texte:'préavis de cinq minutes', source:''},
-        {texte:'activités motrices', source:''},
-        {texte:'espace isolé', source:''},
-        {texte:'relais de collègue', source:''},
-        {texte:'routines stables', source:''}
+        {texte:'préavis de cinq minutes', source:'exterieur'},
+        {texte:'activités motrices', source:'interieur'},
+        {texte:'espace isolé', source:'exterieur'},
+        {texte:'relais de collègue', source:'exterieur'},
+        {texte:'routines stables', source:'exterieur'}
       ],
       texte:"La tension semble s'accumuler en début de semaine et se libérer lors des activités physiques. Les lundis de retour de week-end sont systématiquement plus chargés."
     }
@@ -8224,7 +8252,8 @@ const PROFILS_SIM = [
     vaseConnu:{
       interieur:"Douleurs dentaires récurrentes, pas toujours repérées à temps. Périodes de sommeil très courtes.",
       exterieur:"Bruit du réfectoire. Absences de sa mère. Remplacements de professionnels qu'elle ne connaît pas.",
-      descend:"Le casque et la musique. Sa peluche. Un espace calme, sans sollicitation, aussi longtemps qu'il faut."
+      descendInterieur:"Serrer sa peluche, s'envelopper dans la musique au casque.",
+      descendExterieur:"Un espace calme, sans sollicitation, aussi longtemps qu'il faut."
     },
     lieuxConcrets:['Couloir','Cuisine pédagogique','Réfectoire','Salle créative','Hall','Vestiaires','Salle snoezelen','Domicile familial'],
     declarants:[
@@ -8302,11 +8331,11 @@ const PROFILS_SIM = [
         {texte:"fin d'activité appréciée", source:'exterieur'}
       ],
       descend:[
-        {texte:'musique au casque', source:''},
-        {texte:'pictogrammes', source:''},
-        {texte:'peluche', source:''},
-        {texte:'snoezelen', source:''},
-        {texte:'routines stables', source:''}
+        {texte:'musique au casque', source:'interieur'},
+        {texte:'pictogrammes', source:'exterieur'},
+        {texte:'peluche', source:'interieur'},
+        {texte:'snoezelen', source:'exterieur'},
+        {texte:'routines stables', source:'exterieur'}
       ],
       texte:"Naomie régule beaucoup par les supports sensoriels. Les pictogrammes réduisent l'anxiété liée aux transitions, mais pas suffisamment quand la surcharge est déjà installée."
     }
@@ -8337,7 +8366,8 @@ const PROFILS_SIM = [
     vaseConnu:{
       interieur:"Anxiété anticipatoire forte : pense à la récréation dès le début du cours précédent.",
       exterieur:"La cour de récréation. Les changements de salle. Le bruit du hall aux intercours.",
-      descend:"Rester en classe pendant la récréation. Travailler seul sur un exercice. Savoir à l'avance le déroulé de la journée."
+      descendInterieur:"Se plonger seul dans un exercice, surtout en mathématiques.",
+      descendExterieur:"Rester en classe pendant la récréation. Savoir à l'avance le déroulé de la journée."
     },
     lieuxConcrets:['Cour de récréation','Couloir','Salle de classe','Cantine','Gymnase','Sortie de l\'école'],
     declarants:[
@@ -8402,11 +8432,11 @@ const PROFILS_SIM = [
         {texte:'prise de parole imposée', source:'exterieur'}
       ],
       descend:[
-        {texte:'AESH stable', source:''},
-        {texte:'ordinateur habituel', source:''},
-        {texte:'travail seul autorisé', source:''},
-        {texte:'mathématiques', source:''},
-        {texte:'routines préservées', source:''}
+        {texte:'AESH stable', source:'exterieur'},
+        {texte:'ordinateur habituel', source:'exterieur'},
+        {texte:'travail seul autorisé', source:'exterieur'},
+        {texte:'mathématiques', source:'interieur'},
+        {texte:'routines préservées', source:'exterieur'}
       ],
       texte:"Tom fonctionne par routines et repères stables. L'imprévu, même mineur, a un coût énergétique important. Les fins de journée concentrent la fatigue accumulée."
     }
@@ -8607,7 +8637,7 @@ function simuler(idx){
     coucher: P.coucher || '', lever: P.lever || '',
     journeeCreneaux: P.journeeCreneaux.map(c => Object.assign({}, c)),
     semaineCreneaux: {}, joursExtras: [], libre: P.libre,
-    vaseConnu: P.vaseConnu ? Object.assign({}, P.vaseConnu) : {interieur:'', exterieur:'', descend:''}
+    vaseConnu: P.vaseConnu ? Object.assign({}, P.vaseConnu) : {interieur:'', exterieur:'', descendInterieur:'', descendExterieur:'', descend:''}
   };
   state.m2.evenements = evts;
   state.m2.brouillons = [];
@@ -8823,6 +8853,24 @@ const _CONTROLES = [
     const evts = [30, 50, 55, 90, 85].map(v => ({tension: {pic: {v}}})).concat([{tension: {}}, {}]);
     const p = picLePlusFrequent(evts);
     return _bancEgal('Palier le plus fréquent, effectif', 'deborde 2/5', p.id + ' ' + p.nb + '/' + p.total);
+  }},
+
+  {nom:'Ce qui fait redescendre se range d\'elle, du dehors, ou reste à situer', test: () => {
+    /* Même partage que pour la montée. Un élément saisi avant la distinction
+       n'est rangé nulle part d'office : il attend qu'on le situe. */
+    ensureM4();
+    const avant = JSON.parse(JSON.stringify(state.m4.vase));
+    state.m4.vase.descend = [{texte: 'zzdi', source: 'interieur'}, {texte: 'zzde', source: 'exterieur'}, {texte: 'zzds', source: ''}];
+    renderVaseTags();
+    const txt = id => (document.getElementById(id) || {}).textContent || '';
+    const obtenu = [
+      txt('vase-descend-interieur-tags').includes('zzdi') && !txt('vase-descend-interieur-tags').includes('zzde'),
+      txt('vase-descend-exterieur-tags').includes('zzde') && !txt('vase-descend-exterieur-tags').includes('zzds'),
+      txt('vase-a-situer').includes('zzds')
+    ].join(',');
+    state.m4.vase = avant;
+    renderVaseTags();
+    return _bancEgal('Intérieur, dehors, à situer', 'true,true,true', obtenu);
   }},
 
   {nom:'Chaque volet a sa couleur, distincte des autres', test: () => {
@@ -11658,8 +11706,10 @@ function renderVaseApriori() {
   if (!el) return;
   const vc = state.m1.vaseConnu || {};
   const lignes = [
-    vc.interieur ? '<div><b>Ce qui vient d\'elle ou de lui :</b> ' + esc(vc.interieur) + '</div>' : '',
-    vc.exterieur ? '<div><b>Ce qui vient du dehors :</b> ' + esc(vc.exterieur) + '</div>' : '',
+    vc.interieur ? '<div><b>Ce qui le fait monter, venant d\'elle ou de lui :</b> ' + esc(vc.interieur) + '</div>' : '',
+    vc.exterieur ? '<div><b>Ce qui le fait monter, venant du dehors :</b> ' + esc(vc.exterieur) + '</div>' : '',
+    vc.descendInterieur ? '<div><b>Ce qui le fait redescendre, venant d\'elle ou de lui :</b> ' + esc(vc.descendInterieur) + '</div>' : '',
+    vc.descendExterieur ? '<div><b>Ce qui le fait redescendre, venant du dehors :</b> ' + esc(vc.descendExterieur) + '</div>' : '',
     vc.descend   ? '<div><b>Ce qui le fait redescendre :</b> ' + esc(vc.descend) + '</div>' : ''
   ].filter(Boolean);
   if (!lignes.length) { el.innerHTML = ''; return; }
@@ -11674,35 +11724,43 @@ function renderVaseTags() {
     '<span class="vase-tag ' + (liste === 'descend' ? 'descend' : 'monte') + '">' + esc(texte) +
     '<button onclick="retirerVaseTag(\'' + liste + '\',' + i + ')">×</button></span>';
 
-  ['interieur','exterieur'].forEach(src => {
-    const cible = document.getElementById('vase-' + src + '-tags');
-    if (!cible) return;
-    cible.innerHTML = vase.monte.map((t, i) => t.source === src ? chip('monte', i, t.texte) : '').join('');
+  // Ce qui fait monter et ce qui fait redescendre se rangent de la même façon :
+  // ce qui vient d'elle ou de lui, ce qui vient du dehors (Arthur, 15/09/2026).
+  [['monte', 'vase-'], ['descend', 'vase-descend-']].forEach(([liste, prefixe]) => {
+    ['interieur', 'exterieur'].forEach(src => {
+      const cible = document.getElementById(prefixe + src + '-tags');
+      if (cible) cible.innerHTML = vase[liste].map((t, i) => t.source === src ? chip(liste, i, t.texte) : '').join('');
+    });
   });
-  const cibleD = document.getElementById('vase-descend-tags');
-  if (cibleD) cibleD.innerHTML = vase.descend.map((t, i) => chip('descend', i, t.texte)).join('');
 
-  // Les tags saisis avant que la distinction existe : on ne devine pas à leur
-  // place, on demande où les mettre.
+  // Les éléments saisis avant que la distinction existe : on ne devine pas à
+  // leur place, on demande où les mettre.
   const el = document.getElementById('vase-a-situer');
   if (!el) return;
-  const aSituer = vase.monte.map((t, i) => ({t, i})).filter(x => !x.t.source);
-  if (!aSituer.length) { el.innerHTML = ''; return; }
-  el.innerHTML = '<div class="vase-a-situer">Ces éléments ont été saisis avant qu\'on distingue l\'intérieur du dehors. Où les rangez-vous ?<div class="vase-tags" style="margin-top:8px;">' +
-    aSituer.map(x =>
-      '<span class="vase-tag">' + esc(x.t.texte) +
-      '<button class="situer" onclick="situerVaseTag(' + x.i + ',\'interieur\')">d\'elle</button>' +
-      '<button class="situer" onclick="situerVaseTag(' + x.i + ',\'exterieur\')">du dehors</button>' +
-      '<button onclick="retirerVaseTag(\'monte\',' + x.i + ')">×</button></span>'
-    ).join('') + '</div></div>';
+  const groupe = (liste, libelle) => {
+    const aSituer = vase[liste].map((t, i) => ({t, i})).filter(x => !x.t.source);
+    if (!aSituer.length) return '';
+    return '<div class="vase-a-situer-groupe"><b>' + libelle + '</b><div class="vase-tags" style="margin-top:6px;">' +
+      aSituer.map(x =>
+        '<span class="vase-tag">' + esc(x.t.texte) +
+        '<button class="situer" onclick="situerVaseTag(\'' + liste + '\',' + x.i + ',\'interieur\')">d\'elle</button>' +
+        '<button class="situer" onclick="situerVaseTag(\'' + liste + '\',' + x.i + ',\'exterieur\')">du dehors</button>' +
+        '<button onclick="retirerVaseTag(\'' + liste + '\',' + x.i + ')">×</button></span>'
+      ).join('') + '</div></div>';
+  };
+  const blocs = groupe('monte', 'Ce qui le fait monter') + groupe('descend', 'Ce qui le fait redescendre');
+  el.innerHTML = blocs
+    ? '<div class="vase-a-situer">Ces éléments ont été saisis avant qu\'on distingue l\'intérieur du dehors. Où les rangez-vous ?' + blocs + '</div>'
+    : '';
 }
 
 function ajouterVaseTag(type) {
   ensureM4();
   const input = document.getElementById('vase-' + type + '-input');
   if (!input || !input.value.trim()) return;
-  if (type === 'descend') state.m4.vase.descend.push({texte: input.value.trim(), source: ''});
-  else state.m4.vase.monte.push({texte: input.value.trim(), source: type});
+  // type : 'interieur', 'exterieur' (monte) ou 'descend-interieur', 'descend-exterieur'.
+  const descend = type.indexOf('descend-') === 0;
+  state.m4.vase[descend ? 'descend' : 'monte'].push({texte: input.value.trim(), source: descend ? type.slice(8) : type});
   input.value = '';
   persist();
   renderVaseTags();
@@ -11718,13 +11776,14 @@ function retirerVaseTag(liste, idx) {
   refreshSynthese();
 }
 
-function situerVaseTag(idx, source) {
+function situerVaseTag(liste, idx, source) {
   ensureM4();
-  const t = state.m4.vase.monte[idx];
+  const t = (state.m4.vase[liste] || [])[idx];
   if (!t) return;
   t.source = source;
   persist();
   renderVaseTags();
+  refreshSynthese();
 }
 
 /* ── 3 · La courbe ─────────────────────────────────────────────────────
@@ -12675,9 +12734,10 @@ function corpsPreambule() {
 
     docxIntertitre('6 · Son vase de tension, ce qu\'on en sait déjà', DOCX_C.antecedent, DOCX_C.antecedentTrait) +
     docxP('Tout le monde a un vase qui se remplit de ce qu\'il vit. Avant même de regarder les évènements : d\'après ce que vous connaissez de cette personne, qu\'est-ce qui le remplit, qu\'est-ce qui le vide ? Ce sont des hypothèses de départ — les données les confirmeront ou non.', {taille: 18, couleur: DOCX_C.inkSoft, apres: 100}) +
-    champ('Ce qui vient d\'elle ou de lui — fonctionnement, angoisse, histoire, santé', 800) +
-    champ('Ce qui vient du dehors — environnement, organisation, personnes, évènements', 800) +
-    champ('Ce qui le fait redescendre — même partiellement, même provisoirement', 800) +
+    champ('Ce qui le fait monter, venant d\'elle ou de lui — fonctionnement, angoisse, histoire, santé', 800) +
+    champ('Ce qui le fait monter, venant du dehors — environnement, organisation, personnes, évènements', 800) +
+    champ('Ce qui le fait redescendre, venant d\'elle ou de lui — ce qui l\'apaise, ce qu\'elle ou il fait pour se réguler', 800) +
+    champ('Ce qui le fait redescendre, venant du dehors — environnement, organisation, personnes', 800) +
 
     docxIntertitre('7 · Autre chose', DOCX_C.papierFonce, DOCX_C.slate) +
     champ('Tout ce qui pourrait être utile par la suite', 1100);
