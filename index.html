@@ -374,24 +374,17 @@ body.mode-codage .codage-seul{display:block;}
   font-size:13px;line-height:1.8;color:var(--ink);
 }
 
-
-.situer{
-  border:1px solid var(--line);border-radius:var(--radius-sm);
-  background:var(--paper);margin:0 0 18px;overflow:hidden;
+.situer-boussole{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:30px;height:30px;margin-left:10px;padding:0;vertical-align:middle;
+  border:1.5px solid var(--line);border-radius:50%;background:var(--paper);
+  color:var(--slate);cursor:pointer;transition:border-color .15s, transform .2s;
 }
-.situer-tete{
-  display:flex;align-items:center;gap:9px;width:100%;
-  background:none;border:none;padding:9px 14px;cursor:pointer;
-  font-family:inherit;font-size:12.5px;font-weight:700;color:var(--ink-soft);
-  text-align:left;
-}
-.situer-tete:hover{color:var(--slate);}
-.situer-ico{font-size:13px;flex-shrink:0;}
-.situer-titre{flex:1;letter-spacing:.3px;}
-.situer-chevron{flex-shrink:0;font-size:11px;transition:transform .16s;}
-.situer.replie .situer-chevron{transform:rotate(-90deg);}
-.situer.replie .situer-corps{display:none;}
-.situer-corps{padding:2px 14px 12px;}
+.situer-boussole:hover, .situer-boussole:focus-visible{border-color:var(--slate);transform:rotate(-20deg);}
+.situer-boussole svg{width:20px;height:20px;display:block;}
+.situer-coin{display:flex;justify-content:flex-end;margin:0 0 4px;}
+.situer-modal h3{display:flex;align-items:center;gap:8px;}
+.situer-modal h3 svg{width:22px;height:22px;color:var(--slate);}
 .situer-ligne{
   display:flex;gap:12px;align-items:baseline;
   padding:5px 0;border-top:1px solid var(--line-soft);
@@ -477,7 +470,8 @@ body.mode-declarant .declarant-seul{display:block;}
 body.mode-declarant .analyste-seul,
 body.mode-declarant #m2-partager-card,
 body.mode-declarant #m2-recevoir-card,
-body.mode-declarant .situer{display:none !important;}
+body.mode-declarant .situer-boussole,
+body.mode-declarant .situer-coin{display:none !important;}
 .declarant-visibilite{font-size:14px;line-height:1.6;border-left:3px solid var(--sauge-deep);}
 .decl-num{
   flex:0 0 26px;width:26px;height:26px;border-radius:50%;
@@ -3740,6 +3734,17 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
 </div>
 
 <!-- Modale de choix de simulation -->
+<div id="situer-overlay" class="sim-modal-overlay" style="display:none;" onclick="fermerSituer(event)">
+  <div class="sim-modal situer-modal" role="dialog" aria-modal="true" aria-labelledby="situer-titre">
+    <h3 id="situer-titre"></h3>
+    <div id="situer-corps"></div>
+    <div class="situer-pied">
+      <button type="button" class="situer-lien" onclick="fermerSituer(); route('parcours')">Voir le parcours entier →</button>
+    </div>
+    <button class="sim-modal-close" onclick="fermerSituer()">Fermer</button>
+  </div>
+</div>
+
 <div id="evt-detail-overlay" class="sim-modal-overlay" style="display:none;" onclick="fermerDetailEvt(event)">
   <div class="sim-modal evt-detail" role="dialog" aria-modal="true" aria-label="Détail de l'évènement">
     <div class="evt-detail-head">
@@ -8525,12 +8530,16 @@ function _bancEgal(nom, attendu, obtenu, tolerance) {
 const _CONTROLES = [
 
   {nom:'Chaque module sait dire où l\'on est', test: () => {
-    /* Une bande manquante sur un module, et la chaîne redevient invisible
-       exactement là où quelqu'un se perd. */
+    /* Une boussole manquante sur un module, et la chaîne redevient invisible
+       exactement là où quelqu'un se perd. On pose la boussole, on ouvre sa
+       fenêtre, on vérifie qu'elle dit bien les trois choses. */
     const manquants = Object.keys(SITUER).filter(v => {
       poserSituer(v);
-      const b = document.querySelector('#view-' + v + ' .situer .situer-texte');
-      return !b || !b.textContent.trim();
+      if (!document.querySelector('#view-' + v + ' .situer-boussole')) return true;
+      ouvrirSituer(v);
+      const lignes = [...document.querySelectorAll('#situer-corps .situer-texte')].filter(t => t.textContent.trim());
+      fermerSituer();
+      return lignes.length !== SITUER_LIBELLES.length;
     });
     const trous = Object.keys(SITUER).filter(v =>
       SITUER_LIBELLES.some(([c]) => !SITUER[v][c] || !SITUER[v][c].trim()));
@@ -12900,7 +12909,7 @@ refreshAccueilBadges();
 // tout lien partagé inopérant, il ouvrait toujours la page d'accueil.
 
 /* ══════════════════════════════════════════════════════════════════════
-   SITUER — la même bande sur chaque module
+   SITUER — une petite boussole à côté du titre de chaque module
    ══════════════════════════════════════════════════════════════════════
    Ce qui perd quelqu'un dans la BAF, ce n'est pas le manque d'explications :
    c'est de ne pas voir la chaîne. On écrit une phrase dans Recueillir, elle
@@ -12912,8 +12921,9 @@ refreshAccueilBadges();
    dans le même ordre. L'uniformité est ce qui rend un outil apprenable ; une
    explication différente par page, c'est du bruit.
 
-   La bande se replie et s'en souvient — sinon, au troisième dossier,
-   l'utilisateur expérimenté ferme l'outil. */
+   Une bande dépliée prenait trop de place (Arthur, 14/09/2026). La boussole,
+   posée à côté du titre, ne coûte rien à l'œil : on clique une fois pour
+   comprendre à quoi elle sert, puis on l'oublie jusqu'au jour où on se perd. */
 
 const SITUER = {
   m1: {
@@ -12954,46 +12964,59 @@ const SITUER_LIBELLES = [
   ['repart', "Où ça repart"]
 ];
 
-function situerReplie() {
-  return DEPOT.preference('situer-replie') === '1';
-}
-function basculerSituer() {
-  DEPOT.preference('situer-replie', situerReplie() ? '0' : '1');
-  document.querySelectorAll('.situer').forEach(b => b.classList.toggle('replie', situerReplie()));
-}
+const SVG_BOUSSOLE_SITUER =
+  '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">' +
+    '<circle cx="24" cy="24" r="20"/>' +
+    '<path d="M24 7 L30 24 L24 41 L18 24 Z" fill="var(--sauge)" stroke="none"/>' +
+    '<path d="M24 7 L24 41" stroke-width="1" opacity=".45"/>' +
+    '<circle cx="24" cy="24" r="2.8" fill="var(--paper)" stroke-width="1.6"/>' +
+  '</svg>';
 
-/* Posée par le routage, jamais écrite en dur dans les six vues : une bande
+/* Posée par le routage, jamais écrite en dur dans les vues : une boussole
    recopiée six fois finit par diverger six fois. */
 function poserSituer(nomVue) {
   const info = SITUER[nomVue];
   const vue = document.getElementById('view-' + nomVue);
-  if (!vue || !info) return;
-  let bande = vue.querySelector('.situer');
-  if (!bande) {
-    bande = document.createElement('div');
-    bande.className = 'situer';
-    const entete = vue.querySelector('.mod-header');
-    if (entete && entete.nextSibling) vue.insertBefore(bande, entete.nextSibling);
-    else vue.insertBefore(bande, vue.firstChild);
-  }
-  bande.classList.toggle('replie', situerReplie());
-  bande.innerHTML =
-    '<button type="button" class="situer-tete" onclick="basculerSituer()" ' +
-      'title="Afficher ou masquer ce repère sur toutes les pages">' +
-      '<span class="situer-ico">🧭</span>' +
-      '<span class="situer-titre">Où suis-je ?</span>' +
-      '<span class="situer-chevron">▾</span>' +
-    '</button>' +
-    '<div class="situer-corps">' +
-      SITUER_LIBELLES.map(([cle, libelle]) =>
-        '<div class="situer-ligne">' +
-          '<span class="situer-libelle">' + esc(libelle) + '</span>' +
-          '<span class="situer-texte">' + esc(info[cle]) + '</span>' +
-        '</div>').join('') +
-      '<div class="situer-pied">' +
-        '<button type="button" class="situer-lien" onclick="route(\'parcours\')">Voir le parcours entier →</button>' +
-      '</div>' +
-    '</div>';
+  if (!vue || !info || vue.querySelector('.situer-boussole')) return;
+  const bouton = document.createElement('button');
+  bouton.type = 'button';
+  bouton.className = 'situer-boussole no-print';
+  bouton.title = 'Où suis-je ?';
+  bouton.setAttribute('aria-label', 'Où suis-je ?');
+  bouton.innerHTML = SVG_BOUSSOLE_SITUER;
+  bouton.addEventListener('click', (ev) => { ev.stopPropagation(); ouvrirSituer(nomVue); });
+  const titre = vue.querySelector('.mod-header h2');
+  if (titre) { titre.appendChild(bouton); return; }
+  // Une vue sans titre fixe (la cotation) : la boussole se pose en haut à droite.
+  const coin = document.createElement('div');
+  coin.className = 'situer-coin no-print';
+  coin.appendChild(bouton);
+  vue.insertBefore(coin, vue.firstChild);
+}
+
+function ouvrirSituer(nomVue) {
+  const info = SITUER[nomVue];
+  const overlay = document.getElementById('situer-overlay');
+  if (!info || !overlay) return;
+  document.getElementById('situer-titre').innerHTML = SVG_BOUSSOLE_SITUER + '<span>Où suis-je ?</span>';
+  document.getElementById('situer-corps').innerHTML = SITUER_LIBELLES.map(([cle, libelle]) =>
+    '<div class="situer-ligne">' +
+      '<span class="situer-libelle">' + esc(libelle) + '</span>' +
+      '<span class="situer-texte">' + esc(info[cle]) + '</span>' +
+    '</div>').join('');
+  overlay.style.display = 'flex';
+  document.addEventListener('keydown', fermerSituerClavier);
+}
+
+function fermerSituer(ev) {
+  if (ev && ev.target !== ev.currentTarget) return;
+  const overlay = document.getElementById('situer-overlay');
+  if (overlay) overlay.style.display = 'none';
+  document.removeEventListener('keydown', fermerSituerClavier);
+}
+
+function fermerSituerClavier(ev) {
+  if (ev.key === 'Escape') fermerSituer();
 }
 
 const SITUER_ENCHAINEMENT = [
