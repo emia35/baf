@@ -347,34 +347,15 @@ header.top{
 .cov-item-etat{color:var(--ink-soft);font-size:12px;}
 .cov-item-note{color:var(--ink-soft);font-style:italic;font-size:12px;flex:1;}
 
-.dc-tag{
-  display:inline-block;background:var(--paper-deep);color:var(--ink-soft);
-  font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;margin-left:8px;
-  text-transform:uppercase;letter-spacing:.4px;vertical-align:middle;
-}
 .dc-texte{font-size:14px;color:var(--ink-soft);line-height:1.65;margin:0 0 12px;}
 .dc-texte b{color:var(--ink);}
 .dc-actions{display:flex;gap:8px;flex-wrap:wrap;}
-.dc-resultat{margin-top:18px;padding-top:14px;border-top:1px solid var(--line-soft);}
-.dc-auteur{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:10px;}
-.dc-volet{margin:0 0 14px;}
-.dc-volet-tete{
-  display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline;
-  font-size:13px;font-weight:700;color:var(--ink);padding-bottom:5px;
-  border-bottom:1px solid var(--line-soft);
-}
-.dc-taux{font-weight:400;color:var(--ink-soft);font-size:12.5px;}
-.dc-taux b{color:var(--ink);}
-.dc-ecarts{list-style:none;margin:8px 0 0;padding:0;}
-.dc-ecarts li{
-  display:flex;gap:10px;flex-wrap:wrap;align-items:baseline;
-  padding:6px 0;border-bottom:1px solid var(--line-soft);font-size:12.5px;line-height:1.5;
-}
-.dc-item{flex:1;min-width:200px;color:var(--ink);}
-.dc-vous,.dc-autre{font-size:11.5px;padding:1px 8px;border-radius:10px;white-space:nowrap;}
-.dc-vous{background:var(--sauge-pale);color:var(--sauge-deep);}
-.dc-autre{background:var(--ocre-pale);color:var(--ocre-deep);}
-.dc-reste{font-size:12px;color:var(--ink-soft);font-style:italic;padding-top:6px;}
+.dc-etapes{margin:0 0 14px;padding-left:22px;font-size:14px;color:var(--ink-soft);line-height:1.65;}
+.dc-etapes li{margin-bottom:6px;}
+.dc-etapes b{color:var(--ink);}
+.dc-ancien{margin:14px 0 0;padding-top:12px;border-top:1px solid var(--line-soft);}
+.codage-seul{display:none;}
+body.mode-codage .codage-seul{display:block;}
 
 .perimetre{
   border:1px solid var(--ocre);background:var(--ocre-pale);
@@ -3520,6 +3501,10 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
       <div class="sub">À partir de ce que vous avez organisé, vous pouvez maintenant proposer des patterns — pas pour conclure définitivement, mais pour <b>donner à voir ce que vous, vous repérez</b>. Ce matériau sera discuté avec un clinicien.</div>
     </div>
 
+    <div class="card codage-seul declarant-visibilite">
+      <b>Copie de primo codage.</b> Interpréter se fait à deux, directement en synthèse, dans le fichier officiel : rien à remplir ici.
+    </div>
+
     <div id="m4-rapide-content">
     <!-- Onglets des 3 sous-modules -->
     <div class="m4-tabs" id="m4-tabs">
@@ -4218,8 +4203,8 @@ const TYPES_FICHIER = {
   dossier:        'un dossier complet',
   kit:            'un kit déclarant',
   contribution:   'le fichier d\'un déclarant',
-  'codage-kit':   'un kit de codage, pour catégoriser en aveugle',
-  codage:         'le codage d\'un second codeur'
+  'codage-kit':   'un kit de codage (une copie vierge pour le primo codage)',
+  codage:         'le codage d\'un second codeur, selon l\'ancienne méthode que la BAF n\'utilise plus'
 };
 
 function enveloppeBAF(type) {
@@ -4303,6 +4288,7 @@ function route(name, fromHistory){
   // Identité visuelle par outil (couleur d\'accent du header/nav)
   document.body.classList.toggle('tool-baf', isBaf);
   document.body.classList.toggle('tool-idc', isIdc);
+  document.body.classList.toggle('mode-codage', !!(state.codage && state.codage.actif));
 
   // Barre fixe sous le header : flèche retour + export, propre à chaque outil
   const dansOutil1 = ['baf-accueil','m1','m2','m2-form','m3','m4','synthese'].includes(name);
@@ -4422,7 +4408,9 @@ function majBarreDossierInterne(outil, surAccueilOutil) {
   const nb = (state.m2.evenements || []).length;
   const prenom = (state.m1.prenom || '').trim();
   const detail = nb ? ` · <b>${nb}</b> évènement${nb>1?'s':''}` : '';
-  if (state.origineDossier === 'simulation') {
+  if (state.codage && state.codage.actif) {
+    zone.innerHTML = `Copie de primo codage — <b>${esc(prenom || 'sans prénom')}</b>${detail}`;
+  } else if (state.origineDossier === 'simulation') {
     zone.innerHTML = `Simulation — <b>${esc(prenom || 'profil fictif')}</b>${detail}`;
   } else if (state.fichierDossier) {
     zone.innerHTML = `Dossier : <b>${esc(state.fichierDossier)}</b>${detail}`;
@@ -7518,7 +7506,7 @@ function exporterJSON(){
   const a = document.createElement('a');
   const prenom = state.m1.prenom ? state.m1.prenom.replace(/[^a-zA-Z0-9]/g,'_') : 'sans_nom';
   a.href = url;
-  a.download = `RDAF_${prenom}_${horodatageFichier()}.json`;
+  a.download = (state.codage && state.codage.actif ? 'RDAF-primo-codage_' : 'RDAF_') + prenom + '_' + horodatageFichier() + '.json';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -8874,44 +8862,35 @@ const _CONTROLES = [
     return _bancEgal('Libellé du dénominateur', 'ok', verdict);
   }},
 
-  {nom:'Le kit de codage ne transporte aucune catégorisation', test: () => {
-    /* « En aveugle » est tenu par la machine, pas par la bonne volonté : si le
-       kit portait le codage du référent, le second codeur le verrait et
-       l'accord mesuré ne vaudrait rien. */
-    const g = grilleCategories();
-    const fuites = [];
-    M3_SOUS.forEach(s => {
-      Object.entries(g[s.id] || {}).forEach(([k, c]) => {
-        if ((c.items || []).length) fuites.push(s.id + '/' + (c.nom || k));
-      });
-    });
-    return _bancEgal('Catégories du kit portant des items', '', fuites.join(','));
+  {nom:'Le kit de codage part sans aucune catégorie, et Interpréter vide', test: () => {
+    /* Le primo codage se fait à partir du seul déclaratif : une grille de
+       départ, même sans éléments rangés, orienterait déjà le regard. */
+    const kit = construireKitCodage();
+    const nbCats = M3_SOUS.reduce((a, s) => a + Object.keys((kit.m3.categories || {})[s.id] || {}).length, 0);
+    const nbInterp = (kit.m4.patterns || []).length + (kit.m4.gradations || []).length +
+                     (kit.m4.vase.monte || []).length + (kit.m4.vase.descend || []).length + Object.keys(kit.m4.paliers || {}).length;
+    const evts = (kit.m2.evenements || []).length === ((state.m2 && state.m2.evenements) || []).length;
+    return _bancEgal('Catégories | éléments d\'interprétation | déclaratif complet', '0|0|true', nbCats + '|' + nbInterp + '|' + evts);
   }},
 
-  {nom:'Le kit de codage garde la grille à l\'identique', test: () => {
-    const g = grilleCategories();
-    const ecarts = M3_SOUS.filter(s =>
-      Object.keys(g[s.id] || {}).length !== Object.keys((state.m3.categories || {})[s.id] || {}).length);
-    return _bancEgal('Volets dont la grille a changé', '', ecarts.map(s => s.id).join(','));
-  }},
-
-  {nom:'Un codage comparé à lui-même donne un accord parfait', test: () => {
-    const cats = (state.m3 && state.m3.categories) || {};
-    const soucis = M3_SOUS.map(s => {
-      const r = comparerCodage(s.id, cats, cats);
-      if (!r.compares) return null;
-      return (r.taux === 100 && r.ecarts.length === 0 && r.memeGrille) ? null : s.id + ':' + r.taux;
-    }).filter(Boolean);
-    return _bancEgal('Volets en désaccord avec eux-mêmes', '', soucis.join(','));
-  }},
-
-  {nom:'Deux grilles différentes ne produisent pas de taux', test: () => {
-    /* Deux codeurs qui inventent chacun leurs catégories sont en désaccord par
-       construction. Afficher un pourcentage là-dessus serait de la fausse
-       rigueur : l'outil doit le dire, pas le calculer. */
-    const a = {cp: {x: {nom: 'Fuite', items: ['e1_0']}}};
-    const b = {cp: {y: {nom: 'Départ précipité', items: ['e1_0']}}};
-    return _bancEgal('Grilles différentes détectées', false, comparerCodage('cp', a, b).memeGrille);
+  {nom:'Effacer le codage garde le préambule, le déclaratif et les drapeaux de migration', test: () => {
+    const sauve = JSON.parse(JSON.stringify(state));
+    const vrais = {persist, showToast, confirm: window.confirm};
+    persist = () => {}; showToast = () => {}; window.confirm = () => true;
+    let verdict;
+    try {
+      const avant = JSON.stringify(state.m1) + '|' + JSON.stringify(state.m2);
+      const drapeaux = Object.keys(state.m3 || {}).filter(k => k.charAt(0) === '_').sort().join(',');
+      effacerCodage();
+      const nbCats = M3_SOUS.reduce((a, s) => a + Object.keys((state.m3.categories || {})[s.id] || {}).length, 0);
+      verdict = [avant === JSON.stringify(state.m1) + '|' + JSON.stringify(state.m2),
+                 drapeaux === Object.keys(state.m3).filter(k => k.charAt(0) === '_').sort().join(','),
+                 nbCats, (state.m4.patterns || []).length].join('|');
+    } finally {
+      persist = vrais.persist; showToast = vrais.showToast; window.confirm = vrais.confirm;
+      replaceState(sauve);
+    }
+    return _bancEgal('Préambule et déclaratif intacts | drapeaux gardés | catégories | séquences', 'true|true|0|0', verdict);
   }},
 
   {nom:'Le kit déclarant ne transporte que le préambule', test: () => {
@@ -13709,245 +13688,150 @@ function renderCouverture() {
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   LE DOUBLE CODAGE — mode approfondi de la catégorisation
+   LE DOUBLE CODAGE
    ══════════════════════════════════════════════════════════════════════
    La catégorisation est un acte de MESURE : c'est elle qui transforme un texte
-   libre en une variable qui sera comptée, croisée et affichée. Faite par une
-   seule personne, sans contrôle, elle porte toute la statistique de l'outil
-   sans que rien n'en garantisse la fiabilité.
+   libre en une variable qui sera comptée, croisée et affichée.
 
-   Le protocole, tel qu'Arthur le pose : chacun lit le déclaratif de son côté et
-   catégorise seul, puis les deux se parlent et produisent une catégorisation de
-   SYNTHÈSE. C'est elle qui alimente l'analyse. L'outil ne tranche rien — il
-   montre les écarts, et les écarts sont la matière de la discussion.
+   Le protocole, arrêté par Arthur le 14/09/2026 :
+   · le PRIMO CODAGE se fait séparément, chacun dans une copie vierge, à partir
+     du seul déclaratif — aucune catégorie de départ, rien dans Interpréter ;
+   · la SYNTHÈSE se saisit à deux, dans le fichier officiel, y compris les
+     signes qui entrent dans le vase de tension ; Interpréter se fait
+     directement en synthèse ;
+   · la synthèse est le seul codage : les copies se suppriment ensuite.
 
-   Deux gains distincts, et ils n'ont pas le même prix :
-   · Le gain clinique — deux regards, une discussion. Il ne demande rien.
-   · Le gain psychométrique — un taux d'accord interprétable. Il exige que les
-     DEUX CODENT CONTRE LA MÊME GRILLE. Si l'un écrit « Refus » et l'autre
-     « Opposition verbale », aucun calcul ne dira s'ils ont vu la même chose.
-   L'outil affiche donc un taux quand les grilles coïncident, et le dit quand
-   elles diffèrent — plutôt que de produire un chiffre qui ne veut rien dire.
+   L'outil ne compare plus les codages de lui-même. Un taux d'accord exigeait
+   que les deux codeurs partent de la même grille — donc qu'on ait déjà
+   catégorisé avant de coder, et c'est précisément ce biais qu'on refuse. Les
+   écarts se lisent en réunion, copie contre copie. */
 
-   Et « en aveugle » est tenu par la machine : le kit de codage part avec la
-   grille et SANS aucune catégorisation. */
-
-/* La grille seule : les catégories, leur arborescence, aucun item. */
-function grilleCategories() {
-  const out = {};
-  M3_SOUS.forEach(s => {
-    out[s.id] = {};
-    const cats = (state.m3.categories || {})[s.id] || {};
-    Object.keys(cats).forEach(k => {
-      out[s.id][k] = {nom: cats[k].nom, color: cats[k].color, parent: cats[k].parent || null, items: []};
-    });
-  });
-  return out;
+function categoriesVides() {
+  const c = {};
+  M3_SOUS.forEach(s => { c[s.id] = {}; });
+  return c;
 }
 
-function exporterKitCodage() {
-  const nbCats = M3_SOUS.reduce((a, s) => a + Object.keys((state.m3.categories || {})[s.id] || {}).length, 0);
-  if (!nbCats && !confirm(
-      "Aucune catégorie n'est définie pour l'instant.\n\n" +
-      "Le kit partira avec une grille vide : chacun inventera ses catégories de son côté, " +
-      "et aucun taux d'accord ne pourra être calculé — seuls les écarts seront lisibles.\n\n" +
-      "Définir la grille ensemble AVANT de coder séparément est ce qui rend l'accord mesurable. Continuer ?")) return;
+/* Organiser et Interpréter vides. Les drapeaux de migration (clés en « _ »)
+   sont gardés : sans eux, une migration qui n'est pas idempotente se
+   rejouerait sur des données qui n'en ont pas besoin. */
+function codageVierge() {
+  const drapeaux = {};
+  Object.keys(state.m3 || {}).forEach(k => { if (k.charAt(0) === '_') drapeaux[k] = state.m3[k]; });
+  return {
+    m3: Object.assign({sous: 'cp', categories: categoriesVides()}, drapeaux),
+    m4: {sous: 'pattern', patterns: [], gradations: [], vase: {monte: [], descend: [], texte: ''}, paliers: {}, courbeJour: null}
+  };
+}
+
+function construireKitCodage() {
   migrerIdentiteDossier();
-  const kit = {
+  const vierge = codageVierge();
+  return {
     baf: enveloppeBAF('codage-kit'),
     m1: JSON.parse(JSON.stringify(state.m1 || {})),
     m2: JSON.parse(JSON.stringify(state.m2 || {evenements: []})),
-    m3: {sous: 'cp', categories: grilleCategories()}
+    contributions: JSON.parse(JSON.stringify(state.contributions || {})),
+    m3: vierge.m3,
+    m4: vierge.m4
   };
-  const prenom = (state.m1.prenom || 'sans_nom').replace(/[^a-zA-Z0-9]/g, '_');
-  telechargerTexte(JSON.stringify(kit, null, 2),
-    'RDAF-codage_' + prenom + '_' + new Date().toISOString().slice(0, 10) + '.json');
-  showToast('Kit de codage exporté — il ne contient aucune catégorisation.');
+}
+
+function exporterKitCodage() {
+  const kit = construireKitCodage();
+  const prenom = ((state.m1 && state.m1.prenom) || 'sans_nom').replace(/[^a-zA-Z0-9]/g, '_');
+  telechargerTexte(JSON.stringify(kit, null, 2), 'RDAF-kit-codage_' + prenom + '_' + horodatageFichier() + '.json');
+  showToast('Kit de codage exporté : une copie vierge, sans aucune catégorie. Une par codeur.');
 }
 
 function ouvrirKitCodage(lu) {
   const kit = lu.dossier || {};
   const env = lu.enveloppe || {};
-  if (((state.m2 && state.m2.evenements) || []).length &&
-      !confirm("Un dossier est déjà ouvert. Ouvrir ce kit de codage le remplacera. Continuer ?")) return;
-  replaceState({m1: kit.m1 || {}, m2: kit.m2 || {evenements: []}, m3: kit.m3 || {}});
+  const n = ((state.m2 && state.m2.evenements) || []).length;
+  if ((n || ((state.m1 && state.m1.prenom) || '').trim()) &&
+      !confirm("Un dossier est ouvert dans ce navigateur. Ouvrir ce kit de codage le remplacera : il ne sera perdu que s'il n'a pas été exporté.\n\nContinuer ?")) return;
+  replaceState({m1: kit.m1 || {}, m2: kit.m2 || {evenements: []}, contributions: kit.contributions || {}, m3: kit.m3 || {}, m4: kit.m4 || {}});
+  // Un kit d'avant la passe 77 portait encore la grille : on repart d'une page blanche quoi qu'il arrive.
+  const vierge = codageVierge();
+  state.m3 = vierge.m3;
+  state.m4 = vierge.m4;
   state.idDossier = env.idDossier || nouvelIdentifiant('dos');
   state.schema = SCHEMA_DOSSIER;
+  state.fichierDossier = null;
   state.origineDossier = 'codage';
-  state.codage = {actif: true, auteur: '', ouvert: new Date().toISOString()};
+  state.codage = {actif: true, ouvert: new Date().toISOString()};
   persist();
   loadM1FromState();
   refreshM2List();
   refreshAccueilBadges();
   route('m3');
-  showToast('Kit de codage ouvert. Catégorisez sans consulter le codage de l\'autre.');
+  showToast('Copie de primo codage ouverte. Catégorisez à partir du seul déclaratif.');
 }
 
-function exporterMonCodage() {
-  const auteur = (state.codage && state.codage.auteur || '').trim() ||
-    (prompt("Votre nom ou votre fonction, pour que le référent sache de qui vient ce codage :", "") || '').trim();
-  if (!auteur) { showToast('Codage non exporté : il faut un nom.'); return; }
-  if (state.codage) state.codage.auteur = auteur;
+function effacerCodage() {
+  const cats = (state.m3 && state.m3.categories) || {};
+  const nbCats = M3_SOUS.reduce((a, s) => a + Object.keys(cats[s.id] || {}).length, 0);
+  const m4 = state.m4 || {};
+  const nbSeq = (m4.patterns || []).length + (m4.gradations || []).length;
+  if (!confirm("Effacer tout le codage de ce dossier ?\n\n" +
+      "· Organiser : " + nbCats + " catégorie" + (nbCats > 1 ? 's' : '') + " et les éléments qui y sont rangés\n" +
+      "· Interpréter : " + nbSeq + " séquence" + (nbSeq > 1 ? 's' : '') + ", les signes du vase de tension et ses paliers\n\n" +
+      "Le préambule, les évènements et les contributions reçues sont conservés. " +
+      "Exportez d'abord si vous voulez garder une trace de ce codage.\n\nEffacer ?")) return;
+  const vierge = codageVierge();
+  state.m3 = vierge.m3;
+  state.m4 = vierge.m4;
   persist();
-  const codage = {
-    baf: enveloppeBAF('codage'),
-    codage: {
-      idCodage: nouvelIdentifiant('cod'),
-      idDossier: state.idDossier || null,
-      auteur,
-      envoye: new Date().toISOString(),
-      categories: JSON.parse(JSON.stringify((state.m3 && state.m3.categories) || {}))
-    }
-  };
-  telechargerTexte(JSON.stringify(codage, null, 2),
-    'RDAF-codage_' + auteur.replace(/[^a-zA-Z0-9]/g, '_').slice(0, 20) + '_' +
-    new Date().toISOString().slice(0, 10) + '.json');
-  showToast('Codage exporté. Renvoyez-le au référent du dossier.');
+  renderM3();
+  refreshAccueilBadges();
+  refreshSynthese();
+  showToast('Codage effacé : Organiser et Interpréter repartent d\'une page blanche.');
 }
 
-function importerCodage(ev) {
-  const f = ev.target.files && ev.target.files[0];
-  ev.target.value = '';
-  if (!f) return;
-  const lecteur = new FileReader();
-  lecteur.onload = (e) => {
-    let objet;
-    try { objet = JSON.parse(e.target.result); }
-    catch (err) { alert("Le fichier n'a pas pu être lu : il n'est pas au format JSON, ou il est abîmé."); return; }
-    const lu = lireFichierBAF(objet, ['codage']);
-    if (!lu.ok) { alert(lu.raison); return; }
-    const c = (lu.dossier && lu.dossier.codage) || {};
-    if (c.idDossier && state.idDossier && c.idDossier !== state.idDossier &&
-        !confirm("Ce codage a été produit à partir d'un autre dossier. L'ajouter quand même ?")) return;
-    ensureM3();
-    /* Le codage du référent est figé au premier codage reçu : à partir de là,
-       state.m3.categories devient la catégorisation de SYNTHÈSE, et les deux
-       codages d'origine restent consultables. On ne retouche pas plus le
-       travail d'un codeur que le déclaratif d'un déclarant. */
-    if (!state.m3.codageReferent) {
-      state.m3.codageReferent = JSON.parse(JSON.stringify(state.m3.categories || {}));
-    }
-    state.m3.codages = state.m3.codages || [];
-    const idx = state.m3.codages.findIndex(x => x.auteur === c.auteur);
-    const entree = {
-      id: c.idCodage || nouvelIdentifiant('cod'),
-      auteur: c.auteur || 'codeur sans nom',
-      recu: new Date().toISOString(),
-      categories: c.categories || {}
-    };
-    if (idx >= 0) state.m3.codages[idx] = entree; else state.m3.codages.push(entree);
-    persist();
-    renderM3();
-    alert('Codage de ' + entree.auteur + ' ajouté.\n\nLes écarts avec votre propre codage apparaissent en bas d\'Organiser. ' +
-          'La catégorisation affichée reste la vôtre : c\'est elle qui deviendra la synthèse, après discussion.');
-  };
-  lecteur.readAsText(f);
-}
-
-/* ── La comparaison ────────────────────────────────────────────────── */
-
-function nomsCat(cats, catId) {
-  const cat = cats[catId];
-  if (!cat) return '';
-  const parent = cat.parent && cats[cat.parent];
-  return parent ? parent.nom + ' › ' + cat.nom : cat.nom;
-}
-
-/* itemId → liste des noms de catégories, pour un jeu de catégories donné. */
-function categoriesParItem(cats) {
-  const out = {};
-  Object.keys(cats || {}).forEach(catId => {
-    (cats[catId].items || []).forEach(id => {
-      (out[id] = out[id] || []).push(nomsCat(cats, catId));
-    });
-  });
-  Object.keys(out).forEach(k => out[k].sort());
-  return out;
-}
-
-function grillesIdentiques(catsA, catsB) {
-  const noms = (c) => Object.keys(c || {}).map(k => nomsCat(c, k)).sort().join('|');
-  return noms(catsA) === noms(catsB);
-}
-
-function comparerCodage(sousId, catsA, catsB) {
-  const items = extraireItems(sousId).filter(i => !i.vide);
-  const pa = categoriesParItem(catsA[sousId] || {});
-  const pb = categoriesParItem(catsB[sousId] || {});
-  let accord = 0, compares = 0;
-  const ecarts = [];
-  items.forEach(it => {
-    const a = pa[it.id] || [], b = pb[it.id] || [];
-    if (!a.length && !b.length) return;      // ni l'un ni l'autre n'a classé : rien à comparer
-    compares++;
-    if (a.join('|') === b.join('|')) accord++;
-    else ecarts.push({texte: it.texte, a, b});
-  });
-  return {
-    compares, accord, ecarts,
-    taux: compares ? Math.round(accord / compares * 100) : null,
-    memeGrille: grillesIdentiques(catsA[sousId] || {}, catsB[sousId] || {})
-  };
+function supprimerAnciensCodages() {
+  if (!confirm("Supprimer les codages reçus avec l'ancienne méthode de comparaison ?\n\nLa catégorisation affichée dans Organiser n'est pas touchée.")) return;
+  delete state.m3.codages;
+  delete state.m3.codageReferent;
+  persist();
+  renderM3();
 }
 
 function renderDoubleCodage() {
   const el = document.getElementById('m3-double-codage');
   if (!el) return;
-  const codages = (state.m3 && state.m3.codages) || [];
   const enCodage = !!(state.codage && state.codage.actif);
+  const anciens = ((state.m3 && state.m3.codages) || []).length;
+  const effacer = '<button class="btn btn-ghost btn-sm" onclick="effacerCodage()">🧹 Effacer le codage</button>';
 
   let html = '<div class="card" id="carte-double-codage">' +
-    '<h4 style="font-size:16px;color:var(--ink);margin-bottom:6px;">Double codage <span class="dc-tag">mode approfondi</span></h4>';
+    '<h4 style="font-size:16px;color:var(--ink);margin-bottom:6px;">' + (enCodage ? 'Copie de primo codage' : 'Double codage') + '</h4>';
 
   if (enCodage) {
-    html += '<p class="dc-texte"><b>Vous codez ce dossier en aveugle.</b> La grille vous a été transmise sans aucune ' +
-      'catégorisation : c\'est ce qui rend l\'écart lisible ensuite. Quand vous avez terminé, renvoyez votre codage ' +
-      'au référent du dossier.</p>' +
-      '<button class="btn btn-primary" onclick="exporterMonCodage()">✉ Exporter mon codage</button>';
+    html += '<p class="dc-texte"><b>Vous catégorisez à partir du seul déclaratif</b>, sans catégorie de départ et sans voir le codage de l\'autre.</p>' +
+      '<p class="dc-texte">Cette copie ne remplace pas le fichier officiel. Sauvegardez-la avec « 💾 Exporter » et apportez-la à la ' +
+      'réunion de synthèse. <b>Interpréter se fera ensemble</b>, dans le fichier officiel.</p>' +
+      '<div class="dc-actions">' + effacer + '</div>';
   } else {
-    html += noteSource('accord') +
-      '<p class="dc-texte">La catégorisation est un acte de mesure : c\'est elle qui transforme un texte en ' +
-      'une variable qui sera comptée. Faite à deux, elle se vérifie. <b>Chacun code de son côté, puis vous comparez ' +
-      'et vous produisez ensemble la catégorisation de synthèse</b> — celle qui restera affichée ici et qui alimentera l\'analyse.</p>' +
-      '<p class="dc-texte"><b>Définissez la grille ensemble avant de coder séparément.</b> Si chacun invente ses ' +
-      'catégories, les écarts restent lisibles mais aucun taux d\'accord n\'a de sens.</p>' +
+    html += '<p class="dc-texte">La catégorisation est un acte de mesure : c\'est elle qui transforme un texte en une donnée ' +
+      'qui sera comptée. Elle se fait donc à deux.</p>' +
+      '<ol class="dc-etapes">' +
+        '<li><b>Primo codage, séparément.</b> « Exporter un kit de codage » produit une copie vierge : le préambule et les ' +
+          'évènements, aucune catégorie, rien dans Interpréter. Une copie par codeur ; chacun catégorise dans la sienne, ' +
+          'à partir du seul déclaratif.</li>' +
+        '<li><b>Synthèse, à deux.</b> En réunion, chacun ouvre sa copie sur son poste, et vous saisissez ensemble la ' +
+          'catégorisation de synthèse ici, dans le fichier officiel — y compris les signes qui entrent dans le vase de tension. ' +
+          'Interpréter se fait directement en synthèse.</li>' +
+        '<li><b>La synthèse est le seul codage.</b> Supprimez ensuite les deux copies.</li>' +
+      '</ol>' +
       '<div class="dc-actions">' +
-        '<button class="btn btn-secondary btn-sm" onclick="exporterKitCodage()">✉ Exporter un kit de codage</button>' +
-        '<button class="btn btn-secondary btn-sm" onclick="document.getElementById(\'import-codage\').click()">📥 Ajouter un codage reçu</button>' +
-        '<input type="file" id="import-codage" accept=".json" style="display:none;" onchange="importerCodage(event)">' +
+        '<button class="btn btn-secondary btn-sm" onclick="exporterKitCodage()">📄 Exporter un kit de codage</button>' +
+        effacer +
       '</div>';
-  }
-
-  if (codages.length && !enCodage) {
-    const mien = state.m3.codageReferent || state.m3.categories || {};
-    codages.forEach(cod => {
-      html += '<div class="dc-resultat"><div class="dc-auteur">Codage de ' + esc(cod.auteur) + '</div>';
-      M3_SOUS.forEach(s => {
-        const r = comparerCodage(s.id, mien, cod.categories || {});
-        if (!r.compares) return;
-        html += '<div class="dc-volet">' +
-          '<div class="dc-volet-tete">' + s.icon + ' ' + esc(s.label) +
-            '<span class="dc-taux">' +
-              (r.memeGrille
-                ? r.accord + ' accords sur ' + r.compares + ' · <b>' + r.taux + '%</b>'
-                : '<i>grilles différentes : ' + r.ecarts.length + ' écart' + (r.ecarts.length > 1 ? 's' : '') + ', pas de taux calculable</i>') +
-            '</span>' +
-          '</div>';
-        if (r.ecarts.length) {
-          html += '<ul class="dc-ecarts">' + r.ecarts.slice(0, 12).map(e =>
-            '<li><span class="dc-item">' + esc(e.texte.slice(0, 90)) + (e.texte.length > 90 ? '…' : '') + '</span>' +
-            '<span class="dc-vous">vous : ' + (e.a.length ? esc(e.a.join(', ')) : '<i>non classé</i>') + '</span>' +
-            '<span class="dc-autre">' + esc(cod.auteur) + ' : ' + (e.b.length ? esc(e.b.join(', ')) : '<i>non classé</i>') + '</span></li>'
-          ).join('') + '</ul>';
-          if (r.ecarts.length > 12) html += '<div class="dc-reste">… et ' + (r.ecarts.length - 12) + ' autre' + (r.ecarts.length - 12 > 1 ? 's' : '') + '.</div>';
-        }
-        html += '</div>';
-      });
-      html += '</div>';
-    });
-    html += '<p class="dc-texte" style="margin-top:14px;"><b>Ce que l\'outil ne fait pas : trancher.</b> ' +
-      'Les écarts se règlent de vive voix. Ce que vous laissez affiché dans Organiser après discussion EST la ' +
-      'catégorisation de synthèse — les deux codages d\'origine restent enregistrés dans le dossier.</p>';
+    if (anciens) {
+      html += '<p class="dc-texte dc-ancien">Ce dossier contient ' + anciens + ' codage' + (anciens > 1 ? 's' : '') +
+        ' reçu' + (anciens > 1 ? 's' : '') + ' avec l\'ancienne méthode de comparaison, que la BAF n\'utilise plus. ' +
+        '<button class="btn btn-ghost btn-sm" onclick="supprimerAnciensCodages()">Les supprimer</button></p>';
+    }
   }
 
   html += '</div>';
@@ -14544,7 +14428,7 @@ const REPERES = [
            <p>Le travail de l'analyste ne commence qu'à l'étape <b>Organiser</b>. Tout ce qui y est produit — catégories, regroupements — se lit par-dessus et n'est jamais réécrit dans l'évènement. On peut donc toujours revenir au matériau d'origine.</p>`},
       {q: "Comment travailler à plusieurs sur la même analyse ?",
        r: `<p><b>Pour recueillir</b>, le référent envoie à chaque déclarant un <i>kit déclarant</i> : un fichier qui contient le préambule, sans aucun évènement ni travail d'analyse. Le déclarant l'ouvre depuis la page Participer de la BAF, décrit ce qu'il observe et sauvegarde son fichier au fur et à mesure ; à la fin, il envoie le dernier, sa <i>contribution</i>. Le référent la verse dans le dossier : chaque évènement garde sa provenance, et les envois successifs ne se dupliquent pas. Ceux qui ne peuvent pas utiliser l'outil numérique remplissent une grille ABC papier, disponible dans Ressources.</p>
-           <p><b>Pour organiser</b>, référent et clinicien catégorisent chacun de leur côté, grâce à un <i>kit de codage</i>, puis comparent leurs écarts et arrêtent ensemble une catégorisation de synthèse.</p>
+           <p><b>Pour organiser</b>, référent et clinicien font d'abord un primo codage chacun de leur côté, dans la copie vierge que produit le <i>kit de codage</i>, à partir du seul déclaratif. Ils se réunissent ensuite et saisissent ensemble, dans le fichier officiel, la catégorisation de synthèse, qui devient le seul codage. Interpréter se fait directement en synthèse.</p>
            <p>Le dossier complet, lui, ne circule pas : il reste chez le référent. Ce qui part vers l'extérieur, c'est le document d'analyse fonctionnelle.</p>`},
       {q: "Pourquoi déclarer les journées où il ne se passe rien ?",
        r: `<p>Parce qu'une journée sans comportement-défi est une donnée, pas un vide. Sans elle, l'outil ne peut pas distinguer « il ne s'est rien passé » de « personne n'a rempli » : la fréquence qu'il affiche mesure alors les signalements, pas les comportements.</p>
@@ -14587,7 +14471,8 @@ const LEXIQUE_BAF = {
   "contribution": "Le fichier d'un déclarant : le préambule reçu, ses évènements et ses périodes observées. Il le sauvegarde à chaque séance, le rouvre la fois suivante, et envoie le dernier. Le référent la verse dans le dossier, chaque évènement gardant sa provenance.",
   "période observée": "Une journée ou une plage de jours déclarée comme observée, avec ou sans comportement-défi. Sans elle, l'outil ne peut pas distinguer « il ne s'est rien passé » de « personne n'a rempli ».",
   "vase de tension": "L'image qu'emploie la BAF pour la tension qui s'accumule chez la personne, en cinq paliers. Le déclarant pose un palier et note à quoi ça se voyait ; l'équipe en tire l'échelle décrite propre à la personne.",
-  "double codage": "La catégorisation faite séparément par deux personnes — le référent et le clinicien, par exemple —, puis comparée et discutée, pour aboutir à une catégorisation de synthèse.",
+  "double codage": "La catégorisation faite d'abord séparément par deux personnes — le référent et le clinicien, par exemple —, chacune dans une copie vierge et à partir du seul déclaratif, puis saisie à deux, en synthèse, dans le fichier officiel. La synthèse devient le seul codage.",
+  "kit de codage": "Une copie vierge du dossier pour le primo codage : le préambule et les évènements, aucune catégorie, rien dans Interpréter. Une par codeur.",
 };
 
 const LEXIQUE_AF = {
@@ -14613,7 +14498,7 @@ const LEXIQUE_CLASSE = {
   "BAF": "outil", "RDAF": "outil", "ICAF": "outil", "préambule": "outil",
   "analyste": "outil", "référent": "outil", "cotateur": "outil",
   "kit déclarant": "outil", "contribution": "outil", "période observée": "outil",
-  "vase de tension": "outil", "double codage": "outil",
+  "vase de tension": "outil", "double codage": "outil", "kit de codage": "outil",
 };
 
 function tousLesTermes() {
