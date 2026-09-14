@@ -469,6 +469,8 @@ header.top{
   background:var(--sauge-deep);border-color:var(--sauge-deep);color:#FFFFFF;font-weight:700;
 }
 #declarant-subbar .subbar-btn.declarant-envoi:hover{background:var(--sauge);border-color:var(--sauge);color:#FFFFFF;}
+#declarant-subbar .subbar-btn.declarant-envoi.a-sauver::after{content:' •';color:#FFD9C9;}
+.declarant-a-sauver{color:var(--rose-deep);font-weight:700;}
 .decl-etape{
   display:flex;gap:14px;align-items:flex-start;
   padding:14px 0;border-top:1px solid var(--line-soft);
@@ -2788,8 +2790,8 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
     </button>
     <div class="subbar-dossier" id="declarant-etat"></div>
     <div class="subbar-actions">
-      <button class="subbar-btn declarant-envoi" onclick="exporterContribution()" title="Produire le fichier à renvoyer">✉ Renvoyer ma contribution</button>
-      <button class="subbar-btn" onclick="quitterModeDeclarant()" title="Revenir à l'outil complet">Quitter</button>
+      <button class="subbar-btn declarant-envoi" id="declarant-sauver" onclick="sauvegarderFichierDeclarant()" title="Télécharger le fichier à jour : c'est votre sauvegarde">💾 Télécharger pour sauvegarder</button>
+      <button class="subbar-btn" onclick="effacerFichierDeclarant()" title="Effacer ce que contient ce navigateur">🗑 Effacer</button>
     </div>
   </div>
 </div>
@@ -3365,8 +3367,9 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
       <h4 style="font-size:16px;color:var(--ink);margin-bottom:6px;">Faire participer d'autres personnes</h4>
       <p style="font-size:14px;color:var(--ink-soft);line-height:1.65;margin:0 0 12px;">
         Une famille, un foyer, un accueil de jour voient des choses que vous ne voyez pas. Exportez un <b>kit déclarant</b> :
-        il contient le préambule, aucun évènement, et rien du travail d'analyse. La personne qui le reçoit ouvre la BAF,
-        charge ce fichier, relit le préambule, décrit ce qu'elle a observé, puis vous renvoie sa contribution.
+        le même fichier pour tous, avec le préambule, aucun évènement et rien du travail d'analyse. La personne qui le reçoit
+        l'ouvre depuis la page <b>emia35.github.io/baf/#participer</b>, décrit ce qu'elle observe, sauvegarde son fichier
+        au fur et à mesure, et vous envoie le dernier.
       </p>
       <button class="btn btn-secondary" onclick="exporterKitDeclarant()">✉ Exporter un kit déclarant</button>
     </div>
@@ -3374,10 +3377,10 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
     <div class="card" id="m2-recevoir-card">
       <h4 style="font-size:16px;color:var(--ink);margin-bottom:6px;">Recevoir une contribution</h4>
       <p style="font-size:14px;color:var(--ink-soft);line-height:1.65;margin:0 0 12px;">
-        Le fichier que vous renvoie un déclarant vient se verser ici, dans la même chronologie.
-        Chaque évènement garde la trace de sa provenance, et les envois successifs d'une même
-        personne ne se dupliquent pas. Seul le déclaratif remonte : l'organisation et
-        l'interprétation restent les vôtres.
+        Le fichier d'un déclarant vient se verser ici, dans la même chronologie, et chaque évènement
+        garde sa provenance. Chaque fichier contient tout ce que le déclarant a écrit depuis le début :
+        les évènements déjà reçus sont mis à jour, les nouveaux s'ajoutent, et un fichier plus ancien
+        ne remplace rien. Seul le déclaratif remonte : le préambule reste le vôtre.
       </p>
       <button class="btn btn-secondary" onclick="document.getElementById('import-contribution').click()">📥 Ajouter une contribution</button>
       <input type="file" id="import-contribution" accept=".json" style="display:none;" onchange="importerContribution(event)">
@@ -4189,7 +4192,7 @@ function loadPersisted(){
 const TYPES_FICHIER = {
   dossier:        'un dossier complet',
   kit:            'un kit déclarant',
-  contribution:   'une contribution de déclarant',
+  contribution:   'le fichier d\'un déclarant',
   'codage-kit':   'un kit de codage, pour catégoriser en aveugle',
   codage:         'le codage d\'un second codeur'
 };
@@ -7486,9 +7489,8 @@ function exporterJSON(){
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   const prenom = state.m1.prenom ? state.m1.prenom.replace(/[^a-zA-Z0-9]/g,'_') : 'sans_nom';
-  const date = new Date().toISOString().slice(0,10);
   a.href = url;
-  a.download = `RDAF_${prenom}_${date}.json`;
+  a.download = `RDAF_${prenom}_${horodatageFichier()}.json`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -7778,9 +7780,13 @@ function importerJSON(event, versOutil2){
   const reader = new FileReader();
   reader.onload = function(e){
     try{
-      const lu = lireFichierBAF(JSON.parse(e.target.result), ['dossier','kit','codage-kit']);
+      const lu = lireFichierBAF(JSON.parse(e.target.result), ['dossier','kit','contribution','codage-kit']);
       if (!lu.ok) { alert(lu.raison); return; }
-      if (lu.type === 'kit') { ouvrirKitDeclarant(lu); return; }
+      if (lu.type === 'kit') { ouvrirFichierDeclarant(lu); return; }
+      if (lu.type === 'contribution') {
+        if (confirm("C'est le fichier d'un déclarant.\n\nPour verser ses évènements dans votre dossier : Annuler, puis Recueillir → « Ajouter une contribution ».\n\nPour le rouvrir en tant que déclarant : OK.")) ouvrirFichierDeclarant(lu);
+        return;
+      }
       if (lu.type === 'codage-kit') { ouvrirKitCodage(lu); return; }
       replaceState(lu.dossier);
       // On retient d'où vient le dossier, pour que la barre puisse le dire.
@@ -8647,6 +8653,24 @@ const _CONTROLES = [
     return _bancEgal('Évènements après une puis deux fusions', (n0 + 2) + '|' + (n0 + 2), n1 + '|' + n2);
   }},
 
+  {nom:'Un fichier plus ancien ne remplace pas ce qui a déjà été reçu', test: () => {
+    const sauve = JSON.parse(JSON.stringify({m2: state.m2, contributions: state.contributions || {}}));
+    const vraiAlert = window.alert, vraiConfirm = window.confirm;
+    window.alert = () => {}; window.confirm = () => true;
+    const envoi = (envoye, texte) => ({
+      baf: {schema: SCHEMA_DOSSIER, type: 'contribution', idDossier: state.idDossier || null},
+      contribution: {idContribution: 'ctr_ordre', idDossier: state.idDossier || null, provenance: 'foyer', envoye},
+      m2: {evenements: [{id: 'evt_ordre_1', date: '2026-04-04', cp: texte}]}
+    });
+    fusionnerContribution(lireFichierBAF(envoi('2026-09-10T10:00:00Z', 'version corrigée'), ['contribution']), 'banc.json');
+    fusionnerContribution(lireFichierBAF(envoi('2026-09-01T10:00:00Z', 'première version'), ['contribution']), 'banc.json');
+    const e = (state.m2.evenements || []).find(x => x.id === 'evt_ordre_1');
+    const lu = e ? e.cp : 'ÉVÈNEMENT ABSENT';
+    window.alert = vraiAlert; window.confirm = vraiConfirm;
+    state.m2 = sauve.m2; state.contributions = sauve.contributions;
+    return _bancEgal('Texte gardé après un fichier plus ancien', 'version corrigée', lu);
+  }},
+
   {nom:'La provenance suit chaque évènement fusionné', test: () => {
     const sauve = JSON.parse(JSON.stringify({m2: state.m2, contributions: state.contributions || {}}));
     const vraiAlert = window.alert, vraiConfirm = window.confirm;
@@ -8668,22 +8692,23 @@ const _CONTROLES = [
     /* Une contribution qui porterait de l'organisation ne doit pas l'imposer :
        l'action de l'équipe commence dans Organiser, et personne d'autre n'y
        touche. */
-    const sauve = JSON.parse(JSON.stringify({m2: state.m2, m3: state.m3, m4: state.m4, contributions: state.contributions || {}}));
+    const sauve = JSON.parse(JSON.stringify({m1: state.m1, m2: state.m2, m3: state.m3, m4: state.m4, contributions: state.contributions || {}}));
     const vraiAlert = window.alert, vraiConfirm = window.confirm;
     window.alert = () => {}; window.confirm = () => true;
-    const empreinteAvant = JSON.stringify(state.m3) + '|' + JSON.stringify(state.m4);
+    const empreinteAvant = JSON.stringify(state.m1) + '|' + JSON.stringify(state.m3) + '|' + JSON.stringify(state.m4);
     const envoi = {
       baf: {schema: SCHEMA_DOSSIER, type: 'contribution'},
-      contribution: {idContribution: 'ctr_sale', idDossier: state.idDossier || null, provenance: 'x', remarques: {}},
+      contribution: {idContribution: 'ctr_sale', idDossier: state.idDossier || null, provenance: 'x'},
+      m1: {prenom: 'Pirate'},
       m2: {evenements: [{id: 'evt_sale_1', date: '2026-03-03', cp: 'Quatre'}]},
       m3: {categories: {cp: {pirate: {nom: 'Pirate', items: ['evt_sale_1_0']}}}},
       m4: {patterns: [{a: 'pirate'}]}
     };
     fusionnerContribution(lireFichierBAF(envoi, ['contribution']), 'banc.json');
-    const empreinteApres = JSON.stringify(state.m3) + '|' + JSON.stringify(state.m4);
+    const empreinteApres = JSON.stringify(state.m1) + '|' + JSON.stringify(state.m3) + '|' + JSON.stringify(state.m4);
     window.alert = vraiAlert; window.confirm = vraiConfirm;
-    state.m2 = sauve.m2; state.m3 = sauve.m3; state.m4 = sauve.m4; state.contributions = sauve.contributions;
-    return _bancEgal('Organisation et interprétation inchangées', empreinteAvant, empreinteApres);
+    state.m1 = sauve.m1; state.m2 = sauve.m2; state.m3 = sauve.m3; state.m4 = sauve.m4; state.contributions = sauve.contributions;
+    return _bancEgal('Préambule, organisation et interprétation inchangés', empreinteAvant, empreinteApres);
   }},
 
   {nom:'Chaque mot du lexique est rangé dans un des deux lexiques', test: () => {
@@ -8878,18 +8903,45 @@ const _CONTROLES = [
       'kit|refusé', (commeKit.ok ? commeKit.type : 'REFUSÉ') + '|' + (commeDossier.ok ? 'ACCEPTÉ' : 'refusé'));
   }},
 
-  {nom:'La contribution ne remonte que le déclaratif', test: () => {
-    /* L'action de l'équipe commence dans Organiser : ce qu'un déclarant
-       renvoie ne doit contenir ni catégorisation ni interprétation. */
-    const contribution = {
-      baf: enveloppeBAF('contribution'),
-      contribution: {idContribution:'ctr_x', idDossier: state.idDossier || null, provenance:'', remarques:{}, nbEvenements:0, envoye:''},
-      m2: {evenements: []}
-    };
-    const cles = Object.keys(contribution).sort().join(',');
-    const lu = lireFichierBAF(contribution, ['contribution']);
-    return _bancEgal('Contribution : forme et type', 'baf,contribution,m2|contribution',
+  {nom:'Le fichier du déclarant porte son préambule et son déclaratif, rien d\'autre', test: () => {
+    /* Il doit se rouvrir tel quel la fois suivante — donc porter le préambule —
+       et ne jamais contenir de catégorisation ni d'interprétation. */
+    const fichier = construireFichierDeclarant();
+    const cles = Object.keys(fichier).sort().join(',');
+    const lu = lireFichierBAF(fichier, ['contribution']);
+    return _bancEgal('Fichier du déclarant : forme et type', 'baf,contribution,m1,m2|contribution',
       cles + '|' + (lu.ok ? lu.type : 'REFUSÉ'));
+  }},
+
+  {nom:'Rouvrir un kit du même dossier garde les évènements du déclarant', test: () => {
+    const sauve = JSON.parse(JSON.stringify(state));
+    const vrais = {persist, route, showToast, alert: window.alert, confirm: window.confirm};
+    persist = () => {}; route = () => {}; showToast = () => {}; window.alert = () => {}; window.confirm = () => true;
+    let verdict;
+    try {
+      state.idDossier = state.idDossier || 'dos_banc';
+      state.declarant = {actif: true, idContribution: 'ctr_banc_kit', provenance: 'foyer', ouvert: '', sauvegarde: '', empreinte: ''};
+      const n = (state.m2.evenements || []).length;
+      ouvrirFichierDeclarant({type: 'kit', enveloppe: {idDossier: state.idDossier}, dossier: {m1: {prenom: 'Préambule corrigé'}}});
+      verdict = [(state.m2.evenements || []).length === n, state.m1.prenom === 'Préambule corrigé',
+                 (state.declarant || {}).idContribution === 'ctr_banc_kit'].join('|');
+    } finally {
+      persist = vrais.persist; route = vrais.route; showToast = vrais.showToast;
+      window.alert = vrais.alert; window.confirm = vrais.confirm;
+      replaceState(sauve);
+    }
+    return _bancEgal('Évènements gardés | préambule mis à jour | même déclarant', 'true|true|true', verdict);
+  }},
+
+  {nom:'Le déclarant sait ce qui n\'est pas sauvegardé', test: () => {
+    const sauve = JSON.parse(JSON.stringify({declarant: state.declarant, m2: state.m2}));
+    state.declarant = {actif: true, idContribution: 'ctr_banc_sauve', provenance: '', ouvert: '', sauvegarde: 'x'};
+    state.declarant.empreinte = empreinteDeclarant();
+    const apresSauvegarde = declarantNonSauvegarde();
+    state.m2.evenements = (state.m2.evenements || []).concat([{id: 'evt_banc_sauve', date: '2026-01-01', cp: 'Nouveau'}]);
+    const apresAjout = declarantNonSauvegarde();
+    state.declarant = sauve.declarant; state.m2 = sauve.m2;
+    return _bancEgal('Non sauvegardé : juste après sauvegarde | après un ajout', 'false|true', apresSauvegarde + '|' + apresAjout);
   }},
 
   {nom:'Le mode déclarant verrouille les vues réservées', test: () => {
@@ -12985,7 +13037,7 @@ function exporterKitDeclarant() {
   };
   const prenom = (state.m1.prenom || 'sans_nom').replace(/[^a-zA-Z0-9]/g, '_');
   telechargerTexte(JSON.stringify(kit, null, 2),
-    'RDAF-kit_' + prenom + '_' + new Date().toISOString().slice(0, 10) + '.json');
+    'RDAF-kit_' + prenom + '_' + horodatageFichier() + '.json');
   showToast('Kit déclarant exporté.');
 }
 
@@ -12998,53 +13050,164 @@ function telechargerTexte(texte, nom) {
   URL.revokeObjectURL(url);
 }
 
-/* ── Côté déclarant : ouvrir le kit ────────────────────────────────── */
-function ouvrirKitDeclarant(lu) {
-  const kit = lu.dossier || {};
+/* ── Côté déclarant : ouvrir un fichier ─────────────────────────────
+   Un seul geste pour deux fichiers : le kit reçu par mail la première fois,
+   puis le dernier fichier sauvegardé les fois suivantes. La règle qui commande
+   tout : ne jamais écraser sans le dire un travail que le navigateur contient
+   et que le fichier n'a pas. */
+function ouvrirFichierDeclarant(lu) {
   const env = lu.enveloppe || {};
-  const dejaDesEvenements = (state.m2 && (state.m2.evenements || []).length) > 0;
-  if (dejaDesEvenements && !confirm(
-      "Un dossier est déjà ouvert dans cet outil (" +
-      (state.m2.evenements || []).length + " évènement(s)). Ouvrir ce kit le remplacera. Continuer ?")) return;
+  const f = lu.dossier || {};
+  const estKit = lu.type === 'kit';
+  const meta = f.contribution || {};
+  if (!f.m1 || typeof f.m1 !== 'object') {
+    alert("Ce fichier ne contient pas le préambule : il vient d'une version plus ancienne de la BAF.\n\n" +
+          "Demandez un nouveau kit à la personne qui vous a sollicité.");
+    return;
+  }
+  const idDossier = env.idDossier || meta.idDossier || null;
+  const memeDossier = modeDeclarantActif() && !!idDossier && state.idDossier === idDossier;
 
-  replaceState({ m1: kit.m1 || {} });
-  state.idDossier = env.idDossier || nouvelIdentifiant('dos');
+  // Un kit du même dossier : le préambule se met à jour, rien d'autre ne bouge.
+  if (estKit && memeDossier) {
+    state.m1 = JSON.parse(JSON.stringify(f.m1));
+    persist();
+    loadM1FromState();
+    refreshM2List();
+    refreshAccueilBadges();
+    route('declarant');
+    const n = (state.m2.evenements || []).length;
+    alert('Préambule mis à jour.' + (n ? '\n\nVos ' + n + ' évènement' + (n > 1 ? 's sont conservés.' : ' est conservé.') : ''));
+    return;
+  }
+
+  const perte = perteSiOuverture(estKit ? null : meta);
+  if (perte && !confirm(perte)) return;
+
+  replaceState({
+    m1: f.m1,
+    m2: estKit ? {evenements: []}
+               : {evenements: (f.m2 && f.m2.evenements) || [], couverture: (f.m2 && f.m2.couverture) || []}
+  });
+  state.idDossier = idDossier || nouvelIdentifiant('dos');
   state.cree = new Date().toISOString();
   state.schema = SCHEMA_DOSSIER;
   state.fichierDossier = null;
   state.origineDossier = 'kit';
   state.declarant = {
     actif: true,
-    idContribution: nouvelIdentifiant('ctr'),
-    provenance: '',
-    ouvert: new Date().toISOString()
+    idContribution: (!estKit && meta.idContribution) || nouvelIdentifiant('ctr'),
+    provenance: estKit ? '' : (meta.provenance || ''),
+    ouvert: new Date().toISOString(),
+    sauvegarde: estKit ? '' : (meta.envoye || '')
   };
+  // Ce qu'on vient d'ouvrir EST la sauvegarde : rien n'est à sauvegarder.
+  state.declarant.empreinte = estKit ? '' : empreinteDeclarant();
   persist();
   loadM1FromState();
   refreshM2List();
   refreshAccueilBadges();
   route('declarant');
-  showToast('Kit ouvert. Bienvenue.');
+  showToast(estKit ? 'Kit ouvert. Bienvenue.' : 'Fichier ouvert : vous reprenez là où vous en étiez.');
 }
 
-function quitterModeDeclarant() {
-  if (!confirm("Quitter le mode déclarant ?\n\nVos évènements restent dans l'outil, mais l'outil redeviendra complet. Si vous n'avez pas encore renvoyé votre contribution, faites-le avant.")) return;
-  if (state.declarant) state.declarant.actif = false;
+/* Ce qui serait perdu si le fichier remplaçait le contenu du navigateur —
+   null s'il n'y a rien à perdre. metaFichier : l'en-tête d'un fichier de
+   déclarant (null pour un kit). */
+function perteSiOuverture(metaFichier) {
+  const n = ((state.m2 && state.m2.evenements) || []).length;
+  const prenom = ((state.m1 && state.m1.prenom) || '').trim();
+  const nbCouv = ((state.m2 && state.m2.couverture) || []).length;
+  if (!n && !prenom && !nbCouv) return null;
+  if (!modeDeclarantActif()) {
+    return "Un dossier est ouvert dans ce navigateur (" + (prenom || 'sans prénom') + ", " + n + " évènement" + (n > 1 ? 's' : '') + ").\n\n" +
+           "Ouvrir ce fichier le remplacera. Il ne sera perdu que s'il n'a pas été exporté.\n\nContinuer ?";
+  }
+  if (declarantNonSauvegarde()) {
+    return "Ce navigateur contient des modifications que vous n'avez pas sauvegardées (" + n + " évènement" + (n > 1 ? 's' : '') + " au total).\n\n" +
+           "Si vous ouvrez ce fichier, elles seront perdues. Pour les garder : Annuler, puis « 💾 Télécharger pour sauvegarder ».\n\nOuvrir quand même ?";
+  }
+  const d = state.declarant || {};
+  if (metaFichier && metaFichier.envoye && d.sauvegarde && metaFichier.idContribution === d.idContribution &&
+      metaFichier.envoye < d.sauvegarde) {
+    return "Ce fichier a été sauvegardé le " + dateLisible(metaFichier.envoye) + ", avant votre dernière sauvegarde (le " + dateLisible(d.sauvegarde) + ").\n\n" +
+           "L'ouvrir remplacera ce que contient ce navigateur par cette version plus ancienne. Vérifiez que vous avez pris le fichier le plus récent.\n\nOuvrir quand même ?";
+  }
+  return null;
+}
+
+/* Ce qui compte pour savoir s'il reste du travail non sauvegardé : ce que le
+   déclarant a écrit, pas le moment où il a ouvert une page. */
+function empreinteDeclarant() {
+  const t = JSON.stringify({
+    e: (state.m2 && state.m2.evenements) || [],
+    c: (state.m2 && state.m2.couverture) || [],
+    p: (state.declarant && state.declarant.provenance) || ''
+  });
+  let h = 5381;
+  for (let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0;
+  return t.length + ':' + h;
+}
+
+function declarantNonSauvegarde() {
+  if (!modeDeclarantActif()) return false;
+  const d = state.declarant;
+  const quelqueChose = ((state.m2.evenements || []).length + (state.m2.couverture || []).length) > 0 || !!(d.provenance || '').trim();
+  if (!d.empreinte) return quelqueChose;
+  return d.empreinte !== empreinteDeclarant();
+}
+
+/* Horodatage à l'heure locale pour les noms de fichier : deux sauvegardes du
+   même jour ne portent plus le même nom, et la plus récente se reconnaît dans
+   une liste de téléchargements. */
+function horodatageFichier(d) {
+  d = d || new Date();
+  const z = (n) => String(n).padStart(2, '0');
+  return d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()) + '_' + z(d.getHours()) + 'h' + z(d.getMinutes());
+}
+
+function dateLisible(iso) {
+  const d = new Date(iso);
+  if (isNaN(d)) return '';
+  const z = (n) => String(n).padStart(2, '0');
+  return d.toLocaleDateString('fr-FR') + ' à ' + z(d.getHours()) + 'h' + z(d.getMinutes());
+}
+
+/* ── Côté déclarant : effacer ce que contient le navigateur ───────────
+   Sur un poste partagé, c'est le geste qui protège : le collègue qui ouvrira
+   la BAF demain ne doit pas retrouver une version périmée et la compléter
+   sans savoir qu'une plus récente attend dans le dossier partagé. */
+function effacerFichierDeclarant() {
+  const n = ((state.m2 && state.m2.evenements) || []).length;
+  const msg = declarantNonSauvegarde()
+    ? "⚠ Des modifications n'ont pas été sauvegardées (" + n + " évènement" + (n > 1 ? 's' : '') + " au total). Si vous effacez maintenant, elles seront perdues.\n\n" +
+      "Pour les garder : Annuler, puis « 💾 Télécharger pour sauvegarder ».\n\nEffacer quand même ?"
+    : "Effacer ce que contient ce navigateur ?\n\nVotre fichier sauvegardé n'est pas touché : c'est lui que vous rouvrirez la prochaine fois.";
+  if (!confirm(msg)) return;
+  replaceState({
+    version: 1,
+    m1: {prenom:'', age:'', diag:'', lieux:[], statut:'', lieuAnalyse:'', jours:[], heures:'', journeeCreneaux:[], semaineCreneaux:{}, libre:''},
+    m2: {evenements: []}
+  });
+  state.fichierDossier = null;
+  state.origineDossier = null;
+  migrerIdentiteDossier(true);
   persist();
-  route('baf-accueil');
-  showToast('Mode déclarant quitté.');
+  loadM1FromState();
+  refreshM2List();
+  refreshAccueilBadges();
+  route('declarant');
+  showToast('Ce navigateur est vide. Votre fichier sauvegardé vous attend.');
 }
 
-/* ── Côté déclarant : renvoyer sa contribution ─────────────────────── */
-function exporterContribution() {
+/* ── Côté déclarant : sauvegarder ────────────────────────────────────
+   Le fichier téléchargé est à la fois la sauvegarde et l'envoi : il porte le
+   préambule reçu, les évènements, les périodes observées. Le déclarant le
+   rouvre la fois suivante et envoie le dernier à la fin. */
+function construireFichierDeclarant() {
   const d = state.declarant || {};
   const evts = (state.m2 && state.m2.evenements) || [];
-  if (!evts.length && !confirm("Aucun évènement n'est décrit pour l'instant. Produire quand même le fichier ?")) return;
-  const prov = (document.getElementById('declarant-provenance') || {}).value;
-  if (typeof prov === 'string') d.provenance = prov.trim();
-  persist();
-
-  const contribution = {
+  return {
     baf: enveloppeBAF('contribution'),
     contribution: {
       idContribution: d.idContribution || nouvelIdentifiant('ctr'),
@@ -13053,15 +13216,30 @@ function exporterContribution() {
       nbEvenements: evts.length,
       envoye: new Date().toISOString()
     },
+    m1: JSON.parse(JSON.stringify(state.m1 || {})),
     m2: {
       evenements: JSON.parse(JSON.stringify(evts)),
       couverture: JSON.parse(JSON.stringify(ensureCouverture()))
     }
   };
-  const qui = (d.provenance || 'contribution').replace(/[^a-zA-Z0-9]/g, '_').slice(0, 24) || 'contribution';
-  telechargerTexte(JSON.stringify(contribution, null, 2),
-    'RDAF-contribution_' + qui + '_' + new Date().toISOString().slice(0, 10) + '.json');
-  showToast('Contribution exportée. Renvoyez ce fichier à la personne qui vous a sollicité.');
+}
+
+function sauvegarderFichierDeclarant() {
+  const d = state.declarant || {};
+  if (!d.idContribution) d.idContribution = nouvelIdentifiant('ctr');
+  state.declarant = d;
+  const fichier = construireFichierDeclarant();
+  const prenom = ((state.m1 && state.m1.prenom) || 'sans_nom').replace(/[^a-zA-Z0-9]/g, '_');
+  const lieu = (d.provenance || 'declarant').replace(/[^a-zA-Z0-9]/g, '_').slice(0, 24) || 'declarant';
+  telechargerTexte(JSON.stringify(fichier, null, 2),
+    'RDAF-declarant_' + prenom + '_' + lieu + '_' + horodatageFichier() + '.json');
+  d.sauvegarde = fichier.contribution.envoye;
+  d.empreinte = empreinteDeclarant();
+  persist();
+  majBarreDeclarant();
+  const vue = document.getElementById('view-declarant');
+  if (vue && vue.classList.contains('show')) renderDeclarant();
+  showToast('Fichier téléchargé. C\'est lui que vous rouvrirez la prochaine fois, et lui que vous enverrez à la fin.');
 }
 
 function appliquerModeDeclarantSurM1() {
@@ -13097,11 +13275,16 @@ function majBarreDeclarant() {
   barre.style.display = '';
   const n = ((state.m2 && state.m2.evenements) || []).length;
   const prenom = (state.m1 && state.m1.prenom) || 'cette personne';
+  const aSauver = declarantNonSauvegarde();
+  const d = state.declarant || {};
   const zone = document.getElementById('declarant-etat');
   if (zone) {
-    zone.innerHTML = 'Observations sur <b>' + esc(prenom) + '</b> · ' +
-      '<b>' + n + '</b> évènement' + (n > 1 ? 's' : '') + ' décrit' + (n > 1 ? 's' : '');
+    zone.innerHTML = 'Observations sur <b>' + esc(prenom) + '</b> · <b>' + n + '</b> évènement' + (n > 1 ? 's' : '') +
+      (aSauver ? ' · <span class="declarant-a-sauver">non sauvegardé</span>'
+               : (d.sauvegarde ? ' · sauvegardé le ' + esc(dateLisible(d.sauvegarde)) : ''));
   }
+  const bouton = document.getElementById('declarant-sauver');
+  if (bouton) bouton.classList.toggle('a-sauver', aSauver);
 }
 
 /* ── La page d'accueil du déclarant ────────────────────────────────── */
@@ -13138,7 +13321,7 @@ function renderDeclarant() {
       '<div class="decl-etape"><span class="decl-num">3</span><div>' +
         '<b>Renvoyez votre contribution</b> quand vous avez terminé. L\'outil produit un fichier ; ' +
         'vous le renvoyez à la personne qui vous a sollicité, comme une pièce jointe. ' +
-        '<button class="btn btn-secondary btn-sm" style="margin-top:8px;" onclick="exporterContribution()">Renvoyer ma contribution</button>' +
+        '<button class="btn btn-secondary btn-sm" style="margin-top:8px;" onclick="sauvegarderFichierDeclarant()">💾 Télécharger pour sauvegarder</button>' +
       '</div></div>' +
     '</div>' +
     '<div class="card">' +
@@ -13714,12 +13897,23 @@ function fusionnerContribution(lu, nomFichier) {
   if (!Array.isArray(state.m2.evenements)) state.m2.evenements = [];
   const parId = new Map(state.m2.evenements.map((e, i) => [e.id, i]));
 
-  let ajoutes = 0, remplaces = 0;
+  /* Chaque fichier contient TOUT ce que le déclarant a écrit depuis le début.
+     Un fichier plus ancien que le dernier reçu de lui — une pièce jointe
+     retrouvée après coup — effacerait ses corrections : il ne peut donc
+     qu'ajouter ce qui manquerait. Le même fichier reçu deux fois ne change rien. */
+  const precedent = (state.contributions || {})[idC];
+  const plusAncien = !!(precedent && precedent.envoye && meta.envoye && meta.envoye < precedent.envoye);
+  const memeEnvoi = !!(precedent && meta.envoye && meta.envoye === precedent.envoye);
+  const neRienRemplacer = plusAncien || memeEnvoi;
+  let ajoutes = 0, remplaces = 0, gardes = 0;
   entrants.forEach(brut => {
     const e = JSON.parse(JSON.stringify(brut));
     if (!e.id) e.id = nouvelIdentifiant('evt');
     e.source = idC;
-    if (parId.has(e.id)) { state.m2.evenements[parId.get(e.id)] = e; remplaces++; }
+    if (parId.has(e.id)) {
+      if (neRienRemplacer) gardes++;
+      else { state.m2.evenements[parId.get(e.id)] = e; remplaces++; }
+    }
     else { parId.set(e.id, state.m2.evenements.length); state.m2.evenements.push(e); ajoutes++; }
   });
 
@@ -13727,14 +13921,18 @@ function fusionnerContribution(lu, nomFichier) {
      déclaratif, et celle qu'on n'obtient jamais si on ne la demande pas. */
   const couvEntrantes = ((lu.dossier && lu.dossier.m2 && lu.dossier.m2.couverture) || []);
   ensureCouverture();
-  const dejaLa = new Set(state.m2.couverture.map(p => p.id));
+  const couvParId = new Map(state.m2.couverture.map((p, i) => [p.id, i]));
   let couvAjoutees = 0;
   couvEntrantes.forEach(p => {
-    if (!p || !p.debut || dejaLa.has(p.id)) return;
+    if (!p || !p.debut) return;
     const copie = JSON.parse(JSON.stringify(p));
     copie.source = idC;
+    if (couvParId.has(p.id)) {
+      if (!neRienRemplacer) state.m2.couverture[couvParId.get(p.id)] = copie;
+      return;
+    }
     state.m2.couverture.push(copie);
-    dejaLa.add(copie.id);
+    couvParId.set(copie.id, state.m2.couverture.length - 1);
     couvAjoutees++;
   });
   state.m2.couverture.sort((a, b) => (a.debut || '').localeCompare(b.debut || ''));
@@ -13745,7 +13943,7 @@ function fusionnerContribution(lu, nomFichier) {
 
   state.contributions = state.contributions || {};
   const dejaVue = !!state.contributions[idC];
-  state.contributions[idC] = {
+  if (!plusAncien) state.contributions[idC] = {
     provenance: (meta.provenance || '').trim(),
     envoye: meta.envoye || '',
     recu: new Date().toISOString(),
@@ -13753,7 +13951,7 @@ function fusionnerContribution(lu, nomFichier) {
     nbEvenements: entrants.length
   };
 
-  const ignorees = ['m1', 'm3', 'm4'].filter(k => lu.dossier && lu.dossier[k]);
+  const ignorees = ['m3', 'm4'].filter(k => lu.dossier && lu.dossier[k]);
 
   migrerIdsCategorisation();
   persist();
@@ -13769,7 +13967,9 @@ function fusionnerContribution(lu, nomFichier) {
     msg += '· ' + remplaces + ' déjà présent' + (remplaces > 1 ? 's' : '') + ', remplacé' + (remplaces > 1 ? 's' : '') +
            ' par la version la plus récente\n  ⚠ Si vous les aviez déjà catégorisés, vérifiez que les catégories correspondent toujours au texte.\n';
   }
-  if (dejaVue && !remplaces) msg += '· Cet envoi avait déjà été reçu.\n';
+  if (memeEnvoi) msg += '· Ce fichier avait déjà été ajouté : rien n\'a changé.\n';
+  else if (plusAncien) msg += '· Ce fichier est plus ancien que le dernier reçu de ce déclarant : ' + gardes + ' évènement' + (gardes > 1 ? 's' : '') + ' déjà présent' + (gardes > 1 ? 's' : '') + ' laissé' + (gardes > 1 ? 's' : '') + ' tel' + (gardes > 1 ? 's' : '') + ' quel' + (gardes > 1 ? 's' : '') + '.\n';
+  else if (dejaVue && !remplaces) msg += '· Cet envoi avait déjà été reçu.\n';
   if (couvAjoutees) msg += '· ' + couvAjoutees + ' période' + (couvAjoutees > 1 ? 's' : '') + ' observée' + (couvAjoutees > 1 ? 's' : '') + ' sans comportement-défi\n';
   if (ignorees.length) msg += '· Ignoré : ' + ignorees.join(', ') + ' — une contribution ne remonte que le déclaratif.\n';
   alert(msg);
@@ -14231,7 +14431,7 @@ const REPERES = [
        r: `<p>Jamais. Le déclaratif est la donnée de base : c'est le discours d'un professionnel ou d'une famille, avec son point de vue et ses biais propres, et il doit garder ce caractère.</p>
            <p>Le travail de l'analyste ne commence qu'à l'étape <b>Organiser</b>. Tout ce qui y est produit — catégories, regroupements — se lit par-dessus et n'est jamais réécrit dans l'évènement. On peut donc toujours revenir au matériau d'origine.</p>`},
       {q: "Comment travailler à plusieurs sur la même analyse ?",
-       r: `<p><b>Pour recueillir</b>, le référent envoie à chaque déclarant un <i>kit déclarant</i> : un fichier qui contient le préambule, sans aucun évènement ni travail d'analyse. Le déclarant l'ouvre dans la BAF, décrit ce qu'il observe, puis renvoie sa <i>contribution</i>. Le référent la verse dans le dossier : chaque évènement garde sa provenance, et les envois successifs ne se dupliquent pas. Ceux qui ne peuvent pas utiliser l'outil numérique remplissent une grille ABC papier, disponible dans Ressources.</p>
+       r: `<p><b>Pour recueillir</b>, le référent envoie à chaque déclarant un <i>kit déclarant</i> : un fichier qui contient le préambule, sans aucun évènement ni travail d'analyse. Le déclarant l'ouvre depuis la page Participer de la BAF, décrit ce qu'il observe et sauvegarde son fichier au fur et à mesure ; à la fin, il envoie le dernier, sa <i>contribution</i>. Le référent la verse dans le dossier : chaque évènement garde sa provenance, et les envois successifs ne se dupliquent pas. Ceux qui ne peuvent pas utiliser l'outil numérique remplissent une grille ABC papier, disponible dans Ressources.</p>
            <p><b>Pour organiser</b>, référent et clinicien catégorisent chacun de leur côté, grâce à un <i>kit de codage</i>, puis comparent leurs écarts et arrêtent ensemble une catégorisation de synthèse.</p>
            <p>Le dossier complet, lui, ne circule pas : il reste chez le référent. Ce qui part vers l'extérieur, c'est le document d'analyse fonctionnelle.</p>`},
       {q: "Pourquoi déclarer les journées où il ne se passe rien ?",
@@ -14271,8 +14471,8 @@ const LEXIQUE_BAF = {
   "analyste": "Celui ou celle qui organise et interprète les données, puis fait l'analyse fonctionnelle. Dans la démarche proposée, c'est le binôme formé par le référent et le clinicien.",
   "référent": "Le professionnel qui porte la démarche : il la prépare, lance le recueil, reçoit les contributions et fait l'analyse avec le clinicien qui la supervise.",
   "cotateur": "Celui ou celle qui remplit l'ICAF sur une analyse fonctionnelle terminée. Coter à plusieurs, séparément, est plus instructif que la note elle-même.",
-  "kit déclarant": "Le fichier envoyé à un déclarant : le préambule, sans aucun évènement ni travail d'analyse. Il l'ouvre dans la BAF, décrit ce qu'il observe et renvoie une contribution.",
-  "contribution": "Le fichier renvoyé par un déclarant : ses évènements et ses périodes observées. Le référent la verse dans le dossier, chaque évènement gardant sa provenance.",
+  "kit déclarant": "Le fichier envoyé à tous les déclarants : le préambule, sans aucun évènement ni travail d'analyse. Chacun l'ouvre depuis la page Participer de la BAF.",
+  "contribution": "Le fichier d'un déclarant : le préambule reçu, ses évènements et ses périodes observées. Il le sauvegarde à chaque séance, le rouvre la fois suivante, et envoie le dernier. Le référent la verse dans le dossier, chaque évènement gardant sa provenance.",
   "période observée": "Une journée ou une plage de jours déclarée comme observée, avec ou sans comportement-défi. Sans elle, l'outil ne peut pas distinguer « il ne s'est rien passé » de « personne n'a rempli ».",
   "vase de tension": "L'image qu'emploie la BAF pour la tension qui s'accumule chez la personne, en cinq paliers. Le déclarant pose un palier et note à quoi ça se voyait ; l'équipe en tire l'échelle décrite propre à la personne.",
   "double codage": "La catégorisation faite séparément par deux personnes — le référent et le clinicien, par exemple —, puis comparée et discutée, pour aboutir à une catégorisation de synthèse.",
