@@ -2116,6 +2116,36 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
   text-align:justify;text-justify:inter-word;
 }
 .grad-intro b{color:var(--sauge-deep);}
+/* Ce que les données disent de la montée : même cadre que les suggestions de patterns. */
+.sg-bloc{border-left-color:var(--rose);}
+.sg-partie{padding:11px 0 4px;border-top:1px solid var(--line-soft);}
+.sp-avert + .sg-partie{border-top:none;padding-top:0;}
+.sg-titre{font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:3px;}
+.sg-aide{font-size:12px;color:var(--ink-soft);line-height:1.55;margin-bottom:8px;}
+.sg-table-wrap{overflow-x:auto;}
+.sg-table{width:100%;border-collapse:collapse;font-size:13px;}
+.sg-table td{padding:6px 10px 6px 0;border-top:1px solid var(--line-soft);vertical-align:middle;color:var(--ink);}
+.sg-table tr:first-child td{border-top:none;}
+.sg-table td:first-child{width:38%;font-weight:600;overflow-wrap:anywhere;}
+.sg-table tr.sg-fort td:first-child{color:var(--rose-deep);}
+.sg-barre{position:relative;display:inline-block;width:120px;height:9px;border-radius:5px;background:var(--line-soft);vertical-align:middle;margin-right:9px;}
+.sg-barre b{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:var(--rose);}
+.sg-barre i{position:absolute;top:-3px;bottom:-3px;width:2px;margin-left:-1px;background:var(--ink-soft);}
+.sg-chiffres{font-size:12.5px;color:var(--ink-soft);white-space:nowrap;}
+.sg-paliers{display:flex;flex-direction:column;gap:7px;margin-bottom:9px;}
+.sg-palier-ligne{display:grid;grid-template-columns:minmax(0,32%) minmax(0,1fr) auto;gap:10px;align-items:center;font-size:13px;}
+.sg-nom{font-weight:600;color:var(--ink);overflow-wrap:anywhere;}
+.sg-empile{display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--line-soft);}
+.sg-mode{font-size:12px;color:var(--ink-soft);white-space:nowrap;}
+.sg-legende{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:11.5px;color:var(--ink-soft);margin-bottom:6px;}
+.sg-legende span{display:inline-flex;align-items:center;gap:4px;}
+.sg-legende i{display:inline-block;width:10px;height:10px;border-radius:3px;}
+.sg-fleche{color:var(--rose-deep);font-weight:700;}
+@media (max-width:720px){
+  .sg-palier-ligne{grid-template-columns:1fr;gap:3px;}
+  .sg-mode, .sg-chiffres{white-space:normal;}
+  .sg-barre{width:80px;}
+}
 .vase-connu-grille{
   display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:10px;
 }
@@ -3629,6 +3659,7 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
           </svg>
         </div>
       </div>
+      <div id="grad-stats"></div>
       <div class="grad-list" id="grad-list"></div>
       <button class="abc-add-btn" style="border-color:var(--rose);" onclick="ajouterGradation()">+ Proposer une séquence de montée en tension</button>
     </div>
@@ -8732,6 +8763,37 @@ const _CONTROLES = [
     return _bancEgal('Synthèse de l\'élément après deux « Prendre A »', 'taper + taper › Contre un pair · 3 catégories', obtenu);
   }},
 
+  {nom:'Statistiques de gradation : chaque effet reste attaché à son intervention', test: () => {
+    /* Une intervention sans texte ne devient pas un élément : les suivantes
+       remontent d'un rang. Si le calcul l'oubliait, « Calmer » hériterait de
+       l'augmentation de l'intervention d'avant. */
+    const evts = [
+      {id: 't1', comportement: 'A refusé', tension: {pic: {v: 50}}, interventions: [
+        {texte: 'Insiste', effet: 'Augmentation de la tension', cdPostIntervention: 'Tape'},
+        {texte: '', effet: 'Augmentation de la tension'},
+        {texte: 'Calme', effet: 'Diminution de la tension'}
+      ]},
+      {id: 't2', comportement: 'A refusé encore', tension: {pic: {v: 85}}, interventions: []}
+    ];
+    const cats = {
+      interventions: {i1: {nom: 'Insister', items: ['et1_0']}, i2: {nom: 'Calmer', items: ['et1_1']}},
+      cp: {c1: {nom: 'Refus', items: ['et1_0', 'et2_0']}, c2: {nom: 'Taper', items: ['et1_1']}}
+    };
+    const st = statsGradation(evts, cats);
+    const e = (nom) => st.effets[nom] ? st.effets[nom].nAug + '/' + st.effets[nom].n : 'absent';
+    const refus = st.paliers['Refus'] || {par: {}};
+    const chaine = st.chaines['Refus ¦ Taper'];
+    const obtenu = [
+      'base ' + st.nAug + '/' + st.nEffet,
+      'Insister ' + e('Insister'),
+      'Calmer ' + e('Calmer'),
+      'Refus ' + (refus.par.tendu || 0) + ' tendu ' + (refus.par.deborde || 0) + ' débordé',
+      'Refus→Taper ' + (chaine ? chaine.n + ' après ' + Object.keys(chaine.apres).join(',') : 'absent')
+    ].join(' · ');
+    return _bancEgal('Effets, paliers et enchaînement',
+      'base 2/3 · Insister 1/1 · Calmer 0/1 · Refus 1 tendu 1 débordé · Refus→Taper 1 après Insister', obtenu);
+  }},
+
   {nom:'Chaque volet a sa couleur, distincte des autres', test: () => {
     /* Le contexte et l'antécédent ont longtemps partagé le même jaune : on ne
        distinguait plus, à l'œil, deux volets que l'outil sépare. */
@@ -11111,10 +11173,189 @@ function ajouterGradation() {
   renderGradations();
 }
 
+/* ── Ce que les données disent de la montée ────────────────────────────
+   Trois lectures de l'escalade, calculées sur la catégorisation comme les
+   suggestions de patterns (Arthur, 14/09/2026) :
+   1. après quelles interventions la tension augmente, à côté du taux d'ensemble ;
+   2. jusqu'à quel palier du vase monte chaque catégorie de comportement —
+      rangées du palier médian le plus bas au plus haut, c'est un ordre de
+      montée à discuter, pas une séquence observée ;
+   3. quel comportement apparaît après une intervention, et à la suite de quoi.
+   L'effectif est toujours affiché : sur six évènements, un taux ne dit rien. */
+
+/* Même découpage qu'extraireItems : l'identifiant d'un élément est sa place
+   parmi les parties extraites de l'évènement. Une intervention sans texte ne
+   devient pas un élément, et les suivantes remontent d'un rang. */
+function elementsEvtVolet(sousId, evt) {
+  const sous = M3_SOUS.find(s => s.id === sousId);
+  if (!sous || !evt || !evt.id) return [];
+  return sous.extract(evt)
+    .map((t, i) => ({id: 'e' + evt.id + '_' + i, texte: String(t || ''), post: String(t || '').startsWith('§POST§')}))
+    .filter(x => x.texte.trim());
+}
+
+function medianeStatsGrad(valeurs) {
+  const t = valeurs.slice().sort((a, b) => a - b);
+  if (!t.length) return null;
+  const m = Math.floor(t.length / 2);
+  return t.length % 2 ? t[m] : (t[m - 1] + t[m]) / 2;
+}
+
+/* Pure : prend les évènements et les catégories, ne lit rien d'autre. */
+function statsGradation(evts, categories) {
+  const catsIv = (categories && categories.interventions) || {};
+  const catsCp = (categories && categories.cp) || {};
+  const nomsDe = (cats, itemId) => catsDeItemDans(cats, itemId).map(id => cheminCatDans(cats, id));
+  const AUGMENTATION = 'Augmentation de la tension';
+  const st = {effets: {}, nEffet: 0, nAug: 0, nIvSansCat: 0, paliers: {}, nEvtSansPic: 0, chaines: {}, nEvtPost: 0};
+
+  (evts || []).forEach(evt => {
+    if (!evt || !evt.id) return;
+    const interventions = evt.interventions || [];
+    const avecTexte = interventions.filter(iv => iv.texte && iv.texte.trim());
+
+    // 1. L'effet de chaque intervention, rangé sous sa catégorie.
+    interventions.forEach(iv => {
+      if (!iv.effet) return;
+      st.nEffet++;
+      if (iv.effet === AUGMENTATION) st.nAug++;
+    });
+    avecTexte.forEach((iv, k) => {
+      if (!iv.effet) return;
+      const noms = nomsDe(catsIv, 'e' + evt.id + '_' + k);
+      if (!noms.length) { st.nIvSansCat++; return; }
+      noms.forEach(nom => {
+        const e = st.effets[nom] || (st.effets[nom] = {nom, n: 0, nAug: 0});
+        e.n++;
+        if (iv.effet === AUGMENTATION) e.nAug++;
+      });
+    });
+
+    // 2 et 3. Les comportements de départ, et ceux apparus après une intervention —
+    // dans l'ordre même où extraireCDPostIntervention les a posés.
+    const ivPost = interventions.filter(iv => effetNeedsCdPost(iv.effet) && iv.cdPostIntervention && iv.cdPostIntervention.trim());
+    const depart = new Set();
+    const apres = [];
+    let kPost = 0;
+    elementsEvtVolet('cp', evt).forEach(el => {
+      const noms = nomsDe(catsCp, el.id);
+      if (!el.post) { noms.forEach(n => depart.add(n)); return; }
+      const iv = ivPost[kPost++];
+      const k = iv ? avecTexte.indexOf(iv) : -1;
+      if (noms.length) apres.push({noms, nomsIv: k >= 0 ? nomsDe(catsIv, 'e' + evt.id + '_' + k) : []});
+    });
+    if (!depart.size) return;
+
+    const pic = tensionPicEvt(evt);
+    const pal = palierDe(pic);
+    if (!pal) st.nEvtSansPic++;
+    else depart.forEach(nom => {
+      const p = st.paliers[nom] || (st.paliers[nom] = {nom, n: 0, par: {}, valeurs: []});
+      p.n++;
+      p.par[pal.id] = (p.par[pal.id] || 0) + 1;
+      p.valeurs.push(pic);
+    });
+
+    if (!apres.length) return;
+    st.nEvtPost++;
+    apres.forEach(a => depart.forEach(de => a.noms.forEach(vers => {
+      const cle = de + ' ¦ ' + vers;
+      const c = st.chaines[cle] || (st.chaines[cle] = {de, vers, n: 0, apres: {}});
+      c.n++;
+      a.nomsIv.forEach(x => { c.apres[x] = (c.apres[x] || 0) + 1; });
+    })));
+  });
+  return st;
+}
+
+function blocStatsGradation() {
+  ensureM3();
+  const st = statsGradation(state.m2.evenements || [], state.m3.categories);
+  const ch = (t) => '<span class="sp-chiffre">' + t + '</span>';
+  const pct = (x, y) => y > 0 ? Math.round(x / y * 100) : 0;
+  const pluriel = (n, mot) => n + ' ' + mot + (n > 1 ? 's' : '');
+  const parties = [];
+
+  const effets = Object.values(st.effets).sort((a, b) => (b.nAug / b.n) - (a.nAug / a.n) || b.n - a.n);
+  if (effets.length) {
+    const base = pct(st.nAug, st.nEffet);
+    const sansCat = st.nIvSansCat === 1 ? ' 1 intervention pas encore catégorisée ne figure pas ci-dessous.'
+      : st.nIvSansCat > 1 ? ' ' + st.nIvSansCat + ' interventions pas encore catégorisées ne figurent pas ci-dessous.' : '';
+    parties.push('<div class="sg-partie">' +
+      '<div class="sg-titre">Après quelles interventions la tension augmente</div>' +
+      '<div class="sg-aide">Sur les ' + ch(pluriel(st.nEffet, 'intervention')) + ' dont l\'effet est noté, ' + ch(base + ' %') +
+        ' sont suivies d\'une augmentation de la tension. Le trait sur chaque barre marque ce taux d\'ensemble.' + sansCat + '</div>' +
+      '<div class="sg-table-wrap"><table class="sg-table"><tbody>' +
+      effets.slice(0, 8).map(e => {
+        const taux = pct(e.nAug, e.n);
+        // Même règle que les suggestions de patterns : au moins trois fois, et nettement plus souvent qu'à l'ordinaire.
+        const fort = e.nAug >= SUGG_MIN_OCCURRENCES && e.nAug / e.n >= 1.3 * (st.nAug / st.nEffet);
+        return '<tr' + (fort ? ' class="sg-fort"' : '') + '><td>' + esc(e.nom) + '</td><td>' +
+          '<span class="sg-barre" aria-hidden="true"><b style="width:' + taux + '%;"></b><i style="left:' + base + '%;"></i></span>' +
+          '<span class="sg-chiffres">' + e.nAug + ' sur ' + e.n + ' · ' + taux + ' %' + (e.n < 5 ? ' · <i>effectif faible</i>' : '') + '</span>' +
+        '</td></tr>';
+      }).join('') +
+      '</tbody></table></div></div>');
+  }
+
+  const paliers = Object.values(st.paliers)
+    .map(p => Object.assign({}, p, {mediane: medianeStatsGrad(p.valeurs)}))
+    .sort((a, b) => a.mediane - b.mediane || b.n - a.n);
+  if (paliers.length) {
+    const sansPic = st.nEvtSansPic === 1 ? ' 1 évènement sans pic coté ne compte pas.'
+      : st.nEvtSansPic > 1 ? ' ' + st.nEvtSansPic + ' évènements sans pic coté ne comptent pas.' : '';
+    parties.push('<div class="sg-partie">' +
+      '<div class="sg-titre">Jusqu\'où monte le vase, comportement par comportement</div>' +
+      '<div class="sg-aide">Pour chaque catégorie, le palier atteint au plus fort de l\'évènement. Elles sont rangées du palier médian le plus bas au plus haut : ' +
+        '<b>un ordre de montée à discuter</b>, pas une séquence observée.' + sansPic + '</div>' +
+      '<div class="sg-paliers">' + paliers.slice(0, 8).map(p => {
+        const max = Math.max.apply(null, PALIERS_VASE.map(x => p.par[x.id] || 0));
+        const modes = PALIERS_VASE.filter(x => (p.par[x.id] || 0) === max).map(x => x.nom);
+        return '<div class="sg-palier-ligne">' +
+          '<span class="sg-nom">' + esc(p.nom) + '</span>' +
+          '<span class="sg-empile" title="' + esc(PALIERS_VASE.filter(x => p.par[x.id]).map(x => x.nom + ' : ' + p.par[x.id]).join(' · ')) + '">' +
+            PALIERS_VASE.map(x => p.par[x.id] ? '<span style="flex:' + p.par[x.id] + ';background:' + x.couleur + ';"></span>' : '').join('') +
+          '</span>' +
+          '<span class="sg-mode">le plus souvent ' + ch(modes.join(' / ')) + ' · ' + pluriel(p.n, 'évènement') + '</span>' +
+        '</div>';
+      }).join('') + '</div>' +
+      '<div class="sg-legende">' + PALIERS_VASE.map(x => '<span><i style="background:' + x.couleur + ';"></i>' + x.nom + '</span>').join('') + '</div>' +
+    '</div>');
+  }
+
+  const chaines = Object.values(st.chaines).sort((a, b) => b.n - a.n);
+  if (chaines.length) {
+    parties.push('<div class="sg-partie">' +
+      '<div class="sg-titre">Quand un nouveau comportement apparaît après une intervention</div>' +
+      '<div class="sg-aide">Sur ' + ch(pluriel(st.nEvtPost, 'évènement')) + ' où un comportement catégorisé est apparu après une intervention : ' +
+        'ce qu\'il y avait au départ, ce qui est venu ensuite, et après quelle intervention.</div>' +
+      chaines.slice(0, 6).map(c => {
+        const apres = Object.keys(c.apres).sort((x, y) => c.apres[y] - c.apres[x])
+          .map(x => '<b>' + esc(x) + '</b>' + (c.apres[x] > 1 ? ' (' + c.apres[x] + ')' : '')).join(', ');
+        return '<div class="sp-item"><b>' + esc(c.de) + '</b> <span class="sg-fleche">↗</span> <b>' + esc(c.vers) + '</b> : ' +
+          ch(c.n + ' fois') + (apres ? ', après ' + apres : '') + '.' + reserveEffectif(c.n) + '</div>';
+      }).join('') +
+    '</div>');
+  }
+
+  const entete = '<h5>Ce que les données disent de la montée</h5>';
+  if (!parties.length) {
+    return '<div class="suggestions-patterns sg-bloc">' + entete +
+      '<div class="sp-avert">Rien à compter pour l\'instant. Ces lectures demandent des comportements et des interventions catégorisés dans Organiser, ' +
+      'l\'effet des interventions noté, et le vase coté dans les évènements.</div></div>';
+  }
+  return '<div class="suggestions-patterns sg-bloc">' + entete +
+    '<div class="sp-avert">Compté sur votre catégorisation et sur ce que les déclarants ont coté. Ce sont des <b>co-occurrences dans du déclaratif, pas des causes</b> ; ' +
+    'chaque chiffre est donné avec son effectif.</div>' +
+    parties.join('') + '</div>';
+}
+
 function renderGradations() {
   const el = document.getElementById('grad-list');
   if (!el) return;
   ensureM4();
+  const stats = document.getElementById('grad-stats');
+  if (stats) stats.innerHTML = blocStatsGradation();
   const grads = state.m4.gradations;
   const catsCP = getCatsForSlot('cp');
 
