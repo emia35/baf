@@ -434,6 +434,15 @@ section .cmp-petit-ecran{display:none;}
 .cmp-identique .cmp-copie{background:var(--sauge-pale);}
 .cmp-desaccord .cmp-el{box-shadow:inset 3px 0 0 var(--rose);}
 .cmp-vide{padding:22px 16px;text-align:center;color:var(--ink-soft);font-style:italic;}
+.cmp-chip-x{font:inherit;font-size:12px;line-height:1;color:#fff;background:none;border:none;padding:0 0 0 6px;margin:0;cursor:pointer;opacity:.75;}
+.cmp-chip-x:hover, .cmp-chip-x:focus-visible{opacity:1;}
+.cmp-arbitrer{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-top:6px;}
+.cmp-prendre{
+  font:inherit;font-size:11.5px;font-weight:700;color:var(--slate);
+  background:var(--card);border:1.5px solid var(--line);border-radius:999px;padding:2px 9px;cursor:pointer;
+}
+.cmp-prendre:hover{border-color:var(--slate);}
+.cmp-choix{font:inherit;font-size:11.5px;color:var(--ink-soft);background:var(--card);border:1px solid var(--line);border-radius:6px;padding:2px 4px;max-width:100%;}
 @media (max-width:720px){
   section .cmp-ordi{display:none;}
   section .cmp-petit-ecran{display:block;}
@@ -8702,6 +8711,27 @@ const _CONTROLES = [
       'I,D,D,-,D,-', [lire(A, B, 'i1'), lire(A, B, 'i2'), lire(A, B, 'i3'), lire(A, B, 'i4'), lire(A, B, 'i5'), lire(A, null, 'i2')].join(','));
   }},
 
+  {nom:'Prendre A reprend son codage sous les mêmes noms, sans doublon', test: () => {
+    /* La synthèse a déjà « taper » et « Autre » ; A a rangé l'élément dans
+       « Taper » et dans sa sous-catégorie « Contre un pair ». Prendre A deux
+       fois : « taper » est réutilisée, la sous-catégorie créée une seule fois,
+       « Autre » perd l'élément. */
+    ensureM3();
+    const avantComp = state.comparaison;
+    const avantCats = JSON.parse(JSON.stringify(state.m3.categories));
+    state.comparaison = {A: {nom: 'A', evenements: [], categories: {cp: {
+      a1: {nom: 'Taper', items: ['it1']}, a2: {nom: 'Contre un pair', parent: 'a1', items: ['it1']}, a3: {nom: 'Crier', items: []}}}}};
+    state.m3.categories.cp = {s1: {nom: 'taper', color: '#3D4F6B', items: []}, s9: {nom: 'Autre', color: '#3D4F6B', items: ['it1']}};
+    reprendreCodage('A', 'cp', 'it1');
+    reprendreCodage('A', 'cp', 'it1');
+    const cats = state.m3.categories.cp;
+    const obtenu = catsDeItemDans(cats, 'it1').map(id => cheminCatDans(cats, id)).sort().join(' + ') +
+      ' · ' + Object.keys(cats).length + ' catégories';
+    state.m3.categories = avantCats;
+    if (avantComp === undefined) delete state.comparaison; else state.comparaison = avantComp;
+    return _bancEgal('Synthèse de l\'élément après deux « Prendre A »', 'taper + taper › Contre un pair · 3 catégories', obtenu);
+  }},
+
   {nom:'Chaque volet a sa couleur, distincte des autres', test: () => {
     /* Le contexte et l'antécédent ont longtemps partagé le même jaune : on ne
        distinguait plus, à l'œil, deux volets que l'outil sépare. */
@@ -12695,10 +12725,10 @@ function corpsModeEmploiGeneral() {
     ], DOCX_C.papierFonce, bleu) +
 
     sousPartie('Organiser : le double codage') +
-    dansBaf('Organiser → « Exporter un kit de codage » (une copie vierge par codeur), et « Effacer le codage » pour repartir d\'une page blanche') +
+    dansBaf('Organiser → « Double codage » : « Exporter un kit de codage » (une copie vierge par codeur), puis « Comparer les deux copies » ; « Effacer le codage » pour repartir d\'une page blanche') +
     texte("Organiser, c'est regrouper en catégories ce qui se ressemble, volet par volet : contexte, antécédent, comportement, conséquence, intervention. Or catégoriser, c'est déjà mesurer : c'est ce geste qui transforme un texte en une donnée qui sera comptée. Le référent et le clinicien organisent donc d'abord chacun de leur côté, pour permettre la richesse d'un double codage.") +
     puce('Primo codage, chacun de son côté, à partir du seul déclaratif et sans aucune catégorie de départ : ', "le référent exporte un kit de codage, une copie vierge du fichier officiel (tous les évènements, aucune catégorie, rien dans Interpréter). Chacun ouvre sa copie, réalise son codage et l'enregistre de son côté avec « Exporter ». Le fichier officiel, lui, reste vierge côté Organiser.") +
-    puce('Synthèse, à deux : ', "en réunion, chacun ouvre sa copie sur son poste ; vous comparez, vous arbitrez, et vous saisissez ensemble le codage de synthèse dans le fichier officiel, y compris les signes qui entrent dans le vase de tension. La synthèse devient le seul codage : supprimez ensuite les deux copies.") +
+    puce('Synthèse, à deux : ', "en réunion, sur un seul poste. Le référent ouvre le fichier officiel, puis « Comparer les deux copies », et importe les deux copies. Chaque élément se lit sur une ligne : le codage A, le codage B, et la synthèse que vous arbitrez — prendre A, prendre B, ou une autre catégorie. Les signes qui entrent dans le vase de tension s'arbitrent aussi en synthèse. « Terminer la synthèse » efface les deux copies du fichier officiel : la synthèse devient le seul codage. Supprimez aussi les fichiers des copies.") +
     aEviter("Catégoriser en pensant déjà à la fonction. On regroupe ce qui se ressemble ; l'hypothèse vient après, et pas avant.") +
 
     sousPartie('Interpréter : chercher ce qui se répète, en binôme') +
@@ -14150,7 +14180,8 @@ function renderDoubleCodage() {
         '<li><b>Synthèse, à deux.</b> En réunion, sur un seul poste : ouvrez le fichier officiel, puis « Comparer les deux copies », ' +
           'et importez-les. Chaque élément se lit sur une ligne, le codage A à côté du codage B, et vous arbitrez la synthèse, qui s\'écrit ici. ' +
           'Les signes qui entrent dans le vase de tension s\'arbitrent aussi en synthèse, et Interpréter se fait directement en synthèse.</li>' +
-        '<li><b>La synthèse est le seul codage.</b> Supprimez ensuite les deux copies.</li>' +
+        '<li><b>La synthèse est le seul codage.</b> « Terminer la synthèse », dans le comparateur, efface les deux copies du fichier officiel. ' +
+          'Supprimez aussi leurs fichiers, là où ils sont rangés.</li>' +
       '</ol>' +
       '<div class="dc-actions">' +
         '<button class="btn btn-secondary btn-sm" onclick="exporterKitCodage()">📄 Exporter un kit de codage</button>' +
@@ -14324,9 +14355,148 @@ function puceCatCmp(cats, catId) {
 
 function celluleSyntheseCmp(sousId, item, l) {
   const cats = state.m3.categories[sousId] || {};
+  const comp = state.comparaison || {};
+  const idItem = esc(item.id);
+  const puces = l.s.map(id => {
+    const cat = cats[id];
+    const chemin = esc(cheminCatDans(cats, id));
+    return '<span class="cmp-chip" style="background:' + esc((cat && cat.color) || '#3D4F6B') + ';">' + chemin +
+      '<button type="button" class="cmp-chip-x" aria-label="Retirer de « ' + chemin + ' »" title="Retirer" ' +
+        'onclick="cmpRetirer(\'' + sousId + '\', \'' + idItem + '\', \'' + esc(id) + '\')">×</button></span>';
+  }).join('');
+  const bouton = (slot, libelle) =>
+    '<button type="button" class="cmp-prendre" onclick="cmpPrendre(\'' + slot + '\', \'' + sousId + '\', \'' + idItem + '\')">' + libelle + '</button>';
+  // On ne propose de prendre un codage que s'il existe et qu'il n'est pas déjà celui de la synthèse.
+  const offre = (slot, ids, cle) => (comp[slot] && ids && ids.length && cle !== l.cleS);
+  const prendre = l.identiques
+    ? (offre('A', l.a, l.cleA) ? bouton('A', 'Prendre A = B') : '')
+    : (offre('A', l.a, l.cleA) ? bouton('A', 'Prendre A') : '') + (offre('B', l.b, l.cleB) ? bouton('B', 'Prendre B') : '');
+  const options = Object.keys(cats).filter(id => l.s.indexOf(id) === -1)
+    .map(id => ({id, chemin: cheminCatDans(cats, id)}))
+    .sort((x, y) => x.chemin.localeCompare(y.chemin, 'fr'))
+    .map(o => '<option value="' + esc(o.id) + '">' + esc(o.chemin) + '</option>').join('');
+  const choix = '<select class="cmp-choix" aria-label="Ajouter une catégorie à la synthèse" ' +
+      'onchange="cmpAjouter(\'' + sousId + '\', \'' + idItem + '\', this)">' +
+    '<option value="">+ Autre catégorie…</option>' + options +
+    '<option value="__nouvelle">Nouvelle catégorie…</option></select>';
   return '<td class="cmp-cell cmp-synth">' +
-    (l.s.length ? l.s.map(id => puceCatCmp(cats, id)).join('') : '<span class="cmp-rien">Pas encore arbitré</span>') +
+    (puces || '<span class="cmp-rien">Pas encore arbitré</span>') +
+    '<div class="cmp-arbitrer">' + prendre + choix + '</div>' +
   '</td>';
+}
+
+function actionsComparateur(sousId, lignes) {
+  const comp = state.comparaison || {};
+  if (!comp.A && !comp.B) return '';
+  const nIdentiques = (comp.A && comp.B) ? lignes.filter(x => x.l.identiques && !x.l.arbitre).length : 0;
+  return (nIdentiques
+      ? '<button type="button" class="btn btn-secondary btn-sm" onclick="reprendreIdentiques(\'' + sousId + '\')" ' +
+          'title="Les éléments que A et B ont codés à l\'identique, et que la synthèse n\'a pas encore arbitrés">' +
+          '✓ Reprendre les ' + nIdentiques + ' codage' + (nIdentiques > 1 ? 's' : '') + ' identique' + (nIdentiques > 1 ? 's' : '') + '</button>'
+      : '') +
+    '<button type="button" class="btn btn-ghost btn-sm" onclick="terminerSynthese()">🏁 Terminer la synthèse</button>';
+}
+
+/* Une catégorie de même nom (au même niveau) déjà présente dans la synthèse est
+   réutilisée : prendre A puis B ne doit pas créer « Fuite » et « fuite ». */
+function trouverOuCreerCat(sousId, nom, parentId) {
+  const cats = state.m3.categories[sousId];
+  const cle = normNomCat(nom);
+  const trouve = Object.keys(cats).find(id =>
+    normNomCat(cats[id].nom) === cle && (cats[id].parent || null) === (parentId || null));
+  if (trouve) return trouve;
+  const catId = 'cat_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+  const idx = Object.keys(cats).length;
+  cats[catId] = {
+    nom: String(nom || '').trim() || 'Catégorie',
+    color: (parentId && cats[parentId] && cats[parentId].color) || catColorFor(idx),
+    items: []
+  };
+  if (parentId) cats[catId].parent = parentId;
+  return catId;
+}
+
+/* Prendre A, c'est remplacer : pour cet élément, la synthèse devient exactement
+   le codage de A. Sans enregistrer : le banc l'éprouve à blanc. */
+function reprendreCodage(slot, sousId, itemId) {
+  ensureM3();
+  const copie = state.comparaison && state.comparaison[slot];
+  if (!copie) return false;
+  const catsC = (copie.categories || {})[sousId] || {};
+  if (!state.m3.categories[sousId]) state.m3.categories[sousId] = {};
+  const cats = state.m3.categories[sousId];
+  Object.keys(cats).forEach(id => { cats[id].items = (cats[id].items || []).filter(i => i !== itemId); });
+  catsDeItemDans(catsC, itemId).forEach(idC => {
+    const c = catsC[idC];
+    const parent = c.parent && catsC[c.parent];
+    const id = trouverOuCreerCat(sousId, c.nom, parent ? trouverOuCreerCat(sousId, parent.nom, null) : null);
+    if (cats[id].items.indexOf(itemId) === -1) cats[id].items.push(itemId);
+  });
+  return true;
+}
+
+function cmpPrendre(slot, sousId, itemId) {
+  if (!reprendreCodage(slot, sousId, itemId)) return;
+  persist();
+  renderComparateur();
+}
+
+function cmpRetirer(sousId, itemId, catId) {
+  const cat = (state.m3.categories[sousId] || {})[catId];
+  if (!cat) return;
+  cat.items = (cat.items || []).filter(i => i !== itemId);
+  persist();
+  renderComparateur();
+}
+
+function cmpAjouter(sousId, itemId, champ) {
+  const valeur = champ.value;
+  champ.value = '';
+  if (!valeur) return;
+  ensureM3();
+  const cats = state.m3.categories[sousId];
+  let catId = valeur;
+  if (valeur === '__nouvelle') {
+    const nom = prompt('Nom de la nouvelle catégorie :');
+    if (!nom || !nom.trim()) return;
+    catId = trouverOuCreerCat(sousId, nom, null);
+  }
+  if (!cats[catId]) return;
+  if (!cats[catId].items) cats[catId].items = [];
+  if (cats[catId].items.indexOf(itemId) === -1) cats[catId].items.push(itemId);
+  persist();
+  renderComparateur();
+}
+
+function reprendreIdentiques(sousId) {
+  const lignes = lignesComparateur(sousId).filter(x => x.l.identiques && !x.l.arbitre);
+  if (!lignes.length) return;
+  const volet = ((M3_SOUS.find(s => s.id === sousId) || {}).label || '').toLowerCase();
+  if (!confirm('Reprendre tels quels les ' + lignes.length + ' éléments (' + volet + ') que A et B ont codés à l\'identique ?\n\n' +
+      'Ils entrent dans la synthèse avec leurs catégories communes. Vous pourrez toujours les reprendre ligne par ligne.')) return;
+  lignes.forEach(x => reprendreCodage('A', sousId, x.item.id));
+  persist();
+  renderComparateur();
+  showToast(lignes.length + ' codage' + (lignes.length > 1 ? 's identiques repris' : ' identique repris') + ' dans la synthèse.');
+}
+
+/* Le bouton qu'Arthur voulait dès le départ : après la réunion, on ne garde
+   que la synthèse. */
+function terminerSynthese() {
+  const comp = state.comparaison || {};
+  if (!comp.A && !comp.B) return;
+  const restants = M3_SOUS.reduce((n, s) => n + lignesComparateur(s.id).filter(x => ligneAArbitrer(x.l)).length, 0);
+  const alerte = !restants ? ''
+    : restants === 1 ? 'Attention : 1 élément codé par A ou B n\'a encore aucune catégorie dans la synthèse.\n\n'
+    : 'Attention : ' + restants + ' éléments codés par A ou B n\'ont encore aucune catégorie dans la synthèse.\n\n';
+  if (!confirm('Terminer la synthèse ?\n\n' +
+      'Les deux copies de primo codage sont effacées de ce fichier. La synthèse reste dans Organiser : c\'est désormais le seul codage.\n\n' +
+      alerte +
+      'Supprimez aussi les fichiers des deux copies, là où ils sont rangés.\n\nTerminer ?')) return;
+  delete state.comparaison;
+  persist();
+  renderComparateur();
+  showToast('Synthèse terminée : les deux copies sont effacées. Exportez le fichier officiel pour la garder.');
 }
 
 function renderComparateur() {
@@ -14371,6 +14541,7 @@ function renderComparateur() {
       filtre('desaccords', 'Désaccords', deux ? nDesaccords : null) +
       filtre('a-arbitrer', 'Pas encore arbitrées', (comp.A || comp.B) ? nAArbitrer : null) +
     '</div>' +
+    '<div class="cmp-actions">' + actionsComparateur(sousId, toutes) + '</div>' +
   '</div>' +
   (deux ? '<p class="cmp-legende"><i class="cmp-i-identique"></i> A et B ont codé à l\'identique' +
     '<span class="cmp-sep">·</span><i class="cmp-i-desaccord"></i> A et B diffèrent</p>' : '');
@@ -14439,6 +14610,9 @@ function renderComparateur() {
       '</tr>').join('');
   }
 
+  // Chaque arbitrage redessine le tableau : sans ça, on remonterait en haut à chaque clic.
+  const tableauAvant = zone.querySelector('.cmp-wrap');
+  const hautAvant = tableauAvant && zone.dataset.vue === sousId + '|' + cmpFiltre ? tableauAvant.scrollTop : 0;
   zone.innerHTML = onglets + barre +
     '<div class="cmp-wrap"><table class="cmp-table">' +
       '<thead><tr>' +
@@ -14449,6 +14623,9 @@ function renderComparateur() {
       '</tr></thead>' +
       '<tbody>' + corps + '</tbody>' +
     '</table></div>';
+  zone.dataset.vue = sousId + '|' + cmpFiltre;
+  const tableauApres = zone.querySelector('.cmp-wrap');
+  if (tableauApres && hautAvant) tableauApres.scrollTop = hautAvant;
 }
 
 /* ══════════════════════════════════════════════════════════════════════
