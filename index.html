@@ -523,6 +523,22 @@ header.top{
   .subbar-back{font-size:12.5px;}
   .subbar-dossier{display:none;}
 }
+.subbar-dossier-court{display:none;}
+@media(max-width:760px){
+  .subbar-dossier-court{
+    display:flex;align-items:baseline;flex:1 1 auto;min-width:0;
+    font-size:12px;color:var(--ink-soft);white-space:nowrap;padding-left:2px;
+  }
+  .subbar-dossier-court b{color:var(--ink);font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;}
+  .subbar-dossier-court{overflow:hidden;}
+  .subbar-dossier-court span{flex-shrink:0;}
+  .subbar-dossier-court i{font-style:normal;}
+  .subbar-dossier-court i.court{display:none;}
+}
+@media(max-width:379px){
+  .subbar-dossier-court i.long{display:none;}
+  .subbar-dossier-court i.court{display:inline;}
+}
 
 .brand{
   display:flex;align-items:center;gap:11px;
@@ -2724,6 +2740,7 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
       <span id="subbar-retour-label">Accueil</span>
     </button>
     <div class="subbar-dossier" id="subbar-dossier"></div>
+    <div class="subbar-dossier-court" id="subbar-dossier-court"></div>
     <div class="subbar-actions">
       <button class="subbar-btn subbar-large" id="subbar-export" onclick="exporterDossierCourant()" title="Enregistrer le dossier en cours">💾 Exporter</button>
       <span class="subbar-menu subbar-large">
@@ -4315,6 +4332,30 @@ function majBarreDossier(outil, surAccueilOutil) {
   const zone = document.getElementById('subbar-dossier');
   const compact = document.getElementById('subbar-dossier-compact');
   if (zone && compact) compact.innerHTML = zone.innerHTML;
+  const court = document.getElementById('subbar-dossier-court');
+  if (court) court.innerHTML = libelleDossierCourt(outil);
+}
+
+/* Le menu garde l'état complet, mais il faut l'ouvrir. Depuis que la bande
+   « dossier déjà ouvert » a disparu, rien d'autre ne dirait, sur un téléphone,
+   qu'un dossier est là. La barre en garde donc l'essentiel : le prénom, qui
+   s'abrège s'il le faut, et le nombre, qui ne s'abrège jamais. */
+function libelleDossierCourt(outil) {
+  const prenom = ((state.m1 && state.m1.prenom) || '').trim();
+  const nb = ((state.m2 && state.m2.evenements) || []).length;
+  const nombre = (n, mot, abrege) => '<span>&nbsp;· ' + n + ' <i class="long">' + mot + (n > 1 ? 's' : '') +
+    '</i><i class="court">' + abrege + '</i></span>';
+  if (outil === 'idc') {
+    const s2 = etatOutil2();
+    const n = (s2 && s2.raters) ? s2.raters.length : 0;
+    if (s2 && s2.baf) return '<b>' + esc((s2.bafMeta && s2.bafMeta.prenom) || 'sans prénom') + '</b>' + nombre(n, 'cotateur', 'cot.');
+    if (n) return '<b>Cotation libre</b>' + nombre(n, 'cotateur', 'cot.');
+    if (prenom || nb) return '<b>' + esc(prenom || 'sans prénom') + '</b><span>&nbsp;· pas encore coté</span>';
+    return '';
+  }
+  if (!prenom && !nb) return '';
+  const fictif = state.origineDossier === 'simulation' ? '🧪 ' : '';
+  return '<b>' + fictif + esc(prenom || 'sans prénom') + '</b>' + nombre(nb, 'évènement', 'év.');
 }
 function majBarreDossierInterne(outil, surAccueilOutil) {
   outilCourant = outil;
@@ -9131,6 +9172,20 @@ const _CONTROLES = [
     return _bancEgal('Médiane des pics de tension (outil 2)', attendu, meta.intensMoy);
   }},
 
+  {nom:'La barre étroite nomme le dossier ouvert', test: () => {
+    /* Sur téléphone, c'est le seul endroit visible qui dise qu'un dossier est
+       ouvert. Un libellé vide ou faux laisserait la personne suivante travailler
+       dans le dossier d'une autre sans le savoir. */
+    majBarreDossier('baf', false);
+    const zone = document.getElementById('subbar-dossier-court');
+    const b = zone && zone.querySelector('b');
+    const span = zone && zone.querySelector('span');
+    const court = b ? b.textContent.replace(/^🧪 /, '') + ' · ' + ((span && span.textContent.match(/\d+/)) || [''])[0] : '';
+    const prenom = ((state.m1 && state.m1.prenom) || '').trim();
+    const nb = ((state.m2 && state.m2.evenements) || []).length;
+    const attendu = (!prenom && !nb) ? '' : (prenom || 'sans prénom') + ' · ' + nb;
+    return _bancEgal('Libellé court', attendu, court);
+  }},
   {nom:'La barre dossier de l\'outil 2 se rend sans exception', test: () => {
     // majBarreDossier lit l'état de l'outil 2, déclaré bien plus bas dans le
     // script. Un accès direct planterait l'initialisation sur un lien partagé
@@ -13849,7 +13904,7 @@ const NOTES_VERSION = [
 
 <h4>L'accueil de l'outil 1</h4>
 <p>Il s'intitule désormais <b>Recueil de Données pour une Analyse Fonctionnelle</b> — le RDAF —, sous « EMIA35 · BAF ». La phrase d'accroche, le bouton « Repères et lexique » et l'encart bleu autour de « Avant de commencer » ont disparu, et l'en-tête s'est resserré : en arrivant, on voit le préambule et les modules.</p>
-<p>La bande « Un dossier est déjà ouvert sur ce poste » a été retirée : la barre sous l'en-tête indique déjà le dossier en cours.</p>
+<p>La bande « Un dossier est déjà ouvert sur ce poste » a été retirée : la barre sous l'en-tête indique déjà le dossier en cours. Sur téléphone, où la place manque, elle en garde désormais l'essentiel : le prénom et le nombre d'évènements.</p>
 
 <h4>Les Repères réécrits, en trois parties</h4>
 <ul>
