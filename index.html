@@ -66,10 +66,10 @@
   /* Le contexte reste dans la famille de l ocre — c est l antecedent lointain,
      pas un cinquieme volet — mais d un ton plus clair : deux volets distincts
      doivent se distinguer d un coup d oeil. */
-  --vol-contexte:       #E4D49B;
-  --vol-contexte-deep:  #BCA152;
-  --vol-contexte-pale:  #FAF3E0;
-  --vol-contexte-texte: #7A6220;
+  --vol-contexte:       #A9B8CC;
+  --vol-contexte-deep:  #5E7291;
+  --vol-contexte-pale:  #E7ECF3;
+  --vol-contexte-texte: #3D4F6B;
   --vol-antecedent:       var(--ocre);
   --vol-antecedent-deep:  var(--ocre-deep);
   --vol-antecedent-pale:  var(--ocre-pale);
@@ -375,6 +375,13 @@ header.top{
 .dc-texte{font-size:14px;color:var(--ink-soft);line-height:1.65;margin:0 0 12px;}
 .dc-texte b{color:var(--ink);}
 .dc-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.m3-dc-place{margin-left:auto;}
+.dc-bouton{
+  font:inherit;font-size:12px;font-weight:700;color:var(--slate);white-space:nowrap;
+  background:var(--paper);border:1.5px solid var(--line);border-radius:999px;padding:4px 11px;cursor:pointer;
+}
+.dc-bouton:hover{border-color:var(--slate);}
+.dc-bouton.copie{background:var(--ocre-pale);border-color:var(--ocre);color:var(--ocre-deep);}
 .dc-etapes{margin:0 0 14px;padding-left:22px;font-size:14px;color:var(--ink-soft);line-height:1.65;}
 .dc-etapes li{margin-bottom:6px;}
 .dc-etapes b{color:var(--ink);}
@@ -1443,8 +1450,8 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
    MODULE 2 — ORGANISER (M3)
    ============================================================ */
 .m3-tabs{
-  display:flex;gap:6px;flex-wrap:wrap;
-  margin-bottom:20px;
+  display:flex;gap:8px;flex-wrap:wrap;justify-content:safe center;
+  margin-bottom:20px;padding:2px 0 4px;
 }
 .m3-tabs, .m4-tabs{
   overflow-x:auto;overflow-y:hidden;flex-wrap:nowrap;
@@ -1453,28 +1460,31 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
 .m3-tabs::-webkit-scrollbar, .m4-tabs::-webkit-scrollbar{display:none;}
 .m3-tab, .m4-tab{flex-shrink:0;}
 .m3-tab{
-  background:var(--paper);
-  border:1.5px solid var(--line);
-  border-radius:999px;
-  padding:8px 18px;
-  font-size:13px;font-weight:700;
-  color:var(--ink-soft);
-  cursor:pointer;
-  transition:all .15s;
+  display:inline-flex;flex-direction:column;align-items:center;gap:7px;
+  background:var(--paper);border:1.5px solid var(--line);border-radius:14px;
+  padding:8px 16px 8px;font-size:13px;font-weight:700;color:var(--ink-soft);
+  cursor:pointer;transition:border-color .15s, background .15s, color .15s;
 }
-/* La couleur de l'onglet vient de son volet, posée en ligne par renderM3Tabs :
-   ces deux règles peignaient tous les onglets en jaune, c'est-à-dire tous de la
-   couleur de l'antécédent. */
-.m3-tab:hover{filter:brightness(.96);}
+.m3-tab:hover{border-color:var(--ink-soft);color:var(--ink);}
+.m3-tab.on{background:var(--card);border-color:var(--slate);color:var(--ink);box-shadow:var(--shadow-soft);}
 .m3-tab .m3-tab-count{
-  display:inline-block;
-  background:rgba(255,255,255,.25);
-  border-radius:999px;
-  padding:1px 7px;
-  font-size:11px;
-  margin-left:4px;
+  display:inline-block;background:var(--line-soft);color:var(--ink-soft);
+  border-radius:999px;padding:1px 7px;font-size:11px;margin-left:4px;
 }
-.m3-tab:not(.on) .m3-tab-count{background:var(--line);color:var(--ink-soft);}
+.m3-tab.on .m3-tab-count{background:var(--paper-deep);color:var(--ink);}
+/* La bulle est la légende : toujours là, plus intense sur le volet ouvert. */
+.m3-tab-bulle{width:14px;height:14px;border-radius:50%;background:var(--line);opacity:.5;transition:transform .15s, opacity .15s;}
+.m3-tab.on .m3-tab-bulle{opacity:1;transform:scale(1.25);}
+.m3-tab[data-volet="contexte"] .m3-tab-bulle{background:var(--vol-contexte);}
+.m3-tab[data-volet="antecedent"] .m3-tab-bulle{background:var(--vol-antecedent);}
+.m3-tab[data-volet="comportement"] .m3-tab-bulle{background:var(--vol-comportement);}
+.m3-tab[data-volet="consequence"] .m3-tab-bulle{background:var(--vol-consequence);}
+.m3-tab[data-volet="intervention"] .m3-tab-bulle{background:var(--vol-intervention);}
+.m3-tab.on[data-volet="contexte"] .m3-tab-bulle{background:var(--vol-contexte-deep);}
+.m3-tab.on[data-volet="antecedent"] .m3-tab-bulle{background:var(--vol-antecedent-deep);}
+.m3-tab.on[data-volet="comportement"] .m3-tab-bulle{background:var(--vol-comportement-deep);}
+.m3-tab.on[data-volet="consequence"] .m3-tab-bulle{background:var(--vol-consequence-deep);}
+.m3-tab.on[data-volet="intervention"] .m3-tab-bulle{background:var(--vol-intervention-deep);}
 
 .m3-layout{
   display:grid;
@@ -1674,13 +1684,10 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
 .graphique-actions button:disabled{opacity:.5;cursor:default;}
 
 /* Catégories proposées : une base de départ, jamais créée d'office. */
-.cats-suggerees{
-  background:var(--paper);border:1.5px dashed var(--line);
-  border-radius:var(--radius-sm);padding:11px 13px;margin-bottom:12px;
-}
-.cats-suggerees .cs-titre{
-  font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
-  color:var(--ink-soft);margin-bottom:4px;
+.cats-suggerees{margin-bottom:12px;}
+.cats-suggerees .cs-corps{
+  background:var(--paper);border-left:3px solid var(--line);
+  border-radius:0 6px 6px 0;padding:9px 13px 11px;margin:-4px 0 0;
 }
 .cats-suggerees .cs-aide{font-size:12px;color:var(--ink-soft);line-height:1.5;margin-bottom:8px;}
 .cats-suggerees .cs-liste{display:flex;flex-wrap:wrap;gap:6px;}
@@ -3440,7 +3447,6 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
     </div>
 
     <div id="m3-rapide-content">
-    <div id="m3-legende"></div>
     <!-- Onglets des 5 sous-modules -->
     <div class="m3-tabs" id="m3-tabs"></div>
 
@@ -3476,6 +3482,7 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
         <div class="m3-col-cats">
           <div class="m3-col-header">
             <span class="m3-col-title">Catégories</span>
+            <span id="m3-double-codage" class="m3-dc-place no-print"></span>
           </div>
           <div class="note-colonne">Créez vos propres catégories. Pas de bonne réponse — juste ce qui vous semble faire sens pour cette personne.</div>
           <div id="m3-cats-suggestions"></div>
@@ -3486,8 +3493,6 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
     </div>
 
     </div><!-- fin rapide-content -->
-
-    <div id="m3-double-codage"></div>
 
     <div class="actions-row" style="margin-top:28px;">
       <button class="btn btn-secondary" onclick="route('m2')">← Module 1</button>
@@ -3741,6 +3746,14 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
 </div>
 
 <!-- Modale de choix de simulation -->
+<div id="dc-overlay" class="sim-modal-overlay" style="display:none;" onclick="fermerFenetre('dc-overlay', event)">
+  <div class="sim-modal fenetre-simple" role="dialog" aria-modal="true" aria-labelledby="dc-titre">
+    <h3 id="dc-titre">Double codage</h3>
+    <div id="dc-corps"></div>
+    <button class="sim-modal-close" onclick="fermerFenetre('dc-overlay')">Fermer</button>
+  </div>
+</div>
+
 <div id="kit-overlay" class="sim-modal-overlay" style="display:none;" onclick="fermerFenetre('kit-overlay', event)">
   <div class="sim-modal fenetre-simple" role="dialog" aria-modal="true" aria-labelledby="kit-titre">
     <h3 id="kit-titre">Exporter un kit déclarant</h3>
@@ -5901,7 +5914,7 @@ const ETAPES = [
     label: 'Contexte', court: 'Contexte',
     render: (d) => `
       <div class="card">
-        <div style="background:var(--vol-contexte-pale);border-left:3px solid var(--vol-contexte);padding:13px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;" title="Jaune ocre : le contexte et l'antécédent, ce qui précède le comportement.">
+        <div style="background:var(--vol-contexte-pale);border-left:3px solid var(--vol-contexte);padding:13px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;" title="Bleu ardoise : le contexte, ce qui pèse de loin.">
           <b>Contexte (setting events)</b> — Ce qui précède de loin, pas juste la seconde d'avant. C'est souvent là que les clés se cachent.
         </div>
         <div class="field">
@@ -5970,7 +5983,7 @@ const ETAPES = [
         : [{id:'ant_'+Date.now(), texte:'', declencheurPresume:false}];
       return `
       <div class="card">
-        <div style="background:var(--vol-antecedent-pale);border-left:3px solid var(--vol-antecedent);padding:13px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;" title="Jaune ocre : le contexte et l'antécédent, ce qui précède le comportement.">
+        <div style="background:var(--vol-antecedent-pale);border-left:3px solid var(--vol-antecedent);padding:13px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;" title="Jaune ocre : l'antécédent, ce qui précède directement le comportement.">
           <b>Ce qui s'est passé juste avant le comportement.</b> Pas une interprétation ("il était énervé"), pas un résumé ("RAS") — mais ce qui s'est concrètement passé dans les secondes ou minutes précédentes. Il y en a souvent <b>plusieurs</b> : ajoutez-en autant que nécessaire.
         </div>
         <div class="field">
@@ -8573,6 +8586,19 @@ const _CONTROLES = [
     return _bancEgal('Modules sans repère', '', manquants.concat(trous).join(','));
   }},
 
+  {nom:'Chaque volet a sa couleur, distincte des autres', test: () => {
+    /* Le contexte et l'antécédent ont longtemps partagé le même jaune : on ne
+       distinguait plus, à l'œil, deux volets que l'outil sépare. */
+    const essai = document.createElement('span');
+    document.body.appendChild(essai);
+    const couleurs = ['contexte', 'antecedent', 'comportement', 'consequence', 'intervention'].map(v => {
+      essai.style.background = 'var(--vol-' + v + ')';
+      return getComputedStyle(essai).backgroundColor;
+    });
+    essai.remove();
+    return _bancEgal('Couleurs distinctes sur cinq volets', 5, new Set(couleurs).size);
+  }},
+
   {nom:'La pastille dit détaillé dès qu\'une case détaillée est remplie', test: () => {
     const rapide = {resumes: {contexte: 'Au foyer, le soir.'}};
     const detaille = {resumes: {contexte: 'Au foyer.'}, comportement: 'Il crie.'};
@@ -9517,17 +9543,19 @@ function extraireCDPostIntervention(evt) {
 
 // Configuration des 5 sous-modules
 /* ── Le code couleur, dit une fois ─────────────────────────────────────
-   Une couleur par volet, la même d'un bout à l'autre de l'outil. Le contexte
-   partage celle de l'antécédent : c'est l'antécédent lointain. */
+   Une couleur par volet, la même d'un bout à l'autre de l'outil. Le contexte a
+   longtemps partagé le jaune de l'antécédent ; Arthur a demandé deux couleurs
+   (14/09/2026) : à l'œil, on ne séparait plus deux volets que l'outil sépare. */
 const LEGENDE_VOLETS = {
-  antecedent:   "Jaune ocre — le contexte et l'antécédent : ce qui précède le comportement.",
-  contexte:     "Jaune ocre — le contexte et l'antécédent : ce qui précède le comportement.",
+  antecedent:   "Jaune ocre — l'antécédent : ce qui précède directement le comportement.",
+  contexte:     "Bleu ardoise — le contexte : ce qui pèse de loin, avant que la séquence ne commence.",
   comportement: "Vert sauge — le comportement observé.",
   consequence:  "Rosé — la conséquence pour la personne : ce qu'elle a obtenu ou évité.",
   intervention: "Prune — l'intervention de l'entourage, et ce qu'elle a produit."
 };
 const ORDRE_LEGENDE = [
-  ['antecedent',   'Contexte et antécédent'],
+  ['contexte',     'Contexte'],
+  ['antecedent',   'Antécédent'],
   ['comportement', 'Comportement'],
   ['consequence',  'Conséquence'],
   ['intervention', 'Intervention']
@@ -9593,16 +9621,29 @@ function suggestionsRestantes(sousId) {
   const liste = conf.liste.filter(n => !existants.has(normaliserNomCat(n)));
   return liste.length ? {aide: conf.aide, liste} : null;
 }
+/* Repliées par défaut : l'encart prenait le haut de la colonne. L'état ouvert
+   se garde le temps de la page, sinon chaque catégorie créée le refermerait. */
+let aideCatsOuverte = false;
 function blocSuggestionsCats(sousId) {
   const sug = suggestionsRestantes(sousId);
   if (!sug) return '';
   return '<div class="cats-suggerees no-print">' +
-    '<div class="cs-titre">Pour démarrer</div>' +
-    '<div class="cs-aide">' + esc(sug.aide) + '</div>' +
-    '<div class="cs-liste">' + sug.liste.map(n =>
-      '<button type="button" class="cs-chip" onclick="creerCategorieSuggeree(\'' + sousId + '\', this.dataset.nom)" data-nom="' + esc(n) + '">' +
-      '<span class="cs-plus">+</span>' + esc(n) + '</button>'
-    ).join('') + '</div></div>';
+    '<button type="button" class="aide-repliable' + (aideCatsOuverte ? ' ouvert' : '') + '" aria-expanded="' + aideCatsOuverte + '" ' +
+      'onclick="basculerAideCats()">' +
+      '<span class="ar-ico">?</span><span class="ar-titre">Besoin d\'aide pour démarrer ?</span><span class="ar-chevron">▾</span>' +
+    '</button>' +
+    '<div class="cs-corps"' + (aideCatsOuverte ? '' : ' hidden') + '>' +
+      '<div class="cs-aide">' + esc(sug.aide) + '</div>' +
+      '<div class="cs-liste">' + sug.liste.map(n =>
+        '<button type="button" class="cs-chip" onclick="creerCategorieSuggeree(\'' + sousId + '\', this.dataset.nom)" data-nom="' + esc(n) + '">' +
+        '<span class="cs-plus">+</span>' + esc(n) + '</button>'
+      ).join('') + '</div>' +
+    '</div></div>';
+}
+function basculerAideCats() {
+  aideCatsOuverte = !aideCatsOuverte;
+  const el = document.getElementById('m3-cats-suggestions');
+  if (el) el.innerHTML = blocSuggestionsCats(state.m3.sous);
 }
 function creerCategorieSuggeree(sousId, nom) {
   ensureM3();
@@ -10332,29 +10373,23 @@ function supprimerCat(sousId, catId) {
 }
 
 function renderM3Tabs() {
-  const leg = document.getElementById('m3-legende');
-  if (leg) leg.innerHTML = legendeVolets('Code couleur des volets');
-  // Re-render seulement les onglets (pas tout le sous-module)
   ensureM3();
   const evts = state.m2.evenements || [];
   if (evts.length === 0) return;
   const tabsEl = document.getElementById('m3-tabs');
   if (!tabsEl) return;
+  /* La légende tient dans les onglets : chaque volet porte sa bulle de couleur,
+     toujours visible, plus intense sur le volet ouvert. La couleur vient d'une
+     règle de feuille sur data-volet, pas d'un style en ligne. */
   tabsEl.innerHTML = M3_SOUS.map(s => {
     // Le compteur porte sur les items réels : un volet non renseigné n'a rien
     // à catégoriser et gonflerait le dénominateur sans raison.
     const items = extraireItems(s.id).filter(it => !it.vide);
     const nAssignes = items.filter(it => catDunItem(s.id, it.id).length > 0).length;
     const isOn = state.m3.sous === s.id;
-    // Chaque onglet porte la couleur de son volet : ils étaient tous jaunes,
-    // c'est-à-dire tous de la couleur de l'antécédent.
-    const c = s.couleur ? `--vol-${s.couleur}` : '--slate';
-    const style = isOn
-      ? `background:var(${c}-texte);border-color:var(${c}-texte);color:#fff;`
-      : `border-color:var(${c}-pale);color:var(${c}-texte);`;
-    return `<button class="m3-tab${isOn?' on':''}" style="${style}" onclick="changerSous('${s.id}')" title="${esc(LEGENDE_VOLETS[s.couleur] || '')}">
-      ${s.icon} ${s.label}
-      <span class="m3-tab-count">${nAssignes}/${items.length}</span>
+    return `<button class="m3-tab${isOn ? ' on' : ''}" data-volet="${esc(s.couleur || '')}" onclick="changerSous('${s.id}')" title="${esc(LEGENDE_VOLETS[s.couleur] || '')}">
+      <span class="m3-tab-ligne">${s.icon} ${s.label} <span class="m3-tab-count">${nAssignes}/${items.length}</span></span>
+      <span class="m3-tab-bulle" aria-hidden="true"></span>
     </button>`;
   }).join('');
 }
@@ -11843,6 +11878,7 @@ function xe(t) {
 const DOCX_C = {
   ink: '2C2416', inkSoft: '6B6152', ligne: 'D9D0C0', papier: 'F5F0E8', papierFonce: 'EDE7D9',
   slate: '3D4F6B',
+  contexte: 'E7ECF3', contexteTexte: '3D4F6B', contexteTrait: 'A9B8CC',
   antecedent: 'F5E8C8', antecedentTexte: '7A6220', antecedentTrait: 'C9A84C',
   comportement: 'E4EDEA', comportementTexte: '46685A', comportementTrait: '9AB5A8',
   consequence: 'F8E8E0', consequenceTexte: 'A8503A', consequenceTrait: 'E8B4A0',
@@ -12016,7 +12052,7 @@ function corpsGrilleABC() {
 
   const ligneEnTete = [
     enTete('Quand · Qui', 'Date, heure, moment de la journée, lieu.\nQui remplit, et à quel titre.\n☐ J\'ai vu la scène moi-même', DOCX_C.papierFonce, DOCX_C.ink),
-    enTete('Contexte', 'Ce qui s\'était passé avant, de loin : la nuit, le week-end, un changement, une douleur, un remplacement.', DOCX_C.antecedent, DOCX_C.antecedentTexte),
+    enTete('Contexte', 'Ce qui s\'était passé avant, de loin : la nuit, le week-end, un changement, une douleur, un remplacement.', DOCX_C.contexte, DOCX_C.contexteTexte),
     enTete('Antécédent', 'Ce qui s\'est passé juste avant, et dans quel état il ou elle était.', DOCX_C.antecedent, DOCX_C.antecedentTexte),
     enTete('Comportement', 'Ce qu\'une caméra aurait filmé : les gestes, les sons, l\'ordre, la durée.', DOCX_C.comportement, DOCX_C.comportementTexte),
     enTete('Intervention · effet', 'Ce que vous avez fait, et ce que ça a donné. « On n\'a rien fait » est une réponse.', DOCX_C.intervention, DOCX_C.interventionTexte),
@@ -12198,7 +12234,7 @@ function corpsGuide() {
 
     docxTitre(2, 'Contexte ou antécédent ?') +
     docxP('C\'est la distinction qui revient le plus souvent, et elle est simple.') +
-    docxP([{t: 'Le contexte', gras: true, couleur: DOCX_C.antecedentTexte}, {t: ', c\'est ce qui précède de loin : la nuit d\'avant, le retour de week-end, un traitement modifié, un remplacement, une douleur signalée la veille. Ça ne déclenche rien tout seul, mais ça remplit le vase.'}]) +
+    docxP([{t: 'Le contexte', gras: true, couleur: DOCX_C.contexteTexte}, {t: ', c\'est ce qui précède de loin : la nuit d\'avant, le retour de week-end, un traitement modifié, un remplacement, une douleur signalée la veille. Ça ne déclenche rien tout seul, mais ça remplit le vase.'}]) +
     docxP([{t: 'L\'antécédent', gras: true, couleur: DOCX_C.antecedentTexte}, {t: ', c\'est ce qui se passe juste avant, dans les secondes ou les minutes : une consigne, une activité qui se termine, un bruit, quelqu\'un qui s\'approche, un objet qu\'on retire.'}]) +
     docxP('Les deux comptent. Un même antécédent ne produit pas le même effet selon le contexte — c\'est souvent là que l\'explication se trouve, et c\'est pour ça qu\'on demande les deux séparément.') +
     docxP('Si vous hésitez, posez-vous la question : est-ce que ça vient de se produire, ou est-ce que c\'était déjà là en arrivant ?', {italique: true, couleur: DOCX_C.inkSoft}) +
@@ -12238,7 +12274,7 @@ function corpsGuide() {
     colonne('Contexte',
       'Où, avec qui, et ce qui s\'était passé avant — de loin. Le ratio d\'encadrement compte : « 1 pro, 8 résidents » n\'est pas la même chose que « 2 pros, 3 résidents ».',
       'Au foyer, dans le hall. 1 pro pour 9 résidents. Retour de week-end famille ce matin, il a peu dormi d\'après sa mère.',
-      DOCX_C.antecedent, DOCX_C.antecedentTexte) +
+      DOCX_C.contexte, DOCX_C.contexteTexte) +
     colonne('Antécédent',
       'Les secondes ou les minutes qui précèdent, et l\'état dans lequel il ou elle était. S\'il y a plusieurs éléments, notez-les tous ; si l\'un vous semble avoir déclenché, soulignez-le.',
       'On lui a demandé de ranger ses affaires pour passer au repas. Il tournait en rond dans le couloir depuis une dizaine de minutes et regardait souvent vers la porte.',
@@ -13845,7 +13881,7 @@ function fermerFenetre(id, ev) {
 
 function fermerFenetresClavier(ev) {
   if (ev.key !== 'Escape') return;
-  ['kit-overlay', 'contrib-overlay', 'trous-overlay'].forEach(id => fermerFenetre(id));
+  ['kit-overlay', 'contrib-overlay', 'trous-overlay', 'dc-overlay'].forEach(id => fermerFenetre(id));
   document.removeEventListener('keydown', fermerFenetresClavier);
 }
 
@@ -13959,15 +13995,20 @@ function supprimerAnciensCodages() {
 }
 
 function renderDoubleCodage() {
-  const el = document.getElementById('m3-double-codage');
-  if (!el) return;
+  const place = document.getElementById('m3-double-codage');
+  const corps = document.getElementById('dc-corps');
   const enCodage = !!(state.codage && state.codage.actif);
   const anciens = ((state.m3 && state.m3.codages) || []).length;
+  if (place) {
+    place.innerHTML = enCodage
+      ? '<button type="button" class="dc-bouton copie" onclick="ouvrirFenetre(\'dc-overlay\')" title="Ce qu\'est cette copie">✏️ Copie de primo codage</button>'
+      : '<button type="button" class="dc-bouton" onclick="ouvrirFenetre(\'dc-overlay\')">👥 Double codage</button>';
+  }
+  if (!corps) return;
+  const titre = document.getElementById('dc-titre');
+  if (titre) titre.textContent = enCodage ? 'Copie de primo codage' : 'Double codage';
   const effacer = '<button class="btn btn-ghost btn-sm" onclick="effacerCodage()">🧹 Effacer le codage</button>';
-
-  let html = '<div class="card" id="carte-double-codage">' +
-    '<h4 style="font-size:16px;color:var(--ink);margin-bottom:6px;">' + (enCodage ? 'Copie de primo codage' : 'Double codage') + '</h4>';
-
+  let html = '';
   if (enCodage) {
     html += '<p class="dc-texte"><b>Vous catégorisez à partir du seul déclaratif</b>, sans catégorie de départ et sans voir le codage de l\'autre.</p>' +
       '<p class="dc-texte">Cette copie ne remplace pas le fichier officiel. Sauvegardez-la avec « 💾 Exporter » et apportez-la à la ' +
@@ -13995,9 +14036,7 @@ function renderDoubleCodage() {
         '<button class="btn btn-ghost btn-sm" onclick="supprimerAnciensCodages()">Les supprimer</button></p>';
     }
   }
-
-  html += '</div>';
-  el.innerHTML = html;
+  corps.innerHTML = html;
 }
 
 /* ══════════════════════════════════════════════════════════════════════
