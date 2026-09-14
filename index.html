@@ -454,13 +454,6 @@ header.top{
   display:inline-block;background:var(--sauge-pale);color:var(--sauge-deep);
   font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:10px;margin-left:6px;
 }
-.remarque-recue{margin:0 0 16px;}
-.rr-titre{font-size:13px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
-.rr-ligne{font-size:14px;line-height:1.6;padding:7px 0;border-top:1px solid var(--line-soft);}
-.rr-prov{
-  display:inline-block;background:var(--sauge-pale);color:var(--sauge-deep);
-  font-size:11px;font-weight:700;padding:1px 7px;border-radius:10px;margin-right:8px;
-}
 
 /* ── Mode déclarant ────────────────────────────────────────────────────
    Même gabarit que la barre dossier, teinte différente : le déclarant doit
@@ -490,6 +483,8 @@ header.top{
 }
 #view-m1 [data-fige-declarant]{opacity:.72;cursor:not-allowed;}
 #preambule-remarques[hidden]{display:none;}
+.preambule-fige{font-size:14px;line-height:1.6;border-left:3px solid var(--sauge-deep);}
+.preambule-fige b{color:var(--sauge-deep);}
 @media(max-width:620px){
   #declarant-subbar .subbar-dossier{display:none;}
   #declarant-subbar .subbar-btn{font-size:11px;padding:5px 8px;}
@@ -12757,7 +12752,7 @@ refreshAccueilBadges();
 const SITUER = {
   m1: {
     ici: "Ce que l'équipe sait déjà de la personne, avant toute observation.",
-    vient: "De vous, et des remarques que les déclarants renvoient sur ce préambule.",
+    vient: "De vous, et de ce que vous avez vérifié au téléphone avec chaque partenaire, avant le recueil.",
     repart: "Vers les moments et les lieux dans lesquels chaque évènement viendra se ranger."
   },
   m2: {
@@ -12928,8 +12923,10 @@ function renderParcours() {
 
    Deux règles qui commandent tout le reste :
 
-   1. Le préambule du destinataire fait foi. Le déclarant peut le contester,
-      section par section, jamais le réécrire. Sans ça, quatre personnes
+   1. Le préambule du destinataire fait foi. Le déclarant ne peut ni le
+      réécrire ni le commenter dans l'outil : il a été vérifié avec lui au
+      téléphone avant le recueil, et s'il faut le corriger, il appelle la
+      référente. Sans ça, quatre personnes
       déclareraient des évènements sur la base de quatre journées types
       différentes, et la carte jour × moment perdrait sans rien dire les
       évènements dont le moment n'existe pas chez le receveur.
@@ -12942,21 +12939,6 @@ function renderParcours() {
    Ce bloc est déclaré AVANT le routage initial : route() interroge
    VUES_RESERVEES dès l'ouverture d'un lien direct. Un const déclaré plus bas
    serait en zone morte temporelle. Ne pas le déplacer. */
-
-const SECTIONS_PREAMBULE = [
-  {cle:'personne', titre:'La personne',
-   aide:"Prénom, âge, ce qui est dit de son fonctionnement, de sa communication."},
-  {cle:'espaces', titre:'Les espaces de vie',
-   aide:"Les lieux où elle vit et où elle est accueillie, et lesquels vous connaissez."},
-  {cle:'journee', titre:'La journée type',
-   aide:"Les moments de la journée et leurs horaires, tels qu'ils sont décrits ici."},
-  {cle:'nuit', titre:'La nuit et les trajets',
-   aide:"Coucher, lever, déplacements."},
-  {cle:'vase', titre:'Le vase de tension',
-   aide:"Ce qui la fait monter en tension, ce qui la fait redescendre."},
-  {cle:'autre', titre:'Autre chose',
-   aide:"Ce qui manque, ce qui vous paraît faux, ce que vous diriez autrement."}
-];
 
 /* Ce qu'un déclarant ne fait pas — et ce qu'on lui répond quand il y va. */
 const VUES_RESERVEES = {
@@ -13035,8 +13017,7 @@ function ouvrirKitDeclarant(lu) {
     actif: true,
     idContribution: nouvelIdentifiant('ctr'),
     provenance: '',
-    ouvert: new Date().toISOString(),
-    remarques: {}
+    ouvert: new Date().toISOString()
   };
   persist();
   loadM1FromState();
@@ -13058,10 +13039,9 @@ function quitterModeDeclarant() {
 function exporterContribution() {
   const d = state.declarant || {};
   const evts = (state.m2 && state.m2.evenements) || [];
-  if (!evts.length && !confirm("Aucun évènement n'est décrit pour l'instant. Envoyer quand même vos remarques sur le préambule ?")) return;
+  if (!evts.length && !confirm("Aucun évènement n'est décrit pour l'instant. Produire quand même le fichier ?")) return;
   const prov = (document.getElementById('declarant-provenance') || {}).value;
   if (typeof prov === 'string') d.provenance = prov.trim();
-  collecterRemarquesPreambule();
   persist();
 
   const contribution = {
@@ -13070,7 +13050,6 @@ function exporterContribution() {
       idContribution: d.idContribution || nouvelIdentifiant('ctr'),
       idDossier: state.idDossier || null,
       provenance: d.provenance || '',
-      remarques: d.remarques || {},
       nbEvenements: evts.length,
       envoye: new Date().toISOString()
     },
@@ -13085,18 +13064,6 @@ function exporterContribution() {
   showToast('Contribution exportée. Renvoyez ce fichier à la personne qui vous a sollicité.');
 }
 
-/* ── Le préambule, en lecture seule, avec des remarques ────────────── */
-function collecterRemarquesPreambule() {
-  if (!state.declarant) return;
-  const r = state.declarant.remarques || {};
-  SECTIONS_PREAMBULE.forEach(s => {
-    const el = document.getElementById('remarque-' + s.cle);
-    if (el) r[s.cle] = el.value.trim();
-  });
-  Object.keys(r).forEach(k => { if (!r[k]) delete r[k]; });
-  state.declarant.remarques = r;
-}
-
 function appliquerModeDeclarantSurM1() {
   const vue = document.getElementById('view-m1');
   const bloc = document.getElementById('preambule-remarques');
@@ -13104,38 +13071,21 @@ function appliquerModeDeclarantSurM1() {
   const actif = modeDeclarantActif();
 
   vue.querySelectorAll('input, textarea, select, button').forEach(el => {
-    if (el.closest('#preambule-remarques')) return;
+    if (el.closest('.actions-row')) return;
     if (actif) { el.setAttribute('disabled', 'disabled'); el.dataset.figeDeclarant = '1'; }
     else if (el.dataset.figeDeclarant) { el.removeAttribute('disabled'); delete el.dataset.figeDeclarant; }
   });
 
-  if (!actif) {
-    // Côté équipe : ce que les déclarants ont dit du préambule, à côté du
-    // préambule. Présenté, jamais appliqué.
-    const recues = renderRemarquesRecues();
-    bloc.innerHTML = recues;
-    bloc.hidden = !recues;
-    return;
-  }
+  if (!actif) { bloc.hidden = true; bloc.innerHTML = ''; return; }
+  // En tête de page : c'est la première chose à savoir avant de lire
+  const entete = vue.querySelector('.mod-header');
+  if (entete && entete.nextElementSibling !== bloc) entete.after(bloc);
   bloc.hidden = false;
-  const r = (state.declarant && state.declarant.remarques) || {};
   bloc.innerHTML =
-    '<div class="card">' +
-      '<h3 style="font-size:17px;margin-bottom:6px;">Ce préambule vous semble-t-il juste ?</h3>' +
-      '<p style="font-size:14px;color:var(--ink-soft);margin:0 0 16px;line-height:1.6;">' +
-        'Il a été rempli par l\'équipe qui vous a sollicité. Vous ne pouvez pas le modifier — c\'est volontaire : ' +
-        'si chacun le réécrivait de son côté, les observations ne se compareraient plus. ' +
-        'En revanche, <b>dites ce qui vous paraît faux, incomplet ou mal dit</b>. La personne qui vous a sollicité ' +
-        'recevra vos remarques et corrigera.' +
-      '</p>' +
-      SECTIONS_PREAMBULE.map(s =>
-        '<div class="field" style="margin-bottom:14px;">' +
-          '<label for="remarque-' + s.cle + '">' + esc(s.titre) + '</label>' +
-          '<div class="help" style="margin:0 0 6px;">' + esc(s.aide) + '</div>' +
-          '<textarea id="remarque-' + s.cle + '" rows="2" placeholder="Rien à signaler, ou dites-le ici…" ' +
-            'oninput="collecterRemarquesPreambule(); persist();">' + esc(r[s.cle] || '') + '</textarea>' +
-        '</div>'
-      ).join('') +
+    '<div class="card preambule-fige">' +
+      '<b>Ce préambule a été établi avec la personne qui vous a sollicité.</b> ' +
+      'Vous ne pouvez pas le modifier : tous les déclarants partent du même. ' +
+      'S\'il vous paraît faux ou incomplet, appelez-la.' +
     '</div>';
 }
 
@@ -13723,8 +13673,8 @@ function renderDoubleCodage() {
      cumul ne duplique donc rien : on reconnaît ce qui est déjà là.
    · Seul m2 remonte. Une contribution qui porterait de l'organisation ou de
      l'interprétation les verrait ignorées — et on le dit.
-   · Les remarques sur le préambule ne s'appliquent jamais toutes seules. On
-     les présente à côté du préambule ; c'est l'équipe qui corrige. */
+   · Le préambule ne remonte jamais : il a été vérifié au téléphone avant le
+     recueil, et seul le référent le modifie. */
 
 function provenanceEvt(e) {
   if (!e || !e.source) return '';
@@ -13797,7 +13747,6 @@ function fusionnerContribution(lu, nomFichier) {
   const dejaVue = !!state.contributions[idC];
   state.contributions[idC] = {
     provenance: (meta.provenance || '').trim(),
-    remarques: meta.remarques || {},
     envoye: meta.envoye || '',
     recu: new Date().toISOString(),
     fichier: nomFichier || '',
@@ -13805,7 +13754,6 @@ function fusionnerContribution(lu, nomFichier) {
   };
 
   const ignorees = ['m1', 'm3', 'm4'].filter(k => lu.dossier && lu.dossier[k]);
-  const nbRemarques = Object.keys(state.contributions[idC].remarques || {}).length;
 
   migrerIdsCategorisation();
   persist();
@@ -13823,7 +13771,6 @@ function fusionnerContribution(lu, nomFichier) {
   }
   if (dejaVue && !remplaces) msg += '· Cet envoi avait déjà été reçu.\n';
   if (couvAjoutees) msg += '· ' + couvAjoutees + ' période' + (couvAjoutees > 1 ? 's' : '') + ' observée' + (couvAjoutees > 1 ? 's' : '') + ' sans comportement-défi\n';
-  if (nbRemarques) msg += '· ' + nbRemarques + ' remarque' + (nbRemarques > 1 ? 's' : '') + ' sur le préambule, à relire dans le préambule.\n';
   if (ignorees.length) msg += '· Ignoré : ' + ignorees.join(', ') + ' — une contribution ne remonte que le déclaratif.\n';
   alert(msg);
 }
@@ -13842,41 +13789,12 @@ function renderContributions() {
       const x = c[k];
       const n = compte[k] || 0;
       const quand = x.recu ? new Date(x.recu).toLocaleDateString('fr-FR') : '';
-      const nbR = Object.keys(x.remarques || {}).length;
       return '<div class="contrib-item">' +
         '<span class="contrib-prov">' + esc(x.provenance || 'provenance non précisée') + '</span>' +
         '<span class="contrib-detail">' + n + ' évènement' + (n > 1 ? 's' : '') +
           (quand ? ' · reçu le ' + esc(quand) : '') +
-          (nbR ? ' · ' + nbR + ' remarque' + (nbR > 1 ? 's' : '') + ' sur le préambule' : '') +
         '</span></div>';
     }).join('') + '</div>';
-}
-
-/* Ce que les déclarants disent du préambule, présenté à côté — jamais appliqué. */
-function renderRemarquesRecues() {
-  const c = state.contributions || {};
-  const parSection = {};
-  Object.keys(c).forEach(k => {
-    const prov = (c[k].provenance || 'provenance non précisée');
-    Object.entries(c[k].remarques || {}).forEach(([sec, txt]) => {
-      if (!txt) return;
-      (parSection[sec] = parSection[sec] || []).push({prov, txt});
-    });
-  });
-  if (!Object.keys(parSection).length) return '';
-  return '<div class="card">' +
-    '<h3 style="font-size:17px;margin-bottom:6px;">Ce que les déclarants disent de ce préambule</h3>' +
-    '<p style="font-size:14px;color:var(--ink-soft);margin:0 0 16px;line-height:1.6;">' +
-      'Leurs remarques sont présentées ici, pas appliquées : <b>c\'est vous qui corrigez</b>. ' +
-      'Une contradiction entre deux lieux n\'est pas forcément une erreur — c\'est souvent une information.' +
-    '</p>' +
-    SECTIONS_PREAMBULE.filter(s => parSection[s.cle]).map(s =>
-      '<div class="remarque-recue"><div class="rr-titre">' + esc(s.titre) + '</div>' +
-      parSection[s.cle].map(r =>
-        '<div class="rr-ligne"><span class="rr-prov">' + esc(r.prov) + '</span>' + esc(r.txt) + '</div>'
-      ).join('') + '</div>'
-    ).join('') +
-  '</div>';
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -14313,7 +14231,7 @@ const REPERES = [
        r: `<p>Jamais. Le déclaratif est la donnée de base : c'est le discours d'un professionnel ou d'une famille, avec son point de vue et ses biais propres, et il doit garder ce caractère.</p>
            <p>Le travail de l'analyste ne commence qu'à l'étape <b>Organiser</b>. Tout ce qui y est produit — catégories, regroupements — se lit par-dessus et n'est jamais réécrit dans l'évènement. On peut donc toujours revenir au matériau d'origine.</p>`},
       {q: "Comment travailler à plusieurs sur la même analyse ?",
-       r: `<p><b>Pour recueillir</b>, le référent envoie à chaque déclarant un <i>kit déclarant</i> : un fichier qui contient le préambule, sans aucun évènement ni travail d'analyse. Le déclarant l'ouvre dans la BAF, décrit ce qu'il observe, peut commenter le préambule, puis renvoie sa <i>contribution</i>. Le référent la verse dans le dossier : chaque évènement garde sa provenance, et les envois successifs ne se dupliquent pas. Ceux qui ne peuvent pas utiliser l'outil numérique remplissent une grille ABC papier, disponible dans Ressources.</p>
+       r: `<p><b>Pour recueillir</b>, le référent envoie à chaque déclarant un <i>kit déclarant</i> : un fichier qui contient le préambule, sans aucun évènement ni travail d'analyse. Le déclarant l'ouvre dans la BAF, décrit ce qu'il observe, puis renvoie sa <i>contribution</i>. Le référent la verse dans le dossier : chaque évènement garde sa provenance, et les envois successifs ne se dupliquent pas. Ceux qui ne peuvent pas utiliser l'outil numérique remplissent une grille ABC papier, disponible dans Ressources.</p>
            <p><b>Pour organiser</b>, référent et clinicien catégorisent chacun de leur côté, grâce à un <i>kit de codage</i>, puis comparent leurs écarts et arrêtent ensemble une catégorisation de synthèse.</p>
            <p>Le dossier complet, lui, ne circule pas : il reste chez le référent. Ce qui part vers l'extérieur, c'est le document d'analyse fonctionnelle.</p>`},
       {q: "Pourquoi déclarer les journées où il ne se passe rien ?",
@@ -14354,7 +14272,7 @@ const LEXIQUE_BAF = {
   "référent": "Le professionnel qui porte la démarche : il la prépare, lance le recueil, reçoit les contributions et fait l'analyse avec le clinicien qui la supervise.",
   "cotateur": "Celui ou celle qui remplit l'ICAF sur une analyse fonctionnelle terminée. Coter à plusieurs, séparément, est plus instructif que la note elle-même.",
   "kit déclarant": "Le fichier envoyé à un déclarant : le préambule, sans aucun évènement ni travail d'analyse. Il l'ouvre dans la BAF, décrit ce qu'il observe et renvoie une contribution.",
-  "contribution": "Le fichier renvoyé par un déclarant : ses évènements, ses périodes observées et ses remarques sur le préambule. Le référent la verse dans le dossier, chaque évènement gardant sa provenance.",
+  "contribution": "Le fichier renvoyé par un déclarant : ses évènements et ses périodes observées. Le référent la verse dans le dossier, chaque évènement gardant sa provenance.",
   "période observée": "Une journée ou une plage de jours déclarée comme observée, avec ou sans comportement-défi. Sans elle, l'outil ne peut pas distinguer « il ne s'est rien passé » de « personne n'a rempli ».",
   "vase de tension": "L'image qu'emploie la BAF pour la tension qui s'accumule chez la personne, en cinq paliers. Le déclarant pose un palier et note à quoi ça se voyait ; l'équipe en tire l'échelle décrite propre à la personne.",
   "double codage": "La catégorisation faite séparément par deux personnes — le référent et le clinicien, par exemple —, puis comparée et discutée, pour aboutir à une catégorisation de synthèse.",
