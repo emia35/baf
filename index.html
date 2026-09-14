@@ -2938,9 +2938,15 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
       </div>
 
       <div class="res-doc">
-        <div class="res-doc-tete"><span class="res-doc-ico">🧭</span><span class="res-doc-titre">Faire une analyse fonctionnelle avec la BAF</span></div>
-        <div class="res-doc-desc">Le protocole, dans l'ordre : ouvrir le dossier, faire valider le préambule par les parties, envoyer les kits, fusionner les contributions, organiser, interpréter, coter. Huit étapes, avec à chaque fois où c'est dans l'outil et le piège à éviter. À poser à côté du clavier les premières fois.</div>
-        <button class="btn btn-secondary btn-sm" onclick="telechargerModeEmploi()">⬇ Télécharger (.docx)</button>
+        <div class="res-doc-tete"><span class="res-doc-ico">📘</span><span class="res-doc-titre">Mode d'emploi : faire une AF avec la BAF</span></div>
+        <div class="res-doc-desc">Pour toute équipe qui se lance. Le vocabulaire — déclarant, analyste, cotateur —, les quatre temps d'une analyse fonctionnelle, les questions à se poser avant de commencer, un modèle de courriel à envoyer aux déclarants, et ce que la BAF fait, ou ne fait pas, à chaque étape.</div>
+        <button class="btn btn-secondary btn-sm" onclick="telechargerModeEmploiGeneral()">⬇ Télécharger (.docx)</button>
+      </div>
+
+      <div class="res-doc">
+        <div class="res-doc-tete"><span class="res-doc-ico">🧭</span><span class="res-doc-titre">Faire une AF avec la BAF — Version EMIA</span></div>
+        <div class="res-doc-desc">Le protocole tel qu'il se pratique à l'EMIA 35, dans l'ordre : ouvrir le dossier, faire valider le préambule par les parties, envoyer les kits, fusionner les contributions, organiser, interpréter, coter. Huit étapes, avec à chaque fois où c'est dans l'outil et le piège à éviter.</div>
+        <button class="btn btn-secondary btn-sm" onclick="telechargerVersionEMIA()">⬇ Télécharger (.docx)</button>
       </div>
     </div>
 
@@ -8449,12 +8455,13 @@ const _CONTROLES = [
     return _bancEgal('Rendu du parcours', 'ok', souci ? souci : (svg ? 'ok' : 'AUCUN SVG'));
   }},
 
-  {nom:'Les quatre documents se fabriquent sans exception', test: () => {
+  {nom:'Les documents imprimables se fabriquent sans exception', test: () => {
     /* Une erreur dans un corps de document ne se voit qu'au clic, et le clic
        ouvre une boîte de téléchargement : personne ne l'essaie jamais. */
     const soucis = [];
     [['grille', corpsGrilleABC, true], ['préambule', corpsPreambule, false],
-     ['guide', corpsGuide, false], ['mode d\'emploi', corpsModeEmploi, false]].forEach(([nom, f, paysage]) => {
+     ['guide', corpsGuide, false], ['version EMIA', corpsModeEmploi, false],
+     ['mode d\'emploi général', corpsModeEmploiGeneral, false]].forEach(([nom, f, paysage]) => {
       try {
         const blob = construireDocx(f(), paysage);
         if (!blob || !blob.size) soucis.push(nom + ' : archive vide');
@@ -12074,7 +12081,7 @@ function corpsModeEmploi() {
     (piege ? docxP([{t: 'À éviter. ', gras: true, couleur: DOCX_C.consequenceTexte}, {t: piege}],
       {fond: DOCX_C.consequence, traitGauche: DOCX_C.consequenceTrait, avant: 80, apres: 60}) : '');
 
-  return docxTitre(1, "Faire une analyse fonctionnelle avec la BAF") +
+  return docxTitre(1, "Faire une AF avec la BAF — Version EMIA") +
     docxP([{t: "Le déroulé d'une AF à l'EMIA, dans l'ordre. À suivre à la lettre les premières fois — " +
                "les raccourcis se prennent quand on sait ce qu'ils coûtent.", italique: true, couleur: DOCX_C.inkSoft}],
       {apres: 200}) +
@@ -12188,7 +12195,156 @@ function corpsModeEmploi() {
     docxPuce("Qu'une AF se fait vite. Ce protocole prend des semaines, et l'essentiel de ce temps n'est pas passé devant l'écran — il est passé à discuter avec ceux qui accompagnent la personne.");
 }
 
-function telechargerModeEmploi() { telechargerDocx('BAF_Mode-emploi.docx', corpsModeEmploi(), false); }
+function telechargerVersionEMIA() { telechargerDocx('BAF_AF-version-EMIA.docx', corpsModeEmploi(), false); }
+
+/* ── 5. Le mode d'emploi général ────────────────────────────────────────
+   Pour toute équipe qui se lance, pas seulement l'EMIA. Il pose le
+   vocabulaire, les quatre temps d'une analyse fonctionnelle, et dit à chaque
+   étape ce que la BAF fait — et surtout ce qu'elle ne fait pas.
+
+   « Coter » reste réservé à l'ICAF : pour la catégorisation à deux, on parle
+   de double codage. Un même mot pour deux gestes différents, dans un document
+   destiné à des équipes qui découvrent, c'est une confusion garantie. */
+function corpsModeEmploiGeneral() {
+  const partie = (num, titre, sous) =>
+    docxP([
+      {t: num + '   ', gras: true, taille: 30, couleur: DOCX_C.slate},
+      {t: titre, gras: true, taille: 30, couleur: DOCX_C.slate}
+    ], {avant: 380, apres: sous ? 40 : 120}) +
+    (sous ? docxP([{t: sous, italique: true, couleur: DOCX_C.inkSoft}], {apres: 140}) : '');
+  const sousPartie = (t) => docxP(t, {gras: true, taille: 23, couleur: DOCX_C.ink, avant: 220, apres: 90});
+  const texte = (t) => docxP(t, {apres: 110});
+  const puce = (gras, suite) => docxP([
+    {t: '•  ', gras: true, couleur: DOCX_C.inkSoft},
+    {t: gras, gras: true},
+    {t: suite || ''}
+  ], {retrait: 240, apres: 80});
+  const encadre = (runs, fond, trait) => docxP(runs, {fond: fond, traitGauche: trait, apres: 160});
+  const ligneCourriel = (t, premiere) => docxP([{t: t || ' ', taille: 19}],
+    {fond: DOCX_C.papier, traitGauche: DOCX_C.slate, retrait: 160, avant: premiere ? 80 : 0, apres: 0});
+
+  const courriel = [
+    'Objet : analyse fonctionnelle — [prénom]',
+    '',
+    'Bonjour,',
+    '',
+    "Dans le cadre de l'accompagnement de [prénom] au sein de notre structure, nous souhaitons mener une analyse fonctionnelle, pour mieux comprendre les comportements suivants : [comportements visés].",
+    '',
+    "Pour cela, nous avons besoin d'observations venues de tous les lieux où [prénom] passe du temps, et nous comptons sur vous. Votre rôle sera de décrire les comportements que vous observerez entre le [date] et le [date] — et de nous signaler aussi les journées où il ne s'en est pas produit : elles comptent autant que les autres.",
+    '',
+    "Vous trouverez ci-joint un kit déclarant. C'est un fichier à ouvrir dans la BAF, un outil gratuit qui fonctionne dans votre navigateur, sans installation et sans envoi de données : [adresse]. Il contient le préambule, c'est-à-dire ce que nous savons déjà de [prénom]. N'hésitez pas à le compléter ou à nous signaler ce qui vous paraît inexact. Vous y décrirez ensuite chaque situation, pas à pas. Merci de n'y inscrire ni nom de famille, ni nom de structure.",
+    '',
+    "À la fin de la période, renvoyez-nous le fichier que la BAF produit (au format .json), en réponse à ce message.",
+    '',
+    "Si vous ne pouvez pas ou ne souhaitez pas utiliser l'outil numérique, nous pouvons vous transmettre des grilles papier. Pour cela, comme pour toute question, vous pouvez joindre [nom], référent·e de la démarche, à [adresse] ou au [téléphone].",
+    '',
+    "Comme toute analyse fonctionnelle, cette démarche est supervisée par un clinicien, [nom]. Une fois le recueil terminé, le référent et le clinicien analyseront ensemble les observations. Ils rédigeront, dans un délai de [X] semaines, un document de synthèse : vous y trouverez les hypothèses fonctionnelles — des propositions de lecture sur ce à quoi servent ces comportements pour [prénom] — et les pistes qui en découlent.",
+    '',
+    'Merci de votre participation,',
+    '[signature]'
+  ];
+
+  return docxTitre(1, "Mode d'emploi : faire une AF avec la BAF") +
+    docxP([{t: "Pour toute équipe qui souhaite mener une analyse fonctionnelle en s'appuyant sur la BAF. Ce document pose les principes et le déroulé ; il ne remplace ni la formation, ni le regard d'un clinicien.",
+            italique: true, couleur: DOCX_C.inkSoft}], {apres: 220}) +
+
+    docxIntertitre('Quelques mots pour commencer', DOCX_C.papierFonce, DOCX_C.slate) +
+    texte([
+      {t: 'La BAF réunit deux outils. ', gras: true},
+      {t: "Le RDAF (outil 1) recueille et prépare les données, en trois étapes : Recueillir, Organiser, Interpréter. L'ICAF (outil 2) évalue la qualité d'une analyse fonctionnelle une fois terminée. "},
+      {t: "Ce qui se passe entre les deux — l'analyse elle-même — c'est à vous de jouer.", gras: true}
+    ]) +
+    texte('Trois rôles, et chacun son moment :') +
+    docxTableau([
+      [
+        {contenu: [docxP('Rôle', {gras: true, taille: 19})], fond: DOCX_C.papierFonce},
+        {contenu: [docxP("Ce qu'il fait", {gras: true, taille: 19})], fond: DOCX_C.papierFonce},
+        {contenu: [docxP('Dans la BAF', {gras: true, taille: 19})], fond: DOCX_C.papierFonce}
+      ],
+      [
+        {contenu: [docxP('Le déclarant', {gras: true, taille: 18})]},
+        {contenu: [docxP("Décrit les comportements-défis qu'il observe, là où il accompagne la personne, et signale les journées où il ne s'en produit pas.", {taille: 18})]},
+        {contenu: [docxP('Recueillir, avec un kit déclarant — ou une grille ABC papier', {taille: 18})]}
+      ],
+      [
+        {contenu: [docxP("L'analyste", {gras: true, taille: 18})]},
+        {contenu: [docxP("Le référent de la démarche et le clinicien qui la supervise, ensemble. Ils organisent et interprètent les données, puis font l'analyse fonctionnelle.", {taille: 18})]},
+        {contenu: [docxP("Organiser, Interpréter — puis hors de l'outil", {taille: 18})]}
+      ],
+      [
+        {contenu: [docxP('Le cotateur', {gras: true, taille: 18})]},
+        {contenu: [docxP("Évalue la qualité de l'analyse fonctionnelle une fois terminée.", {taille: 18})]},
+        {contenu: [docxP('ICAF', {taille: 18})]}
+      ]
+    ], [2000, 5000, 2638], {hauteur: 420}) +
+
+    docxIntertitre('Réaliser une analyse fonctionnelle, en quatre temps', DOCX_C.papierFonce, DOCX_C.slate) +
+    puce('I. Recueillir ', 'des données qualitatives sur les comportements-défis ciblés.') +
+    puce('II. Organiser et interpréter ', 'ces données — et pas seul.') +
+    puce('III. Formuler les hypothèses fonctionnelles. ', "Cette étape demande un regard clinique que la BAF ne peut pas vous offrir.") +
+    puce('IV. Éventuellement, évaluer ', "la qualité de votre document d'analyse fonctionnelle.") +
+
+    /* ── I ── */
+    partie('I.', 'Recueillir', "Une analyse fonctionnelle vaut ce que vaut son matériel déclaratif. Il le faut de qualité, et venu des différents lieux de vie de la personne.") +
+
+    sousPartie('1. Préparer la démarche') +
+    texte('Avant de lancer quoi que ce soit, répondez à ces questions — seul, ou mieux, en réunion d\'équipe.') +
+    puce('Quels comportements visez-vous ? ', "Un à trois comportements-défis, décrits comme une caméra les aurait filmés : ce qu'on voit, pas ce qu'on en pense.") +
+    puce('Une cause somatique a-t-elle été recherchée ? ', "Une douleur non identifiée est la première cause à écarter : le bilan médical vient avant l'analyse fonctionnelle, pas après.") +
+    puce('Combien de temps durera le recueil ? ', 'Fixez une date de début et une date de fin.') +
+    puce('Qui seront les déclarants ? ', 'Au moins une personne pour chaque lieu de vie : famille, institution, accueil de jour, transports…') +
+    puce('Par quels moyens ? ', 'En ligne sur la BAF, avec un kit déclarant, ou sur papier, avec les grilles ABC téléchargeables dans Ressources.') +
+    puce('Qui sera le référent de la démarche ? ', "C'est lui qui la porte, du lancement à la synthèse.") +
+    puce('Quel clinicien la supervisera ? ', 'Un psychologue ou un psychiatre.') +
+    texte("Remplissez ensuite le préambule dans la BAF : ce que l'équipe sait déjà de la personne. Il partira avec chaque kit déclarant.") +
+
+    sousPartie("2. Écrire le projet d'analyse fonctionnelle") +
+    texte("Ce projet se partage avec les déclarants, par exemple par courriel. En voici un modèle, à adapter à votre situation :") +
+    courriel.map((l, i) => ligneCourriel(l, i === 0)).join('') +
+    docxP('', {apres: 140}) +
+
+    sousPartie('3. Recevoir les contributions') +
+    puce('Versez chaque contribution dans le dossier : ', "Recueillir → Ajouter une contribution. Chaque évènement garde sa provenance, et les envois successifs d'une même personne ne se dupliquent pas.") +
+    puce('Saisissez les grilles papier ', "telles qu'elles ont été écrites : la grille reprend colonne pour colonne le mode rapide, la recopie ne demande aucune décision.") +
+    puce('Relisez les remarques sur le préambule ', 'et corrigez-le. Une contradiction entre deux lieux est souvent une information, pas une erreur.') +
+    puce('Regardez les journées sans information : ', "l'outil les repère. Allez demander ce qui s'est passé plutôt que de deviner." ) +
+
+    /* ── II ── */
+    partie('II.', 'Organiser et interpréter', "C'est là que commence le travail de l'analyste — et il ne se fait pas seul.") +
+    encadre([
+      {t: 'On ne retouche jamais le déclaratif. ', gras: true},
+      {t: "Ce que les déclarants ont écrit reste tel quel. Tout ce que vous produisez ici se lit par-dessus, sans jamais modifier la source."}
+    ], DOCX_C.papierFonce, DOCX_C.slate) +
+    sousPartie('Organiser : catégoriser, à deux') +
+    texte("Organiser, c'est regrouper en catégories ce qui se ressemble, volet par volet : contexte, antécédent, comportement, conséquence, intervention. Or catégoriser, c'est déjà mesurer : c'est ce geste qui transforme un texte en une donnée qui sera comptée. Il se fait donc à deux — c'est le double codage —, en quatre temps :") +
+    puce('Définir ensemble la grille de catégories, ', 'avant de commencer.') +
+    puce('Catégoriser chacun de son côté, ', "sans voir le travail de l'autre — le référent d'une part, le clinicien de l'autre. La BAF produit pour cela un kit de codage.") +
+    puce('Comparer. ', "La BAF montre les écarts, élément par élément, et un taux d'accord si vous avez codé contre la même grille.") +
+    puce('Discuter les écarts ', "et arrêter ensemble une catégorisation de synthèse. C'est elle qui servira à la suite.") +
+    sousPartie('Interpréter : chercher ce qui se répète') +
+    texte("Les séquences qui reviennent, les moments et les lieux où le comportement apparaît — et ceux où il n'apparaît pas —, la façon dont la tension monte chez la personne. La BAF compte et signale ; elle ne conclut pas. Un pourcentage calculé sur quelques évènements est une piste, pas une tendance.") +
+
+    /* ── III ── */
+    partie('III.', 'Formuler les hypothèses fonctionnelles', "Ici, la BAF ne peut plus vous aider. Cette étape demande un regard clinique : c'est pour cela qu'un clinicien supervise la démarche.") +
+    texte("Posez les pièces du puzzle sur la table, à plusieurs, et prenez de la hauteur. À partir de ce que les données ont fait apparaître, formulez des hypothèses fonctionnelles : des propositions de lecture sur ce à quoi sert le comportement pour la personne. Il y en a souvent plusieurs, et un même comportement peut en servir plusieurs à la fois.") +
+    puce('Une hypothèse se teste. ', "Si vous pensez que le bruit est en jeu, diminuez le bruit et regardez ce qui se passe. Si le comportement diminue, l'hypothèse tient ; sinon, ajustez-la. L'analyse fonctionnelle, c'est de l'essai-erreur.") +
+    puce('Une préconisation ne vise pas forcément la disparition du comportement, ', "mais un comportement qui remplisse la même fonction, à moindre coût. Partez de ce que la personne fait déjà : elle ne vous a pas attendus pour essayer des choses.") +
+    puce('Deux formes possibles : ', "ajuster l'environnement et l'accompagnement, ou mettre de nouveaux outils à la disposition de la personne.") +
+    texte("Le tout se rédige dans un document d'analyse fonctionnelle, à partager avec les déclarants.") +
+
+    /* ── IV ── */
+    partie('IV.', "Évaluer la qualité de l'analyse", "Si vous le souhaitez vraiment : c'est long, et ce n'est pas facile.") +
+    texte("L'ICAF évalue la qualité méthodologique d'une analyse fonctionnelle terminée. Si vous vous y lancez, voici ce qui vous attend :") +
+    puce("Il évalue le document d'analyse fonctionnelle, pas le recueil seul. ", "Un recueil ne nourrit qu'une partie de ses items : ceux qui portent sur les hypothèses, les préconisations et le document final demandent votre écrit. Laissez non coté ce qui n'existe pas encore.") +
+    puce('Cotez à plusieurs, et séparément. ', 'Les écarts entre cotateurs sont plus instructifs que la note.') +
+    puce("Un indice bas n'invalide rien. ", "Il dit où le matériel est mince, donc ce qu'il faudrait aller chercher.") +
+    encadre([
+      {t: 'AF = RDAF + analyse clinique', gras: true},
+      {t: '\nAF consolidée = AF + ICAF + ce que la cotation fait aller chercher', gras: true}
+    ], DOCX_C.papierFonce, DOCX_C.slate);
+}
+
+function telechargerModeEmploiGeneral() { telechargerDocx('BAF_Mode-emploi.docx', corpsModeEmploiGeneral(), false); }
 
 function telechargerGrilleABC() { telechargerDocx('BAF_Grille-ABC.docx', corpsGrilleABC(), true); }
 function telechargerPreambulePapier() { telechargerDocx('BAF_Preambule.docx', corpsPreambule(), false); }
