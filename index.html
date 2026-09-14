@@ -477,6 +477,27 @@ header.top{
   font-size:14.5px;line-height:1.65;
 }
 .decl-etape:first-of-type{border-top:none;padding-top:0;}
+#declarant-contenu .card p{font-size:14.5px;line-height:1.7;margin:0 0 10px;}
+.declarant-h3{font-size:17px;margin-bottom:10px;}
+.declarant-entree{text-align:center;}
+.declarant-depot{border:2px dashed var(--sauge);border-radius:var(--radius-sm);padding:16px;text-align:center;margin:10px 0 6px;background:var(--paper);}
+.declarant-depot.survol{background:var(--sauge-pale);border-color:var(--sauge-deep);}
+.declarant-gros-bouton{font-size:17px;padding:14px 30px;}
+.declarant-depot-aide{font-size:12.5px;color:var(--ink-soft);margin-top:8px;}
+#declarant-contenu .declarant-note, .declarant-note{font-size:13px;color:var(--ink-soft);line-height:1.6;}
+#declarant-contenu .declarant-rgpd{font-size:13.5px;line-height:1.65;border-left:3px solid var(--sauge-deep);text-align:justify;text-justify:inter-word;}
+.declarant-rgpd b{color:var(--sauge-deep);}
+.declarant-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+.declarant-etat{font-size:14px;padding:10px 14px;border-radius:var(--radius-sm);background:var(--sauge-pale);color:var(--sauge-deep);margin:0 0 16px;}
+.declarant-etat.a-sauver{background:var(--rose-pale);color:var(--rose-deep);display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-weight:600;}
+/* Ce que le déclarant ne voit pas, ou voit seul */
+.declarant-seul{display:none;}
+body.mode-declarant .declarant-seul{display:block;}
+body.mode-declarant .analyste-seul,
+body.mode-declarant #m2-partager-card,
+body.mode-declarant #m2-recevoir-card,
+body.mode-declarant .situer{display:none !important;}
+.declarant-visibilite{font-size:14px;line-height:1.6;border-left:3px solid var(--sauge-deep);}
 .decl-num{
   flex:0 0 26px;width:26px;height:26px;border-radius:50%;
   background:var(--sauge-deep);color:#FFFFFF;
@@ -2908,8 +2929,8 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
 <section id="view-declarant" class="view">
     <div class="mod-header">
       <span class="temps-tag tag-m2">Vous participez</span>
-      <h2>Bienvenue</h2>
-      <div class="sub">Vous avez été sollicité pour décrire ce que vous observez. Voici ce qu'on vous demande, et ce qu'on ne vous demande pas.</div>
+      <h2 id="declarant-titre">Participer à une analyse fonctionnelle</h2>
+      <div class="sub" id="declarant-sous-titre"></div>
     </div>
     <div id="declarant-contenu"></div>
   </section>
@@ -3343,7 +3364,7 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
     <div id="preambule-remarques" hidden></div>
 
     <div class="actions-row">
-      <button class="btn btn-secondary" onclick="route('synthese')">Voir la synthèse</button>
+      <button class="btn btn-secondary analyste-seul" onclick="route('synthese')">Voir la synthèse</button>
       <button class="btn btn-primary" onclick="route('m2')">Passer au module 1 — Recueillir →</button>
     </div>
   </section>
@@ -3359,6 +3380,10 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
     <div class="card" id="m2-intro-card">
       <p style="font-size:14px;color:var(--ink-soft);">On vous guide pas à pas, une question à la fois — un peu comme si l'équipe était face à vous.</p>
       <button class="btn btn-primary" onclick="ouvrirFormulaireEvenement()">+ Ajouter un évènement</button>
+    </div>
+
+    <div class="card declarant-seul declarant-visibilite">
+      Vous ne voyez ici que les évènements que vous avez décrits. Seuls les référents de la démarche d'analyse fonctionnelle voient l'ensemble des évènements.
     </div>
 
     <div id="m2-couverture"></div>
@@ -3398,7 +3423,7 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
 
     </div><!-- fin rapide-content -->
 
-    <div class="actions-row">
+    <div class="actions-row analyste-seul">
       <button class="btn btn-secondary" onclick="route('synthese')">Voir la synthèse</button>
       <button class="btn btn-primary" onclick="route('m3')">Passer au module 2 — Organiser →</button>
     </div>
@@ -4247,7 +4272,7 @@ function route(name, fromHistory){
      fait, et qui s'en charge. Et hors mode déclarant, ses deux pages à lui
      n'ont aucun sens : elles renvoient à l'accueil. */
   if (modeDeclarantActif() && VUES_RESERVEES[name]) { renderReserve(name); name = 'reserve'; }
-  else if (!modeDeclarantActif() && (name === 'declarant' || name === 'reserve')) name = 'accueil';
+  else if (!modeDeclarantActif() && name === 'reserve') name = 'declarant';
   document.querySelectorAll('section.view').forEach(s=>s.classList.remove('show'));
   const target = document.getElementById('view-'+name);
   if(target) target.classList.add('show');
@@ -4255,7 +4280,10 @@ function route(name, fromHistory){
   const navBtn = document.querySelector('.nav-btn[data-go="'+name+'"]');
   if(navBtn) navBtn.classList.add('on');
 
-  const isBaf = ['baf-accueil','m1','m2','m2-form','m3','m4','synthese','declarant','reserve'].includes(name);
+  /* Sans kit ouvert, la page Participer n'appartient à aucun outil : pas de
+     menu, rien d'autre qu'un bouton pour ouvrir son fichier. */
+  const entreeParticiper = name === 'declarant' && !modeDeclarantActif();
+  const isBaf = ['baf-accueil','m1','m2','m2-form','m3','m4','synthese','declarant','reserve'].includes(name) && !entreeParticiper;
   const isIdc = ['idc-accueil','idc-main'].includes(name);
   const isGlobal = ['accueil','reperes','ressources','apropos','notes','parcours'].includes(name);
   const bafNavGroup = document.getElementById('baf-nav-group');
@@ -8944,6 +8972,20 @@ const _CONTROLES = [
     return _bancEgal('Non sauvegardé : juste après sauvegarde | après un ajout', 'false|true', apresSauvegarde + '|' + apresAjout);
   }},
 
+  {nom:'La page Participer s\'ouvre sans kit, avec son bouton', test: () => {
+    /* C'est le lien du mail : il doit arriver sur un bouton, pas sur l'accueil
+       général de la BAF où un parent se perdrait. */
+    const sauve = state.declarant;
+    const vueAvant = (document.querySelector('section.view.show') || {}).id;
+    state.declarant = null;
+    route('declarant');
+    const affichee = (document.querySelector('section.view.show') || {}).id;
+    const bouton = /Importer mon fichier/.test((document.getElementById('declarant-contenu') || {}).textContent || '');
+    state.declarant = sauve;
+    if (vueAvant) route(vueAvant.replace(/^view-/, ''));
+    return _bancEgal('Vue affichée | bouton présent', 'view-declarant|true', affichee + '|' + bouton);
+  }},
+
   {nom:'Le mode déclarant verrouille les vues réservées', test: () => {
     const sauve = state.declarant;
     const vueAvant = (document.querySelector('section.view.show') || {}).id;
@@ -13291,53 +13333,123 @@ function majBarreDeclarant() {
 function renderDeclarant() {
   const el = document.getElementById('declarant-contenu');
   if (!el) return;
-  const prenom = (state.m1 && state.m1.prenom) || 'la personne concernée';
+  const titre = document.getElementById('declarant-titre');
+  const sous = document.getElementById('declarant-sous-titre');
+
+  /* Écrit pour une institution autant que pour une famille : une équipe qui
+     croit envoyer des données sur un serveur refusera, et elle aura raison
+     de poser la question. */
+  const rgpd =
+    '<div class="card declarant-rgpd">' +
+      '<b>Rien n\'est envoyé sur un serveur.</b> La BAF est une page qui fonctionne entièrement dans votre navigateur : ' +
+      'ce que vous écrivez reste sur cet appareil, dans la mémoire du navigateur, et dans les fichiers que vous téléchargez vous-même. ' +
+      'Personne — ni l\'équipe qui vous sollicite, ni qui que ce soit d\'autre — ne reçoit rien tant que vous n\'envoyez pas vous-même votre fichier par mail. ' +
+      'N\'inscrivez ni nom de famille, ni ville, ni nom de structure.' +
+    '</div>';
+  const importer = (libelle, principal) =>
+    '<div class="declarant-depot" ondragover="event.preventDefault();this.classList.add(\'survol\')" ' +
+      'ondragleave="this.classList.remove(\'survol\')" ondrop="deposerFichierDeclarant(event)">' +
+      '<button class="btn ' + (principal ? 'btn-primary declarant-gros-bouton' : 'btn-secondary btn-sm') + '" ' +
+        'onclick="this.parentNode.querySelector(\'input\').click()">📂 ' + libelle + '</button>' +
+      '<div class="declarant-depot-aide">ou glissez le fichier ici</div>' +
+      '<input type="file" accept=".json,application/json" style="display:none;" onchange="importerFichierDeclarant(event)">' +
+    '</div>';
+
+  if (!modeDeclarantActif()) {
+    if (titre) titre.textContent = 'Participer à une analyse fonctionnelle';
+    if (sous) sous.textContent = "Une équipe vous a sollicité pour décrire ce que vous observez. Elle vous a envoyé un fichier par mail : ouvrez-le ici.";
+    el.innerHTML =
+      '<div class="card declarant-entree">' +
+        importer('Importer mon fichier', true) +
+        '<p>Le fichier se termine par <b>.json</b>. La première fois, c\'est celui que vous avez reçu par mail ; ' +
+        'les fois suivantes, c\'est le <b>dernier fichier que vous avez sauvegardé</b>.</p>' +
+        '<p class="declarant-note"><b>Sur téléphone :</b> enregistrez d\'abord la pièce jointe (dans « Fichiers » ou ' +
+        '« Téléchargements »), puis appuyez sur le bouton.</p>' +
+      '</div>' +
+      rgpd +
+      '<p class="declarant-note" style="text-align:center;">Vous n\'avez pas reçu de fichier ? Contactez la personne qui vous a sollicité.</p>';
+    return;
+  }
+
+  const prenom = (state.m1 && state.m1.prenom) || '';
   const d = state.declarant || {};
   const n = ((state.m2 && state.m2.evenements) || []).length;
+  if (titre) titre.textContent = prenom ? 'Vos observations sur ' + prenom : 'Vos observations';
+  if (sous) sous.textContent = "Décrivez ce que vous voyez, sauvegardez votre fichier à chaque fois, et envoyez le dernier à la fin de la période.";
+
+  const etat = declarantNonSauvegarde()
+    ? '<div class="declarant-etat a-sauver">⚠ Des modifications ne sont pas encore sauvegardées. ' +
+        '<button class="btn btn-primary btn-sm" onclick="sauvegarderFichierDeclarant()">💾 Télécharger pour sauvegarder</button></div>'
+    : '<div class="declarant-etat">' +
+        (d.sauvegarde ? '✓ Dernière sauvegarde le ' + esc(dateLisible(d.sauvegarde)) + '.' : 'Rien à sauvegarder pour l\'instant.') +
+      '</div>';
+
   el.innerHTML =
+    etat +
     '<div class="card">' +
-      '<p style="font-size:15px;line-height:1.7;margin:0 0 12px;">' +
-        'Une équipe cherche à comprendre les comportements qui mettent <b>' + esc(prenom) + '</b> en difficulté. ' +
-        'Pour ça, elle a besoin de ce que <b>vous</b> voyez, là où vous l\'accompagnez — et que personne d\'autre ne voit à votre place.' +
-      '</p>' +
-      '<p style="font-size:15px;line-height:1.7;margin:0;">' +
-        'On ne vous demande pas d\'analyser ni d\'expliquer. On vous demande de <b>décrire</b> : ce qui s\'est passé, ' +
-        'dans quel ordre, comme une caméra l\'aurait filmé. L\'analyse viendra après, et ce n\'est pas votre travail.' +
-      '</p>' +
-    '</div>' +
-    '<div class="card">' +
-      '<h3 style="font-size:17px;margin-bottom:14px;">Ce qu\'on vous demande, dans l\'ordre</h3>' +
-      '<div class="decl-etape"><span class="decl-num">1</span><div>' +
-        '<b>Relisez le préambule</b> — ce que l\'équipe sait déjà de ' + esc(prenom) + '. ' +
-        'Vous ne pouvez pas le modifier, mais vous pouvez signaler ce qui vous paraît faux ou incomplet. ' +
-        '<button class="btn btn-secondary btn-sm" style="margin-top:8px;" onclick="route(\'m1\')">Ouvrir le préambule</button>' +
-      '</div></div>' +
-      '<div class="decl-etape"><span class="decl-num">2</span><div>' +
-        '<b>Décrivez les évènements</b> que vous avez observés. Un évènement par situation. ' +
-        'Prenez le temps : il n\'y a pas de nombre attendu, et une description précise vaut mieux que dix approximatives. ' +
-        '<button class="btn btn-primary btn-sm" style="margin-top:8px;" onclick="route(\'m2\')">' +
-          (n ? 'Continuer (' + n + ' décrit' + (n > 1 ? 's' : '') + ')' : 'Commencer') + '</button>' +
-      '</div></div>' +
-      '<div class="decl-etape"><span class="decl-num">3</span><div>' +
-        '<b>Renvoyez votre contribution</b> quand vous avez terminé. L\'outil produit un fichier ; ' +
-        'vous le renvoyez à la personne qui vous a sollicité, comme une pièce jointe. ' +
-        '<button class="btn btn-secondary btn-sm" style="margin-top:8px;" onclick="sauvegarderFichierDeclarant()">💾 Télécharger pour sauvegarder</button>' +
-      '</div></div>' +
-    '</div>' +
-    '<div class="card">' +
-      '<div class="field">' +
+      '<h3 class="declarant-h3">Ce qu\'on vous demande</h3>' +
+      '<p>Une équipe cherche à comprendre les comportements qui mettent <b>' + esc(prenom || 'la personne') + '</b> en difficulté, ' +
+      'et elle a besoin de ce que <b>vous</b> voyez. On ne vous demande pas d\'analyser : on vous demande de <b>décrire</b> ' +
+      'ce qui s\'est passé, comme une caméra l\'aurait filmé, et de signaler aussi les journées où il ne s\'est rien produit.</p>' +
+      '<div class="declarant-actions">' +
+        '<button class="btn btn-primary" onclick="route(\'m2\')">' +
+          (n ? 'Continuer (' + n + ' évènement' + (n > 1 ? 's' : '') + ')' : 'Décrire un évènement') + '</button>' +
+        '<button class="btn btn-secondary" onclick="route(\'m1\')">Relire le préambule</button>' +
+      '</div>' +
+      '<div class="field" style="margin:18px 0 0;">' +
         '<label for="declarant-provenance">D\'où déclarez-vous ?</label>' +
-        '<div class="help">Un mot pour situer vos observations — « domicile », « foyer », « IME », « accueil de jour ». ' +
-        'L\'équipe saura ainsi d\'où vient chaque observation, ce qui compte beaucoup : un même comportement ne se lit pas pareil selon le lieu.</div>' +
+        '<div class="help">Un mot : « domicile », « foyer », « accueil de jour »… L\'équipe saura d\'où vient chaque observation.</div>' +
         '<input type="text" id="declarant-provenance" placeholder="ex : domicile" value="' + esc(d.provenance || '') + '" ' +
-          'oninput="if(state.declarant){state.declarant.provenance=this.value.trim();persist();}">' +
+          'oninput="if(state.declarant){state.declarant.provenance=this.value.trim();persist();majBarreDeclarant();}">' +
       '</div>' +
     '</div>' +
-    '<div class="ethique">' +
-      '<b>Rien de ce que vous écrivez ne quitte cet appareil.</b> L\'outil fonctionne entièrement dans votre navigateur : ' +
-      'aucune donnée n\'est envoyée nulle part. Le seul transfert, c\'est le fichier que vous renverrez vous-même. ' +
-      'N\'inscrivez ni nom de famille, ni ville, ni structure.' +
-    '</div>';
+    '<div class="card">' +
+      '<h3 class="declarant-h3">Comment ça marche</h3>' +
+      '<p>La BAF fonctionne comme un logiciel, et votre fichier <b>.json</b> comme un document : l\'importer dans la BAF, ' +
+      'c\'est comme ouvrir un document dans Word. <b>Si vous n\'enregistrez pas, ce que vous avez écrit peut se perdre.</b></p>' +
+      '<div class="decl-etape"><span class="decl-num">1</span><div><b>Sauvegardez à chaque fois que vous écrivez.</b> ' +
+        'Le bouton « 💾 Télécharger pour sauvegarder », en haut de la page, télécharge un nouveau fichier avec tout ce que ' +
+        'vous avez écrit. Son nom porte la date et l\'heure.</div></div>' +
+      '<div class="decl-etape"><span class="decl-num">2</span><div><b>La fois suivante, repartez du dernier fichier.</b> ' +
+        'Revenez à la même adresse et importez le fichier le plus récent.' + importer('Importer un fichier', false) + '</div></div>' +
+      '<div class="decl-etape"><span class="decl-num">3</span><div><b>Sur un ordinateur partagé, en établissement :</b> ' +
+        'rangez le fichier dans votre dossier partagé, repartez toujours du dernier, une personne à la fois, et cliquez sur ' +
+        '« 🗑 Effacer », en haut de la page, avant de fermer la BAF.</div></div>' +
+      '<div class="decl-etape"><span class="decl-num">4</span><div><b>À la fin de la période,</b> envoyez votre dernier ' +
+        'fichier par mail à la personne qui vous a sollicité.</div></div>' +
+    '</div>' +
+    rgpd;
+}
+
+function importerFichierDeclarant(ev) {
+  const f = ev.target.files && ev.target.files[0];
+  ev.target.value = '';
+  if (f) lireFichierDeclarant(f);
+}
+
+function deposerFichierDeclarant(ev) {
+  ev.preventDefault();
+  ev.currentTarget.classList.remove('survol');
+  const f = ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files[0];
+  if (f) lireFichierDeclarant(f);
+}
+
+/* N'ouvre que ce qui concerne un déclarant : le kit, ou son propre fichier.
+   Un dossier complet de l'équipe n'a rien à faire ici, et on le dit. */
+function lireFichierDeclarant(fichier) {
+  const lecteur = new FileReader();
+  lecteur.onload = (e) => {
+    let objet;
+    try { objet = JSON.parse(e.target.result); }
+    catch (err) {
+      alert("Ce fichier n'a pas pu être lu. Vérifiez que c'est bien le fichier .json reçu par mail, ou le dernier que vous avez sauvegardé.");
+      return;
+    }
+    const lu = lireFichierBAF(objet, ['kit', 'contribution']);
+    if (!lu.ok) { alert(lu.raison); return; }
+    ouvrirFichierDeclarant(lu);
+  };
+  lecteur.readAsText(fichier);
 }
 
 /* ── La page « réservé » ───────────────────────────────────────────── */
