@@ -659,7 +659,7 @@ section.view.show{display:block;animation:fadein .25s ease;}
    foncé de chaque teinte : le sauge et le rosé des encarts, écrits tels quels
    sur le fond de la carte, tombent sous 3 pour 1 de contraste et ne se lisent
    plus comme du texte. */
-.intro-card.accueil-texte p{font-size:14.5px;line-height:1.6;margin:0 0 10px;text-align:justify;text-justify:inter-word;}
+.intro-card.accueil-texte p{font-size:15.5px;line-height:1.65;margin:0 0 10px;text-align:justify;text-justify:inter-word;}
 .sigle-baf{font-weight:700;letter-spacing:.02em;}
 .lettre-echo{color:var(--sauge-deep);}
 .outil-echo{font-weight:700;}
@@ -667,20 +667,14 @@ section.view.show{display:block;animation:fadein .25s ease;}
 .outil-echo.outil-2{color:var(--rose-deep);}
 .signatures{text-align:right;margin-top:10px;font-size:13px;line-height:1.55;color:var(--ink);font-weight:400;}
 .signatures i{color:var(--ink-soft);}
-.signature-nom, .signature-nom:hover, .signature-nom:visited{font-weight:700;color:inherit;text-decoration:none;}
-/* Le bouton Repères reprend exactement celui de l'en-tête : il est posé sur
-   un fond de la couleur de l'en-tête, sinon ses teintes claires — pensées pour
-   un fond sombre — disparaîtraient sur le papier. */
-  display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;
-  margin:-14px 0 18px;font-size:14px;color:var(--ink-soft);
-}
+.signature-nom{font-weight:700;}
 .accueil-donnees{
-  margin-top:24px;
-  padding:16px 18px;
+  margin-top:20px;
+  padding:12px 16px;
   background:var(--sauge-pale);
   border-left:3px solid var(--sauge);
   border-radius:var(--radius-sm);
-  font-size:13.5px;
+  font-size:12.5px;line-height:1.55;
   color:var(--ink);
   text-align:justify;text-justify:inter-word;
 }
@@ -2804,8 +2798,8 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
     <div class="intro-card accueil-texte">
       <p>Au cœur de nos communautés de soin, certains comportements peuvent nous troubler, voire mettre à mal le quotidien. Ces « comportements-défis » sont une tentative, pour la personne accompagnée, de répondre à un besoin, de façon plus ou moins adaptée. L'analyse fonctionnelle vise à décrypter la fonction d'un comportement qui n'est, de fait, pas là pour rien. C'est un travail d'élaboration clinique qui doit se faire <i>à plusieurs</i> et qui peut se soutenir d'outils. C'est pour cela que nous avons créé la <b class="sigle-baf">B<span class="lettre-echo">A</span><span class="lettre-echo">F</span></b>, pour vous aider à structurer la démarche d'analyse fonctionnelle avant (c'est l'<b class="outil-echo outil-1">outil 1</b>) et après (c'est l'<b class="outil-echo outil-2">outil 2</b>). Mais ce qui se passe entre les deux, c'est à vous de jouer.</p>
       <div class="signatures">
-        <div><a class="signature-nom" href="mailto:e.musard@adapei35.asso.fr">Émilie Musard</a> — <i>Éducatrice spécialisée</i></div>
-        <div><a class="signature-nom" href="mailto:a.guillieux@adapei35.asso.fr">Arthur Guillieux</a> — <i>Psychologue clinicien</i></div>
+        <div><b class="signature-nom">Émilie Musard</b> — <i>Éducatrice spécialisée</i></div>
+        <div><b class="signature-nom">Arthur Guillieux</b> — <i>Psychologue clinicien</i></div>
       </div>
     </div>
 
@@ -13851,7 +13845,7 @@ const NOTES_VERSION = [
     titre: "Un accueil signé, des Repères en trois parties, et deux modes d'emploi",
     corps: `
 <h4>Un nouvel accueil</h4>
-<p>La page d'accueil dit désormais en quelques lignes ce qu'est l'analyse fonctionnelle et ce que la BAF fait pour vous : un comportement-défi est une tentative, pour la personne, de répondre à un besoin ; l'analyse fonctionnelle est un travail d'élaboration clinique, qui se fait <b>à plusieurs</b> ; la BAF vous aide à structurer la démarche <b>avant</b> (outil 1) et <b>après</b> (outil 2). Ce qui se passe entre les deux, c'est à vous de jouer. Le texte est signé d'Émilie Musard et d'Arthur Guillieux ; un clic sur leur nom ouvre un courriel.</p>
+<p>La page d'accueil dit désormais en quelques lignes ce qu'est l'analyse fonctionnelle et ce que la BAF fait pour vous : un comportement-défi est une tentative, pour la personne, de répondre à un besoin ; l'analyse fonctionnelle est un travail d'élaboration clinique, qui se fait <b>à plusieurs</b> ; la BAF vous aide à structurer la démarche <b>avant</b> (outil 1) et <b>après</b> (outil 2). Ce qui se passe entre les deux, c'est à vous de jouer. Le texte est signé d'Émilie Musard et d'Arthur Guillieux.</p>
 <p>Juste en dessous, les deux outils, qui portent désormais leur sigle — <b>outil 1 — RDAF</b>, <b>outil 2 — ICAF</b> —, puis l'encart sur les données. L'en-tête et le texte ont été resserrés : sur un écran d'ordinateur, les deux outils se voient sans descendre.</p>
 
 <h4>L'accueil de l'outil 1</h4>
