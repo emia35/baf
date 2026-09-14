@@ -1618,6 +1618,14 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
 .res-cat-titre.premier{margin-top:4px;}
 .res-cat-intro{font-size:13.5px;color:var(--ink-soft);line-height:1.65;margin:0 0 14px;text-align:justify;text-justify:inter-word;}
 .res-cat-intro b{color:var(--ink);}
+.panneau-fond{position:fixed;inset:0;z-index:1100;background:rgba(27,32,36,.45);display:flex;align-items:center;justify-content:center;padding:20px;}
+.panneau-fond[hidden]{display:none;}
+.panneau{background:var(--paper);border-radius:var(--radius);box-shadow:var(--shadow-card);padding:22px 24px;width:100%;max-width:380px;}
+.panneau h3{font-size:17px;color:var(--slate);margin:0 0 8px;}
+.panneau p{font-size:13.5px;color:var(--ink-soft);line-height:1.6;margin:0 0 14px;}
+.panneau input{width:100%;box-sizing:border-box;font:inherit;font-size:16px;letter-spacing:.2em;padding:9px 12px;border:1.5px solid var(--line);border-radius:var(--radius-sm);background:#fff;}
+.panneau-erreur{color:#B54A33;font-size:13px;margin-top:8px;}
+.panneau-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;}
 #view-reperes .res-cat-titre{scroll-margin-top:96px;}
 .reperes-sommaire{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 20px;}
 .reperes-sommaire button{font:inherit;font-size:13px;font-weight:600;color:var(--slate);background:var(--paper);border:1.5px solid var(--line);border-radius:999px;padding:6px 16px;cursor:pointer;}
@@ -2949,8 +2957,8 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
 
       <div class="res-doc">
         <div class="res-doc-tete"><span class="res-doc-ico">📗</span><span class="res-doc-titre">Mode d'emploi : faire une analyse fonctionnelle avec la BAF — Version EMIA</span></div>
-        <div class="res-doc-desc">Les mêmes quatre temps, avec ce qui est propre à l'EMIA 35 : le binôme coordinatrice–psychologue, la relecture du préambule par les parties avant tout recueil, le double codage, le vase de tension que le binôme propose, la réunion d'équipe, et la place de l'analyse dans le bilan d'intervention. Avec, à chaque étape, où c'est dans l'outil.</div>
-        <button class="btn btn-secondary btn-sm" onclick="telechargerVersionEMIA()">⬇ Télécharger (.docx)</button>
+        <div class="res-doc-desc">Les mêmes quatre temps, avec ce qui est propre à l'EMIA 35 : le binôme coordinatrice–psychologue, la relecture du préambule par les parties avant tout recueil, le double codage, le vase de tension que le binôme propose, la réunion d'équipe, et la place de l'analyse dans le bilan d'intervention. Avec, à chaque étape, où c'est dans l'outil. <b>Réservé à l'équipe : un code est demandé.</b></div>
+        <button class="btn btn-secondary btn-sm" onclick="ouvrirPanneauCodeEMIA()">🔒 Télécharger (.docx)</button>
       </div>
     </div>
 
@@ -3737,6 +3745,21 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
 </div>
 
 </main>
+
+<div id="panneau-code-emia" class="panneau-fond" hidden
+     onclick="if(event.target===this)fermerPanneauCodeEMIA()"
+     onkeydown="if(event.key==='Escape')fermerPanneauCodeEMIA()">
+  <form class="panneau" role="dialog" aria-modal="true" aria-labelledby="code-emia-titre" onsubmit="validerCodeEMIA(event)">
+    <h3 id="code-emia-titre">Document réservé à l'EMIA 35</h3>
+    <p>Ce mode d'emploi décrit le fonctionnement interne de l'équipe. Entrez le code pour le télécharger.</p>
+    <input id="code-emia" type="password" inputmode="numeric" autocomplete="off" aria-label="Code">
+    <div id="code-emia-erreur" class="panneau-erreur" role="alert" hidden></div>
+    <div class="panneau-actions">
+      <button type="button" class="btn btn-ghost btn-sm" onclick="fermerPanneauCodeEMIA()">Annuler</button>
+      <button type="submit" class="btn btn-primary btn-sm" id="code-emia-valider">Télécharger</button>
+    </div>
+  </form>
+</div>
 
 <div class="gtt" id="idc-tooltip"></div>
 
@@ -8471,7 +8494,7 @@ const _CONTROLES = [
        ouvre une boîte de téléchargement : personne ne l'essaie jamais. */
     const soucis = [];
     [['grille', corpsGrilleABC, true], ['préambule', corpsPreambule, false],
-     ['guide', corpsGuide, false], ['version EMIA', corpsModeEmploi, false],
+     ['guide', corpsGuide, false],
      ['mode d\'emploi général', corpsModeEmploiGeneral, false]].forEach(([nom, f, paysage]) => {
       try {
         const blob = construireDocx(f(), paysage);
@@ -8479,6 +8502,15 @@ const _CONTROLES = [
       } catch (e) { soucis.push(nom + ' : ' + e.message); }
     });
     return _bancEgal('Documents en défaut', '', soucis.join(' | '));
+  }},
+
+  {nom:'Le mode d\'emploi EMIA ne circule que chiffré', test: () => {
+    /* Le texte en clair n'est plus dans le fichier. Sans le code, écrit nulle
+       part, on ne peut pas l'ouvrir ici : on vérifie que le chiffré est entier. */
+    const d = (typeof DOC_EMIA_CHIFFRE === 'object' && DOC_EMIA_CHIFFRE) || {};
+    const long = (b) => { try { return atob(b || '').length; } catch (e) { return -1; } };
+    const entier = long(d.sel) === 16 && long(d.iv) === 12 && long(d.donnees) > 2000 && d.iterations >= 100000;
+    return _bancEgal('Chiffré du mode d\'emploi EMIA', 'entier', entier ? 'entier' : 'incomplet');
   }},
 
   {nom:'Chaque item du barème sait si un RDAF peut l alimenter', test: () => {
@@ -12074,225 +12106,77 @@ function corpsGuide() {
     docxP('Merci du temps que vous y passez. C\'est un travail ingrat sur le moment, et c\'est lui qui rend l\'analyse possible.', {italique: true, couleur: DOCX_C.inkSoft, avant: 120});
 }
 
-/* ── 4. Le mode d'emploi, version EMIA ──────────────────────────────────
-   Les quatre temps du mode d'emploi pour tous (5), dans le même ordre, avec ce
-   qui est propre à l'EMIA : le binôme coordinatrice–psychologue, la relecture
-   du préambule par les parties avant tout recueil, le vase proposé par le
-   binôme, la réunion d'équipe, le bilan d'intervention. Pour être suivi à la
-   lettre par quelqu'un qui découvre : un protocole de travail, pas un manuel.
-   Il double ce que l'écran dit, à dessein : un protocole qu'on ne peut pas
-   poser à côté du clavier n'est pas suivi. */
-function corpsModeEmploi() {
-  const partie = (num, titre, sous) =>
-    docxP([
-      {t: num + '   ', gras: true, taille: 30, couleur: DOCX_C.slate},
-      {t: titre, gras: true, taille: 30, couleur: DOCX_C.slate}
-    ], {avant: 380, apres: sous ? 40 : 120}) +
-    (sous ? docxP([{t: sous, italique: true, couleur: DOCX_C.inkSoft}], {apres: 140}) : '');
-  const sousPartie = (t) => docxP(t, {gras: true, taille: 23, couleur: DOCX_C.ink, avant: 220, apres: 60});
-  const dansBaf = (t) => docxP([
-    {t: 'Dans la BAF : ', gras: true, taille: 17, couleur: DOCX_C.inkSoft},
-    {t: t, taille: 17, couleur: DOCX_C.inkSoft, italique: true}
-  ], {apres: 100});
-  const texte = (t) => docxP(t, {apres: 110});
-  const puce = (gras, suite) => docxP([
-    {t: '•  ', gras: true, couleur: DOCX_C.inkSoft},
-    {t: gras, gras: true},
-    {t: suite || ''}
-  ], {retrait: 240, apres: 80});
-  const encadre = (runs, fond, trait) => docxP(runs, {fond: fond, traitGauche: trait, apres: 160});
-  const aEviter = (t) => docxP([{t: 'À éviter. ', gras: true, couleur: DOCX_C.consequenceTexte}, {t: t}],
-    {fond: DOCX_C.consequence, traitGauche: DOCX_C.consequenceTrait, avant: 80, apres: 120});
-  const ligneCourriel = (t, premiere) => docxP([{t: t || ' ', taille: 19}],
-    {fond: DOCX_C.papier, traitGauche: DOCX_C.slate, retrait: 160, avant: premiere ? 80 : 0, apres: 0});
+/* ── 4. Le mode d'emploi, version EMIA — sous code ─────────────────────
+   La BAF part en test hors de l'EMIA, et ce document décrit le fonctionnement
+   interne de l'équipe. Son corps — la fonction corpsModeEmploi() — n'est donc
+   pas écrit en clair ici : il est chiffré en AES-GCM, avec une clé dérivée du
+   code par PBKDF2-SHA-256. Le code n'est écrit nulle part : c'est l'échec du
+   déchiffrement qui dit qu'il est faux.
 
-  const courriel = [
-    'Objet : analyse fonctionnelle — [prénom]',
-    '',
-    'Bonjour,',
-    '',
-    "L'Équipe Mobile d'Intervention Autisme (EMIA 35) intervient actuellement auprès de [prénom]. Dans ce cadre, nous souhaitons mener une analyse fonctionnelle, pour mieux comprendre les comportements suivants : [comportements visés].",
-    '',
-    "Pour cela, nous avons besoin d'observations venues de tous les lieux où [prénom] passe du temps, et nous comptons sur vous. Votre rôle sera de décrire les comportements que vous observerez entre le [date] et le [date] — et de nous signaler aussi les journées où il ne s'en est pas produit : elles comptent autant que les autres.",
-    '',
-    "Vous trouverez ci-joint un kit déclarant. C'est un fichier à ouvrir dans la BAF, un outil gratuit qui fonctionne dans votre navigateur, sans installation et sans envoi de données : https://emia35.github.io/baf/. Il contient le préambule, que vous avez relu et que nous avons corrigé grâce à vos remarques. Vous y décrirez chaque situation, pas à pas. Pour que le fichier ne permette pas de l'identifier, [prénom] y apparaît sous le prénom de [prénom d'emprunt] ; merci de n'y inscrire ni nom de famille, ni nom de structure.",
-    '',
-    "À la fin de la période, renvoyez-nous le fichier que la BAF produit (au format .json), en réponse à ce message.",
-    '',
-    "Si vous ne pouvez pas ou ne souhaitez pas utiliser l'outil numérique, nous pouvons vous transmettre des grilles papier. Pour cela, comme pour toute question, vous pouvez joindre [nom], coordinatrice à l'EMIA 35 et référente de la démarche, à [adresse] ou au [téléphone].",
-    '',
-    "Cette démarche est supervisée par [nom], psychologue à l'EMIA 35. Une fois le recueil terminé, le binôme analysera les observations, puis les mettra en discussion en réunion d'équipe. Ce travail nourrira notre bilan d'intervention : vous y trouverez les hypothèses fonctionnelles — des propositions de lecture sur ce à quoi servent ces comportements pour [prénom] — et les préconisations qui en découlent, que nous mettrons en place et ajusterons avec vous. [Préciser quand et comment ce retour vous sera fait.]",
-    '',
-    'Merci de votre participation,',
-    '[signature]'
-  ];
+   Ce n'est pas un coffre-fort, et il ne faut pas le présenter comme tel. Un
+   code de quatre chiffres se retrouve par essais, et la version en clair des
+   passes 58 à 63 reste dans l'historique public du dépôt. Le verrou empêche la
+   lecture en passant — dans le source, sur GitHub, par un moteur de recherche.
+   C'est tout ce qu'on lui demande.
 
-  return docxTitre(1, "Mode d'emploi : faire une analyse fonctionnelle avec la BAF — Version EMIA") +
-    docxP([{t: "Le déroulé d'une analyse fonctionnelle à l'EMIA 35. Il suit le mode d'emploi pour tous et y ajoute ce qui est propre à notre équipe. À suivre à la lettre les premières fois : les raccourcis se prennent quand on sait ce qu'ils coûtent.",
-            italique: true, couleur: DOCX_C.inkSoft}], {apres: 220}) +
+   Pour remplacer le document : écrire la nouvelle fonction corpsModeEmploi()
+   en clair HORS du dépôt, la chiffrer au même format (sel 16 octets, IV 12
+   octets, PBKDF2-SHA-256, AES-GCM 256 bits), remplacer DOC_EMIA_CHIFFRE. */
+const DOC_EMIA_CHIFFRE = {"iterations":250000,"sel":"xMoOiW4iD1Fjjksacbfhcw==","iv":"82I+wu+Zi5kd37Pg","donnees":"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"};
 
-    docxIntertitre('Quelques mots pour commencer', DOCX_C.papierFonce, DOCX_C.slate) +
-    texte([
-      {t: 'La BAF réunit deux outils. ', gras: true},
-      {t: "Le RDAF (outil 1) recueille et prépare les données, en trois étapes : Recueillir, Organiser, Interpréter. L'ICAF (outil 2) évalue la qualité d'une analyse fonctionnelle une fois terminée. "},
-      {t: "Ce qui se passe entre les deux — l'analyse elle-même — c'est le travail du binôme et de l'équipe.", gras: true}
-    ]) +
-    texte("À l'EMIA, l'analyse fonctionnelle prend place dans le temps où l'on prend la mesure de la situation. Elle y est une pièce du puzzle parmi d'autres — observations sur les lieux de vie, évaluations de la communication ou de la sensorialité, entretiens avec la personne, sa famille, les équipes — et elle nourrit le bilan d'intervention et ses préconisations.") +
-    texte('Trois rôles, et chacun son moment :') +
-    docxTableau([
-      [
-        {contenu: [docxP('Rôle', {gras: true, taille: 19})], fond: DOCX_C.papierFonce},
-        {contenu: [docxP("À l'EMIA", {gras: true, taille: 19})], fond: DOCX_C.papierFonce},
-        {contenu: [docxP('Dans la BAF', {gras: true, taille: 19})], fond: DOCX_C.papierFonce}
-      ],
-      [
-        {contenu: [docxP('Le déclarant', {gras: true, taille: 18})]},
-        {contenu: [docxP("Celles et ceux qui accompagnent la personne au quotidien : sa famille, les professionnels de son foyer, de son accueil de jour… Ils décrivent les comportements-défis qu'ils observent, et signalent les journées où il ne s'en produit pas.", {taille: 18})]},
-        {contenu: [docxP('Recueillir, avec un kit déclarant — ou une grille ABC papier', {taille: 18})]}
-      ],
-      [
-        {contenu: [docxP("L'analyste", {gras: true, taille: 18})]},
-        {contenu: [docxP("Le binôme de l'intervention : la coordinatrice, référente de la démarche, et le psychologue, qui la supervise. Ils organisent et interprètent les données, puis font l'analyse fonctionnelle avec l'équipe.", {taille: 18})]},
-        {contenu: [docxP("Organiser, Interpréter — puis hors de l'outil", {taille: 18})]}
-      ],
-      [
-        {contenu: [docxP('Le cotateur', {gras: true, taille: 18})]},
-        {contenu: [docxP("Évalue la qualité de l'analyse fonctionnelle une fois terminée.", {taille: 18})]},
-        {contenu: [docxP('ICAF', {taille: 18})]}
-      ]
-    ], [2000, 5000, 2638], {hauteur: 420}) +
+let corpsModeEmploiOuvert = null;   // déchiffré une fois, gardé le temps de la page
 
-    docxIntertitre('Réaliser une analyse fonctionnelle, en quatre temps', DOCX_C.papierFonce, DOCX_C.slate) +
-    puce('I. Recueillir ', 'des données qualitatives sur les comportements-défis ciblés, dans tous les lieux de vie de la personne.') +
-    puce('II. Organiser et interpréter ', 'ces données — en binôme.') +
-    puce('III. Formuler les hypothèses fonctionnelles, ', "avec le regard clinique du binôme et de l'équipe.") +
-    puce("IV. Évaluer la qualité de l'analyse, ", "avec l'ICAF. À l'EMIA, cette étape fait partie du protocole.") +
-
-    /* ── I ── */
-    partie('I.', 'Recueillir', "Une analyse fonctionnelle vaut ce que vaut son matériel déclaratif. Il le faut de qualité, et venu des différents lieux de vie de la personne.") +
-
-    sousPartie('1. Préparer la démarche') +
-    texte("Avant de lancer quoi que ce soit, le binôme répond à ces questions et les porte en réunion d'équipe.") +
-    puce('Quels comportements visez-vous ? ', "Un à trois comportements-défis, décrits comme une caméra les aurait filmés : ce qu'on voit, pas ce qu'on en pense.") +
-    puce('Une cause somatique a-t-elle été recherchée ? ', "Par qui, quand, avec quelle conclusion ? Une douleur non identifiée est la première cause à écarter : le bilan médical vient avant l'analyse fonctionnelle, pas après.") +
-    puce('Combien de temps durera le recueil ? ', "Fixez une date de début et une date de fin, en gardant le temps d'analyser avant d'écrire le bilan d'intervention.") +
-    puce('Qui seront les déclarants ? ', 'Au moins une personne pour chaque lieu de vie : famille, foyer, accueil de jour, travail, transports…') +
-    puce('Par quels moyens ? ', "En ligne sur la BAF, avec un kit déclarant, ou sur papier, avec les documents de la catégorie « Version papier » des Ressources.") +
-    puce('Qui porte la démarche, qui la supervise ? ', "À l'EMIA, c'est le binôme : la coordinatrice en est la référente, du lancement à la synthèse ; le psychologue la supervise.") +
-    encadre([
-      {t: 'Un prénom d\'emprunt. ', gras: true, couleur: DOCX_C.consequenceTexte},
-      {t: "Aucun nom de famille, aucune ville, aucune structure nommée dans la BAF. Choisissez un prénom d'emprunt à l'ouverture du dossier et gardez-le d'un bout à l'autre, y compris dans les fichiers échangés."}
-    ], DOCX_C.consequence, DOCX_C.consequenceTrait) +
-
-    sousPartie('2. Remplir le préambule, et le faire relire') +
-    dansBaf('Préambule, puis Recueillir → Exporter un kit déclarant') +
-    texte("Le binôme écrit ce que l'équipe sait déjà de la personne : ses espaces de vie, sa journée type avec ses horaires réels, la nuit, les trajets, ce qu'on connaît de son vase de tension. La journée type n'est pas décorative : c'est elle qui fournit les moments dans lesquels tous les évènements viendront se ranger.") +
-    texte("C'est ici que l'EMIA ajoute une étape. Avant tout recueil, le préambule part chez chaque partie — famille, institutions — dans un kit déclarant, pour relecture seulement : on lui demande des remarques, pas encore des évènements.") +
-    puce("C'est coûteux, et c'est voulu. ", "Il n'y a pas de bonne analyse fonctionnelle sans regard clinique de bout en bout. Une analyse construite sur un préambule que personne n'a relu décrit une personne que personne ne reconnaît.") +
-    puce('Chaque partie signale, section par section, ', "ce qui lui paraît faux ou incomplet. Elle ne peut pas modifier le préambule : les remarques arrivent à côté, avec leur provenance, sous « Ce que les déclarants disent de ce préambule ».") +
-    puce('Le binôme corrige à la main. ', "Rien ne s'applique tout seul. Une contradiction entre deux lieux n'est pas forcément une erreur à trancher : c'est souvent une information à garder.") +
-
-    sousPartie("3. Écrire le projet d'analyse fonctionnelle, et lancer le recueil") +
-    dansBaf('Recueillir → Exporter un kit déclarant (préambule corrigé)') +
-    texte("Une fois le préambule corrigé, le binôme envoie à chaque déclarant un nouveau kit, avec un courriel qui pose le projet. En voici un modèle, à adapter à la situation :") +
-    courriel.map((l, i) => ligneCourriel(l, i === 0)).join('') +
-    docxP('', {apres: 140}) +
-
-    sousPartie('4. Recevoir les contributions') +
-    dansBaf('Recueillir → Ajouter une contribution') +
-    puce('Versez chaque contribution dans le dossier. ', "Chaque évènement garde sa provenance, et les envois successifs d'une même personne ne se dupliquent pas. Si un envoi remplace des évènements déjà catégorisés, l'outil le signale : vérifiez que les catégories correspondent toujours au texte.") +
-    puce('Saisissez les grilles papier ', "telles qu'elles ont été écrites : la grille reprend colonne pour colonne le mode rapide, la recopie ne demande aucune décision.") +
-    puce('Regardez les périodes observées. ', "L'outil repère les journées sans information : allez demander ce qui s'est passé plutôt que de deviner. Une journée sans comportement-défi est une donnée, pas un vide.") +
-    aEviter("Retaper à la main ce qu'on a reçu. Outre le temps perdu, on reformule sans s'en rendre compte — et on perd la trace de qui a dit quoi.") +
-
-    /* ── II ── */
-    partie('II.', 'Organiser et interpréter', "C'est là que commence le travail du binôme — et il ne se fait pas seul.") +
-    encadre([
-      {t: 'On ne retouche jamais le déclaratif. ', gras: true},
-      {t: "Ce que les déclarants ont écrit reste tel quel. Tout ce que le binôme produit ici se lit par-dessus, sans jamais modifier la source."}
-    ], DOCX_C.papierFonce, DOCX_C.slate) +
-
-    sousPartie('Organiser : le double codage') +
-    dansBaf('Organiser → Exporter un kit de codage, puis Ajouter un codage reçu') +
-    texte("Organiser, c'est regrouper en catégories ce qui se ressemble, volet par volet : contexte, antécédent, comportement, conséquence, intervention. Or catégoriser, c'est déjà mesurer : c'est ce geste qui transforme un texte en une donnée qui sera comptée. À l'EMIA, la coordinatrice et le psychologue le font donc chacun de leur côté, en quatre temps :") +
-    puce('Définir ensemble la grille de catégories, ', "avant de commencer. Celles que l'outil propose sont des amorces, pas une nomenclature.") +
-    puce('Catégoriser chacun de son côté, ', "sans voir le travail de l'autre. La coordinatrice code dans le dossier et exporte pour le psychologue un kit de codage : il part avec la grille, et sans aucune catégorisation.") +
-    puce('Comparer. ', "Le psychologue renvoie son codage, la coordinatrice l'ajoute au dossier : la BAF montre les écarts, élément par élément, et un taux d'accord si vous avez codé contre la même grille.") +
-    puce('Discuter les écarts ', "et arrêter ensemble une catégorisation de synthèse. C'est elle qui servira à la suite. Deux regards, deux métiers : les écarts sont souvent ce que la discussion a de plus riche.") +
-    aEviter("Catégoriser en pensant déjà à la fonction. On regroupe ce qui se ressemble ; l'hypothèse vient après, et pas avant.") +
-
-    sousPartie('Interpréter : chercher ce qui se répète') +
-    dansBaf('Interpréter les données') +
-    texte("Les séquences qui reviennent, les moments et les lieux où le comportement apparaît — et ceux où il n'apparaît pas —, la façon dont la tension monte chez la personne. La BAF compte et signale ; elle ne conclut pas. Un pourcentage calculé sur quelques évènements est une piste, pas une tendance, et l'outil le dit à chaque fois.") +
-    puce('Proposer un vase de tension. ', "À partir des signes précurseurs que les déclarants ont décrits, le binôme écrit à quoi ressemble chaque palier chez cette personne. Ce vase est un résultat de l'analyse, à rendre aux équipes. Une fois figé, il remplace les descriptions génériques pour les recueils suivants — jamais en cours de recueil : on ne déplace pas l'unité de mesure pendant qu'on mesure.") +
-
-    /* ── III ── */
-    partie('III.', 'Formuler les hypothèses fonctionnelles', "Ici, la BAF ne peut plus aider. Cette étape demande un regard clinique : celui du binôme, et celui de l'équipe.") +
-    texte("Posez les pièces du puzzle sur la table, et prenez de la hauteur. L'analyse fonctionnelle n'est qu'une de ces pièces : les observations sur les lieux de vie, les évaluations, les entretiens en sont d'autres. À partir de l'ensemble, formulez des hypothèses fonctionnelles : des propositions de lecture sur ce à quoi sert le comportement pour la personne. Il y en a souvent plusieurs, et un même comportement peut en servir plusieurs à la fois.") +
-    puce("En réunion d'équipe. ", "C'est le lieu où chacun, depuis sa place, peut dire quelque chose de la situation, et où l'analyse se construit à plusieurs.") +
-    puce('Des hypothèses, pas des vérités. ', "Les préconisations qui en découlent ne sont pas un mode d'emploi : elles sont une étape de plus dans une démarche d'essai-erreur. Si le comportement diminue quand on agit sur ce qu'on pensait en jeu, l'hypothèse tient ; sinon, on l'ajuste.") +
-    puce('Une préconisation ne vise pas forcément la disparition du comportement, ', "mais un comportement qui remplisse la même fonction, à moindre coût. Partez de ce que la personne fait déjà : elle ne nous a pas attendus pour essayer des choses.") +
-    puce('Deux formes possibles : ', "ajuster l'environnement et la posture des accompagnants, ou mettre de nouveaux outils à la disposition de la personne.") +
-    texte("Le tout s'écrit dans le bilan d'intervention. Vient ensuite le temps d'accompagner les préconisations : c'est là que les hypothèses se mettent à l'épreuve, avec la personne, sa famille et les équipes — et qu'elles s'ajustent, parce qu'elles s'ajustent toujours.") +
-    encadre([
-      {t: "L'EMIA vient en complément. ", gras: true},
-      {t: "Notre analyse soutient et complète la pratique clinique des équipes qui accompagnent la personne ; elle ne la remplace pas."}
-    ], DOCX_C.papierFonce, DOCX_C.slate) +
-
-    /* ── IV ── */
-    partie('IV.', "Évaluer la qualité de l'analyse", "À l'EMIA, cette étape fait partie du protocole. Elle est longue, et elle n'est pas facile.") +
-    dansBaf('Indice de confiance (ICAF)') +
-    texte("L'ICAF évalue la qualité méthodologique d'une analyse fonctionnelle terminée. Ce qui vous attend :") +
-    puce("Il évalue le document d'analyse fonctionnelle, pas le recueil seul. ", "Un recueil ne nourrit qu'une partie de ses items : ceux qui portent sur les hypothèses, les préconisations et le document final demandent votre écrit. Laissez non coté ce qui n'existe pas encore.") +
-    puce('Il évalue le travail produit, ', 'pas la personne accompagnée, pas les déclarants.') +
-    puce('Cotez à plusieurs, et séparément. ', 'Les écarts entre cotateurs sont plus instructifs que la note.') +
-    puce("Un indice bas n'invalide rien. ", "Il dit où le matériel est mince, donc ce qu'il faudrait aller chercher.") +
-    encadre([
-      {t: 'AF = RDAF + analyse clinique', gras: true},
-      {t: '\nAF consolidée = AF + ICAF + ce que la cotation fait aller chercher', gras: true}
-    ], DOCX_C.papierFonce, DOCX_C.slate) +
-
-    /* ── Les fichiers ── */
-    docxIntertitre('Les fichiers qui circulent', DOCX_C.papierFonce, DOCX_C.slate) +
-    docxTableau([
-      [
-        {contenu: [docxP('Fichier', {gras: true, taille: 19})], fond: DOCX_C.papierFonce},
-        {contenu: [docxP('Ce qu\'il contient', {gras: true, taille: 19})], fond: DOCX_C.papierFonce},
-        {contenu: [docxP('Qui l\'envoie', {gras: true, taille: 19})], fond: DOCX_C.papierFonce}
-      ],
-      [
-        {contenu: [docxP('Kit déclarant', {gras: true, taille: 18})]},
-        {contenu: [docxP('Le préambule, et l\'échelle du vase si elle a été figée. Aucun évènement, rien de l\'analyse.', {taille: 18})]},
-        {contenu: [docxP('Le binôme, vers un déclarant', {taille: 18})]}
-      ],
-      [
-        {contenu: [docxP('Contribution', {gras: true, taille: 18})]},
-        {contenu: [docxP('Les évènements décrits, les périodes observées et les remarques sur le préambule. Rien d\'autre.', {taille: 18})]},
-        {contenu: [docxP('Un déclarant, vers le binôme', {taille: 18})]}
-      ],
-      [
-        {contenu: [docxP('Kit de codage', {gras: true, taille: 18})]},
-        {contenu: [docxP('Le préambule, les évènements et la grille de catégories — sans aucune catégorisation.', {taille: 18})]},
-        {contenu: [docxP('La coordinatrice, vers le psychologue', {taille: 18})]}
-      ],
-      [
-        {contenu: [docxP('Codage', {gras: true, taille: 18})]},
-        {contenu: [docxP('La catégorisation d\'un codeur, et son nom.', {taille: 18})]},
-        {contenu: [docxP('Le psychologue, vers la coordinatrice', {taille: 18})]}
-      ],
-      [
-        {contenu: [docxP('Dossier', {gras: true, taille: 18})]},
-        {contenu: [docxP('Tout : préambule, évènements, organisation, interprétation.', {taille: 18})]},
-        {contenu: [docxP('L\'équipe, pour elle-même', {taille: 18})]}
-      ]
-    ], [2200, 5100, 2338], {hauteur: 400}) +
-    docxP([
-      {t: "Le dossier complet ne sort pas de l'équipe. ", gras: true},
-      {t: "Il contient l'ensemble du matériel et le travail d'analyse. Ce qui circule vers l'extérieur, c'est le bilan d'intervention — pas le fichier."}
-    ], {fond: DOCX_C.consequence, traitGauche: DOCX_C.consequenceTrait, avant: 120, apres: 200});
+async function dechiffrerModeEmploiEMIA(code) {
+  const d = DOC_EMIA_CHIFFRE;
+  const octets = (b64) => Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(code), 'PBKDF2', false, ['deriveKey']);
+  const cle = await crypto.subtle.deriveKey(
+    {name: 'PBKDF2', salt: octets(d.sel), iterations: d.iterations, hash: 'SHA-256'},
+    base, {name: 'AES-GCM', length: 256}, false, ['decrypt']);
+  const clair = await crypto.subtle.decrypt({name: 'AES-GCM', iv: octets(d.iv)}, cle, octets(d.donnees));
+  return new Function(new TextDecoder().decode(clair) + '\nreturn corpsModeEmploi;')();
 }
 
-function telechargerVersionEMIA() { telechargerDocx('BAF_Mode-emploi-version-EMIA.docx', corpsModeEmploi(), false); }
+function ouvrirPanneauCodeEMIA() {
+  if (corpsModeEmploiOuvert) {
+    telechargerDocx('BAF_Mode-emploi-version-EMIA.docx', corpsModeEmploiOuvert(), false);
+    return;
+  }
+  const champ = document.getElementById('code-emia');
+  document.getElementById('code-emia-erreur').hidden = true;
+  champ.value = '';
+  document.getElementById('panneau-code-emia').hidden = false;
+  champ.focus();
+}
+
+function fermerPanneauCodeEMIA() {
+  document.getElementById('panneau-code-emia').hidden = true;
+}
+
+async function validerCodeEMIA(ev) {
+  if (ev) ev.preventDefault();
+  const champ = document.getElementById('code-emia');
+  const erreur = document.getElementById('code-emia-erreur');
+  const bouton = document.getElementById('code-emia-valider');
+  const dire = (t) => { erreur.textContent = t; erreur.hidden = false; };
+  if (!(window.crypto && crypto.subtle)) {
+    dire("Ce navigateur ne permet pas d'ouvrir le document ici. Ouvrez la BAF depuis son adresse en ligne.");
+    return;
+  }
+  bouton.disabled = true;
+  try {
+    corpsModeEmploiOuvert = await dechiffrerModeEmploiEMIA(champ.value.trim());
+  } catch (e) {
+    // un mauvais code fait échouer AES-GCM ; toute autre erreur est un vrai défaut
+    dire(e && e.name === 'OperationError' ? 'Code incorrect.' : "Le document n'a pas pu être ouvert : " + e.message);
+    champ.select();
+    return;
+  } finally {
+    bouton.disabled = false;
+  }
+  fermerPanneauCodeEMIA();
+  telechargerDocx('BAF_Mode-emploi-version-EMIA.docx', corpsModeEmploiOuvert(), false);
+}
 
 /* ── 5. Le mode d'emploi général ────────────────────────────────────────
    Pour toute équipe qui se lance, pas seulement l'EMIA. Il pose le
