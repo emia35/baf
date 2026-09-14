@@ -1622,6 +1622,10 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
 .res-doc-ico{font-size:20px;}
 .res-doc-titre{font-size:15px;font-weight:700;color:var(--ink);}
 .res-doc-desc{font-size:13px;color:var(--ink-soft);line-height:1.6;margin-bottom:12px;}
+.res-cat-titre{font-size:17px;font-weight:700;color:var(--slate);margin:32px 0 10px;}
+.res-cat-titre.premier{margin-top:4px;}
+.res-cat-intro{font-size:13.5px;color:var(--ink-soft);line-height:1.65;margin:0 0 14px;text-align:justify;text-justify:inter-word;}
+.res-cat-intro b{color:var(--ink);}
 
 /* Un graphique s'emporte : SVG pour le retoucher, PNG pour le coller. */
 .graphique-actions{
@@ -2889,7 +2893,7 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
     </div>
 
     <div class="ethique" style="margin-top:18px;">
-      <b>Un retour, une objection, une idée ?</b> Écrivez-nous à <a href="mailto:emia35@adapei35.asso.fr">emia35@adapei35.asso.fr</a>. Les remarques qui dérangent sont les plus utiles.
+      <b>Un retour, une idée ?</b> Toutes les suggestions nous intéressent ! <a href="mailto:emia35@adapei35.asso.fr">emia35@adapei35.asso.fr</a>
     </div>
   </section>
 
@@ -2945,10 +2949,23 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
       <h2>Documents et liens utiles</h2>
       <div class="sub">Les supports partageables, les références et les liens qui accompagnent la démarche.</div>
     </div>
-    <div class="ethique" style="margin-bottom:18px;">
-      <b>Toutes les familles et toutes les institutions ne pourront pas utiliser l'outil numérique.</b> Les trois premiers documents permettent de recueillir sur papier exactement ce que la BAF demande, puis de le recopier ici sans rien réinterpréter. La grille reprend colonne pour colonne le mode rapide du formulaire : la correspondance est littérale, c'est ce qui rend la recopie sûre.
+    <h3 class="res-cat-titre premier">Mode d'emploi</h3>
+    <div class="res-docs">
+      <div class="res-doc">
+        <div class="res-doc-tete"><span class="res-doc-ico">📘</span><span class="res-doc-titre">Mode d'emploi : faire une analyse fonctionnelle avec la BAF — Pour tous</span></div>
+        <div class="res-doc-desc">Pour toute équipe qui se lance. Le vocabulaire — déclarant, analyste, cotateur —, les quatre temps d'une analyse fonctionnelle, les questions à se poser avant de commencer, un modèle de courriel à envoyer aux déclarants, et ce que la BAF fait, ou ne fait pas, à chaque étape.</div>
+        <button class="btn btn-secondary btn-sm" onclick="telechargerModeEmploiGeneral()">⬇ Télécharger (.docx)</button>
+      </div>
+
+      <div class="res-doc">
+        <div class="res-doc-tete"><span class="res-doc-ico">📗</span><span class="res-doc-titre">Mode d'emploi : faire une analyse fonctionnelle avec la BAF — Version EMIA</span></div>
+        <div class="res-doc-desc">Le protocole tel qu'il se pratique à l'EMIA 35, dans l'ordre : ouvrir le dossier, faire valider le préambule par les parties, envoyer les kits, fusionner les contributions, organiser, interpréter, coter. Huit étapes, avec à chaque fois où c'est dans l'outil et le piège à éviter.</div>
+        <button class="btn btn-secondary btn-sm" onclick="telechargerVersionEMIA()">⬇ Télécharger (.docx)</button>
+      </div>
     </div>
 
+    <h3 class="res-cat-titre">Version papier</h3>
+    <p class="res-cat-intro"><b>Toutes les familles et toutes les institutions ne pourront pas utiliser l'outil numérique.</b> Ces trois documents permettent de recueillir sur papier exactement ce que la BAF demande, puis de le recopier ici sans rien réinterpréter. La grille reprend colonne pour colonne le mode rapide du formulaire : la correspondance est littérale, c'est ce qui rend la recopie sûre.</p>
     <div class="res-docs">
       <div class="res-doc">
         <div class="res-doc-tete"><span class="res-doc-ico">📋</span><span class="res-doc-titre">Grille ABC — version BAF</span></div>
@@ -2967,22 +2984,10 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
         <div class="res-doc-desc">La règle de la caméra, la différence entre observer et interpréter, entre contexte et antécédent, ce qu'est vraiment une conséquence, comment coter le vase — et un exemple pour chaque colonne de la grille. Écrit à partir des consignes de l'outil, pour que le papier dise la même chose que l'écran.</div>
         <button class="btn btn-secondary btn-sm" onclick="telechargerGuide()">⬇ Télécharger (.docx)</button>
       </div>
-
-      <div class="res-doc">
-        <div class="res-doc-tete"><span class="res-doc-ico">📘</span><span class="res-doc-titre">Mode d'emploi : faire une AF avec la BAF</span></div>
-        <div class="res-doc-desc">Pour toute équipe qui se lance. Le vocabulaire — déclarant, analyste, cotateur —, les quatre temps d'une analyse fonctionnelle, les questions à se poser avant de commencer, un modèle de courriel à envoyer aux déclarants, et ce que la BAF fait, ou ne fait pas, à chaque étape.</div>
-        <button class="btn btn-secondary btn-sm" onclick="telechargerModeEmploiGeneral()">⬇ Télécharger (.docx)</button>
-      </div>
-
-      <div class="res-doc">
-        <div class="res-doc-tete"><span class="res-doc-ico">🧭</span><span class="res-doc-titre">Faire une AF avec la BAF — Version EMIA</span></div>
-        <div class="res-doc-desc">Le protocole tel qu'il se pratique à l'EMIA 35, dans l'ordre : ouvrir le dossier, faire valider le préambule par les parties, envoyer les kits, fusionner les contributions, organiser, interpréter, coter. Huit étapes, avec à chaque fois où c'est dans l'outil et le piège à éviter.</div>
-        <button class="btn btn-secondary btn-sm" onclick="telechargerVersionEMIA()">⬇ Télécharger (.docx)</button>
-      </div>
     </div>
 
-    <div class="card" style="margin-top:24px;">
-      <h3 style="font-size:17px;margin-bottom:6px;">Sur quoi la BAF s'appuie</h3>
+    <h3 class="res-cat-titre">Sur quoi la BAF s'appuie</h3>
+    <div class="card">
       <p style="font-size:14px;color:var(--ink-soft);line-height:1.65;margin:0 0 18px;">
         Chaque outil emprunté à la littérature nomme sa source là où il sert, et dit quand la BAF
         l'adapte plutôt que de le reproduire. <b>Les écarts sont indiqués</b> : c'est là que se lisent
@@ -12112,7 +12117,7 @@ function corpsModeEmploi() {
     (piege ? docxP([{t: 'À éviter. ', gras: true, couleur: DOCX_C.consequenceTexte}, {t: piege}],
       {fond: DOCX_C.consequence, traitGauche: DOCX_C.consequenceTrait, avant: 80, apres: 60}) : '');
 
-  return docxTitre(1, "Faire une AF avec la BAF — Version EMIA") +
+  return docxTitre(1, "Mode d'emploi : faire une analyse fonctionnelle avec la BAF — Version EMIA") +
     docxP([{t: "Le déroulé d'une AF à l'EMIA, dans l'ordre. À suivre à la lettre les premières fois — " +
                "les raccourcis se prennent quand on sait ce qu'ils coûtent.", italique: true, couleur: DOCX_C.inkSoft}],
       {apres: 200}) +
@@ -12226,7 +12231,7 @@ function corpsModeEmploi() {
     docxPuce("Qu'une AF se fait vite. Ce protocole prend des semaines, et l'essentiel de ce temps n'est pas passé devant l'écran — il est passé à discuter avec ceux qui accompagnent la personne.");
 }
 
-function telechargerVersionEMIA() { telechargerDocx('BAF_AF-version-EMIA.docx', corpsModeEmploi(), false); }
+function telechargerVersionEMIA() { telechargerDocx('BAF_Mode-emploi-version-EMIA.docx', corpsModeEmploi(), false); }
 
 /* ── 5. Le mode d'emploi général ────────────────────────────────────────
    Pour toute équipe qui se lance, pas seulement l'EMIA. Il pose le
@@ -12275,7 +12280,7 @@ function corpsModeEmploiGeneral() {
     '[signature]'
   ];
 
-  return docxTitre(1, "Mode d'emploi : faire une AF avec la BAF") +
+  return docxTitre(1, "Mode d'emploi : faire une analyse fonctionnelle avec la BAF — Pour tous") +
     docxP([{t: "Pour toute équipe qui souhaite mener une analyse fonctionnelle en s'appuyant sur la BAF. Ce document pose les principes et le déroulé ; il ne remplace ni la formation, ni le regard d'un clinicien.",
             italique: true, couleur: DOCX_C.inkSoft}], {apres: 220}) +
 
@@ -12375,7 +12380,7 @@ function corpsModeEmploiGeneral() {
     ], DOCX_C.papierFonce, DOCX_C.slate);
 }
 
-function telechargerModeEmploiGeneral() { telechargerDocx('BAF_Mode-emploi.docx', corpsModeEmploiGeneral(), false); }
+function telechargerModeEmploiGeneral() { telechargerDocx('BAF_Mode-emploi-pour-tous.docx', corpsModeEmploiGeneral(), false); }
 
 function telechargerGrilleABC() { telechargerDocx('BAF_Grille-ABC.docx', corpsGrilleABC(), true); }
 function telechargerPreambulePapier() { telechargerDocx('BAF_Preambule.docx', corpsPreambule(), false); }
@@ -13936,9 +13941,10 @@ const NOTES_VERSION = [
 
 <h4>Deux modes d'emploi dans Ressources</h4>
 <ul>
-<li><b>« Mode d'emploi : faire une AF avec la BAF »</b>, pour toute équipe qui se lance : le vocabulaire, les quatre temps d'une analyse fonctionnelle, les questions à se poser avant de commencer, un modèle de courriel à envoyer aux déclarants, et ce que la BAF fait — ou ne fait pas — à chaque étape.</li>
-<li><b>« Faire une AF avec la BAF — Version EMIA »</b> : le protocole de l'EMIA 35, qui portait jusqu'ici un nom générique.</li>
+<li><b>« Mode d'emploi : faire une analyse fonctionnelle avec la BAF — Pour tous »</b>, pour toute équipe qui se lance : le vocabulaire, les quatre temps d'une analyse fonctionnelle, les questions à se poser avant de commencer, un modèle de courriel à envoyer aux déclarants, et ce que la BAF fait — ou ne fait pas — à chaque étape.</li>
+<li><b>« Mode d'emploi : faire une analyse fonctionnelle avec la BAF — Version EMIA »</b> : le protocole de l'EMIA 35, qui portait jusqu'ici un nom générique.</li>
 </ul>
+<p>Les Ressources se rangent désormais en trois catégories : les modes d'emploi d'abord, puis la version papier, puis les références sur lesquelles la BAF s'appuie.</p>
 
 <h4>La page À propos</h4>
 <p>Réécrite : qui est l'EMIA 35, pour qui et comment elle intervient — prendre la mesure, puis accompagner les préconisations —, ce qui tient sa pratique, et comment la pluralité des regards de l'équipe a donné naissance à la BAF. Elle présente aussi le projet de thèse d'Arthur Guillieux, mené en parallèle et dirigé par Sandrine Le Sourn-Bissaoui, de 2026 à 2032.</p>
