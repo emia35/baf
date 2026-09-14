@@ -1624,6 +1624,11 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
 .res-cat-titre.premier{margin-top:4px;}
 .res-cat-intro{font-size:13.5px;color:var(--ink-soft);line-height:1.65;margin:0 0 14px;text-align:justify;text-justify:inter-word;}
 .res-cat-intro b{color:var(--ink);}
+#view-reperes .res-cat-titre{scroll-margin-top:96px;}
+.reperes-sommaire{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 20px;}
+.reperes-sommaire button{font:inherit;font-size:13px;font-weight:600;color:var(--slate);background:var(--paper);border:1.5px solid var(--line);border-radius:999px;padding:6px 16px;cursor:pointer;}
+.reperes-sommaire button:hover{border-color:var(--slate);}
+.reperes-sous-titre{font-size:14px;font-style:italic;color:var(--ink-soft);margin:-4px 0 12px;}
 
 /* Un graphique s'emporte : SVG pour le retoucher, PNG pour le coller. */
 .graphique-actions{
@@ -2827,9 +2832,25 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
       <div class="crumb"><button onclick="route('accueil')">← Accueil</button></div>
       <span class="temps-tag tag-m1">Repères</span>
       <h2>Comprendre l'analyse fonctionnelle</h2>
-      <div class="sub">Ce qu'il faut avoir en tête avant de se lancer, et le vocabulaire qu'on emploie. À lire une fois, à revenir consulter au besoin.</div>
+      <div class="sub">Ce qu'il faut avoir en tête avant de se lancer, le vocabulaire qu'on emploie, et ce sur quoi la BAF s'appuie. À lire une fois, à revenir consulter au besoin.</div>
+    </div>
+    <div class="reperes-sommaire">
+      <button type="button" onclick="allerAPartieReperes('reperes-faq')">FAQ</button>
+      <button type="button" onclick="allerAPartieReperes('reperes-lexique')">Lexique</button>
+      <button type="button" onclick="allerAPartieReperes('reperes-biblio')">Bibliographie</button>
     </div>
     <div id="reperes-contenu"></div>
+
+    <h3 class="res-cat-titre" id="reperes-biblio">Bibliographie</h3>
+    <p class="reperes-sous-titre">Sur quoi la BAF s'appuie</p>
+    <div class="card">
+      <p style="font-size:14px;color:var(--ink-soft);line-height:1.65;margin:0 0 18px;">
+        Chaque outil emprunté à la littérature nomme sa source là où il sert, et dit quand la BAF
+        l'adapte plutôt que de le reproduire. <b>Les écarts sont indiqués</b> : c'est là que se lisent
+        les limites de ce que l'outil permet de conclure.
+      </p>
+      <div id="references-liste"></div>
+    </div>
   </section>
 
   <section id="view-apropos" class="view">
@@ -2922,7 +2943,7 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
       <div class="crumb"><button onclick="route('accueil')">← Accueil</button></div>
       <span class="temps-tag tag-m4">Ressources</span>
       <h2>Documents et liens utiles</h2>
-      <div class="sub">Les supports partageables, les références et les liens qui accompagnent la démarche.</div>
+      <div class="sub">Les documents qui accompagnent la démarche : à suivre, à imprimer, à partager.</div>
     </div>
     <h3 class="res-cat-titre premier">Mode d'emploi</h3>
     <div class="res-docs">
@@ -2961,15 +2982,6 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
       </div>
     </div>
 
-    <h3 class="res-cat-titre">Sur quoi la BAF s'appuie</h3>
-    <div class="card">
-      <p style="font-size:14px;color:var(--ink-soft);line-height:1.65;margin:0 0 18px;">
-        Chaque outil emprunté à la littérature nomme sa source là où il sert, et dit quand la BAF
-        l'adapte plutôt que de le reproduire. <b>Les écarts sont indiqués</b> : c'est là que se lisent
-        les limites de ce que l'outil permet de conclure.
-      </p>
-      <div id="references-liste"></div>
-    </div>
   </section>
 
   <section id="view-baf-accueil" class="view">
@@ -4236,7 +4248,7 @@ function route(name, fromHistory){
   if(name === 'notes') renderNotes();
   if(name === 'declarant') renderDeclarant();
   if(name === 'parcours') renderParcours();
-  if(name === 'ressources') renderReferences();
+  if(name === 'reperes') renderReferences();
   if(name === 'baf-accueil') majDossierEnCours();
   poserSituer(name);
   appliquerModeDeclarant();
@@ -14474,7 +14486,7 @@ function tousLesTermes() {
 function renderReperes() {
   const el = document.getElementById('reperes-contenu');
   if (!el) return;
-  let html = REPERES.map(cat => `
+  let html = '<h3 class="res-cat-titre premier" id="reperes-faq">FAQ</h3>' + REPERES.map(cat => `
     <div class="card">
       <h3 style="font-size:17px;margin-bottom:14px;">${esc(cat.titre)}</h3>
       ${cat.questions.map(item => `
@@ -14500,14 +14512,21 @@ function renderReperes() {
       </div>`;
   };
   html += `
+    <h3 class="res-cat-titre" id="reperes-lexique">Lexique</h3>
     <div class="card">
-      <h3 style="font-size:17px;margin-bottom:6px;">Lexique</h3>
       ${groupe('litterature', "Les mots de l'analyse fonctionnelle",
         "Ceux qu'on retrouve dans la littérature et dans toute démarche d'analyse fonctionnelle, avec ou sans la BAF.")}
       ${groupe('outil', "Les mots de la BAF",
         "Ceux que l'outil emploie pour organiser son travail. Ils n'ont pas cours ailleurs, ou pas dans ce sens précis.")}
     </div>`;
   el.innerHTML = html;
+}
+
+/* Les trois parties des Repères à un clic : en bas d'une longue page, la
+   bibliographie ne se trouverait jamais. */
+function allerAPartieReperes(id) {
+  const cible = document.getElementById(id);
+  if (cible) cible.scrollIntoView({block: 'start'});
 }
 
 const vueInitiale = vueDepuisAdresse(location.hash) || 'accueil';
