@@ -3060,7 +3060,7 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
       <div class="crumb"><button onclick="route('accueil')">← Accueil</button></div>
       <span class="temps-tag tag-m4">Le parcours</span>
       <h2>Comment la BAF s'enchaîne</h2>
-      <div class="sub">Trois temps : construire un déclaratif de qualité, écrire l'analyse fonctionnelle, l'évaluer. Dans le premier, rien ne se ressaisit d'une étape à l'autre : ce qui est écrit une fois traverse tout l'outil.</div>
+      <div class="sub">Trois temps : construire un déclaratif de qualité, écrire l'analyse fonctionnelle, et, si l'équipe le peut, l'évaluer. Dans le premier, rien ne se ressaisit d'une étape à l'autre : ce qui est écrit une fois traverse tout l'outil.</div>
     </div>
     <div id="parcours-contenu"></div>
   </section>
@@ -14014,7 +14014,7 @@ const SITUER_ENCHAINEMENT = [
   {de: 'Organiser → Interpréter :', quoi: "les catégories deviennent les termes des séquences et des croisements."},
   {de: 'Interpréter → Synthèse :', quoi: "les patterns et les paliers du vase rejoignent les chiffres du recueil."},
   {de: 'Synthèse → Analyse fonctionnelle :', quoi: "une fois le recueil entièrement fait, le binôme écrit les hypothèses de fonction à partir de la synthèse."},
-  {de: 'Analyse fonctionnelle → Indice de confiance :', quoi: "l'ICAF cote l'analyse produite sur dix critères, dont la complétude du matériau et le niveau de détail du recueil. L'analyse, sa cotation et ce qu'elle fait aller chercher : c'est l'AF évaluée."}
+  {de: 'Analyse fonctionnelle → Indice de confiance :', quoi: "facultatif — l'ICAF cote l'analyse produite sur dix critères, dont la complétude du matériau et le niveau de détail du recueil. L'analyse, sa cotation et ce qu'elle fait aller chercher : c'est l'AF évaluée."}
 ];
 
 /* ── Le parcours, dessiné une fois ─────────────────────────────────────
@@ -14080,10 +14080,11 @@ function renderParcours() {
 
     // 3 · Indice de confiance
     fleche(330, 392, 358, 'var(--slate)') +
-    '<rect x="392" y="318" width="250" height="80" rx="12" fill="var(--paper-deep)" stroke="var(--ink-soft)" stroke-width="1.6"/>' +
+    // Facultatif pour une équipe ordinaire, trop coûteux (Arthur, 15/09/2026) : le trait est en pointillé.
+    '<rect x="392" y="318" width="250" height="80" rx="12" fill="var(--paper-deep)" stroke="var(--ink-soft)" stroke-width="1.6" stroke-dasharray="5 4"/>' +
     texte(517, 344, '3 · Indice de confiance', 14, 'var(--ink)', true) +
-    texte(517, 364, 'cote l\'analyse fonctionnelle', 11.5, 'var(--ink-soft)') +
-    texte(517, 381, 'et ce qui la fonde', 11.5, 'var(--ink-soft)') +
+    texte(517, 364, 'facultatif : cote l\'analyse', 11.5, 'var(--ink-soft)') +
+    texte(517, 381, 'fonctionnelle et ce qui la fonde', 11.5, 'var(--ink-soft)') +
 
     // Ce qu'on obtient
     '<rect x="664" y="332" width="162" height="52" rx="26" fill="var(--slate)"/>' +
@@ -16081,11 +16082,11 @@ const REPERES = [
     titre: "Questions sur l'outil",
     questions: [
       {q: "Est-ce que la BAF pense à ma place ?",
-       r: `<p>Non. Elle ne pose aucun diagnostic et ne formule aucune hypothèse. Elle vous aide à structurer la démarche <b>avant</b> l'analyse — le recueil, l'organisation et la lecture des données (outil 1) — et à en évaluer la qualité <b>après</b> (outil 2).</p>
+       r: `<p>Non. Elle ne pose aucun diagnostic et ne formule aucune hypothèse. Elle vous aide à structurer la démarche <b>avant</b> l'analyse — le recueil, l'organisation et la lecture des données (outil 1) — et, si vous le souhaitez, à en évaluer la qualité <b>après</b> (outil 2, facultatif).</p>
            <p>Ce qui se passe entre les deux — formuler des hypothèses, décider quoi proposer — reste votre travail. Tout ce que l'outil fait apparaître, catégories, régularités, pourcentages, est un matériau de discussion, jamais une conclusion.</p>`},
       {q: "Qui fait quoi dans la BAF ?",
-       r: `<p>La BAF réunit deux outils : le <b>RDAF</b> (outil 1), qui recueille et prépare les données en trois étapes — Recueillir, Organiser, Interpréter —, et l'<b>ICAF</b> (outil 2), qui évalue la qualité d'une analyse fonctionnelle terminée.</p>
-           <p><b>Le déclarant</b> remplit le recueil : il décrit ce qu'il observe là où il accompagne la personne. <b>L'analyste</b> organise et interprète les données, puis fait l'analyse fonctionnelle — dans la démarche proposée, c'est le binôme formé par le référent et le clinicien. <b>Le cotateur</b> remplit l'ICAF.</p>`},
+       r: `<p>La BAF réunit deux outils : le <b>RDAF</b> (outil 1), qui recueille et prépare les données en trois étapes — Recueillir, Organiser, Interpréter —, et l'<b>ICAF</b> (outil 2, facultatif), qui évalue la qualité d'une analyse fonctionnelle terminée.</p>
+           <p><b>Le déclarant</b> remplit le recueil : il décrit ce qu'il observe là où il accompagne la personne. <b>L'analyste</b> organise et interprète les données, puis fait l'analyse fonctionnelle — dans la démarche proposée, c'est le binôme formé par le référent et le clinicien. <b>Le cotateur</b>, si l'équipe choisit d'évaluer son analyse, remplit l'ICAF.</p>`},
       {q: "Où sont stockées les données ? Qui peut les voir ?",
        r: `<p>Tout fonctionne dans votre navigateur. <b>Rien n'est envoyé, stocké ou transmis à un serveur</b>, de quelque façon que ce soit.</p>
            <p>Le dossier en cours reste enregistré dans ce navigateur, sur cet appareil. C'est ce qui vous évite de perdre votre travail en fermant l'onglet — et c'est aussi ce qui fait que, <b>sur un poste partagé, la personne suivante le retrouve</b>. Exportez votre dossier, et effacez-le en quittant. Si vous videz les données du navigateur sans avoir exporté, le travail est perdu.</p>`},
