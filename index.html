@@ -3091,7 +3091,7 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
     <div class="res-docs">
       <div class="res-doc">
         <div class="res-doc-tete"><span class="res-doc-ico">📘</span><span class="res-doc-titre">Mode d'emploi : faire une analyse fonctionnelle avec la BAF — Pour tous</span></div>
-        <div class="res-doc-desc">Pour toute équipe qui se lance. Une fiche process d'une page, puis la notice : les rôles, les quatre étapes d'une analyse fonctionnelle, où la BAF garde votre travail et comment le sauvegarder, un modèle de courriel pour les déclarants, le double codage, et ce que la BAF fait, ou ne fait pas, à chaque étape.</div>
+        <div class="res-doc-desc">Pour toute équipe qui se lance. Une fiche process d'une page, puis la notice : les rôles, les trois étapes d'une analyse fonctionnelle et l'ICAF en option, où la BAF garde votre travail et comment le sauvegarder, un modèle de courriel pour les déclarants, le double codage, et ce que la BAF fait, ou ne fait pas, à chaque étape.</div>
         <button class="btn btn-secondary btn-sm" onclick="telechargerModeEmploiGeneral()">⬇ Télécharger (.docx)</button>
       </div>
 
@@ -9014,6 +9014,18 @@ const _CONTROLES = [
     return _bancEgal('Migration, affichage dans la synthèse', 'true,true', [migre, montre].join(','));
   }},
 
+  {nom:'Le mode d\'emploi pour tous : l\'analyse s\'écrit avant l\'ICAF, qui reste facultatif', test: () => {
+    /* Deux fois, un texte a fait passer directement des analystes à la cotation.
+       Pour une équipe ordinaire, l'ICAF est trop coûteux : il reste en option. */
+    const corps = corpsModeEmploiGeneral();
+    const bienForme = !new DOMParser().parseFromString(
+      '<w:body xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">' + corps + '</w:body>', 'application/xml')
+      .getElementsByTagName('parsererror').length;
+    const texte = corps.replace(/<[^>]+>/g, '').replace(/&apos;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+    return _bancEgal('XML bien formé, analyse écrite, ICAF facultatif, plus de « quatre étapes »', 'true,true,true,true',
+      [bienForme, texte.includes("écrivent l'analyse fonctionnelle"), texte.includes('outil 2, facultatif'), !texte.includes("c'est quatre étapes")].join(','));
+  }},
+
   {nom:'Chaque volet a sa couleur, distincte des autres', test: () => {
     /* Le contexte et l'antécédent ont longtemps partagé le même jaune : on ne
        distinguait plus, à l'œil, deux volets que l'outil sépare. */
@@ -13360,8 +13372,9 @@ function corpsModeEmploiGeneral() {
     docxP([
       {t: 'Qui fait quoi. ', gras: true, couleur: bleu, taille: 20},
       {t: 'Les déclarants', gras: true, taille: 20}, {t: " décrivent ce qu'ils observent, dans chaque lieu de vie de la personne. ", taille: 20},
-      {t: 'Les analystes', gras: true, taille: 20}, {t: ' sont le binôme : le référent de la démarche, et le clinicien qui la supervise. ', taille: 20},
-      {t: 'Les cotateurs', gras: true, taille: 20}, {t: " évaluent l'analyse terminée, avec l'ICAF.", taille: 20}
+      {t: 'Les analystes', gras: true, taille: 20}, {t: ' — le binôme : le référent de la démarche et le clinicien qui la supervise — organisent et interprètent les données, puis ', taille: 20},
+      {t: "écrivent l'analyse fonctionnelle.", gras: true, taille: 20},
+      {t: ' Facultatif : ', italique: true, taille: 20}, {t: "des cotateurs peuvent ensuite évaluer cette analyse avec l'ICAF.", taille: 20}
     ], {fond: DOCX_C.papierFonce, traitGauche: bleu, apres: 60, align: 'both'}) +
 
     etape('1. Recueillir', 'le référent · dans la BAF : Préambule, Recueillir') +
@@ -13380,8 +13393,8 @@ function corpsModeEmploiGeneral() {
     pf('Rassembler les pièces du puzzle : ', "ce que la BAF a fait apparaître, les observations, les évaluations, les entretiens. Solliciter l'équipe au besoin.") +
     pf('Des hypothèses, pas des vérités : ', "elles se mettent à l'épreuve et s'ajustent, parce qu'elles s'ajustent toujours.") +
 
-    etape("4. Évaluer la qualité de l'analyse", 'si vous le souhaitez · dans la BAF : ICAF') +
-    pf('', "L'ICAF évalue une analyse terminée. C'est long, et ce n'est pas facile.") +
+    etape("Pour aller plus loin : évaluer la qualité de l'analyse", 'facultatif · dans la BAF : ICAF') +
+    pf('', "L'ICAF évalue une analyse fonctionnelle terminée. C'est un travail long, à réserver aux équipes qui peuvent y consacrer du temps.") +
 
     docxP([{t: 'Les réflexes', gras: true, couleur: bleu, taille: 20}], {fond: DOCX_C.papierFonce, traitGauche: bleu, avant: 200, apres: 0}) +
     reflexe("Sauvegarder, c'est exporter. ", "Le fichier .json téléchargé est la seule vraie sauvegarde : rangez-le dans le dossier partagé de la personne.") +
@@ -13397,7 +13410,7 @@ function corpsModeEmploiGeneral() {
 
     docxIntertitre("La BAF, c'est deux outils", DOCX_C.papierFonce, bleu) +
     puce('Le RDAF, Recueil de Données pour une Analyse Fonctionnelle (outil 1), ', 'recueille et prépare les données, en trois étapes : Recueillir, Organiser, Interpréter.') +
-    puce("L'ICAF, Indice de Confiance pour une Analyse Fonctionnelle (outil 2), ", "évalue la qualité d'une analyse fonctionnelle une fois terminée.") +
+    puce("L'ICAF, Indice de Confiance pour une Analyse Fonctionnelle (outil 2, facultatif), ", "évalue la qualité d'une analyse fonctionnelle une fois terminée. C'est un travail long, à réserver aux équipes qui peuvent y consacrer du temps.") +
     encadre([{t: "Ce qui se passe entre les deux, l'analyse fonctionnelle elle-même, c'est le travail du binôme et de l'équipe.", gras: true}], DOCX_C.papierFonce, bleu) +
     docxP('', {apres: 40}) +
 
@@ -13419,17 +13432,17 @@ function corpsModeEmploiGeneral() {
         {contenu: [docxP("Organiser, Interpréter — puis hors de l'outil", {taille: 18})]}
       ],
       [
-        {contenu: [docxP('Le ou les cotateurs', {gras: true, taille: 18})]},
-        {contenu: [docxP("Évaluent la qualité de l'analyse fonctionnelle une fois terminée.", {taille: 18})]},
+        {contenu: [docxP('Le ou les cotateurs (facultatif)', {gras: true, taille: 18})]},
+        {contenu: [docxP("Si l'équipe le choisit, évaluent la qualité de l'analyse fonctionnelle une fois terminée.", {taille: 18})]},
         {contenu: [docxP('ICAF', {taille: 18})]}
       ]
     ], [2000, 5000, 2638], {hauteur: 420}) +
 
-    docxIntertitre("Une analyse fonctionnelle, c'est quatre étapes", DOCX_C.papierFonce, bleu) +
+    docxIntertitre("Une analyse fonctionnelle, c'est trois étapes", DOCX_C.papierFonce, bleu) +
     puce('Recueillir ', 'des données qualitatives sur les comportements-défis ciblés, dans tous les lieux de vie de la personne. (avec le RDAF)') +
     puce('Organiser et interpréter ', 'ces données, en binôme. (avec le RDAF)') +
     puce('Formuler les hypothèses fonctionnelles, ', "avec le regard clinique du binôme et de l'équipe. (sans la BAF)") +
-    puce("Évaluer la qualité de l'analyse, ", "avec l'ICAF, si vous le souhaitez.") +
+    docxP([{t: 'Facultatif : ', gras: true, italique: true}, {t: "évaluer ensuite la qualité de l'analyse avec l'ICAF (outil 2)."}], {retrait: 240, apres: 80, align: 'both'}) +
 
     /* ── 1 ── */
     partie('1.', 'Recueillir', "Une analyse fonctionnelle vaut ce que vaut son matériel déclaratif. Il le faut de qualité, et venu des différents lieux de vie de la personne.") +
@@ -13499,7 +13512,8 @@ function corpsModeEmploiGeneral() {
     texte("Le tout se rédige dans un document d'analyse fonctionnelle, à partager avec les déclarants.") +
 
     /* ── 4 ── */
-    partie('4.', "Évaluer la qualité de l'analyse", "Si vous le souhaitez vraiment : c'est long, et ce n'est pas facile.") +
+    docxP([{t: "Pour aller plus loin : évaluer la qualité de l'analyse", gras: true, taille: 30, couleur: bleu}], {avant: 380, apres: 40}) +
+    docxP([{t: "Facultatif. C'est un travail long, et pas facile : à réserver aux équipes qui peuvent y consacrer du temps.", italique: true, couleur: DOCX_C.inkSoft}], {apres: 140}) +
     dansBaf('Indice de confiance (ICAF)') +
     texte("L'ICAF évalue la qualité méthodologique d'une analyse fonctionnelle terminée. Ce qui vous attend :") +
     puce("Il évalue le document d'analyse fonctionnelle, pas le recueil seul. ", "Un recueil ne nourrit qu'une partie de ses items : ceux qui portent sur les hypothèses, les préconisations et le document final demandent votre écrit. Laissez non coté ce qui n'existe pas encore.") +
