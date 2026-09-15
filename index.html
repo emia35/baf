@@ -771,16 +771,23 @@ section.view.show{display:block;animation:fadein .25s ease;}
 .signatures{text-align:right;margin-top:10px;font-size:13px;line-height:1.55;color:var(--ink);font-weight:400;}
 .signatures i{color:var(--ink-soft);}
 .signature-nom{font-weight:700;}
+/* Un petit encart qui ouvre le texte en fenêtre (Arthur, 15/09/2026) : l'information
+   reste là, sans occuper la page. */
+.accueil-donnees-ligne{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:20px;}
 .accueil-donnees{
-  margin-top:20px;
-  padding:12px 16px;
+  padding:8px 14px;
   background:var(--sauge-pale);
-  border-left:3px solid var(--sauge);
+  border:none;border-left:3px solid var(--sauge);
   border-radius:var(--radius-sm);
-  font-size:12.5px;line-height:1.55;
-  color:var(--ink);
-  text-align:justify;text-justify:inter-word;
+  font:inherit;font-size:12.5px;line-height:1.55;
+  color:var(--ink);cursor:pointer;
 }
+.accueil-donnees:hover{filter:brightness(.97);}
+.accueil-donnees-plus{
+  font:inherit;font-size:12.5px;font-style:italic;color:var(--ink-soft);
+  background:none;border:none;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:2px;
+}
+.accueil-donnees-plus:hover{color:var(--ink);}
 .accueil-donnees b{color:var(--sauge-deep);}
 #view-accueil .hero, #view-baf-accueil .hero{padding:22px 0 16px;}
 #view-accueil .hero svg.bigrose, #view-baf-accueil .hero svg.bigrose{width:50px;height:50px;margin-bottom:6px;}
@@ -2964,8 +2971,9 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
       </div>
     </div>
 
-    <div class="ethique accueil-donnees">
-      <b>Aucune donnée n'est collectée.</b> Cet outil fonctionne entièrement dans votre navigateur : rien n'est envoyé, stocké ou transmis à un serveur, de quelque façon que ce soit. <b>En revanche, le dossier en cours reste enregistré dans ce navigateur</b> — c'est ce qui vous permet de fermer l'onglet sans rien perdre, et c'est aussi ce qui fait que, sur un poste partagé, la personne suivante le retrouvera. Exportez votre dossier et effacez-le en quittant.
+    <div class="accueil-donnees-ligne">
+      <button type="button" class="accueil-donnees" onclick="ouvrirFenetre('donnees-overlay')"><b>Aucune donnée n'est collectée.</b></button>
+      <button type="button" class="accueil-donnees-plus" onclick="ouvrirFenetre('donnees-overlay')">en savoir plus</button>
     </div>
   </section>
 
@@ -3898,6 +3906,15 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
     <h3 id="dc-titre">Double codage</h3>
     <div id="dc-corps"></div>
     <button class="sim-modal-close" onclick="fermerFenetre('dc-overlay')">Fermer</button>
+  </div>
+</div>
+
+<div id="donnees-overlay" class="sim-modal-overlay" style="display:none;" onclick="fermerFenetre('donnees-overlay', event)">
+  <div class="sim-modal fenetre-simple" role="dialog" aria-modal="true" aria-labelledby="donnees-titre">
+    <h3 id="donnees-titre">Aucune donnée n'est collectée</h3>
+    <p class="fenetre-texte">Cet outil fonctionne entièrement dans votre navigateur : rien n'est envoyé, stocké ou transmis à un serveur, de quelque façon que ce soit.</p>
+    <p class="fenetre-texte"><b>En revanche, le dossier en cours reste enregistré dans ce navigateur</b> — c'est ce qui vous permet de fermer l'onglet sans rien perdre, et c'est aussi ce qui fait que, sur un poste partagé, la personne suivante le retrouvera. Exportez votre dossier et effacez-le en quittant.</p>
+    <button class="sim-modal-close" onclick="fermerFenetre('donnees-overlay')">Fermer</button>
   </div>
 </div>
 
@@ -14819,7 +14836,7 @@ function fermerFenetre(id, ev) {
 
 function fermerFenetresClavier(ev) {
   if (ev.key !== 'Escape') return;
-  ['kit-overlay', 'contrib-overlay', 'trous-overlay', 'dc-overlay'].forEach(id => fermerFenetre(id));
+  ['kit-overlay', 'contrib-overlay', 'trous-overlay', 'dc-overlay', 'donnees-overlay'].forEach(id => fermerFenetre(id));
   document.removeEventListener('keydown', fermerFenetresClavier);
 }
 
