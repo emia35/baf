@@ -797,6 +797,19 @@ section.view.show{display:block;animation:fadein .25s ease;}
 body.tool-baf #view-baf-accueil .hero h1 i{color:var(--sauge-deep);}
 #view-accueil .intro-card, #view-baf-accueil .intro-card{padding:20px 28px;margin-bottom:30px;}
 #view-baf-accueil .intro-card p.avant-commencer{font-size:14.5px;line-height:1.6;margin:0;}
+/* L'accueil de l'outil 2 reprend l'en-tête de l'outil 1, lettres comprises (Arthur, 15/09/2026). */
+#view-idc-accueil .hero{padding:22px 0 16px;}
+#view-idc-accueil .hero svg.bigrose{width:50px;height:50px;margin-bottom:6px;}
+#view-idc-accueil .hero .kicker{font-size:11px;margin-bottom:6px;}
+#view-idc-accueil .hero h1{font-size:28px;margin-bottom:0;}
+body.tool-idc #view-idc-accueil .hero .kicker{color:var(--slate);}
+body.tool-idc #view-idc-accueil .hero h1 i{color:var(--sauge-deep);}
+#view-idc-accueil .intro-card{padding:20px 28px;margin-bottom:30px;}
+.entrees-note{text-align:center;font-size:12.5px;color:var(--ink-soft);font-style:italic;margin:16px 0 0;}
+@media (max-width:720px){
+  #view-idc-accueil .hero h1{font-size:23px;}
+  #view-idc-accueil .intro-card{padding:18px 18px;}
+}
 @media (max-width:720px){
   #view-accueil .hero h1, #view-baf-accueil .hero h1{font-size:23px;}
   #view-accueil .intro-card, #view-baf-accueil .intro-card{padding:18px 18px;}
@@ -3204,50 +3217,35 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
     <div class="wrap">
       <div class="crumb"><button onclick="route('accueil')">← Accueil</button></div>
       <div class="hero">
-        <svg class="bigscale" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="24" cy="24" r="20.5" fill="var(--prune)" stroke="var(--prune)" stroke-width="1.4"/>
-          <circle cx="24" cy="24" r="20.5" fill="none" stroke="var(--rose)" stroke-width="1.4"/>
-          <path d="M24 10 L29.5 24 L24 38 L18.5 24 Z" fill="var(--rose)"/>
-          <circle cx="24" cy="24" r="2.6" fill="var(--prune)" stroke="#fff" stroke-width="1"/>
-        </svg>
-        <div class="kicker">Outil de recherche — EMIA35</div>
-        <h1>Indice de confiance</h1>
-        <p class="sub">Évaluer la qualité méthodologique d'une analyse fonctionnelle — le travail produit, pas la personne accompagnée, pas les déclarants.</p>
-      </div>
-
-      <div class="ethique" style="margin-bottom:18px;">
-        <b>Ce que l'ICAF cote, et ce qu'il ne cote pas.</b> Le barème évalue un bilan d'analyse fonctionnelle <b>complet</b> : le recueil, mais aussi le profil global de la personne, les hypothèses, les préconisations, la diffusabilité du document. Un recueil de données seul — un RDAF — n'alimente qu'une partie de ces items. Le coter en entier ne dirait pas si le travail est bon : ça mesurerait le recouvrement entre deux périmètres.
-        <div style="margin-top:11px;font-weight:700;line-height:1.9;">
-          AF = RDAF + analyse clinique<br>
-          AF évaluée = AF + ICAF + ce que la cotation fait aller chercher
-        </div>
-        <div style="margin-top:9px;">L'ICAF ne consolide rien par lui-même : il mesure, et il dit où le matériau est mince. Ce qui consolide, c'est ce qu'on va chercher après l'avoir lu.</div>
+        <svg class="bigrose" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="1">
+<circle cx="100" cy="100" r="96"/>
+<line x1="100.0" y1="4.0" x2="100.0" y2="16.0" stroke-width="1.6"/><line x1="116.7" y1="5.5" x2="115.6" y2="11.4" stroke-width="0.8"/><line x1="132.8" y1="9.8" x2="130.8" y2="15.4" stroke-width="0.8"/><line x1="148.0" y1="16.9" x2="145.0" y2="22.1" stroke-width="0.8"/><line x1="161.7" y1="26.5" x2="157.9" y2="31.1" stroke-width="0.8"/><line x1="173.5" y1="38.3" x2="168.9" y2="42.1" stroke-width="0.8"/><line x1="183.1" y1="52.0" x2="177.9" y2="55.0" stroke-width="0.8"/><line x1="190.2" y1="67.2" x2="184.6" y2="69.2" stroke-width="0.8"/><line x1="194.5" y1="83.3" x2="188.6" y2="84.4" stroke-width="0.8"/><line x1="196.0" y1="100.0" x2="184.0" y2="100.0" stroke-width="1.6"/><line x1="194.5" y1="116.7" x2="188.6" y2="115.6" stroke-width="0.8"/><line x1="190.2" y1="132.8" x2="184.6" y2="130.8" stroke-width="0.8"/><line x1="183.1" y1="148.0" x2="177.9" y2="145.0" stroke-width="0.8"/><line x1="173.5" y1="161.7" x2="168.9" y2="157.9" stroke-width="0.8"/><line x1="161.7" y1="173.5" x2="157.9" y2="168.9" stroke-width="0.8"/><line x1="148.0" y1="183.1" x2="145.0" y2="177.9" stroke-width="0.8"/><line x1="132.8" y1="190.2" x2="130.8" y2="184.6" stroke-width="0.8"/><line x1="116.7" y1="194.5" x2="115.6" y2="188.6" stroke-width="0.8"/><line x1="100.0" y1="196.0" x2="100.0" y2="184.0" stroke-width="1.6"/><line x1="83.3" y1="194.5" x2="84.4" y2="188.6" stroke-width="0.8"/><line x1="67.2" y1="190.2" x2="69.2" y2="184.6" stroke-width="0.8"/><line x1="52.0" y1="183.1" x2="55.0" y2="177.9" stroke-width="0.8"/><line x1="38.3" y1="173.5" x2="42.1" y2="168.9" stroke-width="0.8"/><line x1="26.5" y1="161.7" x2="31.1" y2="157.9" stroke-width="0.8"/><line x1="16.9" y1="148.0" x2="22.1" y2="145.0" stroke-width="0.8"/><line x1="9.8" y1="132.8" x2="15.4" y2="130.8" stroke-width="0.8"/><line x1="5.5" y1="116.7" x2="11.4" y2="115.6" stroke-width="0.8"/><line x1="4.0" y1="100.0" x2="16.0" y2="100.0" stroke-width="1.6"/><line x1="5.5" y1="83.3" x2="11.4" y2="84.4" stroke-width="0.8"/><line x1="9.8" y1="67.2" x2="15.4" y2="69.2" stroke-width="0.8"/><line x1="16.9" y1="52.0" x2="22.1" y2="55.0" stroke-width="0.8"/><line x1="26.5" y1="38.3" x2="31.1" y2="42.1" stroke-width="0.8"/><line x1="38.3" y1="26.5" x2="42.1" y2="31.1" stroke-width="0.8"/><line x1="52.0" y1="16.9" x2="55.0" y2="22.1" stroke-width="0.8"/><line x1="67.2" y1="9.8" x2="69.2" y2="15.4" stroke-width="0.8"/><line x1="83.3" y1="5.5" x2="84.4" y2="11.4" stroke-width="0.8"/>
+<path d="M100 22 L118 100 L100 178 L82 100 Z" fill="var(--sauge)" stroke="none"/>
+<path d="M100 22 L100 178" stroke="currentColor" stroke-width="1" opacity=".4"/>
+<circle cx="100" cy="100" r="6" fill="var(--paper)" stroke="currentColor" stroke-width="2"/>
+</svg>
+        <div class="kicker">EMIA35 · B<span class="lettre-echo">A</span><span class="lettre-echo">F</span></div>
+        <h1>Indice de Confiance pour une <i>Analyse Fonctionnelle</i></h1>
       </div>
 
       <div class="intro-card">
-        <h3>À quoi sert cet outil ?</h3>
+        <h3>Avant de commencer</h3>
+        <p><b>Ce que l'ICAF cote, et ce qu'il ne cote pas.</b> Le barème évalue un bilan d'analyse fonctionnelle <b>complet</b> : le recueil, mais aussi le profil global de la personne, les hypothèses, les préconisations, la diffusabilité du document. Un recueil de données seul — un RDAF — n'alimente qu'une partie de ces items. Le coter en entier ne dirait pas si le travail est bon : ça mesurerait le recouvrement entre deux périmètres. L'ICAF ne consolide rien par lui-même : il mesure, et il dit où le matériau est mince. Ce qui consolide, c'est ce qu'on va chercher après l'avoir lu.</p>
+
+        <h3 style="margin-top:22px;">À quoi sert cet outil ?</h3>
         <p>Produire une analyse fonctionnelle, c'est un processus — pas un document. Ce processus a une qualité, une rigueur, une profondeur variables selon les conditions dans lesquelles il est mené : la richesse du déclaratif recueilli, la capacité à organiser et croiser les données, la solidité des hypothèses formulées, la pertinence des préconisations, la diffusabilité du document final. <b>Cet outil permet d'évaluer cette qualité.</b></p>
 
         <p style="margin-top:12px;">Il ne juge pas la personne qui a produit l'analyse, ni la personne accompagnée. Il évalue <i>le processus</i> — ce qui a été recueilli, comment c'est organisé, ce qui en est déduit — à travers six dimensions progressives, de la qualité du déclaratif jusqu'à la transmissibilité du document.</p>
 
         <p style="margin-top:12px;"><b>Un outil de recherche, pas de contrôle.</b> Cet outil est conçu pour outiller une réflexion collective sur ce qui fait la qualité d'une démarche d'analyse fonctionnelle — entre collègues, entre équipes, entre modalités de production. Il permet de comparer des analyses issues de contextes différents, de tester l'apport d'outils numériques, d'identifier ce qui manque structurellement dans un processus donné.</p>
-
-        <div class="ethique">
-          <b>Posture du cotateur.</b> Dans tous les cas, le cotateur reste extérieur à la production de l'analyse. Son rôle est d'évaluer le document rédigé — pas d'inférer ce qui n'y est pas écrit, ni de suppléer aux manques. Si des données issues du Recueil sont affichées à titre de référence, elles éclairent sans coter : <i>le jugement reste entièrement celui du cotateur.</i>
-        </div>
       </div>
+
       <div class="entrees">
         <button class="entree-card primary" onclick="demarrerDepuisDossierOuvert()">
           <div class="entree-icon">🧭</div>
           <h3>Coter le dossier ouvert</h3>
           <p id="entree-dossier-ouvert">Les deux outils partagent la même page : le recueil en cours est lu directement, sans passer par un fichier.</p>
           <div class="entree-cta">Coter ce dossier →</div>
-        </button>
-        <button class="entree-card primary" onclick="demarrerBAF()">
-          <div class="entree-icon">📂</div>
-          <h3>Coter une AF depuis un fichier</h3>
-          <p>L'analyse a été produite ailleurs, ou sur un autre poste. Importez le fichier <code>.json</code> exporté du Recueil des données.</p>
-          <div class="entree-cta">Importer un fichier →</div>
         </button>
         <button class="entree-card secondary" onclick="demarrerSansBAF()">
           <div class="entree-icon">📋</div>
@@ -3256,12 +3254,7 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
           <div class="entree-cta">Démarrer la cotation →</div>
         </button>
       </div>
-      <div style="margin-top:16px;text-align:center;">
-        <button onclick="confirmerReset()" style="background:none;border:1px solid var(--line);border-radius:999px;padding:6px 18px;font-size:12px;font-weight:600;color:var(--ink-soft);cursor:pointer;transition:.15s;" onmouseover="this.style.borderColor='var(--sauge-deep)';this.style.color='var(--sauge-deep)'" onmouseout="this.style.borderColor='var(--line)';this.style.color='var(--ink-soft)'">↺ Effacer les données et recommencer</button>
-      </div>
-      <div style="margin-top:16px;padding:14px 16px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius-sm);font-family:'Source Serif 4',serif;font-size:13.5px;color:var(--ink-soft);line-height:1.65;">
-        <strong style="color:var(--slate);font-family:'Space Grotesk',sans-serif;">Posture du cotateur</strong> — Dans les deux cas, le cotateur reste extérieur à la production de l'AF. Les données du Recueil affichées sont des <em>références informationnelles</em> : elles ne cotent rien, elles éclairent. Le jugement reste entièrement celui du cotateur, sur la base du document rédigé.
-      </div>
+      <p class="entrees-note">Une analyse produite sur un autre poste ? Ouvrez d'abord son fichier avec « Importer », dans la barre sous l'en-tête : elle devient le dossier ouvert.</p>
     </div>
   </section>
 
@@ -16919,7 +16912,7 @@ function majEntreeDossierOuvert(){
   const n = (state.m2.evenements || []).length;
   const prenom = (state.m1.prenom || '').trim();
   if (!n && !prenom) {
-    el.textContent = "Aucun dossier ouvert pour l'instant. Remplissez le Recueil des données, lancez une simulation, ou importez un fichier.";
+    el.textContent = "Aucun dossier ouvert pour l'instant. Remplissez le Recueil des données, lancez une simulation, ou importez un fichier avec « Importer », dans la barre sous l'en-tête.";
     return;
   }
   el.innerHTML = `Dossier en cours : <b>${esc(prenom || 'sans prénom')}</b>, ${n} évènement${n>1?'s':''}. Les deux outils partagent la même page : il est lu directement, sans passer par un fichier.`;
