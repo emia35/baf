@@ -3797,6 +3797,8 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
       <div class="sub">Se met à jour à mesure que vous remplissez les modules.</div>
     </div>
 
+    <div id="synth-codage-encours"></div>
+
     <div class="card synth-block">
       <h4>Profil</h4>
       <div id="synth-profil" style="font-size:14.5px;color:var(--ink);">
@@ -7151,6 +7153,20 @@ function blocVaseSynthese() {
 }
 
 function refreshSynthese(){
+  // Tant que les deux copies de primo codage sont dans le fichier, la catégorisation
+  // est une synthèse en cours : la page le dit, et le document Word aussi (le
+  // bandeau est en styles en ligne, seul le bouton disparaît à l'export).
+  const encours = document.getElementById('synth-codage-encours');
+  if (encours) {
+    const comp = state.comparaison || {};
+    encours.innerHTML = (comp.A || comp.B)
+      ? '<div style="background:var(--ocre-pale);border-left:4px solid var(--ocre);border-radius:8px;padding:12px 16px;margin-bottom:18px;font-size:13.5px;line-height:1.6;color:var(--ink);">' +
+          '<b>Le double codage n\'est pas terminé</b> : les deux copies de primo codage sont encore dans ce fichier. ' +
+          'Les catégories, les chiffres et les suggestions ci-dessous reflètent une synthèse en cours.' +
+          ' <button type="button" class="btn btn-secondary btn-sm no-print" style="margin-left:6px;" onclick="route(\'comparer\')">⚖️ Ouvrir le comparateur</button>' +
+        '</div>'
+      : '';
+  }
   // Les graphiques de la synthèse reçoivent leurs boutons d'export après coup.
   setTimeout(() => { try { equiperGraphiques(document.getElementById('view-synthese')); } catch(e) {} }, 0);
   // Mettre à jour l'en-tête d'impression
@@ -8932,6 +8948,19 @@ const _CONTROLES = [
     state.m4 = avant;
     refreshSynthese();
     return _bancEgal('Observations, palier décrit, Interpréter reconnu comme rempli', 'true,true,true', obtenu);
+  }},
+
+  {nom:'La synthèse prévient tant que le double codage n\'est pas terminé', test: () => {
+    const avant = state.comparaison;
+    state.comparaison = {A: {nom: 'A', evenements: [], categories: {}}};
+    refreshSynthese();
+    const lire = () => (document.getElementById('synth-codage-encours') || {}).textContent || '';
+    const avec = lire().includes('pas terminé');
+    delete state.comparaison;
+    refreshSynthese();
+    const sans = lire() === '';
+    if (avant !== undefined) { state.comparaison = avant; refreshSynthese(); }
+    return _bancEgal('Bandeau avec les copies, rien sans', 'true,true', [avec, sans].join(','));
   }},
 
   {nom:'Chaque volet a sa couleur, distincte des autres', test: () => {
