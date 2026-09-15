@@ -1155,6 +1155,13 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
 /* synthèse */
 .synth-block{margin-bottom:22px;}
 .synth-block h4{font-size:15px;color:var(--ink);margin-bottom:10px;}
+.synth-vase{display:grid;grid-template-columns:minmax(120px,160px) minmax(0,1fr);gap:18px;align-items:start;margin-bottom:12px;}
+.synth-vase .vduo-bande.rempli{animation:none;}
+.synth-vase .vduo-bande, .synth-vase .vduo-nom{cursor:default;}
+@media (max-width:720px){
+  .synth-vase{grid-template-columns:1fr;}
+  .synth-vase-dessin{max-width:170px;margin:0 auto;}
+}
 .kpi-row{display:flex;gap:14px;flex-wrap:wrap;}
 .kpi{
   background:var(--paper);border:1px solid var(--line);border-radius:var(--radius-sm);
@@ -5332,7 +5339,7 @@ function computeM4Pct() {
   const sousRemplis = [
     patterns.length > 0,
     gradations.length > 0,
-    (vase.monte||[]).length > 0 || (vase.descend||[]).length > 0 || (vase.texte && vase.texte.trim())
+    vaseSaisiDansInterpreter()
   ].filter(Boolean).length;
   return Math.round(sousRemplis / 3 * 100);
 }
@@ -7100,6 +7107,69 @@ function modeArray(arr) {
   return best;
 }
 
+/* ── Le vase dans la synthèse (Arthur, 15/09/2026) ─────────────────────
+   Le dessin fixe, rempli jusqu'au pic le plus fréquent ; les paliers tels que
+   l'équipe les a décrits, et l'état de l'échelle ; ce qui remplit et ce qui
+   vide le vase, aux couleurs d'Interpréter ; les observations. Le dessin se
+   calcule sur les évènements cotés : il s'affiche même si rien n'a encore été
+   écrit dans Interpréter. Styles en ligne : l'export Word ne lit pas la feuille
+   de style, seulement ce qui est posé sur les éléments. */
+function vaseSaisiDansInterpreter() {
+  const vase = (state.m4 && state.m4.vase) || {};
+  const paliers = (state.m4 && state.m4.paliers) || {};
+  return (vase.monte || []).length > 0 || (vase.descend || []).length > 0 ||
+    !!(vase.texte && vase.texte.trim()) || PALIERS_VASE.some(p => (paliers[p.id] || '').trim());
+}
+
+function blocVaseSynthese() {
+  ensureM4();
+  const vase = state.m4.vase || {};
+  const paliers = state.m4.paliers || {};
+  const pic = picLePlusFrequent(state.m2.evenements || []);
+  if (!pic.total && !vaseSaisiDansInterpreter()) return '';
+  const prenom = esc((state.m1 && state.m1.prenom) || 'cette personne');
+  const decrits = PALIERS_VASE.slice().reverse().filter(p => (paliers[p.id] || '').trim());
+  const e = echelleEnVigueur();
+  const etatEchelle = e.propre
+    ? 'Échelle figée le ' + esc(e.figeeLe ? formatDate(e.figeeLe.slice(0, 10)) : '—') + ' : c\'est elle que les déclarants utilisent pour coter.'
+    : (decrits.length ? 'Échelle décrite, pas encore figée : les déclarants cotent encore avec les repères génériques.' : '');
+  const note = (t) => '<div style="font-size:12px;color:var(--ink-soft);font-style:italic;margin-top:4px;line-height:1.5;">' + t + '</div>';
+  const ligne = (titre, tags, sens) => {
+    if (!tags.length) return '';
+    const fond = 'var(--vase-' + sens + '-pale)', encre = 'var(--vase-' + sens + '-deep)';
+    return '<div style="margin-bottom:5px;font-size:13px;"><span style="color:' + encre + ';font-weight:700;">' + esc(titre) + ' :</span> ' +
+      tags.map(t => '<span style="background:' + fond + ';color:' + encre +
+        ';border-radius:999px;padding:2px 8px;font-size:12px;margin:0 2px;display:inline-block;">' + esc(t.texte) + '</span>').join('') +
+      '</div>';
+  };
+  const monte = vase.monte || [], descend = vase.descend || [];
+  return '<div style="margin-top:6px;">' +
+    '<div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin-bottom:8px;">💧 Vase de tension</div>' +
+    '<div class="synth-vase">' +
+      '<div class="synth-vase-dessin" data-graphique="Vase de tension">' +
+        svgVaseDuo(pic.id, pic, 'vsynth-clip', false) +
+        '<div class="vduo-legende">' + lignePicVase(pic) + '</div>' +
+      '</div>' +
+      '<div>' +
+        (decrits.length
+          ? decrits.map(p => '<div style="border-left:4px solid ' + p.couleur + ';padding:2px 0 2px 10px;margin-bottom:7px;font-size:13px;line-height:1.55;color:var(--ink);">' +
+              '<b>' + esc(p.nom) + '</b> — ' + esc(paliers[p.id].trim()) + '</div>').join('')
+          : note('Les paliers n\'ont pas encore été décrits pour ' + prenom + '.')) +
+        (etatEchelle ? note(etatEchelle) : '') +
+      '</div>' +
+    '</div>' +
+    ligne("Ce qui le fait monter — d'elle ou de lui", monte.filter(t => t.source === 'interieur'), 'monte') +
+    ligne('Ce qui le fait monter — du dehors', monte.filter(t => t.source === 'exterieur'), 'monte') +
+    ligne('Ce qui le fait monter — reste à situer', monte.filter(t => !t.source), 'monte') +
+    ligne("Ce qui le fait redescendre — d'elle ou de lui", descend.filter(t => t.source === 'interieur'), 'descend') +
+    ligne('Ce qui le fait redescendre — du dehors', descend.filter(t => t.source === 'exterieur'), 'descend') +
+    ligne('Ce qui le fait redescendre — reste à situer', descend.filter(t => !t.source), 'descend') +
+    (vase.texte && vase.texte.trim()
+      ? '<div style="font-size:13px;line-height:1.6;margin-top:8px;color:var(--ink);"><b>Observations :</b> ' + esc(vase.texte.trim()) + '</div>'
+      : '') +
+  '</div>';
+}
+
 function refreshSynthese(){
   // Les graphiques de la synthèse reçoivent leurs boutons d'export après coup.
   setTimeout(() => { try { equiperGraphiques(document.getElementById('view-synthese')); } catch(e) {} }, 0);
@@ -7163,31 +7233,18 @@ function refreshSynthese(){
 
   // ── M4 : patterns + gradations + vase ──────────────────────────────────
   const synthM4El = document.getElementById('synth-m4');
-  // Les tags portent maintenant leur source : une ligne par source, et les
-  // lignes vides ne s'affichent pas.
-  const ligneVaseSynthese = (titre, tags, ton) => {
-    if (!tags.length) return '';
-    const fond = ton === 'teal' ? 'var(--ocre-pale)' : 'var(--sauge-pale)';
-    const encre = ton === 'teal' ? 'var(--ocre-deep)' : 'var(--sauge-deep)';
-    return '<div style="margin-bottom:5px;font-size:13px;"><span style="color:' + encre + ';font-weight:700;">' +
-      esc(titre) + ' :</span> ' +
-      tags.map(t => '<span style="background:' + fond + ';color:' + encre +
-        ';border-radius:999px;padding:2px 8px;font-size:12px;margin:0 2px;">' + esc(t.texte) + '</span>').join('') +
-      '</div>';
-  };
   if (synthM4El) {
     ensureM4();
     const patterns = state.m4.patterns || [];
     const grads = state.m4.gradations || [];
-    const vase = state.m4.vase || {};
-    const monte = vase.monte || [];
-    const descend = vase.descend || [];
-    const texte = vase.texte || '';
-    const hasAnything = patterns.length > 0 || grads.length > 0 || monte.length > 0 || descend.length > 0 || texte;
-    if (!hasAnything) {
-      synthM4El.innerHTML = '<span style="color:var(--ink-soft);font-style:italic;">Le module 3 (Interpréter) n\u2019a pas encore été rempli.</span>';
+    // Le vase se calcule aussi sur les évènements cotés : il peut s'afficher avant
+    // qu'on ait rien écrit dans Interpréter.
+    const saisi = patterns.length > 0 || grads.length > 0 || vaseSaisiDansInterpreter();
+    const blocVase = blocVaseSynthese();
+    if (!saisi && !blocVase) {
+      synthM4El.innerHTML = '<span style="color:var(--ink-soft);font-style:italic;">Le module 3 (Interpréter) n’a pas encore été rempli.</span>';
     } else {
-      let html = '';
+      let html = saisi ? '' : '<div style="color:var(--ink-soft);font-style:italic;margin-bottom:12px;">Le module 3 (Interpréter) n’a pas encore été rempli.</div>';
       if (patterns.length > 0) {
         ensureM3();
         const cats3 = state.m3.categories;
@@ -7223,17 +7280,7 @@ function refreshSynthese(){
           ${grads.map(g => `<div style="font-size:13.5px;color:var(--ink);margin-bottom:4px;">${esc(g.label)} : ${g.cps.filter(Boolean).length} étapes</div>`).join('')}
         </div>`;
       }
-      if (monte.length > 0 || descend.length > 0) {
-        html += `<div>
-          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin-bottom:6px;">💧 Vase de tension</div>
-          ${ligneVaseSynthese("Augmente — ce qui vient d'elle ou de lui", monte.filter(t=>t.source==='interieur'), 'coral')}
-          ${ligneVaseSynthese('Augmente — ce qui vient du dehors', monte.filter(t=>t.source==='exterieur'), 'coral')}
-          ${ligneVaseSynthese('Augmente — reste à situer', monte.filter(t=>!t.source), 'coral')}
-          ${ligneVaseSynthese("Diminue — ce qui vient d'elle ou de lui", descend.filter(t=>t.source==='interieur'), 'teal')}
-          ${ligneVaseSynthese('Diminue — ce qui vient du dehors', descend.filter(t=>t.source==='exterieur'), 'teal')}
-          ${ligneVaseSynthese('Diminue — reste à situer', descend.filter(t=>!t.source), 'teal')}
-        </div>`;
-      }
+      html += blocVase;
       synthM4El.innerHTML = html;
     }
   }
@@ -8871,6 +8918,23 @@ const _CONTROLES = [
     state.m4.vase = avant;
     renderVaseTags();
     return _bancEgal('Intérieur, dehors, à situer', 'true,true,true', obtenu);
+  }},
+
+  {nom:'La synthèse montre le vase : paliers décrits et observations', test: () => {
+    /* Les observations étaient comptées pour dire qu'Interpréter était rempli,
+       mais ne s'affichaient nulle part ; un vase dont seuls les paliers étaient
+       décrits passait pour vide. */
+    ensureM4();
+    const avant = JSON.parse(JSON.stringify(state.m4));
+    state.m4.patterns = []; state.m4.gradations = [];
+    state.m4.vase = {monte: [], descend: [], texte: 'zzobs'};
+    state.m4.paliers = {tendu: 'zzpal'};
+    refreshSynthese();
+    const t = (document.getElementById('synth-m4') || {}).textContent || '';
+    const obtenu = [t.includes('zzobs'), t.includes('zzpal'), !t.includes('pas encore été rempli')].join(',');
+    state.m4 = avant;
+    refreshSynthese();
+    return _bancEgal('Observations, palier décrit, Interpréter reconnu comme rempli', 'true,true,true', obtenu);
   }},
 
   {nom:'Chaque volet a sa couleur, distincte des autres', test: () => {
@@ -11568,45 +11632,57 @@ function picLePlusFrequent(evts) {
   return {id, nb: id ? compte[id] : 0, total};
 }
 
-function dessinerVaseDuo(pic) {
-  const el = document.getElementById('vase-duo-dessin');
-  if (!el) return;
-  const iChoisi = PALIERS_VASE.findIndex(p => p.id === vasePalierChoisi);
+/* Le dessin seul : cliquable dans Interpréter, fixe dans la synthèse. Deux vases
+   peuvent coexister dans la page et dans l'export : chacun a sa propre découpe. */
+function svgVaseDuo(choisiId, pic, idClip, cliquable) {
+  const iChoisi = PALIERS_VASE.findIndex(p => p.id === choisiId);
   const choisi = PALIERS_VASE[iChoisi];
   const palPic = PALIERS_VASE.find(p => p.id === pic.id);
+  const clic = (p) => cliquable ? ' onclick="choisirPalierVase(\'' + p.id + '\')"' : '';
   // Les couches se remplissent par le bas, l'une après l'autre.
   const couches = PALIERS_VASE.map((p, i) => {
     const y1 = vaseY(p.min + 20), y2 = vaseY(p.min);
     return '<rect class="vduo-bande' + (i <= iChoisi ? ' rempli' : '') + '" x="18" y="' + y1.toFixed(1) +
       '" width="86" height="' + (y2 - y1).toFixed(1) + '" fill="' + p.couleur + '" style="animation-delay:' + (i * 70) + 'ms;"' +
-      ' onclick="choisirPalierVase(\'' + p.id + '\')"><title>' + esc(p.nom) + '</title></rect>';
+      clic(p) + '><title>' + esc(p.nom) + '</title></rect>';
   }).join('');
   const traits = PALIERS_VASE.filter(p => p.min > 0).map(p =>
     '<line x1="18" x2="104" y1="' + vaseY(p.min).toFixed(1) + '" y2="' + vaseY(p.min).toFixed(1) + '" stroke="var(--card)" stroke-width="1.2"/>').join('');
   const noms = PALIERS_VASE.map(p =>
     '<text class="vduo-nom' + (p === choisi ? ' choisi' : '') + '" x="112" y="' + (vaseY(p.min + 10) + 3.5).toFixed(1) + '"' +
-    ' onclick="choisirPalierVase(\'' + p.id + '\')">' + esc(p.nom) + '</text>').join('');
+    clic(p) + '>' + esc(p.nom) + '</text>').join('');
   const yPic = palPic ? vaseY(palPic.min + 10) : 0;
   const repere = palPic
     ? '<path class="vduo-repere" d="M2 ' + (yPic - 5).toFixed(1) + ' L12 ' + yPic.toFixed(1) + ' L2 ' + (yPic + 5).toFixed(1) + ' Z"><title>Pic le plus fréquent</title></path>'
     : '';
-  el.innerHTML =
-    '<svg class="vduo-svg" viewBox="0 0 170 186" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' +
+  return '<svg class="vduo-svg' + (cliquable ? '' : ' graphique') + '" viewBox="0 0 170 186" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' +
       esc(choisi ? 'Vase rempli jusqu\'au palier ' + choisi.nom : 'Vase vide') + '">' +
-      '<defs><clipPath id="vduo-clip"><path d="' + VASE_PATH + '"/></clipPath></defs>' +
+      '<defs><clipPath id="' + idClip + '"><path d="' + VASE_PATH + '"/></clipPath></defs>' +
       // Le découpage porte sur le groupe, pas sur les couches : une couche qui
       // s'anime à l'échelle entraînerait sinon sa découpe avec elle.
-      '<g clip-path="url(#vduo-clip)">' +
+      '<g clip-path="url(#' + idClip + ')">' +
         '<rect x="18" y="12" width="86" height="160" fill="var(--paper-deep)"/>' + couches + traits +
       '</g>' +
       '<path d="' + VASE_PATH + '" fill="none" stroke="var(--ink)" stroke-width="2"/>' +
       noms + repere +
-    '</svg>' +
+    '</svg>';
+}
+
+function lignePicVase(pic) {
+  const palPic = PALIERS_VASE.find(p => p.id === pic.id);
+  return palPic
+    ? '<span class="vduo-fleche">▶</span> Pic le plus fréquent : <b>' + esc(palPic.nom) + '</b>, ' +
+      pic.nb + ' évènement' + (pic.nb > 1 ? 's' : '') + ' sur ' + pic.total + ' coté' + (pic.total > 1 ? 's' : '')
+    : 'Aucun évènement coté pour l\'instant : pas de pic à situer.';
+}
+
+function dessinerVaseDuo(pic) {
+  const el = document.getElementById('vase-duo-dessin');
+  if (!el) return;
+  const choisi = PALIERS_VASE.find(p => p.id === vasePalierChoisi);
+  el.innerHTML = svgVaseDuo(vasePalierChoisi, pic, 'vduo-clip', true) +
     '<div class="vduo-legende">' + (choisi ? 'Rempli jusqu\'à <b>' + esc(choisi.nom) + '</b>' : 'Cliquez un palier pour remplir le vase.') + '</div>' +
-    '<div class="vduo-legende">' + (palPic
-      ? '<span class="vduo-fleche">▶</span> Pic le plus fréquent : <b>' + esc(palPic.nom) + '</b>, ' +
-        pic.nb + ' évènement' + (pic.nb > 1 ? 's' : '') + ' sur ' + pic.total + ' coté' + (pic.total > 1 ? 's' : '')
-      : 'Aucun évènement coté pour l\'instant : pas de pic à situer.') + '</div>';
+    '<div class="vduo-legende">' + lignePicVase(pic) + '</div>';
 }
 
 function choisirPalierVase(id) {
