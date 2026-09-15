@@ -1785,6 +1785,7 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
 }
 .sp-item:first-of-type{border-top:none;}
 .sp-item b{font-weight:700;}
+.sp-sous-titre{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);margin:14px 0 2px;}
 .sp-chiffre{
   display:inline-block;background:var(--paper-deep);border-radius:4px;
   padding:0 5px;font-weight:700;font-size:12.5px;
@@ -7678,7 +7679,8 @@ function renderCorrelations() {
 
   // La montée en tension a ses propres seuils : la carte s'affiche dès qu'une lecture a quelque chose à dire.
   const montee = sectionMonteeSynthese();
-  if ((evts.length < CORR_MIN || !hasAny) && !montee) {
+  const contexte = sectionContexteSynthese();
+  if ((evts.length < CORR_MIN || !hasAny) && !montee && !contexte) {
     card.style.display = 'none';
     return;
   }
@@ -7744,7 +7746,7 @@ function renderCorrelations() {
     </div>`;
   }
 
-  el.innerHTML = html + montee;
+  el.innerHTML = html + contexte + montee;
 }
 
 function refreshAccueilBadges(){
@@ -8961,6 +8963,31 @@ const _CONTROLES = [
     const sans = lire() === '';
     if (avant !== undefined) { state.comparaison = avant; refreshSynthese(); }
     return _bancEgal('Bandeau avec les copies, rien sans', 'true,true', [avec, sans].join(','));
+  }},
+
+  {nom:'Le contexte se lit en trois façons, sur des effectifs suffisants', test: () => {
+    /* Dix évènements, tous après « Consigne ». « Nuit courte » est noté sur les
+       cinq premiers : « Refus » y apparaît 4 fois sur 5 (1 sur 5 sans), et le
+       vase monte à « angoissé » 4 fois sur 5 (1 sur 5 sans). */
+    const evts = [], items = (ids) => ids.map(i => 'et' + i + '_0');
+    for (let i = 1; i <= 10; i++) {
+      const avecContexte = i <= 5, haut = (i <= 4) || i === 6;
+      evts.push({id: 't' + i, tension: {pic: {v: haut ? 70 : 30}}, _ctx: avecContexte});
+    }
+    const cats = {
+      contexte: {x1: {nom: 'Nuit courte', items: items([1, 2, 3, 4, 5])}},
+      antecedents: {a1: {nom: 'Consigne', items: items([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])}},
+      cp: {c1: {nom: 'Refus', items: items([1, 2, 3, 4, 6])}, c2: {nom: 'Cris', items: items([5, 7, 8, 9, 10])}}
+    };
+    const lec = lecturesContexte(statsContexte(evts, cats));
+    const l = lec.liens[0], v = lec.vase[0], m = lec.modulations[0];
+    const obtenu = [
+      l ? l.x + '→' + l.b + ' ' + l.n + '/' + l.nX : 'aucun lien',
+      v ? v.x + ' ' + v.haut + '/' + v.n + ' contre ' + v.hautSans + '/' + v.nSans : 'aucun vase',
+      m ? m.a + ' + ' + m.x + ' → ' + m.b + ' ' + m.nAXB + '/' + m.nAX + ' contre ' + m.nSansB + '/' + m.nSans : 'aucune modulation'
+    ].join(' · ');
+    return _bancEgal('Lien, vase, modulation',
+      'Nuit courte→Refus 4/5 · Nuit courte 4/5 contre 1/5 · Consigne + Nuit courte → Refus 4/5 contre 1/5', obtenu);
   }},
 
   {nom:'Chaque volet a sa couleur, distincte des autres', test: () => {
@@ -10917,10 +10944,123 @@ function suggestionsPatterns() {
   return {phrases: uniques.slice(0, SUGG_MAX_PHRASES), stats: st};
 }
 
+/* ── Le contexte dans les calculs (Arthur, 15/09/2026) ─────────────────
+   Le contexte ne déclenche rien tout seul : il remplit le vase, et fait qu'un
+   même antécédent ne produit pas le même effet d'un jour à l'autre. On ne le
+   compte donc pas comme un antécédent de plus. Trois lectures :
+   1. contexte → comportement, à côté du taux d'ensemble ;
+   2. contexte → hauteur du vase : la part des évènements qui montent au moins
+      à « angoissé », avec ce contexte et sans lui ;
+   3. le contexte qui change l'effet d'un antécédent : après le même antécédent,
+      la part d'un comportement avec ce contexte et sans lui.
+   Mêmes seuils que les suggestions de patterns : au moins trois fois, et au
+   moins 30 % au-dessus de ce qu'on voit sans. */
+
+/* Pure : prend les évènements et les catégories, ne lit rien d'autre. */
+function statsContexte(evts, categories) {
+  const cats = categories || {};
+  const SEP = '¦';
+  const nomsEvt = (sousId, evtId) => {
+    const c = cats[sousId] || {};
+    const prefixe = 'e' + evtId + '_';
+    return [...new Set(Object.keys(c)
+      .filter(id => (c[id].items || []).some(i => i.startsWith(prefixe)))
+      .map(id => cheminCatDans(c, id)))];
+  };
+  const plus = (o, k) => { o[k] = (o[k] || 0) + 1; };
+  const st = {nX: {}, nXB: {}, nB: {}, evtB: 0, vase: {}, nCotes: 0, nHaut: 0, nA: {}, nAB: {}, nAX: {}, nAXB: {}};
+  (evts || []).forEach(evt => {
+    if (!evt || !evt.id) return;
+    const X = nomsEvt('contexte', evt.id), A = nomsEvt('antecedents', evt.id), B = nomsEvt('cp', evt.id);
+    if (B.length) st.evtB++;
+    B.forEach(b => plus(st.nB, b));
+    X.forEach(x => { plus(st.nX, x); B.forEach(b => plus(st.nXB, x + SEP + b)); });
+    const pal = palierDe(tensionPicEvt(evt));
+    if (pal) {
+      const haut = pal.min >= 60;   // « angoissé » ou « débordé »
+      st.nCotes++;
+      if (haut) st.nHaut++;
+      X.forEach(x => { const v = st.vase[x] || (st.vase[x] = {n: 0, haut: 0}); v.n++; if (haut) v.haut++; });
+    }
+    A.forEach(a => {
+      plus(st.nA, a);
+      B.forEach(b => plus(st.nAB, a + SEP + b));
+      X.forEach(x => { plus(st.nAX, a + SEP + x); B.forEach(b => plus(st.nAXB, a + SEP + x + SEP + b)); });
+    });
+  });
+  return st;
+}
+
+function lecturesContexte(st) {
+  const SEP = '¦';
+  const nettement = (avec, sans) => sans > 0 ? avec / sans >= SUGG_ECART_MIN : avec > 0;
+  // Même taux de base que la règle antécédent → comportement, pour que les deux se lisent pareil.
+  const liens = Object.keys(st.nXB).map(k => {
+    const [x, b] = k.split(SEP);
+    const n = st.nXB[k], nX = st.nX[x];
+    return {x, b, n, nX, avec: n / nX, base: st.nB[b] / (st.evtB || 1)};
+  }).filter(l => l.n >= SUGG_MIN_OCCURRENCES && nettement(l.avec, l.base))
+    .sort((p, q) => (q.avec - q.base) * q.n - (p.avec - p.base) * p.n);
+
+  const vase = Object.keys(st.vase).map(x => {
+    const v = st.vase[x];
+    const nSans = st.nCotes - v.n, hautSans = st.nHaut - v.haut;
+    return {x, n: v.n, haut: v.haut, nSans, hautSans, avec: v.haut / v.n, sans: nSans ? hautSans / nSans : 0};
+  }).filter(v => v.haut >= SUGG_MIN_OCCURRENCES && v.nSans >= SUGG_MIN_OCCURRENCES && nettement(v.avec, v.sans))
+    .sort((p, q) => (q.avec - q.sans) * q.n - (p.avec - p.sans) * p.n);
+
+  const modulations = Object.keys(st.nAXB).map(k => {
+    const [a, x, b] = k.split(SEP);
+    const nAX = st.nAX[a + SEP + x], nAXB = st.nAXB[k];
+    const nSans = st.nA[a] - nAX, nSansB = (st.nAB[a + SEP + b] || 0) - nAXB;
+    return {a, x, b, nAX, nAXB, nSans, nSansB, avec: nAXB / nAX, sans: nSans ? nSansB / nSans : 0};
+  }).filter(m => m.nAXB >= SUGG_MIN_OCCURRENCES && m.nSans >= SUGG_MIN_OCCURRENCES && nettement(m.avec, m.sans))
+    .sort((p, q) => (q.avec - q.sans) * q.nAX - (p.avec - p.sans) * p.nAX);
+
+  return {liens, vase, modulations};
+}
+
+function phrasesContexte() {
+  ensureM3();
+  const lec = lecturesContexte(statsContexte(state.m2.evenements || [], state.m3.categories));
+  const ch = (t) => '<span class="sp-chiffre">' + t + '</span>';
+  const pct = (x) => Math.round(x * 100);
+  const out = [];
+  lec.liens.slice(0, 2).forEach(l => out.push(
+    'Quand le contexte <b>' + esc(l.x) + '</b> est noté (' + ch(l.nX + ' évènement' + (l.nX > 1 ? 's' : '')) + '), le comportement <b>' + esc(l.b) +
+    '</b> apparaît ' + ch(l.n + ' fois') + ', soit ' + ch(pct(l.avec) + ' %') + ' — contre ' + ch(pct(l.base) + ' %') +
+    ' en moyenne sur l\'ensemble des évènements.' + reserveEffectif(l.nX)));
+  lec.vase.slice(0, 2).forEach(v => out.push(
+    'Avec le contexte <b>' + esc(v.x) + '</b>, le vase monte au moins jusqu\'à « angoissé » dans ' + ch(v.haut + ' évènements sur ' + v.n) +
+    ' (' + ch(pct(v.avec) + ' %') + ') ; sans ce contexte, ' + ch(v.hautSans + ' sur ' + v.nSans) + ' (' + ch(pct(v.sans) + ' %') + ').' +
+    reserveEffectif(Math.min(v.n, v.nSans))));
+  lec.modulations.slice(0, 2).forEach(m => out.push(
+    'Après l\'antécédent <b>' + esc(m.a) + '</b>, le comportement <b>' + esc(m.b) + '</b> apparaît dans ' + ch(pct(m.avec) + ' %') +
+    ' des évènements quand <b>' + esc(m.x) + '</b> est noté (' + m.nAXB + ' sur ' + m.nAX + '), contre ' + ch(pct(m.sans) + ' %') +
+    ' sans ce contexte (' + m.nSansB + ' sur ' + m.nSans + '). Le même antécédent ne produit pas le même effet selon le contexte.' +
+    reserveEffectif(Math.min(m.nAX, m.nSans))));
+  return out;
+}
+
+function sectionContexteSynthese() {
+  const phrases = phrasesContexte();
+  if (!phrases.length) return '';
+  return '<div class="corr-section">' +
+    '<div class="corr-section-title">🕰 Le contexte</div>' +
+    '<div class="corr-note">Le contexte ne déclenche rien tout seul : il remplit le vase, et fait qu\'un même antécédent ne produit pas le même effet ' +
+      'd\'un jour à l\'autre. On regarde donc ce qui change quand il est noté, toujours à côté de ce qu\'on voit sans lui.</div>' +
+    phrases.map(p => '<div class="sp-item">' + p + '</div>').join('') +
+  '</div>';
+}
+
 function blocSuggestionsPatterns() {
   const {phrases, stats} = suggestionsPatterns();
+  const contexte = phrasesContexte();
+  const partieContexte = contexte.length
+    ? '<div class="sp-sous-titre">🕰 Le contexte</div>' + contexte.map(p => '<div class="sp-item">' + p + '</div>').join('')
+    : '';
   const entete = '<h5>Ce que les données suggèrent</h5>';
-  if (!phrases.length) {
+  if (!phrases.length && !contexte.length) {
     let manque;
     if (stats.total < 5) manque = 'Il faut au moins cinq évènements pour que des régularités aient un sens.';
     else if (stats.categorises < 5) manque = 'Trop peu d\'évènements sont catégorisés dans Organiser : c\'est la catégorisation qui rend les régularités calculables.';
@@ -10931,6 +11071,7 @@ function blocSuggestionsPatterns() {
   return '<div class="suggestions-patterns">' + entete +
     '<div class="sp-avert">L\'outil a relu votre catégorisation et compté ce qui revient. Ce sont des <b>co-occurrences observées dans du déclaratif, pas des causes</b> : un taux élevé peut reposer sur trois évènements, et le nombre compte autant que le pourcentage. Rien n\'est rempli à votre place — c\'est à vous de décider si une séquence fait un pattern.</div>' +
     phrases.map(p => '<div class="sp-item">' + p + '</div>').join('') +
+    partieContexte +
   '</div>';
 }
 
