@@ -7097,8 +7097,9 @@ function modeArray(arr) {
    l'équipe les a décrits, et l'état de l'échelle ; ce qui remplit et ce qui
    vide le vase, aux couleurs d'Interpréter ; les observations. Le dessin se
    calcule sur les évènements cotés : il s'affiche même si rien n'a encore été
-   écrit dans Interpréter. Styles en ligne : l'export Word ne lit pas la feuille
-   de style, seulement ce qui est posé sur les éléments. */
+   écrit dans Interpréter. Styles en ligne : l'export Word ne reprend pas la
+   feuille de style de la page, seulement la sienne (construireFichierWord), qui
+   ne connaît que quelques classes. Ce qui compte doit donc être posé sur l'élément. */
 function vaseSaisiDansInterpreter() {
   const vase = (state.m4 && state.m4.vase) || {};
   const paliers = (state.m4 && state.m4.paliers) || {};
