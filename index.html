@@ -2147,6 +2147,7 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
 .vase-connu-ancien{grid-column:1 / -1;}
 @media(max-width:760px){.vase-connu-grille{grid-template-columns:1fr;}}
 .vase-connu-titre{font-size:13px;font-weight:700;color:var(--ink);display:block;margin-bottom:2px;}
+.fleche-bas{font-size:.95em;}
 .vase-connu-grille textarea{min-height:76px;}
 .vase-part-titre{
   font-size:16px;font-weight:700;color:var(--ink);
@@ -3440,17 +3441,17 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
             <textarea id="m1-vase-exterieur" placeholder="ex : bruit du réfectoire, changement d'éducateur, absence de sa mère, travaux dans le bâtiment..." oninput="saveM1()"></textarea>
           </div>
           <div>
-            <label for="m1-vase-descend-interieur" class="vase-connu-titre">🔻 Ce qui le fait redescendre — d'elle ou de lui</label>
+            <label for="m1-vase-descend-interieur" class="vase-connu-titre"><span class="fleche-bas" style="color:#2F6FB5;" aria-hidden="true">▼</span> Ce qui le fait redescendre — d'elle ou de lui</label>
             <div class="help">Ce qu'elle ou il fait pour se réguler, ce qui l'apaise de l'intérieur — même partiellement, même provisoirement.</div>
             <textarea id="m1-vase-descend-interieur" placeholder="ex : s'isoler dans sa chambre, se balancer, dormir, un rituel à soi..." oninput="saveM1()"></textarea>
           </div>
           <div>
-            <label for="m1-vase-descend-exterieur" class="vase-connu-titre">🔻 Ce qui le fait redescendre — du dehors</label>
+            <label for="m1-vase-descend-exterieur" class="vase-connu-titre"><span class="fleche-bas" style="color:#2F6FB5;" aria-hidden="true">▼</span> Ce qui le fait redescendre — du dehors</label>
             <div class="help">Ce que l'environnement, l'organisation ou les personnes apportent — même partiellement, même provisoirement.</div>
             <textarea id="m1-vase-descend-exterieur" placeholder="ex : musique au casque, marcher dehors, retrouver sa routine, présence d'une personne précise..." oninput="saveM1()"></textarea>
           </div>
           <div class="vase-connu-ancien" id="m1-vase-descend-ancien" hidden>
-            <label for="m1-vase-descend" class="vase-connu-titre">🔻 Ce qui le fait redescendre — écrit avant qu'on distingue l'intérieur du dehors</label>
+            <label for="m1-vase-descend" class="vase-connu-titre"><span class="fleche-bas" style="color:#2F6FB5;" aria-hidden="true">▼</span> Ce qui le fait redescendre — écrit avant qu'on distingue l'intérieur du dehors</label>
             <div class="help">Gardé tel quel. Vous pouvez le répartir dans les deux cases ci-dessus, puis vider celle-ci.</div>
             <textarea id="m1-vase-descend" oninput="saveM1()"></textarea>
           </div>
