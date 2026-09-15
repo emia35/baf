@@ -2127,30 +2127,10 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
 .sp-avert + .sg-partie{border-top:none;padding-top:0;}
 .sg-titre{font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:3px;}
 .sg-aide{font-size:12px;color:var(--ink-soft);line-height:1.55;margin-bottom:8px;}
-.sg-table-wrap{overflow-x:auto;}
-.sg-table{width:100%;border-collapse:collapse;font-size:13px;}
-.sg-table td{padding:6px 10px 6px 0;border-top:1px solid var(--line-soft);vertical-align:middle;color:var(--ink);}
-.sg-table tr:first-child td{border-top:none;}
-.sg-table td:first-child{width:38%;font-weight:600;overflow-wrap:anywhere;}
-.sg-table tr.sg-fort td:first-child{color:var(--rose-deep);}
-.sg-barre{position:relative;display:inline-block;width:120px;height:9px;border-radius:5px;background:var(--line-soft);vertical-align:middle;margin-right:9px;}
-.sg-barre b{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:var(--rose);}
-.sg-barre i{position:absolute;top:-3px;bottom:-3px;width:2px;margin-left:-1px;background:var(--ink-soft);}
-.sg-chiffres{font-size:12.5px;color:var(--ink-soft);white-space:nowrap;}
-.sg-paliers{display:flex;flex-direction:column;gap:7px;margin-bottom:9px;}
-.sg-palier-ligne{display:grid;grid-template-columns:minmax(0,32%) minmax(0,1fr) auto;gap:10px;align-items:center;font-size:13px;}
-.sg-nom{font-weight:600;color:var(--ink);overflow-wrap:anywhere;}
-.sg-empile{display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--line-soft);}
-.sg-mode{font-size:12px;color:var(--ink-soft);white-space:nowrap;}
-.sg-legende{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:11.5px;color:var(--ink-soft);margin-bottom:6px;}
-.sg-legende span{display:inline-flex;align-items:center;gap:4px;}
-.sg-legende i{display:inline-block;width:10px;height:10px;border-radius:3px;}
+.sg-graphique-wrap{overflow-x:auto;margin:2px 0 6px;}
+.sg-graphique-wrap svg{min-width:520px;width:100%;max-width:680px;height:auto;display:block;}
+.sg-etoile{font-size:11.5px;color:var(--ink-soft);margin:0 0 6px;}
 .sg-fleche{color:var(--rose-deep);font-weight:700;}
-@media (max-width:720px){
-  .sg-palier-ligne{grid-template-columns:1fr;gap:3px;}
-  .sg-mode, .sg-chiffres{white-space:normal;}
-  .sg-barre{width:80px;}
-}
 .vase-connu-grille{
   display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:10px;
 }
@@ -7275,10 +7255,25 @@ function refreshSynthese(){
         html += '</div>';
       }
       if (grads.length > 0) {
-        html += `<div style="margin-bottom:14px;">
-          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin-bottom:6px;">📈 Gradations (${grads.length})</div>
-          ${grads.map(g => `<div style="font-size:13.5px;color:var(--ink);margin-bottom:4px;">${esc(g.label)} : ${g.cps.filter(Boolean).length} étapes</div>`).join('')}
-        </div>`;
+        ensureM3();
+        const catsCp = state.m3.categories.cp || {};
+        const pastilleCp = (id) => '<span style="background:var(--vol-comportement-pale);color:var(--vol-comportement-texte);border-radius:6px;padding:3px 9px;font-size:13px;">' +
+          esc(catsCp[id] ? cheminCatDans(catsCp, id) : '?') + '</span>';
+        html += '<div style="margin-bottom:14px;">' +
+          '<div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin-bottom:8px;">📈 Séquences de montée en tension (' + grads.length + ')</div>' +
+          grads.map(g => {
+            const etapes = (g.cps || []).filter(Boolean);
+            return '<div style="margin-bottom:10px;">' +
+              '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13.5px;">' +
+                '<span style="font-weight:700;color:var(--ink-soft);font-size:12px;">' + esc(g.label || 'Séquence') + '</span>' +
+                (etapes.length
+                  ? etapes.map(pastilleCp).join('<span style="color:var(--rose-deep);font-weight:700;">↗</span>')
+                  : '<span style="color:var(--ink-soft);font-style:italic;">aucune étape choisie</span>') +
+              '</div>' +
+              (g.note && g.note.trim() ? '<div style="font-size:12.5px;color:var(--ink-soft);font-style:italic;margin-top:4px;">' + esc(g.note.trim()) + '</div>' : '') +
+            '</div>';
+          }).join('') +
+        '</div>';
       }
       html += blocVase;
       synthM4El.innerHTML = html;
@@ -7665,7 +7660,9 @@ function renderCorrelations() {
   const ante_cons = correl.ante_cons || [], cp_cons = correl.cp_cons || [], triplets = correl.triplets || [];
   const hasAny = ante_cons.length > 0 || cp_cons.length > 0 || triplets.length > 0;
 
-  if (evts.length < CORR_MIN || !hasAny) {
+  // La montée en tension a ses propres seuils : la carte s'affiche dès qu'une lecture a quelque chose à dire.
+  const montee = sectionMonteeSynthese();
+  if ((evts.length < CORR_MIN || !hasAny) && !montee) {
     card.style.display = 'none';
     return;
   }
@@ -7731,7 +7728,7 @@ function renderCorrelations() {
     </div>`;
   }
 
-  el.innerHTML = html;
+  el.innerHTML = html + montee;
 }
 
 function refreshAccueilBadges(){
@@ -11411,7 +11408,66 @@ function statsGradation(evts, categories) {
   return st;
 }
 
-function blocStatsGradation() {
+/* Les barres sont dessinées en SVG : c'est la forme que l'export Word sait
+   reprendre, puisqu'il transforme chaque SVG en image. */
+function svgEffetsInterventions(lignes, base) {
+  const H = 26, XB = 240, LB = 180;
+  const couper = (t) => t.length > 32 ? t.slice(0, 31) + '…' : t;
+  let corps = '';
+  lignes.forEach((e, i) => {
+    const y = 6 + i * H;
+    const taux = e.n ? Math.round(e.nAug / e.n * 100) : 0;
+    corps += '<text x="0" y="' + (y + 13) + '" font-size="12.5" font-weight="600" fill="' + (e.fort ? 'var(--rose-deep)' : 'var(--ink)') + '">' +
+        esc(couper(e.nom)) + '<title>' + esc(e.nom) + '</title></text>' +
+      '<rect x="' + XB + '" y="' + (y + 4) + '" width="' + LB + '" height="10" rx="5" fill="var(--line-soft)"/>' +
+      (taux ? '<rect x="' + XB + '" y="' + (y + 4) + '" width="' + (LB * taux / 100).toFixed(1) + '" height="10" rx="5" fill="var(--rose)"/>' : '') +
+      '<rect x="' + (XB + LB * base / 100 - 1).toFixed(1) + '" y="' + y + '" width="2" height="18" fill="var(--ink-soft)"/>' +
+      '<text x="' + (XB + LB + 12) + '" y="' + (y + 13) + '" font-size="12" fill="var(--ink-soft)">' +
+        e.nAug + ' sur ' + e.n + ' · ' + taux + ' %' + (e.n < 5 ? ' *' : '') + '</text>';
+  });
+  const h = 6 + lignes.length * H + 20;
+  corps += '<rect x="' + XB + '" y="' + (h - 15) + '" width="2" height="12" fill="var(--ink-soft)"/>' +
+    '<text x="' + (XB + 8) + '" y="' + (h - 5) + '" font-size="11" fill="var(--ink-soft)">taux d\'ensemble : ' + base + ' %</text>';
+  return '<svg class="graphique sg-graphique" viewBox="0 0 640 ' + h + '" xmlns="http://www.w3.org/2000/svg" role="img" ' +
+    'aria-label="Part des interventions suivies d\'une augmentation de la tension">' + corps + '</svg>';
+}
+
+function svgPaliersComportements(lignes) {
+  const H = 26, XB = 240, LB = 180;
+  const couper = (t) => t.length > 32 ? t.slice(0, 31) + '…' : t;
+  let corps = '';
+  lignes.forEach((p, i) => {
+    const y = 6 + i * H;
+    const max = Math.max.apply(null, PALIERS_VASE.map(x => p.par[x.id] || 0));
+    const modes = PALIERS_VASE.filter(x => (p.par[x.id] || 0) === max).map(x => x.nom);
+    corps += '<text x="0" y="' + (y + 13) + '" font-size="12.5" font-weight="600" fill="var(--ink)">' +
+      esc(couper(p.nom)) + '<title>' + esc(p.nom) + '</title></text>';
+    let x = XB;
+    PALIERS_VASE.forEach(pal => {
+      const k = p.par[pal.id] || 0;
+      if (!k) return;
+      const w = LB * k / p.n;
+      corps += '<rect x="' + x.toFixed(1) + '" y="' + (y + 3) + '" width="' + w.toFixed(1) + '" height="12" fill="' + pal.couleur + '">' +
+        '<title>' + esc(pal.nom + ' : ' + k) + '</title></rect>';
+      x += w;
+    });
+    corps += '<text x="' + (XB + LB + 12) + '" y="' + (y + 13) + '" font-size="12" fill="var(--ink-soft)">' +
+      esc(modes.join(' / ')) + ' · ' + p.n + ' évènement' + (p.n > 1 ? 's' : '') + '</text>';
+  });
+  const yLeg = 6 + lignes.length * H + 6;
+  PALIERS_VASE.forEach((pal, i) => {
+    const x = XB + i * 76;
+    corps += '<rect x="' + x + '" y="' + yLeg + '" width="10" height="10" rx="2" fill="' + pal.couleur + '"/>' +
+      '<text x="' + (x + 14) + '" y="' + (yLeg + 9) + '" font-size="11" fill="var(--ink-soft)">' + esc(pal.nom) + '</text>';
+  });
+  const h = yLeg + 16;
+  return '<svg class="graphique sg-graphique" viewBox="0 0 640 ' + h + '" xmlns="http://www.w3.org/2000/svg" role="img" ' +
+    'aria-label="Palier du vase atteint au plus fort, par catégorie de comportement">' + corps + '</svg>';
+}
+
+/* Les trois lectures de la montée, une partie chacune : dans Interpréter sous
+   la gradation, et dans la synthèse sous « Ce que les chiffres montrent ». */
+function partiesStatsGradation() {
   ensureM3();
   const st = statsGradation(state.m2.evenements || [], state.m3.categories);
   const ch = (t) => '<span class="sp-chiffre">' + t + '</span>';
@@ -11422,23 +11478,19 @@ function blocStatsGradation() {
   const effets = Object.values(st.effets).sort((a, b) => (b.nAug / b.n) - (a.nAug / a.n) || b.n - a.n);
   if (effets.length) {
     const base = pct(st.nAug, st.nEffet);
+    // Même règle que les suggestions de patterns : au moins trois fois, et nettement plus souvent qu'à l'ordinaire.
+    const lignes = effets.slice(0, 8).map(e => Object.assign({}, e, {
+      fort: e.nAug >= SUGG_MIN_OCCURRENCES && e.nAug / e.n >= SUGG_ECART_MIN * (st.nAug / st.nEffet)
+    }));
     const sansCat = st.nIvSansCat === 1 ? ' 1 intervention pas encore catégorisée ne figure pas ci-dessous.'
       : st.nIvSansCat > 1 ? ' ' + st.nIvSansCat + ' interventions pas encore catégorisées ne figurent pas ci-dessous.' : '';
     parties.push('<div class="sg-partie">' +
       '<div class="sg-titre">Après quelles interventions la tension augmente</div>' +
       '<div class="sg-aide">Sur les ' + ch(pluriel(st.nEffet, 'intervention')) + ' dont l\'effet est noté, ' + ch(base + ' %') +
-        ' sont suivies d\'une augmentation de la tension. Le trait sur chaque barre marque ce taux d\'ensemble.' + sansCat + '</div>' +
-      '<div class="sg-table-wrap"><table class="sg-table"><tbody>' +
-      effets.slice(0, 8).map(e => {
-        const taux = pct(e.nAug, e.n);
-        // Même règle que les suggestions de patterns : au moins trois fois, et nettement plus souvent qu'à l'ordinaire.
-        const fort = e.nAug >= SUGG_MIN_OCCURRENCES && e.nAug / e.n >= 1.3 * (st.nAug / st.nEffet);
-        return '<tr' + (fort ? ' class="sg-fort"' : '') + '><td>' + esc(e.nom) + '</td><td>' +
-          '<span class="sg-barre" aria-hidden="true"><b style="width:' + taux + '%;"></b><i style="left:' + base + '%;"></i></span>' +
-          '<span class="sg-chiffres">' + e.nAug + ' sur ' + e.n + ' · ' + taux + ' %' + (e.n < 5 ? ' · <i>effectif faible</i>' : '') + '</span>' +
-        '</td></tr>';
-      }).join('') +
-      '</tbody></table></div></div>');
+        ' sont suivies d\'une augmentation de la tension. Le trait vertical marque ce taux d\'ensemble ; en rose, les interventions nettement au-dessus.' + sansCat + '</div>' +
+      '<div class="sg-graphique-wrap" data-graphique="Interventions suivies d\'une augmentation de la tension">' + svgEffetsInterventions(lignes, base) + '</div>' +
+      (lignes.some(e => e.n < 5) ? '<div class="sg-etoile">* Moins de cinq interventions : une piste, pas une tendance.</div>' : '') +
+    '</div>');
   }
 
   const paliers = Object.values(st.paliers)
@@ -11449,20 +11501,9 @@ function blocStatsGradation() {
       : st.nEvtSansPic > 1 ? ' ' + st.nEvtSansPic + ' évènements sans pic coté ne comptent pas.' : '';
     parties.push('<div class="sg-partie">' +
       '<div class="sg-titre">Jusqu\'où monte le vase, comportement par comportement</div>' +
-      '<div class="sg-aide">Pour chaque catégorie, le palier atteint au plus fort de l\'évènement. Elles sont rangées du palier médian le plus bas au plus haut : ' +
-        '<b>un ordre de montée à discuter</b>, pas une séquence observée.' + sansPic + '</div>' +
-      '<div class="sg-paliers">' + paliers.slice(0, 8).map(p => {
-        const max = Math.max.apply(null, PALIERS_VASE.map(x => p.par[x.id] || 0));
-        const modes = PALIERS_VASE.filter(x => (p.par[x.id] || 0) === max).map(x => x.nom);
-        return '<div class="sg-palier-ligne">' +
-          '<span class="sg-nom">' + esc(p.nom) + '</span>' +
-          '<span class="sg-empile" title="' + esc(PALIERS_VASE.filter(x => p.par[x.id]).map(x => x.nom + ' : ' + p.par[x.id]).join(' · ')) + '">' +
-            PALIERS_VASE.map(x => p.par[x.id] ? '<span style="flex:' + p.par[x.id] + ';background:' + x.couleur + ';"></span>' : '').join('') +
-          '</span>' +
-          '<span class="sg-mode">le plus souvent ' + ch(modes.join(' / ')) + ' · ' + pluriel(p.n, 'évènement') + '</span>' +
-        '</div>';
-      }).join('') + '</div>' +
-      '<div class="sg-legende">' + PALIERS_VASE.map(x => '<span><i style="background:' + x.couleur + ';"></i>' + x.nom + '</span>').join('') + '</div>' +
+      '<div class="sg-aide">Pour chaque catégorie, le palier atteint au plus fort de l\'évènement ; à droite, le palier le plus fréquent. ' +
+        'Les catégories sont rangées du palier médian le plus bas au plus haut : <b>un ordre de montée à discuter</b>, pas une séquence observée.' + sansPic + '</div>' +
+      '<div class="sg-graphique-wrap" data-graphique="Palier atteint au plus fort, par comportement">' + svgPaliersComportements(paliers.slice(0, 8)) + '</div>' +
     '</div>');
   }
 
@@ -11480,7 +11521,11 @@ function blocStatsGradation() {
       }).join('') +
     '</div>');
   }
+  return parties;
+}
 
+function blocStatsGradation() {
+  const parties = partiesStatsGradation();
   const entete = '<h5>Ce que les données disent de la montée</h5>';
   if (!parties.length) {
     return '<div class="suggestions-patterns sg-bloc">' + entete +
@@ -11490,6 +11535,16 @@ function blocStatsGradation() {
   return '<div class="suggestions-patterns sg-bloc">' + entete +
     '<div class="sp-avert">Compté sur votre catégorisation et sur ce que les déclarants ont coté. Ce sont des <b>co-occurrences dans du déclaratif, pas des causes</b> ; ' +
     'chaque chiffre est donné avec son effectif.</div>' +
+    parties.join('') + '</div>';
+}
+
+function sectionMonteeSynthese() {
+  const parties = partiesStatsGradation();
+  if (!parties.length) return '';
+  return '<div class="corr-section">' +
+    '<div class="corr-section-title">📈 La montée en tension</div>' +
+    '<div class="corr-note">Compté sur la catégorisation et sur ce que les déclarants ont coté : l\'effet des interventions, le palier atteint au plus fort, ' +
+      'le comportement apparu après une intervention. Chaque chiffre est donné avec son effectif.</div>' +
     parties.join('') + '</div>';
 }
 
