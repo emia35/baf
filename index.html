@@ -17298,13 +17298,15 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
-const ACTIVITE_CODE = {"jusqua":"2026-10-01","mois":[{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":2602,"retrait":758,"depots":27}]};
+const ACTIVITE_CODE = {"jusqua":"2026-10-01","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":2704,"retrait":802,"depots":28}]};
 
 function svgActiviteCode() {
   const mois = ACTIVITE_CODE.mois || [];
   if (!mois.length) return '';
-  const W = 640, H = 230, G = 46, D = 16, HAUT = 26, BAS = 56;
-  const max = Math.max(1, ...mois.map(m => m.ajout));
+  // Assez large pour que les libellés de deux mois voisins ne se chevauchent pas.
+  const W = Math.max(640, 76 * mois.length), H = 230, G = 46, D = 16, HAUT = 26, BAS = 56;
+  // « avant » : la taille des fichiers livrés dans les conversations, avant le dépôt Git.
+  const max = Math.max(1, ...mois.map(m => (m.ajout || 0) + (m.avant || 0)));
   const pas = (W - G - D) / mois.length, larg = Math.min(64, pas * 0.6);
   const y = (v) => HAUT + (H - HAUT - BAS) * (1 - v / max);
   const NOMS = ['janv.', 'févr.', 'mars', 'avril', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
@@ -17313,21 +17315,25 @@ function svgActiviteCode() {
     const cx = G + pas * i + pas / 2;
     const [an, mm] = m.mois.split('-');
     const nom = NOMS[(+mm) - 1] + ' ' + an.slice(2);
-    if (m.ajout) {
-      corps += '<rect x="' + (cx - larg / 2).toFixed(1) + '" y="' + y(m.ajout).toFixed(1) + '" width="' + larg.toFixed(1) +
-        '" height="' + (H - BAS - y(m.ajout)).toFixed(1) + '" rx="4" fill="var(--sauge-deep)"><title>' +
-        m.ajout + ' lignes ajoutées, ' + m.retrait + ' retirées, ' + m.depots + ' dépôt' + (m.depots > 1 ? 's' : '') + '</title></rect>' +
-        '<text x="' + cx.toFixed(1) + '" y="' + (y(m.ajout) - 6).toFixed(1) + '" text-anchor="middle" font-size="12" font-weight="700" fill="var(--ink)">' +
-        m.ajout.toLocaleString('fr-FR') + '</text>';
+    const av = m.avant || 0, tot = (m.ajout || 0) + av;
+    if (tot) {
+      if (av) corps += '<rect x="' + (cx - larg / 2).toFixed(1) + '" y="' + y(av).toFixed(1) + '" width="' + larg.toFixed(1) +
+        '" height="' + (H - BAS - y(av)).toFixed(1) + '" rx="4" fill="var(--ocre-pale)" stroke="var(--ocre)" stroke-dasharray="3 2"><title>' +
+        av + ' lignes écrites dans les conversations, avant le dépôt' + (m.detail ? ' — ' + m.detail : '') + '</title></rect>';
+      if (m.ajout) corps += '<rect x="' + (cx - larg / 2).toFixed(1) + '" y="' + y(tot).toFixed(1) + '" width="' + larg.toFixed(1) +
+        '" height="' + (y(av) - y(tot)).toFixed(1) + '" rx="4" fill="var(--sauge-deep)"><title>' +
+        m.ajout + ' lignes ajoutées, ' + m.retrait + ' retirées, ' + m.depots + ' dépôt' + (m.depots > 1 ? 's' : '') + '</title></rect>';
+      corps += '<text x="' + cx.toFixed(1) + '" y="' + (y(tot) - 6).toFixed(1) + '" text-anchor="middle" font-size="12" font-weight="700" fill="var(--ink)">' +
+        tot.toLocaleString('fr-FR') + '</text>';
     } else {
       corps += '<text x="' + cx.toFixed(1) + '" y="' + (H - BAS - 6) + '" text-anchor="middle" font-size="11" fill="var(--ink-soft)">—</text>';
     }
     corps += '<text x="' + cx.toFixed(1) + '" y="' + (H - BAS + 18) + '" text-anchor="middle" font-size="12" font-weight="600" fill="var(--ink)">' + nom + '</text>' +
       '<text x="' + cx.toFixed(1) + '" y="' + (H - BAS + 34) + '" text-anchor="middle" font-size="10.5" fill="var(--ink-soft)">' +
-      (m.depots ? m.depots + ' dépôt' + (m.depots > 1 ? 's' : '') : 'aucun dépôt') + '</text>';
+      (m.depots ? m.depots + ' dépôt' + (m.depots > 1 ? 's' : '') : (m.avantDepot ? 'avant Git' : 'aucun dépôt')) + '</text>';
   });
   return '<svg class="graphique" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" role="img" ' +
-    'aria-label="Lignes de code ajoutées par mois">' + corps + '</svg>';
+    'aria-label="Lignes de code par mois, depuis décembre 2025">' + corps + '</svg>';
 }
 
 const NOTES_VERSION = [
@@ -17909,14 +17915,15 @@ const NOTES_VERSION = [
 
   {
     date: '2026-09-10',
-    version: 'antérieur',
-    titre: 'Juin — 10 septembre 2026 : les grandes étapes',
+    version: 'juin–sept. 2026',
+    titre: '21 juin — 10 septembre 2026 : de la fusion aux premières notes',
     corps: `
 <p><i>Cette entrée est reconstituée après coup, à partir de l'historique du projet. Elle est volontairement sommaire : les notes détaillées commencent au 11 septembre.</i></p>
 
 <h4>Juin 2026 — la fondation</h4>
 <ul>
-<li>Le recueil de données et l'indice de confiance étaient <b>deux pages séparées</b>. Elles fusionnent en un seul fichier le 21 juin : depuis, les deux outils partagent le même dossier.</li>
+<li>Le recueil de données et l'indice de confiance étaient <b>deux pages séparées</b>. Elles fusionnent en un seul fichier le 21 juin : depuis, les deux outils partagent le même dossier. Arthur choisit une fusion réelle plutôt que deux cadres étanches côte à côte : c'est ce qui laisse les mains libres pour un outil « de plus en plus connecté ».</li>
+<li>Le travail quitte les conversations pour un <b>dépôt Git</b> : chaque modification devient un dépôt daté, qu'on peut relire ou défaire. C'est à partir de là que l'histoire du code est complète.</li>
 <li>Le module « Apprenons à nous connaître » prend sa forme : journée type, trajets, emploi du temps, progression.</li>
 <li>Le formulaire d'évènement est réordonné en étapes, avec un mode brouillon et un tri automatique.</li>
 <li>L'intervention de l'entourage devient une liste : une intervention, son effet, et un nouveau comportement post-intervention quand l'effet est nul ou aggravant.</li>
@@ -17930,6 +17937,142 @@ const NOTES_VERSION = [
 <li><b>Premier lot</b> : brouillons multiples, plusieurs lieux d'accueil avec leurs jours et leurs heures, fusion de l'antécédent et du déclencheur en un seul volet, export Word sélectif, et les modules <b>Repères</b> et <b>Ressources</b>.</li>
 <li><b>Second lot</b> : sous-catégories, fréquence des évènements, répartition temporelle à quatre échelles, histogrammes par volet, distinction entre ce que disent les chiffres et ce qu'en pense l'équipe, patterns enrichis, et le module <b>Explorer</b>.</li>
 </ul>`
+  },
+
+  {
+    date: "2026-06-20",
+    version: "ICAF · juin 2026",
+    titre: "L'ÉQAF devient l'ICAF, dans les couleurs de la BAF",
+    corps: `<p><i>Entrée reconstituée le 1<sup>er</sup> octobre 2026, à partir du journal du projet PAF, des fichiers conservés et des comptes rendus des conversations de l'époque. Quand une date ou une taille manquait, c'est dit.</i></p>
+<p>Arthur demande de refaire l'échelle d'évaluation dans la direction artistique et le vocabulaire de la BAF, avec deux entrées : coter une analyse issue d'une BAF, ou une analyse produite autrement.</p>
+<ul>
+<li><b>Une décision de principe</b> : l'échelle reste un regard <b>extérieur</b>. Elle affiche ce que la BAF contient, mais ne cote jamais à la place du cotateur, qui reste le seul juge. La pré-cotation automatique est écartée.</li>
+<li>Seules les données <b>factuelles</b> de la BAF sont montrées en regard des items ; les indicateurs partiels sont retirés, parce qu'ils risquaient de faire confondre la richesse du matériau et la qualité de l'analyse.</li>
+<li>Version 5 : refonte complète (palette, polices, en-tête), accueil à deux cartes, import d'un fichier BAF, encarts « boussole », sauvegarde qui embarque le dossier BAF. Logo EMIA et pied de page repris de la BAF.</li>
+<li><b>Renommage</b> : l'ÉQAF devient l'<b>ICAF</b>, « Indice de confiance d'une analyse fonctionnelle » ; « taux de qualité global » devient « indice de confiance global ». Un encart dit à quoi sert l'outil : un outil de recherche, pas de contrôle.</li>
+<li>Idée notée par Arthur : la BAF pourrait un jour suivre le même processus que l'échelle.</li>
+</ul>
+<p>Date exacte inconnue : entre le 19 juin (la BAF qui sert de modèle compte alors 4 524 lignes) et la fusion du 21. Taille : environ 1 200 lignes (1 214 avant le renommage, 1 245 au moment de la fusion).</p>`
+  },
+
+  {
+    date: "2026-06-19",
+    version: "BAF · 19 juin 2026",
+    titre: "Le moodboard d'Émilie, et une journée de passes",
+    corps: `<p><i>Entrée reconstituée le 1<sup>er</sup> octobre 2026, à partir du journal du projet PAF, des fichiers conservés et des comptes rendus des conversations de l'époque. Quand une date ou une taille manquait, c'est dit.</i></p>
+<h4>La forme</h4>
+<ul>
+<li>Émilie apporte un <b>moodboard</b> (« Atacama ») : la palette sauge, ivoire, ardoise, ocre, rose poudré et mauve naît là, et l'outil la garde encore aujourd'hui.</li>
+<li>Les boutons quittent l'en-tête pour l'accueil, la boussole devient l'icône de l'onglet, l'en-tête tient sur une ligne.</li>
+<li>Chaque module reçoit un mode <b>Rapide / Approfondi</b> ; l'approfondi reste « en construction ».</li>
+</ul>
+<h4>Travailler à plusieurs</h4>
+<ul>
+<li>Plusieurs professionnels, plusieurs ordinateurs, un même résident : sans serveur, pas de travail simultané. Décision : un <b>fichier .json</b> rangé dans un dossier commun, repris et renvoyé à tour de rôle. Le lien encodé dans l'adresse est abandonné.</li>
+</ul>
+<h4>Le contenu</h4>
+<ul>
+<li>Chiffres clés de la synthèse corrigés, et « Afficher les détails » avec quatre camemberts (jours, moments, tranches de deux heures, intensité).</li>
+<li>Question « Sur quel lieu d'accueil porte cette analyse ? » dans le préambule.</li>
+<li>Passes A à E : cohérence interne, une étape <b>Déclencheur</b> distincte de l'antécédent, la carte <b>jour × moment</b>, le bloc <b>« Ce que les données suggèrent »</b> (« l'outil pointe, le lecteur interprète » : aucune fonction n'est conclue automatiquement), l'accessibilité et l'impression.</li>
+<li>La journée type passe en <b>créneaux</b>, avec une grille de la semaine.</li>
+<li>Passes F à J : <b>CP devient CD</b> (comportement-défi) ; l'accueil explique ce que « défi » veut dire (un défi pour nous), qu'il ne faut pas attendre la crise (les précurseurs), et la <b>tension interne</b> ; une précision libre sur l'effet de chaque intervention ; l'<b>indice de confiance du recueil</b>, « mini-ÉQAF » en huit critères qui ne juge que la qualité du déclaratif.</li>
+<li>Écarté sur objection d'Arthur : pénaliser un recueil concentré sur certains moments. Si les CD arrivent surtout le matin, c'est un résultat clinique, pas un défaut de recueil.</li>
+<li>« Simuler » propose de choisir entre trois profils fictifs.</li>
+</ul>
+<p>Taille : de 3 039 à 4 523 lignes au fil de la journée.</p>`
+  },
+
+  {
+    date: "2026-06-18",
+    version: "BAF · 18 juin 2026",
+    titre: "Naissance de la Boussole pour une Analyse Fonctionnelle",
+    corps: `<p><i>Entrée reconstituée le 1<sup>er</sup> octobre 2026, à partir du journal du projet PAF, des fichiers conservés et des comptes rendus des conversations de l'époque. Quand une date ou une taille manquait, c'est dit.</i></p>
+<p>Après deux heures de réflexion avec Émilie, le constat d'Arthur : le tableur est <b>indigeste</b>. Il faut un outil qui accompagne trois temps — l'<b>instant de voir</b>, le <b>temps de comprendre</b>, le <b>moment de conclure</b>. Ce sera une page HTML : la « Boussole pour une Analyse Fonctionnelle », la BAF.</p>
+<ul>
+<li>Un « exosquelette » d'abord : accueil avec vigilance éthique, préambule « Apprenons à se connaître », un seul fichier .json pour tout le dossier, sauvegarde automatique dans le navigateur, export et import, simulation (808 lignes).</li>
+<li>Émilie trouve le premier habillage trop proche d'un autre outil : nouvelle charte, logo EMIA, la boussole devient une aiguille de cadran.</li>
+<li><b>Recueillir</b> : un formulaire guidé en sept étapes (qui déclare, contexte, antécédent immédiat, comportement, conséquence, intervention de l'entourage, récapitulatif), jusqu'à cent évènements.</li>
+<li>Le vocabulaire : « <b>évènement</b> » pour toute entrée déclarative, plutôt que « comportement-problème » ; « Module 1 » devient le <b>Préambule</b>, les modules s'appellent Recueillir, Organiser, Interpréter.</li>
+<li><b>Organiser</b> : cinq onglets, des catégories créées librement par l'équipe, rien d'imposé.</li>
+<li><b>Interpréter</b> : pattern ABC, gradation, vase de tension. Trois profils fictifs pour s'exercer.</li>
+<li>Une nuit de chasse au bug : des apostrophes françaises cassaient le script ; trouvé et corrigé au matin du 19.</li>
+</ul>
+<p>Taille : 808 lignes le midi, environ 3 000 le lendemain matin.</p>`
+  },
+
+  {
+    date: "2026-05-07",
+    version: "Tableur · mai 2026",
+    titre: "Un tableur d'analyse fonctionnelle pour l'EMIA",
+    corps: `<p><i>Entrée reconstituée le 1<sup>er</sup> octobre 2026, à partir du journal du projet PAF, des fichiers conservés et des comptes rendus des conversations de l'époque. Quand une date ou une taille manquait, c'est dit.</i></p>
+<p>Avant la BAF, un tableur : Arthur demande de refaire le tableau Excel d'analyse fonctionnelle de l'équipe (« moche, pas pratique »), en partant du travail de l'ÉQAF. Première feuille : les évènements ; les autres : le traitement automatique.</p>
+<ul>
+<li><b>V1 (7 mai)</b> : un comportement par ligne, des listes déroulantes (moments, antécédents, topographie, type d'intervention, efficacité), des catégories paramétrables. Cinq feuilles, 750 formules.</li>
+<li><b>V2 (8 mai)</b> : le <b>verbatim</b> exact du déclarant, un calendrier visuel automatique, l'intensité (1 à 5) et la durée, deux interventions et « autres ». Sept feuilles, 2 359 formules.</li>
+<li><b>V3 (10 mai) et V4 (11 mai)</b> : le dimanche, le calendrier limité à la période saisie, une couleur par feuille, le grisage des jours sans accueil.</li>
+<li>Une décision qui restera : <b>l'outil ne pose pas d'hypothèses fonctionnelles</b>. La feuille « Hypothèses » est retirée ; le travail clinique appartient à l'équipe.</li>
+</ul>
+<p>Taille : des formules, pas de lignes de code.</p>`
+  },
+
+  {
+    date: "2026-05-04",
+    version: "ÉQAF v4 · mai 2026",
+    titre: "ÉQAF version 4 : définir chaque mot",
+    corps: `<p><i>Entrée reconstituée le 1<sup>er</sup> octobre 2026, à partir du journal du projet PAF, des fichiers conservés et des comptes rendus des conversations de l'époque. Quand une date ou une taille manquait, c'est dit.</i></p>
+<p>Le 4 mai, Arthur et Émilie rédigent ensemble leurs consignes pour une version 4. Leur première demande : que chaque terme-clé ait une définition à portée de souris, pour que tous les cotateurs parlent de la même chose.</p>
+<ul>
+<li>Un <b>glossaire interactif</b> (une loupe sur les mots-clés). Les définitions posent des distinctions qui ne bougeront plus : le <b>comportement</b> n'est pas seulement le comportement-défi (il comprend les comportements fonctionnels et les signes précurseurs) ; le <b>comportement-cible</b> est celui qu'on étudie, défi ou non ; le <b>déclarant</b> n'est pas la <b>source</b> ; l'<b>espace</b>, c'est tous les lieux de la personne, taxi et loisirs compris ; la <b>typologie</b> décrit un geste (« se mord le dos de la main jusqu'à laisser une marque »), pas une étiquette (« agressivité »).</li>
+<li>Des <b>exemples</b>, en italique, sous chaque item.</li>
+<li>La dimension A devient « <b>Qualité du recueil des données</b> » : pluralité des sources, niveau de détail, analyse critique des sources, profil global de la personne.</li>
+<li>Version 4.1 : repli par item, bulles repositionnées, synthèse utilisable avec un seul cotateur, suppression d'une cotation, radar cliquable.</li>
+</ul>
+<p>Taille : 425 lignes.</p>`
+  },
+
+  {
+    date: "2026-03-19",
+    version: "ÉQAF v3 · mars 2026",
+    titre: "ÉQAF version 3 : 95 sous-items",
+    corps: `<p><i>Entrée reconstituée le 1<sup>er</sup> octobre 2026, à partir du journal du projet PAF, des fichiers conservés et des comptes rendus des conversations de l'époque. Quand une date ou une taille manquait, c'est dit.</i></p>
+<p>La cotation de 0 à 2 laisse trop de place à l'appréciation. Arthur demande de la remplacer par des sous-items cotés 0 ou 1, à poids égal.</p>
+<ul>
+<li>Six dimensions, de A à F : 17 items, 95 sous-items. Un item = sous-items cochés sur sous-items cotés ; une dimension = la moyenne de ses items ; le score global = la moyenne des six dimensions.</li>
+<li>Un item nouveau : <b>C3, gradation et escalade</b>.</li>
+<li>Des règles d'interdépendance, acceptées à condition d'être explicites. Plusieurs cotateurs indépendants, avec une synthèse. Une ÉQAF ne cote qu'une modalité (EMIA seule, LLM seul, ou les deux ensemble) : on comparera ensuite.</li>
+<li>Trois formes : un classeur Excel (quatre onglets, glossaire de 13 termes, 73 formules), une version interactive, puis une page HTML autonome qu'on peut sauvegarder, recharger et imprimer.</li>
+</ul>
+<p>Taille : 639 lignes pour la page HTML, 510 pour la version interactive.</p>`
+  },
+
+  {
+    date: "2026-02-12",
+    version: "ÉQAF v1–v2 · févr.–mars 2026",
+    titre: "Évaluer la qualité d'une analyse fonctionnelle : l'ÉQAF",
+    corps: `<p><i>Entrée reconstituée le 1<sup>er</sup> octobre 2026, à partir du journal du projet PAF, des fichiers conservés et des comptes rendus des conversations de l'époque. Quand une date ou une taille manquait, c'est dit.</i></p>
+<p>La question posée : si un diagnostic médical est meilleur quand un médecin et un LLM travaillent ensemble, une analyse fonctionnelle l'est-elle aussi quand l'EMIA et un LLM la font ensemble ? Pour le savoir, il faut d'abord pouvoir <b>évaluer la qualité</b> d'une analyse fonctionnelle.</p>
+<ul>
+<li><b>Version 1</b> : l'ÉQAF-TSA, « Échelle de Qualité de l'Analyse Fonctionnelle », construite en partant d'un outil validé pour le milieu scolaire (le TATE, d'Iovannone et coll.) : 15 critères, 5 dimensions, cotation 0-1-2.</li>
+<li><b>Version 2</b>, après les précisions de l'équipe : le bilan de l'EMIA va jusqu'aux préconisations ; la population est majoritairement adulte, avec une déficience intellectuelle ; les cotateurs sont éducateurs et psychologues, sans formation ABA. Six dimensions, 21 critères, un glossaire, une dimension « préconisations », un critère d'<b>analyse critique du matériel déclaratif</b> et un autre sur les facteurs somatiques.</li>
+<li>Une mise en garde dès le départ : sans fidélité inter-juges vérifiée, l'échelle ne prouve rien. Il faudra la tester à plusieurs cotateurs.</li>
+</ul>
+<p>Le classeur de la version 2 est daté du 12 février 2026 ; la conversation est conservée sous une date de mars : la chronologie exacte de ces deux versions reste incertaine. Taille : des formules Excel, pas de lignes de code.</p>`
+  },
+
+  {
+    date: "2025-12-11",
+    version: "Origine · déc. 2025 – févr. 2026",
+    titre: "Le questionnement à l'origine",
+    corps: `
+<p><i>Entrée reconstituée à partir du journal du projet PAF tenu par Arthur — « Projet d'analyse fonctionnelle », et officieusement autre chose.</i></p>
+<h4>11 décembre 2025 — « Claude peut-il tout ? »</h4>
+<p>Le projet commence par une question, pas par un outil. Les hypothèses de départ : Claude ne peut pas tout voir ; Claude a des biais (lesquels, comment les tester ?) ; notre regard apporterait quelque chose, mais il est biaisé lui aussi. Premier scénario : un travail collaboratif entre l'IA et l'EMIA. Première idée de test : des transmissions brutes, pour voir si l'IA repère une gradation.</p>
+<h4>2 février 2026 — le postulat</h4>
+<p>Si un médecin seul et un LLM seul font moins bien qu'un médecin avec un LLM, il en va peut-être de même pour nous. Il faudrait un prompt, un document qui rassemble ce qu'on sait, des transmissions ; puis comparer avec nos anciennes analyses. Et déjà une question : quel outil de recueil serait meilleur que les grilles ABC ?</p>
+<h4>12 février 2026 — PAF = AF LLM + EMIA</h4>
+<p>Deux méthodes à comparer — le LLM seul, l'EMIA seule (le matériau, notre cerveau, un tableau de typologie) — puis, plus tard, les deux ensemble. Les questions qui serviront de fil pendant des mois : qu'est-ce qui est qualifié de comportement-défi, et qu'est-ce qui ne l'est pas ? Relie-t-on les comportements d'une même journée ? Distingue-t-on le factuel de l'interprétatif dans le discours des professionnels ? Invisibilise-t-on des comportements précurseurs parce qu'ils ne sont pas jugés « problèmes » ? Repère-t-on une gradation, une escalade ? Et surtout : <b>comment évaluer la qualité ?</b></p>
+<p>Un principe pour la suite : il faut que les deux cerveaux soient présents à chaque étape, parce que sans avoir la donnée en tête, on ne voit pas ce qui manque.</p>`
   }
 
 ];
@@ -17953,7 +18096,7 @@ function renderNotes() {
         '<h3 class="activite-titre">Le rythme du travail</h3>' +
         '<div class="activite-aide">Lignes de code ajoutées chaque mois' +
           (ACTIVITE_CODE.jusqua ? ', jusqu\'au ' + formatDate(ACTIVITE_CODE.jusqua) : '') +
-          ' — survolez une barre pour les lignes retirées. Le code écrit avant le premier dépôt, importé d\'un bloc en juin, n\'est pas compté.</div>' +
+          ' — survolez une barre pour le détail. En vert, les lignes ajoutées depuis le dépôt Git (juin 2026). En ocre pointillé, le code écrit avant, dans les conversations : c\'est la taille des fichiers livrés (ÉQAF, BAF, ICAF), pas un décompte de lignes ajoutées.</div>' +
         activite +
       '</div>'
     : '') + NOTES_VERSION.map((n, i) =>
