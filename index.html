@@ -1736,6 +1736,10 @@ footer.bottom .footer-version{
 footer.bottom .footer-version:hover{color:var(--sauge-deep);}
 
 #view-notes .note-v{border-bottom:1px solid var(--line-soft);padding:2px 0;}
+.activite-code{position:relative;margin:0 0 18px;padding-bottom:14px;border-bottom:1.5px solid var(--line);}
+.activite-titre{font-size:16px;color:var(--ink);margin:0 0 4px;}
+.activite-aide{font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin-bottom:8px;}
+.activite-code svg{display:block;width:100%;max-width:640px;height:auto;margin:0 auto;}
 #view-notes .note-v:last-child{border-bottom:none;}
 #view-notes .note-v summary{
   cursor:pointer;list-style:none;
@@ -16257,6 +16261,38 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
+const ACTIVITE_CODE = {"jusqua":"2026-10-01","mois":[{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":1161,"retrait":448,"depots":13}]};
+
+function svgActiviteCode() {
+  const mois = ACTIVITE_CODE.mois || [];
+  if (!mois.length) return '';
+  const W = 640, H = 230, G = 46, D = 16, HAUT = 26, BAS = 56;
+  const max = Math.max(1, ...mois.map(m => m.ajout));
+  const pas = (W - G - D) / mois.length, larg = Math.min(64, pas * 0.6);
+  const y = (v) => HAUT + (H - HAUT - BAS) * (1 - v / max);
+  const NOMS = ['janv.', 'févr.', 'mars', 'avril', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+  let corps = '<line x1="' + G + '" x2="' + (W - D) + '" y1="' + (H - BAS) + '" y2="' + (H - BAS) + '" stroke="var(--line)" stroke-width="1"/>';
+  mois.forEach((m, i) => {
+    const cx = G + pas * i + pas / 2;
+    const [an, mm] = m.mois.split('-');
+    const nom = NOMS[(+mm) - 1] + ' ' + an.slice(2);
+    if (m.ajout) {
+      corps += '<rect x="' + (cx - larg / 2).toFixed(1) + '" y="' + y(m.ajout).toFixed(1) + '" width="' + larg.toFixed(1) +
+        '" height="' + (H - BAS - y(m.ajout)).toFixed(1) + '" rx="4" fill="var(--sauge-deep)"><title>' +
+        m.ajout + ' lignes ajoutées, ' + m.retrait + ' retirées, ' + m.depots + ' dépôt' + (m.depots > 1 ? 's' : '') + '</title></rect>' +
+        '<text x="' + cx.toFixed(1) + '" y="' + (y(m.ajout) - 6).toFixed(1) + '" text-anchor="middle" font-size="12" font-weight="700" fill="var(--ink)">' +
+        m.ajout.toLocaleString('fr-FR') + '</text>';
+    } else {
+      corps += '<text x="' + cx.toFixed(1) + '" y="' + (H - BAS - 6) + '" text-anchor="middle" font-size="11" fill="var(--ink-soft)">—</text>';
+    }
+    corps += '<text x="' + cx.toFixed(1) + '" y="' + (H - BAS + 18) + '" text-anchor="middle" font-size="12" font-weight="600" fill="var(--ink)">' + nom + '</text>' +
+      '<text x="' + cx.toFixed(1) + '" y="' + (H - BAS + 34) + '" text-anchor="middle" font-size="10.5" fill="var(--ink-soft)">' +
+      (m.depots ? m.depots + ' dépôt' + (m.depots > 1 ? 's' : '') : 'aucun dépôt') + '</text>';
+  });
+  return '<svg class="graphique" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" role="img" ' +
+    'aria-label="Lignes de code ajoutées par mois">' + corps + '</svg>';
+}
+
 const NOTES_VERSION = [
 
   {
@@ -16774,7 +16810,16 @@ function majPiedVersion() {
 function renderNotes() {
   const el = document.getElementById('notes-contenu');
   if (!el) return;
-  el.innerHTML = NOTES_VERSION.map((n, i) =>
+  const activite = svgActiviteCode();
+  el.innerHTML = (activite
+    ? '<div class="activite-code" data-graphique="Lignes de code ajoutées par mois">' +
+        '<h3 class="activite-titre">Le rythme du travail</h3>' +
+        '<div class="activite-aide">Lignes de code ajoutées chaque mois' +
+          (ACTIVITE_CODE.jusqua ? ', jusqu\'au ' + formatDate(ACTIVITE_CODE.jusqua) : '') +
+          ' — survolez une barre pour les lignes retirées. Le code écrit avant le premier dépôt, importé d\'un bloc en juin, n\'est pas compté.</div>' +
+        activite +
+      '</div>'
+    : '') + NOTES_VERSION.map((n, i) =>
     '<details class="note-v"' + (i === 0 ? ' open' : '') + '>' +
       '<summary>' +
         '<span class="nv-version">' + esc(versionNote(n)) + '</span>' +
@@ -16783,6 +16828,7 @@ function renderNotes() {
       '<div class="nv-corps">' + n.corps + '</div>' +
     '</details>'
   ).join('');
+  equiperGraphiques(el);
 }
 
 
