@@ -1817,8 +1817,10 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
 }
 .cats-suggerees .cs-aide{font-size:12px;color:var(--ink-soft);line-height:1.5;margin-bottom:8px;}
 .cats-suggerees .cs-liste{display:flex;flex-wrap:wrap;gap:6px;}
+.cats-suggerees .cs-titre{font-size:11.5px;font-weight:700;color:var(--slate);margin-bottom:6px;}
+/* Trait pointillé : une suggestion n'est pas une catégorie tant qu'on ne l'a pas cliquée. */
 .cs-chip{
-  background:var(--card);border:1px solid var(--line);border-radius:999px;
+  background:transparent;border:1px dashed var(--slate);border-radius:999px;
   font-family:inherit;font-size:12px;font-weight:600;color:var(--ink);
   padding:4px 11px;cursor:pointer;
   transition:border-color .14s,background .14s;
@@ -1997,6 +1999,22 @@ details.voir-plus{margin-top:4px;}
 }
 .m3-cat-del:hover{color:var(--sauge);background:var(--sauge-pale);}
 .m3-cat-items{padding:6px 10px 6px;}
+/* Une catégorie repliée ne montre plus que son en-tête (et cache ses sous-catégories). */
+.m3-cat-plier{
+  background:none;border:none;color:var(--ink-soft);font-size:12px;line-height:1;
+  cursor:pointer;padding:2px;width:16px;flex-shrink:0;transition:transform .15s;
+}
+.m3-cat-plier:hover{color:var(--ink);}
+.m3-cat.replie > .m3-cat-items, .m3-cat.replie > .m3-cat-enfant{display:none;}
+.m3-cat.replie > .m3-cat-header{border-bottom:none;}
+.m3-cat.replie > .m3-cat-header .m3-cat-plier{transform:rotate(-90deg);}
+.m3-cats-plier{display:flex;justify-content:flex-end;gap:2px;margin:-4px 0 6px;}
+.m3-cats-plier:empty{display:none;}
+.m3-cats-plier button{
+  background:none;border:none;font-family:inherit;font-size:11.5px;color:var(--slate);
+  cursor:pointer;padding:2px 6px;border-radius:4px;
+}
+.m3-cats-plier button:hover{background:var(--paper-deep);color:var(--ink);}
 .m3-cat-item-chip{
   display:inline-flex;align-items:center;gap:5px;
   background:var(--ocre-pale);
@@ -3659,6 +3677,7 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
           </div>
           <div class="note-colonne">Créez vos propres catégories. Pas de bonne réponse — juste ce qui vous semble faire sens pour cette personne.</div>
           <div id="m3-cats-suggestions"></div>
+          <div id="m3-cats-plier" class="m3-cats-plier no-print"></div>
           <div id="m3-cats-list"></div>
           <button class="btn btn-secondary btn-sm" style="margin-top:10px;width:100%;" onclick="ajouterCategorie()">+ Ajouter une catégorie</button>
         </div>
@@ -9301,6 +9320,34 @@ const _CONTROLES = [
     return _bancEgal('Anciens termes encore présents', '', trouves.join(', '));
   }},
 
+  {nom:'Une catégorie se replie seule, « Tout déplier » rouvre tout, et l\'aide se referme en changeant de volet', test: () => {
+    ensureM3();
+    const sous = state.m3.sous || 'cp';
+    const cats = state.m3.categories[sous] || {};
+    const ids = Object.keys(cats);
+    const avant = ids.map(id => cats[id].replie);
+    let seule = 'sans catégorie', tout = 'sans catégorie';
+    if (ids.length) {
+      replierToutesCats(sous, false);
+      basculerRepliCat(sous, ids[0]);
+      const el = document.getElementById('mcat-' + ids[0]);
+      seule = [!!cats[ids[0]].replie, ids.slice(1).every(id => !cats[id].replie), !!(el && el.classList.contains('replie'))].join('|');
+      replierToutesCats(sous, true);
+      replierToutesCats(sous, false);
+      tout = ids.every(id => !cats[id].replie);
+      ids.forEach((id, i) => { if (avant[i]) cats[id].replie = true; else delete cats[id].replie; });
+    }
+    const aideAvant = aideCatsOuverte, sousAvant = state.m3.sous;
+    aideCatsOuverte = true;
+    changerSous(sous === 'cp' ? 'contexte' : 'cp');
+    const aide = aideCatsOuverte;
+    changerSous(sousAvant);
+    aideCatsOuverte = aideAvant;
+    return _bancEgal('Une seule repliée | toutes rouvertes | aide après changement de volet',
+      (ids.length ? 'true|true|true' : 'sans catégorie') + '|' + (ids.length ? 'true' : 'sans catégorie') + '|false',
+      seule + '|' + tout + '|' + aide);
+  }},
+
   {nom:'Les couleurs des catégories se distinguent deux à deux', test: () => {
     /* Ce qui fait confondre deux catégories, c'est la teinte : les deux violets
        d'avant n'étaient séparés que de 10°, les deux rouges de 13°. Entre deux
@@ -10375,6 +10422,7 @@ function blocSuggestionsCats(sousId) {
     '</button>' +
     '<div class="cs-corps"' + (aideCatsOuverte ? '' : ' hidden') + '>' +
       '<div class="cs-aide">' + esc(sug.aide) + '</div>' +
+      '<div class="cs-titre">Suggestions : rien n\'est créé tant que vous ne cliquez pas</div>' +
       '<div class="cs-liste">' + sug.liste.map(n =>
         '<button type="button" class="cs-chip" onclick="creerCategorieSuggeree(\'' + sousId + '\', this.dataset.nom)" data-nom="' + esc(n) + '">' +
         '<span class="cs-plus">+</span>' + esc(n) + '</button>'
@@ -10685,6 +10733,8 @@ function renderM3() {
 
 function changerSous(sousId) {
   ensureM3();
+  // L'aide ouverte dans un volet ne doit pas s'afficher dans le suivant (Émilie, 01/10/2026).
+  if (sousId !== state.m3.sous) aideCatsOuverte = false;
   state.m3.sous = sousId;
   persist();
   renderM3();
@@ -10759,13 +10809,17 @@ function renderM3Sous(sousId) {
       const catItems = (cat.items || []).map(itemId => items.find(it => it.id === itemId)).filter(Boolean);
       const color = cat.color || catColorFor(idx);
       const enfants = estEnfant ? [] : catsEnfants(sousId, catId);
-      return `<div class="m3-cat${estEnfant?' m3-cat-enfant':''}" id="mcat-${catId}">
+      const nEnfants = enfants.length;
+      const compte = catItems.length + ' élément' + (catItems.length > 1 ? 's' : '') +
+        (cat.replie && nEnfants ? ', ' + nEnfants + ' sous-catégorie' + (nEnfants > 1 ? 's' : '') : '');
+      return `<div class="m3-cat${estEnfant?' m3-cat-enfant':''}${cat.replie?' replie':''}" id="mcat-${catId}">
         <div class="m3-cat-header">
+          <button type="button" class="m3-cat-plier" aria-expanded="${cat.replie ? 'false' : 'true'}" title="${cat.replie ? 'Déplier' : 'Replier'} cette catégorie" onclick="basculerRepliCat('${sousId}','${catId}')">▾</button>
           <button type="button" class="m3-cat-color" style="background:${color};" title="Changer la couleur" aria-label="Changer la couleur de cette catégorie" onclick="ouvrirPaletteCat('${sousId}','${catId}',this,event)"></button>
           <input class="m3-cat-name" value="${esc(cat.nom)}"
             onchange="renommerCat('${sousId}','${catId}',this.value)"
             placeholder="${estEnfant ? 'Nom de la sous-catégorie' : 'Nom de la catégorie'}">
-          <span class="m3-cat-count">${catItems.length} élément${catItems.length>1?'s':''}</span>
+          <span class="m3-cat-count">${compte}</span>
           ${estEnfant ? '' : `<button class="m3-cat-del" onclick="ajouterSousCategorie('${sousId}','${catId}')" title="Ajouter une sous-catégorie" style="color:var(--sauge-deep);">＋</button>`}
           <button class="m3-cat-del" onclick="supprimerCat('${sousId}','${catId}')" title="Supprimer cette catégorie">✕</button>
         </div>
@@ -10784,6 +10838,29 @@ function renderM3Sous(sousId) {
     };
     catsEl.innerHTML = racines.map((catId, idx) => blocCat(catId, idx, false)).join('');
   }
+  const plierEl = document.getElementById('m3-cats-plier');
+  if (plierEl) plierEl.innerHTML = Object.keys(cats).length > 1
+    ? '<button type="button" onclick="replierToutesCats(\'' + sousId + '\', true)">Tout replier</button>' +
+      '<button type="button" onclick="replierToutesCats(\'' + sousId + '\', false)">Tout déplier</button>'
+    : '';
+}
+
+/* Replier une catégorie : quand il y a beaucoup d'éléments, la colonne devient
+   illisible (Arthur, 01/10/2026). On range toujours en cliquant sur un élément à
+   gauche : une catégorie repliée reçoit ses éléments comme les autres. */
+function basculerRepliCat(sousId, catId) {
+  const cat = (state.m3.categories[sousId] || {})[catId];
+  if (!cat) return;
+  if (cat.replie) delete cat.replie; else cat.replie = true;
+  persist();
+  renderM3Sous(sousId);
+}
+function replierToutesCats(sousId, replier) {
+  Object.values(state.m3.categories[sousId] || {}).forEach(c => {
+    if (replier) c.replie = true; else delete c.replie;
+  });
+  persist();
+  renderM3Sous(sousId);
 }
 
 /* ── Sous-catégories : un seul niveau ────────────────────────────────
@@ -16322,7 +16399,7 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
-const ACTIVITE_CODE = {"jusqua":"2026-10-01","mois":[{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":1289,"retrait":466,"depots":19}]};
+const ACTIVITE_CODE = {"jusqua":"2026-10-01","mois":[{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":1415,"retrait":535,"depots":21}]};
 
 function svgActiviteCode() {
   const mois = ACTIVITE_CODE.mois || [];
@@ -16355,6 +16432,21 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-01',
+    version: 'v2026.10.01-7',
+    titre: "Plus de « kit » : un fichier socle, des fichiers déclarants ; catégories repliables",
+    corps: `
+<ul>
+<li><b>Le mot « kit » disparaît.</b> Il ne reste que deux fichiers : le <b>fichier socle</b> du référent et le <b>fichier déclarant</b>. Dans Recueillir, « Créer un fichier déclarant » télécharge un fichier déclarant vierge, le même pour tous (<code>RDAF-declarant-vierge_…</code>). Pour le double codage, le kit de codage devient le <b>codage vierge</b> (<code>RDAF-codage-vierge_…</code>). Écrans, messages, Repères, lexique, modes d'emploi (dont celui de l'EMIA) suivent. Les fichiers déjà envoyés s'ouvrent toujours.</li>
+<li>La page des déclarants s'appelle désormais <b>emia35.github.io/baf/#declarant</b>. Les liens déjà envoyés avec <code>#participer</code> y mènent toujours.</li>
+<li>L'export Word prend le nom de son bouton, « Exporter les données » : <code>RDAF-donnees_…doc</code>.</li>
+<li><b>Organiser</b> : chaque catégorie se replie d'un clic sur sa flèche, et « Tout replier / Tout déplier » agit sur toute la colonne. Une catégorie repliée le reste quand on rouvre le dossier, et reçoit ses éléments comme les autres.</li>
+<li>« Besoin d'aide pour démarrer ? » se referme quand on change de volet, et ses suggestions sont dessinées en pointillé : rien n'est créé tant qu'on ne clique pas dessus. Ouverte une fois, l'aide restait affichée dans tous les volets, et ses suggestions passaient pour des catégories déjà remplies.</li>
+</ul>
+`
+  },
 
   {
     date: '2026-10-01',
