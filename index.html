@@ -1831,6 +1831,13 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
 }
 .sp-item:first-of-type{border-top:none;}
 .sp-item b{font-weight:700;}
+.sp-item .sp-chiffre{margin-right:4px;}
+.sp-detail{color:var(--ink-soft);font-size:12.5px;}
+details.comment-lire{margin:0 0 8px;font-size:12px;color:var(--ink-soft);}
+details.comment-lire > summary, details.voir-plus > summary{cursor:pointer;font-weight:600;color:var(--slate);font-size:12px;list-style-position:inside;}
+details.comment-lire[open] > summary{margin-bottom:6px;}
+details.voir-plus{margin-top:4px;}
+.sp-sous-bloc{margin:14px 0 0;background:var(--card);border-left-color:var(--vol-contexte);}
 .sp-sous-titre{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);margin:14px 0 2px;}
 .sp-chiffre{
   display:inline-block;background:var(--paper-deep);border-radius:4px;
@@ -7903,6 +7910,7 @@ function renderCorrelations() {
   }
 
   el.innerHTML = html + contexte + montee;
+  allegerSuggestions(el);
 }
 
 function refreshAccueilBadges(){
@@ -11144,10 +11152,8 @@ function suggestionsPatterns() {
     .sort((p, q) => (q.cond - q.base) * q.n - (p.cond - p.base) * p.n)
     .slice(0, 2)
     .forEach(p => {
-      phrases.push('Après <b>' + esc(p.a) + '</b> (' + ch(p.nA + ' évènement' + (p.nA > 1 ? 's' : '')) +
-        '), le comportement <b>' + esc(p.b) + '</b> apparaît ' + ch(p.n + ' fois') +
-        ', soit ' + ch(pct(p.n, p.nA) + ' %') + ' — contre ' + ch(Math.round(p.base * 100) + ' %') +
-        ' en moyenne sur l\'ensemble des évènements.' + reserveEffectif(p.nA));
+      phrases.push(ch(pct(p.n, p.nA) + ' %') + ' Après <b>' + esc(p.a) + '</b> → <b>' + esc(p.b) + '</b>' +
+        '<span class="sp-detail"> · ' + p.n + ' sur ' + p.nA + ', contre ' + Math.round(p.base * 100) + ' % en moyenne</span>' + reserveEffectif(p.nA));
     });
 
   // 2. Liens comportement → conséquence : c'est là que la fonction se lit
@@ -11162,10 +11168,8 @@ function suggestionsPatterns() {
     .sort((p, q) => (q.cond - q.base) * q.n - (p.cond - p.base) * p.n)
     .slice(0, 2)
     .forEach(p => {
-      phrases.push('<b>' + esc(p.b) + '</b> (' + ch(p.nB + ' évènement' + (p.nB > 1 ? 's' : '')) +
-        ') débouche sur <b>' + esc(p.c) + '</b> ' + ch(p.n + ' fois') + ', soit ' +
-        ch(pct(p.n, p.nB) + ' %') + ' — contre ' + ch(Math.round(p.base * 100) + ' %') +
-        ' en moyenne. C\'est le lien qui oriente la lecture de la fonction.' + reserveEffectif(p.nB));
+      phrases.push(ch(pct(p.n, p.nB) + ' %') + ' <b>' + esc(p.b) + '</b> → <b>' + esc(p.c) + '</b>' +
+        '<span class="sp-detail"> · ' + p.n + ' sur ' + p.nB + ', contre ' + Math.round(p.base * 100) + ' % en moyenne</span>' + reserveEffectif(p.nB));
     });
 
   // 3. La séquence complète la plus fréquente, sans seuil de taux : ce qui
@@ -11176,18 +11180,16 @@ function suggestionsPatterns() {
     .sort((p, q) => q.n - p.n)
     .slice(0, 2)
     .forEach((t, rang) => {
-      phrases.push((rang === 0 ? 'Séquence complète la plus fréquente' : 'Autre séquence complète récurrente') + ' : <b>' + esc(t.a) + '</b> → <b>' +
-        esc(t.b) + '</b> → <b>' + esc(t.c) + '</b>, observée ' + ch(t.n + ' fois') +
-        '. Sur les ' + ch(st.nA[t.a] + ' évènements') + ' où <b>' + esc(t.a) +
-        '</b> est noté, cela représente ' + ch(pct(t.n, st.nA[t.a]) + ' %') + '.' + reserveEffectif(st.nA[t.a]));
+      phrases.push(ch(t.n + ' fois') + ' <b>' + esc(t.a) + '</b> → <b>' + esc(t.b) + '</b> → <b>' + esc(t.c) + '</b>' +
+        '<span class="sp-detail"> · séquence complète' + (rang === 0 ? ' la plus fréquente' : '') + ', ' + pct(t.n, st.nA[t.a]) + ' % des évènements où ' + esc(t.a) + ' est noté</span>' +
+        reserveEffectif(st.nA[t.a]));
     });
 
   // 4. Une conséquence nettement dominante cadre la lecture de l'ensemble.
   const domC = Object.keys(st.nC).map(c => ({c, n: st.nC[c]})).sort((p, q) => q.n - p.n)[0];
   if (domC && st.evtC >= 8 && domC.n / st.evtC >= 0.4) {
-    phrases.push('Toutes séquences confondues, <b>' + esc(domC.c) + '</b> est la conséquence notée dans ' +
-      ch(pct(domC.n, st.evtC) + ' %') + ' des évènements catégorisés (' + ch(domC.n + ' sur ' + st.evtC) +
-      '). Une conséquence aussi présente mérite d\'être interrogée en premier.');
+    phrases.push(ch(pct(domC.n, st.evtC) + ' %') + ' <b>' + esc(domC.c) + '</b>, la conséquence la plus présente' +
+      '<span class="sp-detail"> · ' + domC.n + ' sur ' + st.evtC + ' évènements catégorisés : à interroger en premier</span>');
   }
 
   const vues = new Set();
@@ -11278,17 +11280,15 @@ function phrasesContexte() {
   const pct = (x) => Math.round(x * 100);
   const out = [];
   lec.liens.slice(0, 2).forEach(l => out.push(
-    'Quand le contexte <b>' + esc(l.x) + '</b> est noté (' + ch(l.nX + ' évènement' + (l.nX > 1 ? 's' : '')) + '), le comportement <b>' + esc(l.b) +
-    '</b> apparaît ' + ch(l.n + ' fois') + ', soit ' + ch(pct(l.avec) + ' %') + ' — contre ' + ch(pct(l.base) + ' %') +
-    ' en moyenne sur l\'ensemble des évènements.' + reserveEffectif(l.nX)));
+    ch(pct(l.avec) + ' %') + ' Avec <b>' + esc(l.x) + '</b> → <b>' + esc(l.b) + '</b>' +
+    '<span class="sp-detail"> · ' + l.n + ' sur ' + l.nX + ', contre ' + pct(l.base) + ' % en moyenne</span>' + reserveEffectif(l.nX)));
   lec.vase.slice(0, 2).forEach(v => out.push(
-    'Avec le contexte <b>' + esc(v.x) + '</b>, le vase monte au moins jusqu\'à « angoissé » dans ' + ch(v.haut + ' évènements sur ' + v.n) +
-    ' (' + ch(pct(v.avec) + ' %') + ') ; sans ce contexte, ' + ch(v.hautSans + ' sur ' + v.nSans) + ' (' + ch(pct(v.sans) + ' %') + ').' +
+    ch(pct(v.avec) + ' %') + ' Avec <b>' + esc(v.x) + '</b>, le vase monte au moins à « angoissé »' +
+    '<span class="sp-detail"> · ' + v.haut + ' sur ' + v.n + ', contre ' + v.hautSans + ' sur ' + v.nSans + ' sans (' + pct(v.sans) + ' %)</span>' +
     reserveEffectif(Math.min(v.n, v.nSans))));
   lec.modulations.slice(0, 2).forEach(m => out.push(
-    'Après l\'antécédent <b>' + esc(m.a) + '</b>, le comportement <b>' + esc(m.b) + '</b> apparaît dans ' + ch(pct(m.avec) + ' %') +
-    ' des évènements quand <b>' + esc(m.x) + '</b> est noté (' + m.nAXB + ' sur ' + m.nAX + '), contre ' + ch(pct(m.sans) + ' %') +
-    ' sans ce contexte (' + m.nSansB + ' sur ' + m.nSans + '). Le même antécédent ne produit pas le même effet selon le contexte.' +
+    ch(pct(m.avec) + ' %') + ' Après <b>' + esc(m.a) + '</b> → <b>' + esc(m.b) + '</b>, quand <b>' + esc(m.x) + '</b> est noté' +
+    '<span class="sp-detail"> · ' + m.nAXB + ' sur ' + m.nAX + ', contre ' + pct(m.sans) + ' % sans ce contexte (' + m.nSansB + ' sur ' + m.nSans + ')</span>' +
     reserveEffectif(Math.min(m.nAX, m.nSans))));
   return out;
 }
@@ -11304,11 +11304,38 @@ function sectionContexteSynthese() {
   '</div>';
 }
 
+/* Après le rendu : les textes d'aide passent sous « Comment lire », et au-delà
+   de trois constats, les autres attendent sous « Voir les N autres ». */
+function allegerSuggestions(racine) {
+  if (!racine) return;
+  racine.querySelectorAll('.corr-section, .suggestions-patterns').forEach(sec => {
+    if (sec.dataset.allege) return;
+    sec.dataset.allege = '1';
+    const aides = [...sec.children].filter(x => x.matches('.corr-note, .source-note, .sp-avert'));
+    if (aides.length) {
+      const d = document.createElement('details');
+      d.className = 'comment-lire';
+      d.innerHTML = '<summary>Comment lire</summary>';
+      aides.forEach(a => d.appendChild(a));
+      const titre = sec.querySelector(':scope > .corr-section-title, :scope > h5');
+      if (titre) titre.after(d); else sec.prepend(d);
+    }
+    const lignes = [...sec.children].filter(x => x.matches('.corr-row, .sp-item'));
+    if (lignes.length > 3) {
+      const d = document.createElement('details');
+      d.className = 'voir-plus';
+      d.innerHTML = '<summary>Voir les ' + (lignes.length - 3) + ' autres</summary>';
+      lignes[3].before(d);
+      lignes.slice(3).forEach(l => d.appendChild(l));
+    }
+  });
+}
+
 function blocSuggestionsPatterns() {
   const {phrases, stats} = suggestionsPatterns();
   const contexte = phrasesContexte();
   const partieContexte = contexte.length
-    ? '<div class="sp-sous-titre">🕰 Le contexte</div>' + contexte.map(p => '<div class="sp-item">' + p + '</div>').join('')
+    ? '<div class="suggestions-patterns sp-sous-bloc"><h5>🕰 Le contexte</h5>' + contexte.map(p => '<div class="sp-item">' + p + '</div>').join('') + '</div>'
     : '';
   const entete = '<h5>Ce que les données suggèrent</h5>';
   if (!phrases.length && !contexte.length) {
@@ -11331,7 +11358,7 @@ function renderM4() {
   const leg = document.getElementById('m4-legende');
   if (leg) leg.innerHTML = legendeVolets('Code couleur des volets');
   const sug = document.getElementById('m4-suggestions');
-  if (sug) sug.innerHTML = blocSuggestionsPatterns();
+  if (sug) { sug.innerHTML = blocSuggestionsPatterns(); allegerSuggestions(sug); }
   changerSousM4(state.m4.sous || 'pattern');
   renderPatterns();
   renderGradations();
@@ -12774,7 +12801,7 @@ function pourcentagesEntiers(counts) {
   return bas;
 }
 
-function buildChartBlock(title, data) {
+function buildChartBlock(title, data, mode) {
   // data = [{label, count}] trié par count desc
   const colored = data.map((d, i) => ({...d, color: CHART_COLORS[i % CHART_COLORS.length]}));
   const pie = makePieChart(colored.map(d => ({label: d.label, value: d.count, color: d.color})), 130);
@@ -12794,7 +12821,7 @@ function buildChartBlock(title, data) {
   const legend = lignes.map((l, i) => `<div class="synth-legend-item">
       <div class="synth-legend-dot" style="background:${l.color}"></div>
       <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${l.italique?'font-style:italic;':''}">${l.label}</span>
-      <span class="synth-legend-pct">${pcts[i]}%</span>
+      <span class="synth-legend-pct">${mode === 'nombre' ? l.count : pcts[i] + '%'}</span>
     </div>`).join('');
   return `<div class="synth-chart-block">
     <div class="synth-chart-title">${title}</div>
@@ -14054,7 +14081,7 @@ function blocTemporel(niveau, data, contenuSpecial) {
   let corps;
   if (contenuSpecial) corps = contenuSpecial;
   else if (!data.length) corps = `<div style="color:var(--ink-soft);font-style:italic;font-size:13px;">Pas de donnée pour ce niveau.</div>`;
-  else if (pref.type === 'camembert') corps = buildChartBlock('', data);
+  else if (pref.type === 'camembert') corps = buildChartBlock('', data, pref.mode);
   else corps = buildBarChart(data, pref.mode);
   return `<div class="synth-niveau">
     <div class="synth-niveau-tete"><h5>${esc(niveau.titre)}</h5>${controles}</div>
