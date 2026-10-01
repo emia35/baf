@@ -1669,6 +1669,24 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
   padding:2px 7px;border-radius:999px;
 }
 .m3-item-source{font-size:11px;color:var(--ink-soft);margin-top:3px;font-style:italic;}
+/* Organiser : un évènement en tête, ses éléments en tiroir (01/10/2026). */
+.m3-evt{margin-bottom:12px;}
+.m3-evt-tete{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:2px 0 3px;}
+.m3-evt-titre{font-size:13px;font-weight:700;color:var(--ink);}
+.m3-evt-nbcd{font-size:11px;font-weight:700;color:var(--vol-comportement-deep);background:var(--vol-comportement-pale);padding:1px 8px;border-radius:999px;}
+.m3-evt-resume{font-size:11px;color:var(--ink-soft);margin-left:auto;}
+.m3-evt-source{font-size:11px;color:var(--ink-soft);font-style:italic;margin:0 0 6px 24px;}
+.m3-evt-items{margin-left:7px;padding-left:12px;border-left:2px solid var(--line-soft);}
+.m3-evt.replie > .m3-evt-items, .m3-evt.replie > .m3-evt-source{display:none;}
+.m3-evt.replie .m3-evt-plier{transform:rotate(-90deg);}
+.m3-item-cd{
+  display:inline-block;margin:0 4px 4px 0;background:var(--vol-comportement-deep);color:#fff;
+  font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:999px;
+}
+.m3-item-lien{
+  display:inline-block;margin:0 4px 4px 0;background:var(--card);color:var(--vol-comportement-deep);
+  border:1px solid var(--vol-comportement);font-size:10.5px;font-weight:700;padding:1px 8px;border-radius:999px;
+}
 /* Aide repliable : un bouton qui dit ce qu'il ouvre, plutôt qu'un chevron seul. */
 .aide-repliable{
   display:flex;align-items:center;gap:8px;width:100%;
@@ -3666,6 +3684,7 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
             <span class="ar-chevron">▾</span>
           </button>
           <div class="aide-repliable-corps" id="m3-items-help" hidden></div>
+          <div id="m3-items-plier" class="m3-cats-plier no-print"></div>
           <div id="m3-items-list"></div>
         </div>
 
@@ -4319,6 +4338,7 @@ function migrerIdsCategorisation() {
   migrerLieuAutre();
   migrerAntecedents();
   migrerSeparationContexte();
+  migrerCharnieres();
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -7201,7 +7221,7 @@ function normaliseMomentDetail(m) {
 }
 
 /* ── Histogramme par volet ───────────────────────────────────────────
-   Une barre par catégorie, avec le détail primaire / post-intervention pour
+   Une barre par catégorie, avec le détail premier CD / CD venu à la suite pour
    les comportements. Un CD qui n'apparaît QUE comme comportement secondaire se
    repère alors d'un coup d'œil : c'est une information clinique en soi, elle
    dit que ce comportement naît de nos réponses et pas de la situation. */
@@ -7219,7 +7239,7 @@ function histogrammeVolet(sous) {
       if (!cat) return;
       const assignes = (cat.items || []).map(i => parId[i]).filter(Boolean);
       if (!assignes.length) return;
-      const post = assignes.filter(it => it.tag === 'post-intervention').length;
+      const post = assignes.filter(it => it.suite).length;
       lignes.push({
         nom: cheminCat(sous.id, id),
         enfant: rang > 0,
@@ -7243,12 +7263,12 @@ function histogrammeVolet(sous) {
         <div class="volet-nom" title="${esc(l.nom)}">${esc(l.nom)}</div>
         <div class="volet-piste">
           <div class="volet-barre" style="width:${largeurPrim}%;background:${l.color};" title="${l.primaire} en comportement primaire"></div>
-          ${l.post > 0 ? `<div class="volet-barre post" style="width:${largeurPost}%;" title="${l.post} apparu après une intervention"></div>` : ''}
+          ${l.post > 0 ? `<div class="volet-barre post" style="width:${largeurPost}%;" title="${l.post} venu à la suite d'un autre CD"></div>` : ''}
         </div>
-        <div class="volet-compte">${l.total}${l.post > 0 ? ` <span style="color:var(--sauge-deep);font-weight:600;">(dont ${l.post} post-int.)</span>` : ''}</div>
+        <div class="volet-compte">${l.total}${l.post > 0 ? ` <span style="color:var(--sauge-deep);font-weight:600;">(dont ${l.post} à la suite)</span>` : ''}</div>
       </div>`;
     }).join('')}
-    ${aDesPost ? `<div class="volet-legende"><span class="pastille"></span> apparu après une intervention</div>` : ''}
+    ${aDesPost ? `<div class="volet-legende"><span class="pastille"></span> venu à la suite d'un autre CD du même évènement</div>` : ''}
   </div>`;
 }
 
@@ -10221,17 +10241,31 @@ const _CONTROLES = [
     return _bancEgal('Occurrences ≤ nombre d\'évènements', [], excès.concat(excèsT));
   }},
 
-  {nom:'Crises : numérotation cohérente', test: () => {
-    const labels = computeCPLabels();
-    // Un CD post-intervention porte toujours un sous-numéro, jamais l'inverse.
-    const items = extraireItems('cp');
-    const anomalies = items.filter(it => {
-      const l = labels[it.id];
-      if (!l) return false;
-      const sousNumero = l.indexOf('.') !== -1;
-      return sousNumero !== (it.tag === 'post-intervention');
-    }).map(it => it.id + '=' + labels[it.id]);
-    return _bancEgal('Sous-numéros réservés aux CD post-intervention', [], anomalies);
+  {nom:'CD n.k : n est le rang de l\'évènement, k se suit sans trou', test: () => {
+    const labels = etiquettesCD();
+    const anomalies = [];
+    (state.m2.evenements || []).forEach((evt, idx) => {
+      const st = structureCD(evt);
+      st.cds.forEach((cd, k) => {
+        if (labels[cd.id] !== 'CD ' + (idx + 1) + '.' + (k + 1)) anomalies.push(cd.id + '=' + labels[cd.id]);
+      });
+      // Chaque CD venu d'un « Et ensuite ? » est après le premier, jamais avant.
+      if (st.cds.some((cd, k) => cd.post && k === 0 && st.cds.length > 1 && st.cds.slice(1).some(x => !x.post))) anomalies.push(evt.id + ' : ordre');
+    });
+    return _bancEgal('Étiquettes de CD incohérentes', [], anomalies);
+  }},
+
+  {nom:'Une séquence donne, entre deux CD, une conséquence du premier et un antécédent du suivant', test: () => {
+    const evt = {id: 'banc_seq', comportement: 'Crie', interventions: [
+      {id: 'iv1', texte: 'Lui demande de se calmer', effet: 'Augmentation de la tension', cdPostIntervention: 'Tape le mur'}]};
+    const st = structureCD(evt);
+    const a = elementsEvt('antecedents', evt).filter(e => e.tag === 'charniere');
+    const c = elementsEvt('consequences', evt).filter(e => e.tag === 'charniere');
+    const i = elementsEvt('interventions', evt).filter(e => e.tag === 'charniere');
+    const ids = elementsEvt('cp', evt).map(e => e.id).join(',');
+    return _bancEgal('CD | ids des CD | antécédent | conséquence | intervention en double',
+      '2|ebanc_seq_0,ebanc_seq_1|Lui demande de se calmer→CD 2|Lui demande de se calmer→CD 1|0',
+      [st.cds.length, ids, a.map(e => e.texte + '→CD ' + (e.relie + 1)).join(';'), c.map(e => e.texte + '→CD ' + (e.relie + 1)).join(';'), i.length].join('|'));
   }},
 
   {nom:'Histogrammes par volet : comptes cohérents', test: () => {
@@ -10242,11 +10276,11 @@ const _CONTROLES = [
       const cats = (state.m3.categories||{})[s.id] || {};
       for (const k in cats) {
         const assignes = (cats[k].items||[]).map(i=>parId[i]).filter(Boolean);
-        const post = assignes.filter(i=>i.tag==='post-intervention').length;
+        const post = assignes.filter(i=>i.suite).length;
         if (post > assignes.length) anomalies.push(s.id+'/'+k);
       }
     }
-    return _bancEgal('Post-intervention ≤ total de la catégorie', [], anomalies);
+    return _bancEgal('CD à la suite ≤ total de la catégorie', [], anomalies);
   }},
 ];
 
@@ -10460,7 +10494,7 @@ const M3_SOUS = [
   {
     id: 'cp',
     label: 'Comportements', icon: '🎥', couleur: 'comportement',
-    help: 'Ce qui a été décrit comme comportement dans chaque évènement (colonne B). Regroupez ce qui vous semble appartenir à la même famille — sans vous imposer une nomenclature.',
+    help: 'Les comportements-défis repérés dans chaque évènement, numérotés CD 3.1, CD 3.2… (3 pour le troisième évènement dans l\'ordre chronologique). Par défaut, un évènement en donne un : tout son « Ce qui s\'est passé ». Regroupez ce qui vous semble appartenir à la même famille — sans vous imposer une nomenclature.',
     placeholder: 'ex : Hétéro-agressivité, Auto-agressivité, Refus verbal, Agitation…',
     extract: (evt) => {
       const parts = [];
@@ -10490,7 +10524,7 @@ const M3_SOUS = [
   {
     id: 'antecedents',
     label: 'Antécédents', icon: '⏮', couleur: 'antecedent',
-    help: 'Ce qui s\'est passé juste avant le comportement, dans les secondes ou les minutes. Le badge « présumé déclencheur » signale ce que le déclarant a coché — c\'est son avis, vous restez libre d\'en juger autrement. Un CD apparu après une intervention (badge « post-intervention ») est aussi affiché ici : il devient l\'antécédent de la suite de la crise. Le contexte, lui, a désormais son propre volet.',
+    help: 'Ce qui s\'est passé juste avant le comportement, dans les secondes ou les minutes. Le badge « présumé déclencheur » signale ce que le déclarant a coché — c\'est son avis, vous restez libre d\'en juger autrement. Quand les CD d\'un évènement se suivent, ce qui s\'est passé entre deux CD apparaît aussi ici, comme antécédent du suivant (badge « avant CD 3.2 »). Le contexte, lui, a son propre volet.',
     placeholder: 'ex : Transition, Fin d\'activité appréciée, Consigne, Attente…',
     extract: (evt) => {
       const parts = [];
@@ -10499,14 +10533,13 @@ const M3_SOUS = [
       });
       if (evt.etatAvant) parts.push('État avant : ' + evt.etatAvant);
       if (!etapeDetailRemplie(evt, 'antecedent') && resumeEtape(evt, 'antecedent')) parts.push('§RESU§' + resumeEtape(evt, 'antecedent'));
-      extraireCDPostIntervention(evt).forEach(t => parts.push('§POST§' + t));
       return parts;
     }
   },
   {
     id: 'consequences',
     label: 'Conséquences', icon: '⏭', couleur: 'consequence',
-    help: 'Ce que la personne a obtenu ou évité suite au comportement. C\'est souvent là que la fonction du comportement se lit. Un CD apparu après une intervention (badge « post-intervention ») est aussi affiché ici : il est la conséquence directe de cette intervention.',
+    help: 'Ce que la personne a obtenu ou évité suite au comportement. C\'est souvent là que la fonction du comportement se lit. Quand les CD d\'un évènement se suivent, ce qui s\'est passé entre deux CD apparaît aussi ici, comme conséquence du premier (badge « après CD 3.1 »).',
     placeholder: 'ex : Obtient attention, Évite consigne, Accès à un objet, Sortie de la situation…',
     extract: (evt) => {
       const parts = [];
@@ -10514,7 +10547,6 @@ const M3_SOUS = [
       if (evt.evite) parts.push('Évité : ' + evt.evite);
       if (evt.finPersonne) parts.push('Fin : ' + evt.finPersonne);
       if (!etapeDetailRemplie(evt, 'consequence') && resumeEtape(evt, 'consequence')) parts.push('§RESU§' + resumeEtape(evt, 'consequence'));
-      extraireCDPostIntervention(evt).forEach(t => parts.push('§POST§' + t));
       return parts;
     }
   },
@@ -10612,6 +10644,89 @@ function ensureM3() {
   if (!state.m3.sous) state.m3.sous = 'cp';
 }
 
+
+/* ══════════════════════════════════════════════════════════════════════
+   ÉVÈNEMENTS ET CD (Arthur et Émilie, 01/10/2026)
+   ══════════════════════════════════════════════════════════════════════
+   Un évènement, c'est le déclaratif. Le CD, c'est l'analyste qui le repère :
+   un évènement en contient un ou plusieurs, en même temps ou l'un après
+   l'autre. Sans découpage, un évènement donne un CD — son « Ce qui s'est
+   passé » entier — et ses éléments gardent leurs identifiants d'avant. Le
+   « Et ensuite ? » du déclarant forme déjà une séquence : CD n.1, ce qui
+   s'est passé entre (son intervention), CD n.2.
+   Dans une séquence, ce qui s'est passé entre deux CD devient la conséquence
+   du premier et l'antécédent du suivant : deux éléments à classer, un dans
+   chaque volet. */
+
+/* La structure d'un évènement en CD.
+   {decoupe, mode: 'un' | 'simultane' | 'sequence', cds: [{id, texte}],
+    charnieres: [{cle, texte, intervention, depuisIntervention} | null]}
+   charnieres[k] se place entre cds[k] et cds[k + 1] (séquence seulement). */
+function structureCD(evt) {
+  const D = (((state.m3 && state.m3.decoupages) || {})[evt && evt.id]) || null;
+  if (D && (D.unites || []).length) {
+    const cds = D.unites.map(u => ({id: 'e' + evt.id + '_u' + u.id, texte: String(u.texte || '').trim()}));
+    const seq = D.mode === 'sequence' && cds.length > 1;
+    const charnieres = seq ? cds.slice(1).map((_, k) => {
+      const c = (D.charnieres || [])[k];
+      if (!c || !String(c.texte || '').trim()) return null;
+      return {
+        cle: 'c' + c.id, texte: String(c.texte).trim(),
+        intervention: c.intervention !== false,
+        // Citée dans une intervention déjà décrite : elle est déjà un élément du volet.
+        depuisIntervention: /^interventions\.[^.]+\.texte$/.test(c.champ || '')
+      };
+    }) : [];
+    return {decoupe: true, mode: seq ? 'sequence' : (cds.length > 1 ? 'simultane' : 'un'), cds, charnieres};
+  }
+  const sous = M3_SOUS.find(s => s.id === 'cp');
+  const ivPost = (evt.interventions || []).filter(iv => effetNeedsCdPost(iv.effet) && iv.cdPostIntervention && iv.cdPostIntervention.trim());
+  let jPost = 0;
+  const parts = [];
+  sous.extract(evt).forEach((t, i) => {
+    if (!t || !t.trim() || t.startsWith('(gradation) ')) return;
+    const post = t.startsWith('§POST§');
+    parts.push({id: 'e' + evt.id + '_' + i, texte: t.replace(/^§(POST|RESU)§/, '').trim(), post, iv: post ? ivPost[jPost++] : null});
+  });
+  const cds = parts.filter(p => !p.post).slice(0, 1).concat(parts.filter(p => p.post));
+  const charnieres = cds.slice(1).map(cd => {
+    const t = cd.iv && cd.iv.texte && cd.iv.texte.trim();
+    return t ? {cle: 'p' + cd.iv.id, texte: t, intervention: true, depuisIntervention: true} : null;
+  });
+  return {decoupe: false, mode: cds.length > 1 ? 'sequence' : 'un', cds: cds.map(c => ({id: c.id, texte: c.texte, post: c.post})), charnieres};
+}
+
+/* Les éléments d'un évènement dans un volet : ceux de son déclaratif, puis ceux
+   que fait naître la séquence de ses CD. `relie` dit à quel CD l'élément se
+   rattache (son rang dans la séquence) ; `suite` marque un CD venu après un autre. */
+function elementsEvt(sousId, evt) {
+  const sous = M3_SOUS.find(s => s.id === sousId);
+  if (!sous || !evt) return [];
+  const st = structureCD(evt);
+  const TAGS = {'§POST§': 'post-intervention', '§DECL§': 'presume-declencheur', '§RESU§': 'resume'};
+  const base = (sousId === 'cp' && st.decoupe) ? [] : sous.extract(evt).map((texte, i) => {
+    if (!texte || !texte.trim()) return null;
+    const tag = TAGS[texte.slice(0, 6)] || '';
+    return {id: 'e' + evt.id + '_' + i, texte: (tag ? texte.slice(6) : texte).trim(), tag};
+  }).filter(Boolean);
+  if (sousId === 'cp') {
+    const rang = {};
+    st.cds.forEach((cd, k) => { rang[cd.id] = k; });
+    const cds = st.decoupe ? st.cds.map(cd => ({id: cd.id, texte: cd.texte, tag: 'decoupe'})) : base;
+    return cds.map(el => Object.assign(el, rang[el.id] !== undefined
+      ? {relie: rang[el.id], suite: st.mode === 'sequence' && rang[el.id] > 0} : {}));
+  }
+  const plus = [];
+  st.charnieres.forEach((c, k) => {
+    if (!c) return;
+    if (sousId === 'antecedents') plus.push({id: 'e' + evt.id + '_' + c.cle + '_a', texte: c.texte, tag: 'charniere', relie: k + 1});
+    if (sousId === 'consequences') plus.push({id: 'e' + evt.id + '_' + c.cle + '_c', texte: c.texte, tag: 'charniere', relie: k});
+    if (sousId === 'interventions' && c.intervention && !c.depuisIntervention)
+      plus.push({id: 'e' + evt.id + '_' + c.cle + '_i', texte: c.texte, tag: 'charniere', relie: k});
+  });
+  return base.concat(plus);
+}
+
 // Extraire tous les items d'un sous-module depuis les évènements
 function extraireItems(sousId) {
   const sous = M3_SOUS.find(s => s.id === sousId);
@@ -10619,83 +10734,135 @@ function extraireItems(sousId) {
   const items = [];
   (state.m2.evenements || []).forEach((evt, evtIdx) => {
     if (!evt.id) evt.id = 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
-    const extraits = sous.extract(evt);
-    let produits = 0;
-    extraits.forEach((texte, i) => {
-      if (texte && texte.trim()) {
-        produits++;
-        const isPost = texte.startsWith('§POST§');
-        const isDecl = texte.startsWith('§DECL§');
-        const isResume = texte.startsWith('§RESU§');
-        items.push({
-          id: `e${evt.id}_${i}`,
-          evtIdx,
-          texte: ((isPost || isDecl || isResume) ? texte.slice(6) : texte).trim(),
-          tag: isPost ? 'post-intervention' : (isDecl ? 'presume-declencheur' : (isResume ? 'resume' : '')),
-          date: evt.date || '',
-          heure: evt.heure || '',
-          moment: evt.moment || '',
-        });
-      }
-    });
+    const quand = {evtIdx, date: evt.date || '', heure: evt.heure || '', moment: evt.moment || ''};
+    const elements = elementsEvt(sousId, evt);
+    elements.forEach(el => items.push(Object.assign({}, el, quand)));
     // Un volet laissé vide reste visible : c'est un manque à voir, pas un
     // évènement à faire disparaître. Il est catégorisable si l'analyse veut le
     // qualifier, mais il ne compte pas dans le taux de catégorisation — sinon
     // un dossier peu rempli afficherait un taux bas alors qu'il n'y a rien à
     // catégoriser. Rien n'est écrit dans l'évènement : c'est calculé à la lecture.
-    if (produits === 0) {
-      items.push({
-        id: `e${evt.id}_vide`,
-        evtIdx,
-        texte: 'Non renseigné',
-        tag: 'non-renseigne',
-        vide: true,
-        date: evt.date || '',
-        heure: evt.heure || '',
-        moment: evt.moment || '',
-      });
+    if (!elements.length) {
+      items.push(Object.assign({id: `e${evt.id}_vide`, texte: 'Non renseigné', tag: 'non-renseigne', vide: true}, quand));
     }
   });
   return items;
 }
 
-// Regroupe les CD d'une même journée en "crise" : CP1, CP2... pour des
-// évènements distincts le même jour, CP1, CP1.2, CP1.3... quand ce sont des CD
-// post-intervention rattachés au même évènement (même crise, causalité directe).
-function computeCPLabels() {
-  const items = extraireItems('cp');
-  const byDate = {};
-  items.forEach(it => {
-    const date = it.date || '';
-    if (!byDate[date]) byDate[date] = [];
-    byDate[date].push(it);
+/* CD 3.1, CD 3.2… : 3 pour le troisième évènement dans l'ordre chronologique
+   (les évènements sont tenus triés), puis le rang du CD dans l'évènement. */
+function etiquettesCD() {
+  const lab = {};
+  (state.m2.evenements || []).forEach((evt, idx) => {
+    if (!evt || !evt.id) return;
+    structureCD(evt).cds.forEach((cd, k) => { lab[cd.id] = 'CD ' + (idx + 1) + '.' + (k + 1); });
   });
-  const labels = {};
-  Object.keys(byDate).forEach(date => {
-    const byEvt = {};
-    const evtOrder = [];
-    byDate[date].forEach(it => {
-      const m = /^(.*)_(\d+)$/.exec(it.id);
-      const evtKey = m ? m[1] : it.id;
-      if (!byEvt[evtKey]) { byEvt[evtKey] = []; evtOrder.push(evtKey); }
-      byEvt[evtKey].push(it);
-    });
-    evtOrder.sort((a, b) => (byEvt[a][0].heure||'').localeCompare(byEvt[b][0].heure||''));
-    evtOrder.forEach((evtKey, ci) => {
-      const cpNum = ci + 1;
-      const group = byEvt[evtKey];
-      const primary = group.find(it => it.tag !== 'post-intervention') || group[0];
-      labels[primary.id] = 'CP' + cpNum;
-      // Seuls les CD post-intervention reçoivent un sous-numéro (CP1.2, CP1.3…).
-      // Les autres items du même évènement (ex. gradation) n'ont pas de label.
-      let subIdx = 2;
-      group.filter(it => it.tag === 'post-intervention').forEach(it => {
-        labels[it.id] = 'CP' + cpNum + '.' + subIdx;
-        subIdx++;
+  return lab;
+}
+
+/* Les anciens « CD post-intervention » figuraient aussi, tels quels, parmi les
+   antécédents et les conséquences. Ils y sont remplacés par ce qui s'est passé
+   entre les deux CD : leurs anciens identifiants (après les éléments du
+   déclaratif) ne désignent plus rien, on les retire des catégories. Sans effet
+   si on le rejoue : ces identifiants ne sont plus jamais produits. */
+function migrerCharnieres() {
+  const cats = state.m3 && state.m3.categories;
+  if (!cats) return;
+  (state.m2.evenements || []).forEach(evt => {
+    if (!evt || !evt.id) return;
+    const nPost = extraireCDPostIntervention(evt).length;
+    if (!nPost) return;
+    ['antecedents', 'consequences'].forEach(volet => {
+      const sous = M3_SOUS.find(s => s.id === volet);
+      const n0 = sous.extract(evt).length;
+      const morts = new Set();
+      for (let j = 0; j < nPost; j++) morts.add('e' + evt.id + '_' + (n0 + j));
+      Object.values(cats[volet] || {}).forEach(cat => {
+        if (Array.isArray(cat.items)) cat.items = cat.items.filter(id => !morts.has(id));
       });
     });
   });
-  return labels;
+}
+
+/* Les évènements repliés dans la colonne de gauche d'Organiser, le temps de la page. */
+const evtsReplies = new Set();
+function basculerRepliEvt(evtId) {
+  if (evtsReplies.has(evtId)) evtsReplies.delete(evtId); else evtsReplies.add(evtId);
+  majRepliEvt(evtId);
+}
+function replierTousEvts(replier) {
+  document.querySelectorAll('#m3-items-list .m3-evt').forEach(el => {
+    const id = el.dataset.evtId;
+    if (replier) evtsReplies.add(id); else evtsReplies.delete(id);
+    majRepliEvt(id);
+  });
+}
+function majRepliEvt(evtId) {
+  const el = [...document.querySelectorAll('#m3-items-list .m3-evt')].find(x => x.dataset.evtId === evtId);
+  if (!el) return;
+  const replie = evtsReplies.has(evtId);
+  el.classList.toggle('replie', replie);
+  const b = el.querySelector('.m3-evt-plier');
+  if (b) { b.setAttribute('aria-expanded', String(!replie)); b.title = (replie ? 'Déplier' : 'Replier') + ' cet évènement'; }
+}
+
+/* Un évènement dans la colonne de gauche : son en-tête (numéro, CD, détail),
+   puis ses éléments du volet ouvert, en tiroir. */
+function blocEvtM3(sousId, sous, groupe, cats, etiquettes) {
+  const evt = (state.m2.evenements || [])[groupe.evtIdx] || {};
+  const n = groupe.evtIdx + 1;
+  const st = structureCD(evt);
+  const replie = evtsReplies.has(evt.id);
+  const reels = groupe.items.filter(it => !it.vide);
+  const classes = reels.filter(it => catDunItem(sousId, it.id).length).length;
+  const src = [evt.date ? formatDate(evt.date) : '', evt.heure, evt.moment, evt.declarant].filter(Boolean).join(' · ');
+  const nCD = st.cds.length;
+  return `<div class="m3-evt${replie ? ' replie' : ''}" data-evt-id="${esc(evt.id)}">
+    <div class="m3-evt-tete">
+      <button type="button" class="m3-cat-plier m3-evt-plier" aria-expanded="${!replie}" title="${replie ? 'Déplier' : 'Replier'} cet évènement" onclick="basculerRepliEvt('${esc(evt.id)}')">▾</button>
+      <span class="m3-evt-titre">Évènement ${n}</span>
+      ${nCD > 1 ? `<span class="m3-evt-nbcd" title="${st.mode === 'sequence' ? 'Les CD se suivent : ce qui s\'est passé entre deux CD est la conséquence du premier et l\'antécédent du suivant.' : 'Plusieurs CD en même temps.'}">${nCD} CD ${st.mode === 'sequence' ? 'à la suite' : 'en même temps'}</span>` : ''}
+      <span class="m3-evt-resume">${reels.length ? classes + ' / ' + reels.length + ' classé' + (classes > 1 ? 's' : '') : 'non renseigné'}</span>
+      <button type="button" class="m3-item-detail" title="Revoir l'évènement complet" onclick="ouvrirDetailEvt(${groupe.evtIdx},'${sousId}',event)">détail</button>
+    </div>
+    ${src ? `<div class="m3-evt-source">${esc(src)}</div>` : ''}
+    <div class="m3-evt-items">${groupe.items.map(it => blocItemM3(sousId, sous, it, cats, etiquettes, st, n)).join('')}</div>
+  </div>`;
+}
+
+function blocItemM3(sousId, sous, item, cats, etiquettes, st, n) {
+  const catIds = catDunItem(sousId, item.id);
+  const catBadge = catIds.length > 0
+    ? catIds.map(cid => {
+        const cat = cats[cid];
+        if (!cat) return '';
+        return `<span class="m3-item-cat-badge" style="background:${cat.color||'var(--ocre)'};" onclick="retirerDeUneCat('${sousId}','${item.id}','${cid}',event)">
+         ${esc(cheminCat(sousId, cid))} ×
+       </span>`;
+      }).join(' ')
+    : `<span style="font-size:11.5px;color:var(--ink-soft);font-style:italic;">Non catégorisé — cliquez pour assigner</span>`;
+  const cd = k => 'CD ' + n + '.' + (k + 1);
+  const dernier = st.cds.length - 1;
+  let lien = '';
+  if (sousId === 'cp' && etiquettes[item.id]) {
+    lien = `<span class="m3-item-cd" title="Évènement ${n}, CD n° ${item.relie + 1}${item.suite ? ', venu à la suite du précédent' : ''}.">${etiquettes[item.id]}</span>`;
+  } else if (item.tag === 'charniere') {
+    lien = `<span class="m3-item-lien" title="Ce qui s'est passé entre deux CD de l'évènement ${n}.">` +
+      (sousId === 'antecedents' ? 'avant ' + cd(item.relie) : sousId === 'consequences' ? 'après ' + cd(item.relie) : 'entre ' + cd(item.relie) + ' et ' + cd(item.relie + 1)) + '</span>';
+  } else if (st.mode === 'sequence' && !item.vide && (sousId === 'antecedents' || sousId === 'consequences')) {
+    lien = `<span class="m3-item-lien">${sousId === 'antecedents' ? 'avant ' + cd(0) : 'après ' + cd(dernier)}</span>`;
+  }
+  return `<div class="m3-item${catIds.length>0?' categorise':''}${item.vide?' item-vide':''}" data-volet="${sous.couleur || ''}" data-item-id="${esc(item.id)}" onclick="ouvrirAssign('${sousId}','${item.id}',event)">
+    <div style="flex:1">
+      ${lien}
+      ${item.tag==='post-intervention' ? `<span class="m3-item-tag-post" title="Le déclarant l'a décrit dans « Et ensuite ? », après une intervention.">après une intervention</span>` : ''}
+      ${item.tag==='presume-declencheur' ? `<span class="m3-item-tag-post" style="background:var(--vol-antecedent-deep);" title="Le déclarant pense que c'est ce qui a déclenché — à vous d'en juger. Jaune ocre : couleur de l'antécédent.">présumé déclencheur</span>` : ''}
+      ${item.tag==='resume' ? `<span class="m3-item-tag-post" style="background:var(--slate);" title="Répondu en mode rapide : une seule case pour toute l'étape. Le détail n'a pas été déroulé.">résumé rapide</span>` : ''}
+      ${item.vide ? `<span class="m3-item-tag-post" style="background:var(--line);color:var(--ink-soft);" title="Ce volet n'a pas été rempli par le déclarant">non renseigné</span>` : ''}
+      <div class="m3-item-text">${esc(item.texte)}</div>
+      <div style="margin-top:5px;">${catBadge}</div>
+    </div>
+  </div>`;
 }
 
 // Trouver les catégories d\'un item (un item peut appartenir à plusieurs catégories)
@@ -10767,43 +10934,24 @@ function renderM3Sous(sousId) {
     (nVides > 0 ? ` <span style="color:var(--sauge-deep);">· ${nVides} non renseigné${nVides>1?'s':''}</span>` : '');
   document.getElementById('m3-items-help').textContent = sous.help;
 
-  // ── Colonne gauche : items ──────────────────────────────────────
+  // ── Colonne gauche : les évènements, et leurs éléments en tiroir ──
   const listEl = document.getElementById('m3-items-list');
-
-  const cpLabels = sousId === 'cp' ? computeCPLabels() : null;
-
+  const groupes = [];
+  items.forEach(it => {
+    const der = groupes[groupes.length - 1];
+    if (der && der.evtIdx === it.evtIdx) der.items.push(it); else groupes.push({evtIdx: it.evtIdx, items: [it]});
+  });
   if (items.length === 0) {
     listEl.innerHTML = '<div class="event-empty">Aucun élément extrait des évènements du module 1 pour ce sous-module.</div>';
   } else {
-    listEl.innerHTML = items.map(item => {
-      const catIds = catDunItem(sousId, item.id);
-      const catBadge = catIds.length > 0
-        ? catIds.map(cid => {
-            const cat = cats[cid];
-            if (!cat) return '';
-            return `<span class="m3-item-cat-badge" style="background:${cat.color||'var(--ocre)'};" onclick="retirerDeUneCat('${sousId}','${item.id}','${cid}',event)">
-             ${esc(cheminCat(sousId, cid))} ×
-           </span>`;
-          }).join(' ')
-        : `<span style="font-size:11.5px;color:var(--ink-soft);font-style:italic;">Non catégorisé — cliquez pour assigner</span>`;
-      const dateStr = item.date ? formatDate(item.date) : '';
-      const src = [dateStr, item.moment].filter(Boolean).join(' · ');
-      const cpLabel = cpLabels && cpLabels[item.id] ? `<span class="m3-item-tag-post" style="background:var(--vol-comportement-deep);" title="Repère de crise : CP1, CP2 pour deux évènements du même jour ; CP1.2 pour un CD apparu après une intervention du même évènement.">${cpLabels[item.id]}</span>` : '';
-      return `<div class="m3-item${catIds.length>0?' categorise':''}${item.vide?' item-vide':''}" data-volet="${sous.couleur || ''}" data-item-id="${esc(item.id)}" onclick="ouvrirAssign('${sousId}','${item.id}',event)">
-        <div style="flex:1">
-          ${cpLabel}
-          ${item.tag==='post-intervention' ? `<span class="m3-item-tag-post">post-intervention</span>` : ''}
-          ${item.tag==='presume-declencheur' ? `<span class="m3-item-tag-post" style="background:var(--vol-antecedent-deep);" title="Le déclarant pense que c'est ce qui a déclenché — à vous d'en juger. Jaune ocre : couleur de l'antécédent.">présumé déclencheur</span>` : ''}
-          ${item.tag==='resume' ? `<span class="m3-item-tag-post" style="background:var(--slate);" title="Répondu en mode rapide : une seule case pour toute l'étape. Le détail n'a pas été déroulé.">résumé rapide</span>` : ''}
-          ${item.vide ? `<span class="m3-item-tag-post" style="background:var(--line);color:var(--ink-soft);" title="Ce volet n'a pas été rempli par le déclarant">non renseigné</span>` : ''}
-          <div class="m3-item-text">${esc(item.texte)}</div>
-          ${src ? `<div class="m3-item-source">Évt. ${item.evtIdx+1}${src?' — '+src:''}</div>` : ''}
-          <div style="margin-top:5px;">${catBadge}</div>
-        </div>
-        <button type="button" class="m3-item-detail" title="Revoir l'évènement complet" onclick="ouvrirDetailEvt(${item.evtIdx},'${sousId}',event)">détail</button>
-      </div>`;
-    }).join('');
+    const etiquettes = etiquettesCD();
+    listEl.innerHTML = groupes.map(gr => blocEvtM3(sousId, sous, gr, cats, etiquettes)).join('');
   }
+  const plierEvts = document.getElementById('m3-items-plier');
+  if (plierEvts) plierEvts.innerHTML = groupes.length > 1
+    ? '<button type="button" onclick="replierTousEvts(true)">Tout replier</button>' +
+      '<button type="button" onclick="replierTousEvts(false)">Tout déplier</button>'
+    : '';
 
   // ── Colonne droite : catégories ─────────────────────────────────
   const sugEl = document.getElementById('m3-cats-suggestions');
@@ -11149,6 +11297,8 @@ function basculerAideVolet() {
 function allerVersItem(itemId) {
   const el = document.querySelector(`.m3-item[data-item-id="${itemId}"]`);
   if (!el) return;
+  const evtEl = el.closest('.m3-evt');
+  if (evtEl && evtsReplies.has(evtEl.dataset.evtId)) basculerRepliEvt(evtEl.dataset.evtId);
   // Un seul item signalé à la fois : sinon deux clics rapides laissent deux
   // repères allumés et on ne sait plus lequel on cherchait.
   document.querySelectorAll('.m3-item.item-vise').forEach(rendreBordureVise);
@@ -12012,9 +12162,7 @@ function ajouterGradation() {
 function elementsEvtVolet(sousId, evt) {
   const sous = M3_SOUS.find(s => s.id === sousId);
   if (!sous || !evt || !evt.id) return [];
-  return sous.extract(evt)
-    .map((t, i) => ({id: 'e' + evt.id + '_' + i, texte: String(t || ''), post: String(t || '').startsWith('§POST§')}))
-    .filter(x => x.texte.trim());
+  return elementsEvt(sousId, evt).map(el => ({id: el.id, texte: el.texte, post: el.tag === 'post-intervention'}));
 }
 
 function medianeStatsGrad(valeurs) {
@@ -17166,8 +17314,8 @@ const LEXIQUE_BAF = {
   "antécédent": "Ce qui s'est passé juste avant le comportement, dans les secondes ou minutes précédentes. Il y en a souvent plusieurs. Le déclarant peut signaler celui qui lui semble avoir déclenché — c'est un avis, pas un verdict.",
   "conséquence": "Ce qui change pour la personne après le comportement : ce qu'elle obtient, ce qu'elle évite. C'est souvent là que la fonction du comportement se lit. À ne pas confondre avec l'intervention, qui est ce que l'entourage a fait.",
   "intervention": "Ce que l'entourage a fait en réponse au comportement, et avec quel effet sur la tension. Une intervention peut apaiser, ne rien changer, ou produire à son tour un nouveau comportement-défi.",
-  "CD post-intervention": "Un nouveau comportement-défi apparu après une intervention. Il appartient à la même crise, et se lit à la fois comme conséquence de l'intervention et comme contexte de la suite.",
-  "crise": "L'ensemble des comportements-défis d'une même journée. Ils sont numérotés CP1, CP2… pour des évènements distincts, et CP1.2, CP1.3… pour les comportements apparus après une intervention sur le même évènement.",
+  "CD à la suite": "Un comportement-défi qui en suit un autre dans le même évènement : des cris, puis l'éducatrice demande de se calmer, puis des coups contre le mur. Ce qui s'est passé entre les deux est la conséquence du premier CD et l'antécédent du suivant.",
+  "crise": "Les comportements-défis repérés dans un même évènement. Ils sont numérotés CD 3.1, CD 3.2… : 3 pour le troisième évènement dans l'ordre chronologique, puis le rang du CD dans l'évènement.",
   "pattern": "Une séquence qui semble se répéter, composée à partir des catégories créées dans Organiser. Ce n'est pas une certitude : c'est une hypothèse de lecture, à discuter.",
   "gradation": "La façon dont la tension monte chez la personne : un signe discret d'abord, puis ça s'intensifie. Repérer la gradation permet d'intervenir avant le pic.",
   "indice de confiance": "Dans la synthèse, un indicateur de la robustesse du recueil — volume, pluralité des regards, durée, complétude, part d'observation directe. À ne pas confondre avec l'ICAF, qui évalue l'analyse fonctionnelle entière.",
@@ -17203,7 +17351,7 @@ const LEXIQUE_CLASSE = {
   "contingences synthétiques": "litterature", "typologie": "litterature", "biais potentiels": "litterature",
   "environnement": "litterature", "analyse environnementale": "litterature",
   // Les mots de la BAF
-  "évènement": "outil", "volet": "outil", "intervention": "outil", "CD post-intervention": "outil",
+  "évènement": "outil", "volet": "outil", "intervention": "outil", "CD à la suite": "outil",
   "crise": "outil", "pattern": "outil", "gradation": "outil", "indice de confiance": "outil",
   "déclarant": "outil", "source": "outil", "espace": "outil",
   "BAF": "outil", "RDAF": "outil", "ICAF": "outil", "préambule": "outil",
