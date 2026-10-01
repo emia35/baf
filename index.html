@@ -353,6 +353,13 @@ header.top{
   font:inherit;font-size:13px;font-weight:600;color:var(--sauge-deep);
   background:none;border:none;cursor:pointer;padding:4px 0;
 }
+.fdecl-liste{margin:0 0 14px;padding-left:20px;font-size:13px;color:var(--ink-soft);line-height:1.6;}
+.fdecl-liste b{color:var(--ink);font-weight:600;overflow-wrap:anywhere;}
+.fdecl-choix{display:flex;flex-direction:column;align-items:stretch;gap:4px;margin-bottom:6px;}
+.fdecl-choix .btn{justify-content:center;}
+.fdecl-aide{font-size:12px;color:var(--ink-soft);line-height:1.5;margin:0 0 10px;text-align:center;}
+.pastille-provisoire{display:inline-block;background:var(--ocre-pale);color:var(--ocre-deep);border:1px solid var(--ocre);border-radius:999px;padding:0 8px;font-size:11.5px;font-weight:700;}
+.bandeau-provisoire{background:var(--ocre-pale);border-left:4px solid var(--ocre);border-radius:8px;padding:11px 15px;margin:0 0 14px;font-size:13.5px;line-height:1.55;color:var(--ink);}
 .m2-partage{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin:0 0 16px;}
 .m2-partage-droite{display:flex;flex-direction:column;align-items:flex-end;gap:3px;}
 .m2-contrib-compteur{font-size:12px;color:var(--ink-soft);}
@@ -2903,7 +2910,7 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
           </button>
         </span>
       </span>
-      <input type="file" id="import-file-subbar" accept=".json" onchange="importerDepuisSubbar(event)" style="display:none;">
+      <input type="file" id="import-file-subbar" accept=".json" multiple onchange="importerDepuisSubbar(event)" style="display:none;">
       <span class="subbar-menu subbar-compact">
         <button class="subbar-btn" id="subbar-dossier-btn" aria-haspopup="true" aria-expanded="false"
                 onclick="basculerMenu('subbar-dossier-menu','subbar-dossier-btn',event)"
@@ -3497,6 +3504,7 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
     </div>
 
     <div id="m2-rapide-content">
+    <div id="m2-bandeau-provisoire"></div>
     <div class="card" id="m2-intro-card" style="text-align:center;">
       <p style="font-size:14px;color:var(--ink-soft);">On vous guide pas à pas, une question à la fois — un peu comme si l'équipe était face à vous.</p>
       <button class="btn btn-primary" onclick="ouvrirFormulaireEvenement()">+ Ajouter un évènement</button>
@@ -3910,6 +3918,14 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
   </div>
 </div>
 
+<div id="fdecl-overlay" class="sim-modal-overlay" style="display:none;" onclick="fermerFenetre('fdecl-overlay', event)">
+  <div class="sim-modal fenetre-simple" role="dialog" aria-modal="true" aria-labelledby="fdecl-titre">
+    <h3 id="fdecl-titre">Fichier déclarant</h3>
+    <div id="fdecl-corps"></div>
+    <button class="sim-modal-close" onclick="fermerFenetre('fdecl-overlay')">Annuler</button>
+  </div>
+</div>
+
 <div id="kit-overlay" class="sim-modal-overlay" style="display:none;" onclick="fermerFenetre('kit-overlay', event)">
   <div class="sim-modal fenetre-simple" role="dialog" aria-modal="true" aria-labelledby="kit-titre">
     <h3 id="kit-titre">Exporter un kit déclarant</h3>
@@ -3929,10 +3945,11 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
     <h3 id="contrib-titre">Ajouter des fichiers déclarants</h3>
     <p class="fenetre-texte">Le <b>fichier déclarant</b> renvoyé par chaque déclarant vient se verser dans votre <b>fichier socle</b>, et chaque évènement garde sa provenance.
       Chaque fichier contient tout ce que le déclarant a écrit depuis le début : les évènements déjà reçus sont mis à jour,
-      les nouveaux s'ajoutent, et un fichier plus ancien ne remplace rien. Seul le déclaratif remonte : le préambule reste le vôtre.</p>
+      les nouveaux s'ajoutent, et un fichier plus ancien ne remplace rien. Seul le déclaratif remonte : le préambule reste le vôtre.
+      Vous pouvez en choisir <b>plusieurs à la fois</b>.</p>
     <div class="fenetre-actions">
-      <button class="btn btn-primary" onclick="document.getElementById('import-contribution').click()">📥 Choisir le fichier</button>
-      <input type="file" id="import-contribution" accept=".json" style="display:none;" onchange="importerContribution(event)">
+      <button class="btn btn-primary" onclick="document.getElementById('import-contribution').click()">📥 Choisir les fichiers</button>
+      <input type="file" id="import-contribution" accept=".json" multiple style="display:none;" onchange="importerContribution(event)">
     </div>
     <div id="m2-contributions-liste"></div>
     <button class="sim-modal-close" onclick="fermerFenetre('contrib-overlay')">Fermer</button>
@@ -4590,7 +4607,7 @@ function libelleDossierCourt(outil) {
     return '';
   }
   if (!prenom && !nb) return '';
-  const fictif = state.origineDossier === 'simulation' ? '🧪 ' : '';
+  const fictif = state.origineDossier === 'simulation' ? '🧪 ' : (state.provisoire ? '🧱 ' : '');
   return '<b>' + fictif + esc(prenom || 'sans prénom') + '</b>' + nombre(nb, 'évènement', 'év.');
 }
 function majBarreDossierInterne(outil, surAccueilOutil) {
@@ -4632,7 +4649,9 @@ function majBarreDossierInterne(outil, surAccueilOutil) {
   const nb = (state.m2.evenements || []).length;
   const prenom = (state.m1.prenom || '').trim();
   const detail = nb ? ` · <b>${nb}</b> évènement${nb>1?'s':''}` : '';
-  if (state.codage && state.codage.actif) {
+  if (state.provisoire) {
+    zone.innerHTML = `<span class="pastille-provisoire">Fichier socle provisoire</span> <b>${esc(prenom || 'sans prénom')}</b>${detail}`;
+  } else if (state.codage && state.codage.actif) {
     zone.innerHTML = `Copie de primo codage — <b>${esc(prenom || 'sans prénom')}</b>${detail}`;
   } else if (state.origineDossier === 'simulation') {
     zone.innerHTML = `Simulation — <b>${esc(prenom || 'profil fictif')}</b>${detail}`;
@@ -4697,17 +4716,6 @@ function importDepuisSimulation() {
   ouvrirSimModal();
 }
 
-function importerDepuisSubbar(ev) {
-  const f = ev.target.files && ev.target.files[0];
-  if (!f) return;
-  const aDesDonnees = (state.m2.evenements || []).length > 0 || (state.m1.prenom || '').trim();
-  if (aDesDonnees && !confirm('Importer ce fichier remplacera le dossier actuellement ouvert. Le travail en cours sera perdu s\'il n\'a pas été exporté.\n\nContinuer ?')) {
-    ev.target.value = '';
-    return;
-  }
-  const versOutil2 = (outilCourant === 'idc');
-  importerJSON(ev, versOutil2);
-}
 function effacerDossierCourant() {
   if (outilCourant === 'idc') { if (typeof confirmerReset === 'function') confirmerReset(); return; }
   confirmReset();
@@ -6918,6 +6926,11 @@ function refreshM2List(){
     </div>`;
   });
   list.innerHTML = html;
+  const bandeau = document.getElementById('m2-bandeau-provisoire');
+  if (bandeau) bandeau.innerHTML = state.provisoire
+    ? '<div class="bandeau-provisoire"><b>🧱 Fichier socle provisoire.</b> Il a été reconstitué à partir de fichiers déclarants, pour les lire : ' +
+      'le préambule est celui du kit. Le fichier socle de référence reste celui du référent — ajoutez-y les mêmes fichiers déclarants.</div>'
+    : '';
   renderContributions();
   renderCouverture();
 }
@@ -7800,7 +7813,7 @@ function exporterJSON(){
   const a = document.createElement('a');
   const prenom = state.m1.prenom ? state.m1.prenom.replace(/[^a-zA-Z0-9]/g,'_') : 'sans_nom';
   a.href = url;
-  a.download = (state.codage && state.codage.actif ? 'RDAF-primo-codage_' : 'RDAF-socle_') + prenom + '_' + horodatageFichier() + '.json';
+  a.download = (state.codage && state.codage.actif ? 'RDAF-primo-codage_' : (state.provisoire ? 'RDAF-socle-provisoire_' : 'RDAF-socle_')) + prenom + '_' + horodatageFichier() + '.json';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -8085,37 +8098,10 @@ ${resoudreVariablesCSS(clone.innerHTML)}
 }
 
 function importerJSON(event, versOutil2){
-  const file = event.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e){
-    try{
-      const lu = lireFichierBAF(JSON.parse(e.target.result), ['dossier','kit','contribution','codage-kit']);
-      if (!lu.ok) { alert(lu.raison); return; }
-      if (lu.type === 'kit') { ouvrirFichierDeclarant(lu); return; }
-      if (lu.type === 'contribution') {
-        if (confirm("C'est le fichier d'un déclarant.\n\nPour verser ses évènements dans votre dossier : Annuler, puis Recueillir → « Ajouter une contribution ».\n\nPour le rouvrir en tant que déclarant : OK.")) ouvrirFichierDeclarant(lu);
-        return;
-      }
-      if (lu.type === 'codage-kit') { ouvrirKitCodage(lu); return; }
-      replaceState(lu.dossier);
-      // On retient d'où vient le dossier, pour que la barre puisse le dire.
-      state.fichierDossier = file.name;
-      state.origineDossier = 'fichier';
-      persist();
-      loadM1FromState();
-      refreshM2List();
-      refreshAccueilBadges();
-      refreshSynthese();
-      showToast('Fichier importé.');
-      if (versOutil2) { chargerDossierOuvertDansOutil2(); return; }
-      route('baf-accueil');
-    }catch(err){
-      alert("Le fichier n'a pas pu être lu : il n'est pas au format JSON, ou il est abîmé.");
-    }
-  };
-  reader.readAsText(file);
-  event.target.value = '';
+  const fichiers = Array.from((event.target && event.target.files) || []);
+  if (event.target) event.target.value = '';
+  if (!fichiers.length) return;
+  lireFichiersBAF(fichiers, ['dossier', 'kit', 'contribution', 'codage-kit']).then(lus => aiguillerImport(lus, versOutil2));
 }
 
 function confirmReset(){
@@ -8702,6 +8688,7 @@ function simuler(idx){
   // ── Application au dossier ────────────────────────────────────────────
   state.fichierDossier = null;
   state.origineDossier = 'simulation';
+  delete state.provisoire;
   // Une simulation est un AUTRE dossier : sans ça elle héritait du numéro de
   // celui qu'elle remplace, et deux dossiers sans rapport portaient la même
   // identité. simuler() n'appelle pas replaceState, l'identité survivait donc.
@@ -9033,6 +9020,30 @@ const _CONTROLES = [
     const texte = corps.replace(/<[^>]+>/g, '').replace(/&apos;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&');
     return _bancEgal('XML bien formé, analyse écrite, ICAF facultatif, plus de « quatre étapes »', 'true,true,true,true',
       [bienForme, texte.includes("écrivent l'analyse fonctionnelle"), texte.includes('outil 2, facultatif'), !texte.includes("c'est quatre étapes")].join(','));
+  }},
+
+  {nom:'Fichiers déclarants : un socle provisoire les réunit sans rien perdre', test: () => {
+    /* Le cas de la famille du 01/10/2026 : trois sauvegardes d'un même fichier,
+       la dernière ayant perdu un évènement du milieu (deux parents repartis du
+       même fichier). Réunies dans n'importe quel ordre : les quatre évènements. */
+    const sauve = JSON.parse(JSON.stringify(state));
+    const vrais = {alert: window.alert, confirm: window.confirm, persist, route, showToast};
+    window.alert = () => {}; window.confirm = () => true; persist = () => {}; route = () => {}; showToast = () => {};
+    const fichier = (envoye, ids) => ({nom: envoye + '.json', lu: lireFichierBAF({
+      baf: {schema: SCHEMA_DOSSIER, type: 'contribution', idDossier: 'dos_banc_famille', exporte: envoye},
+      contribution: {idContribution: 'ctr_banc_famille', idDossier: 'dos_banc_famille', provenance: '', envoye},
+      m1: {prenom: 'Banc'}, m2: {evenements: ids.map(id => ({id, date: '2026-09-' + id.slice(-2), comportement: 'x'}))}
+    }, ['contribution'])});
+    let obtenu;
+    try {
+      creerSocleProvisoire([fichier('2026-09-30T11:00:00Z', ['e25', 'f25', 'g29']), fichier('2026-09-27T15:00:00Z', ['e25', 'f25']),
+                            fichier('2026-09-28T19:00:00Z', ['e25', 'f25', 'h28'])]);
+      obtenu = [state.m1.prenom, state.m2.evenements.length, !!state.provisoire, state.idDossier].join('|');
+    } finally {
+      replaceState(sauve);
+      window.alert = vrais.alert; window.confirm = vrais.confirm; persist = vrais.persist; route = vrais.route; showToast = vrais.showToast;
+    }
+    return _bancEgal('Prénom, évènements, provisoire, identité', 'Banc|4|true|dos_banc_famille', obtenu);
   }},
 
   {nom:'Chaque volet a sa couleur, distincte des autres', test: () => {
@@ -14828,7 +14839,7 @@ function fermerFenetre(id, ev) {
 
 function fermerFenetresClavier(ev) {
   if (ev.key !== 'Escape') return;
-  ['kit-overlay', 'contrib-overlay', 'trous-overlay', 'dc-overlay', 'donnees-overlay'].forEach(id => fermerFenetre(id));
+  ['kit-overlay', 'contrib-overlay', 'trous-overlay', 'dc-overlay', 'donnees-overlay', 'fdecl-overlay'].forEach(id => fermerFenetre(id));
   document.removeEventListener('keydown', fermerFenetresClavier);
 }
 
@@ -15442,24 +15453,192 @@ function provenanceEvt(e) {
   return (c && c.provenance) || '';
 }
 
-function importerContribution(ev) {
-  fermerFenetre('contrib-overlay');
-  const f = ev.target.files && ev.target.files[0];
-  ev.target.value = '';
-  if (!f) return;
-  const lecteur = new FileReader();
-  lecteur.onload = (e) => {
-    let objet;
-    try { objet = JSON.parse(e.target.result); }
-    catch (err) { alert("Le fichier n'a pas pu être lu : il n'est pas au format JSON, ou il est abîmé."); return; }
-    const lu = lireFichierBAF(objet, ['contribution']);
-    if (!lu.ok) { alert(lu.raison); return; }
-    fusionnerContribution(lu, f.name);
-  };
-  lecteur.readAsText(f);
+/* ── Importer : on lit d'abord, on aiguille ensuite ──────────────────
+   Avant, la question « remplacer le dossier ouvert ? » tombait avant même de
+   savoir ce qu'on importait, et un fichier déclarant ouvert depuis la barre
+   proposait « OK » pour basculer en mode déclarant : le réflexe envoyait le
+   référent sur la page Participer (Arthur, 01/10/2026). Désormais la BAF lit
+   le ou les fichiers, puis dit ce que c'est et propose des boutons qui disent
+   ce qu'ils font. */
+function importerDepuisSubbar(ev) {
+  const fichiers = Array.from((ev.target && ev.target.files) || []);
+  if (ev.target) ev.target.value = '';
+  if (!fichiers.length) return;
+  const versOutil2 = (outilCourant === 'idc');
+  lireFichiersBAF(fichiers, ['dossier', 'kit', 'contribution', 'codage-kit'])
+    .then(lus => aiguillerImport(lus, versOutil2));
 }
 
-function fusionnerContribution(lu, nomFichier) {
+// Promesse : [{nom, lu}] — lu comme lireFichierBAF, ou {ok:false, raison}.
+function lireFichiersBAF(fichiers, types) {
+  return Promise.all(fichiers.map(f => new Promise(resoudre => {
+    const lecteur = new FileReader();
+    lecteur.onload = (e) => {
+      let objet;
+      try { objet = JSON.parse(e.target.result); }
+      catch (err) { resoudre({nom: f.name, lu: {ok: false, raison: "il n'est pas au format JSON, ou il est abîmé."}}); return; }
+      resoudre({nom: f.name, lu: lireFichierBAF(objet, types)});
+    };
+    lecteur.onerror = () => resoudre({nom: f.name, lu: {ok: false, raison: "il n'a pas pu être lu."}});
+    lecteur.readAsText(f);
+  })));
+}
+
+function aiguillerImport(lus, versOutil2) {
+  const refuses = lus.filter(x => !x.lu.ok);
+  const bons = lus.filter(x => x.lu.ok);
+  if (refuses.length) {
+    alert(refuses.map(x => '« ' + x.nom + ' » : ' + x.lu.raison).join('\n\n') +
+      (bons.length ? '\n\n' + (refuses.length > 1 ? 'Ces fichiers sont laissés' : 'Ce fichier est laissé') + ' de côté.' : ''));
+  }
+  if (!bons.length) return;
+  const declarants = bons.filter(x => x.lu.type === 'contribution');
+  if (declarants.length) {
+    if (declarants.length < bons.length) {
+      alert("Vous avez choisi à la fois des fichiers déclarants et un autre type de fichier.\n\n" +
+        "Importez d'abord votre fichier socle, puis ajoutez les fichiers déclarants.");
+      return;
+    }
+    ouvrirFenetreFichiersDeclarants(declarants);
+    return;
+  }
+  if (bons.length > 1) {
+    alert("Un seul fichier à la fois ici : un fichier socle, un kit déclarant ou un kit de codage.\n\n" +
+      "Seuls les fichiers déclarants peuvent s'ajouter plusieurs à la fois.");
+    return;
+  }
+  const {nom, lu} = bons[0];
+  if (lu.type === 'kit') { ouvrirFichierDeclarant(lu); return; }
+  if (lu.type === 'codage-kit') { ouvrirKitCodage(lu); return; }
+  if (socleOuvert() && !confirm('Importer ce fichier socle remplacera celui qui est ouvert dans ce navigateur. ' +
+      'Le travail en cours sera perdu s\'il n\'a pas été exporté.\n\nContinuer ?')) return;
+  chargerFichierSocle(lu, nom, versOutil2);
+}
+
+function chargerFichierSocle(lu, nom, versOutil2) {
+  replaceState(lu.dossier);
+  // On retient d'où vient le dossier, pour que la barre puisse le dire.
+  state.fichierDossier = nom;
+  state.origineDossier = 'fichier';
+  persist();
+  loadM1FromState();
+  refreshM2List();
+  refreshAccueilBadges();
+  refreshSynthese();
+  showToast('Fichier socle importé.');
+  if (versOutil2) { chargerDossierOuvertDansOutil2(); return; }
+  route('baf-accueil');
+}
+
+// Un socle est-il ouvert ? Rien côté déclarant : sa page n'est pas un socle.
+function socleOuvert() {
+  if (modeDeclarantActif()) return false;
+  return !!(((state.m1 && state.m1.prenom) || '').trim() || ((state.m2 && state.m2.evenements) || []).length);
+}
+
+/* ── La fenêtre des fichiers déclarants ── */
+let fichiersDeclarantsEnAttente = [];
+
+function ouvrirFenetreFichiersDeclarants(declarants) {
+  fichiersDeclarantsEnAttente = declarants;
+  const n = declarants.length;
+  const corps = document.getElementById('fdecl-corps');
+  const titre = document.getElementById('fdecl-titre');
+  if (titre) titre.textContent = n > 1 ? n + ' fichiers déclarants' : 'Un fichier déclarant';
+  const ligne = (x) => {
+    const m = (x.lu.dossier && x.lu.dossier.contribution) || {};
+    const nb = ((x.lu.dossier && x.lu.dossier.m2 && x.lu.dossier.m2.evenements) || []).length;
+    const quand = m.envoye ? new Date(m.envoye).toLocaleString('fr-FR', {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'}) : '';
+    return '<li><b>' + esc(x.nom) + '</b> — ' + (m.provenance ? esc(m.provenance) + ', ' : '') +
+      nb + ' évènement' + (nb > 1 ? 's' : '') + (quand ? ', sauvegardé le ' + esc(quand) : '') + '</li>';
+  };
+  const ouvert = socleOuvert();
+  const prenom = ((state.m1 && state.m1.prenom) || '').trim();
+  corps.innerHTML =
+    '<p class="fenetre-texte">' + (n > 1 ? 'Ce sont des <b>fichiers déclarants</b>' : 'C\'est un <b>fichier déclarant</b>') +
+      ', pas un fichier socle : ' + (n > 1 ? 'ils contiennent' : 'il contient') + ' les observations d\'un déclarant, pas le travail d\'analyse.</p>' +
+    '<ul class="fdecl-liste">' + declarants.map(ligne).join('') + '</ul>' +
+    '<div class="fdecl-choix">' +
+      (ouvert
+        ? '<button class="btn btn-primary" onclick="choisirFichiersDeclarants(\'ajouter\')">➕ Ajouter à mon fichier socle' + (prenom ? ' (' + esc(prenom) + ')' : '') + '</button>' +
+          '<div class="fdecl-aide">Vous êtes référent : les évènements se versent dans votre chronologie, chacun avec sa provenance.</div>'
+        : '') +
+      '<button class="btn ' + (ouvert ? 'btn-secondary' : 'btn-primary') + '" onclick="choisirFichiersDeclarants(\'provisoire\')">🧱 Créer un fichier socle provisoire</button>' +
+      '<div class="fdecl-aide">Pour lire ces observations sans avoir le fichier socle du référent. Le préambule est repris du fichier déclarant. ' +
+        'Ce socle reste provisoire : le fichier socle de référence est celui du référent, auquel vous ajouterez ensuite les mêmes fichiers déclarants.</div>' +
+      (n === 1
+        ? '<button class="btn btn-ghost" onclick="choisirFichiersDeclarants(\'declarant\')">✍️ Je suis déclarant : continuer mon fichier</button>' +
+          '<div class="fdecl-aide">Vous rouvrez votre propre fichier pour y ajouter des observations.</div>'
+        : '') +
+    '</div>';
+  ouvrirFenetre('fdecl-overlay');
+}
+
+function choisirFichiersDeclarants(choix) {
+  const lus = fichiersDeclarantsEnAttente;
+  fichiersDeclarantsEnAttente = [];
+  fermerFenetre('fdecl-overlay');
+  if (!lus.length) return;
+  if (choix === 'ajouter') { fusionnerLot(lus); return; }
+  if (choix === 'declarant') { ouvrirFichierDeclarant(lus[0].lu); return; }
+  if (socleOuvert() && !confirm('Créer un fichier socle provisoire remplacera le dossier ouvert dans ce navigateur. ' +
+      'Il ne sera perdu que s\'il n\'a pas été exporté.\n\nContinuer ?')) return;
+  creerSocleProvisoire(lus);
+}
+
+/* Plusieurs fichiers d'un même déclarant : du plus ancien au plus récent, pour
+   que le dernier ait toujours le dernier mot. */
+function trierParEnvoi(lus) {
+  const envoi = (x) => (((x.lu.dossier || {}).contribution || {}).envoye) || '';
+  return lus.slice().sort((a, b) => envoi(a).localeCompare(envoi(b)));
+}
+
+function fusionnerLot(lus) {
+  const tries = trierParEnvoi(lus);
+  const messages = tries.map(x => fusionnerContribution(x.lu, x.nom, {lot: true})).filter(Boolean);
+  migrerIdsCategorisation();
+  persist();
+  loadM1FromState();
+  refreshM2List();
+  refreshAccueilBadges();
+  refreshSynthese();
+  route('m2');
+  if (messages.length) alert(messages.join('\n'));
+}
+
+/* Un socle reconstitué à partir de fichiers déclarants : le préambule du plus
+   récent, les évènements de tous. Il garde l'identité du dossier d'origine,
+   pour que ces mêmes fichiers s'ajoutent ensuite sans alerte au vrai socle. */
+function creerSocleProvisoire(lus) {
+  const tries = trierParEnvoi(lus);
+  const dernier = tries[tries.length - 1].lu;
+  const f = dernier.dossier || {};
+  const meta = f.contribution || {};
+  replaceState({m1: JSON.parse(JSON.stringify(f.m1 || {})), m2: {evenements: [], couverture: []}});
+  const maintenant = new Date().toISOString();
+  state.idDossier = (dernier.enveloppe && dernier.enveloppe.idDossier) || meta.idDossier || nouvelIdentifiant('dos');
+  state.cree = maintenant;
+  state.schema = SCHEMA_DOSSIER;
+  state.fichierDossier = null;
+  state.origineDossier = 'provisoire';
+  state.provisoire = {cree: maintenant};
+  fusionnerLot(tries);
+}
+
+function importerContribution(ev) {
+  const fichiers = Array.from((ev.target && ev.target.files) || []);
+  if (ev.target) ev.target.value = '';
+  fermerFenetre('contrib-overlay');
+  if (!fichiers.length) return;
+  lireFichiersBAF(fichiers, ['contribution']).then(lus => {
+    const refuses = lus.filter(x => !x.lu.ok);
+    if (refuses.length) alert(refuses.map(x => '« ' + x.nom + ' » : ' + x.lu.raison).join('\n\n'));
+    const bons = lus.filter(x => x.lu.ok);
+    if (bons.length) fusionnerLot(bons);
+  });
+}
+
+function fusionnerContribution(lu, nomFichier, opts) {
   const meta = (lu.dossier && lu.dossier.contribution) || {};
   const entrants = ((lu.dossier && lu.dossier.m2 && lu.dossier.m2.evenements) || []);
   const idC = meta.idContribution || nouvelIdentifiant('ctr');
@@ -15531,14 +15710,6 @@ function fusionnerContribution(lu, nomFichier) {
 
   const ignorees = ['m3', 'm4'].filter(k => lu.dossier && lu.dossier[k]);
 
-  migrerIdsCategorisation();
-  persist();
-  loadM1FromState();
-  refreshM2List();
-  refreshAccueilBadges();
-  refreshSynthese();
-  route('m2');
-
   let msg = 'Fichier déclarant' + (state.contributions[idC].provenance ? ' — ' + state.contributions[idC].provenance : '') + '\n\n';
   msg += '· ' + ajoutes + ' évènement' + (ajoutes > 1 ? 's' : '') + ' ajouté' + (ajoutes > 1 ? 's' : '') + '\n';
   if (remplaces) {
@@ -15550,6 +15721,15 @@ function fusionnerContribution(lu, nomFichier) {
   else if (dejaVue && !remplaces) msg += '· Cet envoi avait déjà été reçu.\n';
   if (couvAjoutees) msg += '· ' + couvAjoutees + ' période' + (couvAjoutees > 1 ? 's' : '') + ' observée' + (couvAjoutees > 1 ? 's' : '') + ' sans comportement-défi\n';
   if (ignorees.length) msg += '· Ignoré : ' + ignorees.join(', ') + ' — un fichier déclarant n\'apporte que le déclaratif.\n';
+  if (nomFichier) msg = '« ' + nomFichier + ' »\n' + msg;
+  if (opts && opts.lot) return msg;
+  migrerIdsCategorisation();
+  persist();
+  loadM1FromState();
+  refreshM2List();
+  refreshAccueilBadges();
+  refreshSynthese();
+  route('m2');
   alert(msg);
 }
 
