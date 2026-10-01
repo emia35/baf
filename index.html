@@ -1683,6 +1683,59 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
   display:inline-block;margin:0 4px 4px 0;background:var(--vol-comportement-deep);color:#fff;
   font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:999px;
 }
+.m3-evt-decouper{
+  background:var(--card);border:1px solid var(--vol-comportement);color:var(--vol-comportement-deep);
+  font-family:inherit;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;cursor:pointer;
+}
+.m3-evt-decouper:hover{background:var(--vol-comportement-pale);}
+.m3-evt-alerte{
+  margin:0 0 6px 24px;font-size:11.5px;color:var(--rose-deep);background:var(--rose-pale, #FBEDEF);
+  border-radius:6px;padding:4px 9px;
+}
+.m3-puce-ref{font-weight:700;margin-right:2px;}
+.decoupe-fenetre{max-width:1040px;max-height:calc(100vh - 32px);overflow-y:auto;}
+.dec-grille{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:6px;}
+@media (max-width:820px){ .dec-grille{grid-template-columns:1fr;} }
+.dec-col-titre{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:6px;}
+.dec-col-titre span{font-weight:400;color:var(--ink-soft);}
+.dec-aide{font-size:12px;color:var(--ink-soft);margin-bottom:8px;}
+.dec-selection{font-size:12px;color:var(--ink);background:var(--paper-deep);border-radius:6px;padding:0 10px;margin-bottom:8px;}
+.dec-selection:not(:empty){padding:6px 10px;}
+.dec-sel-erreur{color:var(--rose-deep);}
+.dec-champ{margin-bottom:10px;}
+.dec-champ-titre{font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;}
+.dec-texte{
+  font-size:13.5px;line-height:1.55;color:var(--ink);white-space:pre-wrap;
+  background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:8px 11px;
+  user-select:text;cursor:text;
+}
+.dec-texte mark{border-radius:3px;padding:0 1px;color:inherit;}
+.dec-texte mark.dec-m-cd{background:var(--vol-comportement-pale);box-shadow:inset 0 -2px 0 var(--vol-comportement);}
+.dec-texte mark.dec-m-entre{background:var(--vol-intervention-pale);box-shadow:inset 0 -2px 0 var(--vol-intervention);}
+.dec-texte mark::before{
+  content:attr(data-et);font-size:9.5px;font-weight:700;vertical-align:super;margin-right:2px;
+  color:var(--vol-comportement-deep);
+}
+.dec-texte mark.dec-m-entre::before{color:var(--vol-intervention-deep);}
+.dec-mode{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;font-size:13px;}
+.dec-mode span{color:var(--ink-soft);}
+.dec-case{border:1.5px solid var(--line);border-radius:8px;padding:9px 11px;margin-bottom:8px;background:var(--paper);}
+.dec-case-cd{border-color:var(--vol-comportement);}
+.dec-case-entre{border-style:dashed;border-color:var(--vol-intervention);margin-left:18px;}
+.dec-case-titre{font-size:12px;font-weight:700;color:var(--ink);margin-bottom:5px;}
+.dec-case-aide{font-weight:400;color:var(--ink-soft);}
+.dec-cit{font-size:13px;line-height:1.45;color:var(--ink);margin-bottom:6px;}
+.dec-cit.vide{color:var(--ink-soft);font-style:italic;font-size:12px;}
+.dec-cit.perdue{color:var(--rose-deep);}
+.dec-perdue{font-size:11.5px;font-style:italic;margin-top:3px;}
+.dec-cit-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+.dec-vider{background:none;border:none;font-family:inherit;font-size:11.5px;color:var(--ink-soft);cursor:pointer;padding:2px 4px;}
+.dec-vider:hover{color:var(--ink);text-decoration:underline;}
+.dec-double{font-size:11.5px;color:var(--ink-soft);font-style:italic;margin-top:4px;}
+.dec-iv{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink);margin-top:6px;}
+.dec-ajout{margin-top:2px;}
+.dec-pied{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:16px;flex-wrap:wrap;}
+.dec-pied-droite{display:flex;gap:8px;}
 .m3-item-lien{
   display:inline-block;margin:0 4px 4px 0;background:var(--card);color:var(--vol-comportement-deep);
   border:1px solid var(--vol-comportement);font-size:10.5px;font-weight:700;padding:1px 8px;border-radius:999px;
@@ -4061,6 +4114,14 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
       <button type="button" class="situer-lien" onclick="fermerSituer(); route('parcours')">Voir le parcours entier →</button>
     </div>
     <button class="sim-modal-close" onclick="fermerSituer()">Fermer</button>
+  </div>
+</div>
+
+<!-- Découper un évènement en CD (Organiser). Elle ne se ferme pas d'un clic à côté :
+     une sélection à la souris qui déborde ferait perdre le travail. -->
+<div id="decoupe-overlay" class="sim-modal-overlay" style="display:none;">
+  <div class="sim-modal decoupe-fenetre" role="dialog" aria-modal="true" aria-labelledby="decoupe-titre">
+    <div id="decoupe-contenu"></div>
   </div>
 </div>
 
@@ -9379,6 +9440,54 @@ const _CONTROLES = [
     return _bancEgal('Termes qui demandent un CD au déclarant', '', fautifs.join(', '));
   }},
 
+  {nom:'Découper un évènement ne touche pas au déclaratif, et fait naître ses éléments', test: () => {
+    const evt = (state.m2.evenements || [])[0];
+    if (!evt) return _bancEgal('Sans évènement', true, true);
+    ensureM3();
+    const avantEvt = JSON.stringify(evt);
+    const sauveD = state.m3.decoupages ? JSON.parse(JSON.stringify(state.m3.decoupages)) : null;
+    const sauveCats = JSON.parse(JSON.stringify(state.m3.categories));
+    const vraiConfirm = window.confirm;
+    window.confirm = () => true;
+    const ch = champsCitables(evt)[0] || {champ: 'comportement', texte: ''};
+    const D = {mode: 'sequence',
+      unites: [{id: 'b1', champ: ch.champ, debut: 0, texte: ch.texte.slice(0, 3) || 'x'}, {id: 'b2', champ: ch.champ, debut: 0, texte: ch.texte || 'y'}],
+      charnieres: [{id: 'k1', champ: ch.champ, debut: 0, texte: 'entre', intervention: true}]};
+    appliquerDecoupage(evt, D);
+    const cds = elementsEvt('cp', evt).map(e => e.id).join(',');
+    const nb = v => elementsEvt(v, evt).filter(e => e.tag === 'charniere').length;
+    const obtenu = [cds, nb('antecedents'), nb('consequences'), nb('interventions'), etiquettesCD()['e' + evt.id + '_ub2'], JSON.stringify(evt) === avantEvt].join('|');
+    appliquerDecoupage(evt, null);
+    const retire = !((state.m3.decoupages || {})[evt.id]);
+    if (sauveD) state.m3.decoupages = sauveD; else delete state.m3.decoupages;
+    state.m3.categories = sauveCats;
+    window.confirm = vraiConfirm;
+    const ivAttendu = /^interventions\.[^.]+\.texte$/.test(ch.champ) ? 0 : 1;
+    return _bancEgal('CD | antécédent | conséquence | intervention | étiquette | déclaratif intact | retrait',
+      ['e' + evt.id + '_ub1,e' + evt.id + '_ub2', 1, 1, ivAttendu, 'CD 1.2', true, true].join('|'), obtenu + '|' + retire);
+  }},
+
+  {nom:'Un découpage qui fait disparaître un élément classé retire ce classement', test: () => {
+    const evt = (state.m2.evenements || []).find(e => elementsEvt('cp', e).length);
+    if (!evt) return _bancEgal('Sans comportement', true, true);
+    ensureM3();
+    const sauveD = state.m3.decoupages ? JSON.parse(JSON.stringify(state.m3.decoupages)) : null;
+    const sauveCats = JSON.parse(JSON.stringify(state.m3.categories));
+    const vraiConfirm = window.confirm;
+    const idAvant = elementsEvt('cp', evt)[0].id;
+    state.m3.categories.cp.cat_banc = {nom: 'Banc', color: '#000', items: [idAvant]};
+    window.confirm = () => false;
+    const refuse = appliquerDecoupage(evt, {mode: 'simultane', unites: [{id: 'z1', champ: 'comportement', debut: 0, texte: 'z'}], charnieres: []});
+    const garde = state.m3.categories.cp.cat_banc.items.includes(idAvant) && !((state.m3.decoupages || {})[evt.id]);
+    window.confirm = () => true;
+    appliquerDecoupage(evt, {mode: 'simultane', unites: [{id: 'z1', champ: 'comportement', debut: 0, texte: 'z'}], charnieres: []});
+    const retire = !state.m3.categories.cp.cat_banc.items.includes(idAvant);
+    if (sauveD) state.m3.decoupages = sauveD; else delete state.m3.decoupages;
+    state.m3.categories = sauveCats;
+    window.confirm = vraiConfirm;
+    return _bancEgal('Refus : rien ne bouge | accord : classement retiré', 'false|true|true', [refuse, garde, retire].join('|'));
+  }},
+
   {nom:'Les couleurs des catégories se distinguent deux à deux', test: () => {
     /* Ce qui fait confondre deux catégories, c'est la teinte : les deux violets
        d'avant n'étaient séparés que de 10°, les deux rouges de 13°. Entre deux
@@ -10494,7 +10603,7 @@ const M3_SOUS = [
   {
     id: 'cp',
     label: 'Comportements', icon: '🎥', couleur: 'comportement',
-    help: 'Les comportements-défis repérés dans chaque évènement, numérotés CD 3.1, CD 3.2… (3 pour le troisième évènement dans l\'ordre chronologique). Par défaut, un évènement en donne un : tout son « Ce qui s\'est passé ». Regroupez ce qui vous semble appartenir à la même famille — sans vous imposer une nomenclature.',
+    help: 'Les comportements-défis repérés dans chaque évènement, numérotés CD 3.1, CD 3.2… (3 pour le troisième évènement dans l\'ordre chronologique). Par défaut, un évènement en donne un : tout son « Ce qui s\'est passé ». S\'il en contient plusieurs, « ✂ Découper » permet de les repérer, chacun par une citation exacte du déclaratif, qui n\'est jamais modifié. Regroupez ce qui vous semble appartenir à la même famille — sans vous imposer une nomenclature.',
     placeholder: 'ex : Hétéro-agressivité, Auto-agressivité, Refus verbal, Agitation…',
     extract: (evt) => {
       const parts = [];
@@ -10824,7 +10933,9 @@ function blocEvtM3(sousId, sous, groupe, cats, etiquettes) {
       ${nCD > 1 ? `<span class="m3-evt-nbcd" title="${st.mode === 'sequence' ? 'Les CD se suivent : ce qui s\'est passé entre deux CD est la conséquence du premier et l\'antécédent du suivant.' : 'Plusieurs CD en même temps.'}">${nCD} CD ${st.mode === 'sequence' ? 'à la suite' : 'en même temps'}</span>` : ''}
       <span class="m3-evt-resume">${reels.length ? classes + ' / ' + reels.length + ' classé' + (classes > 1 ? 's' : '') : 'non renseigné'}</span>
       <button type="button" class="m3-item-detail" title="Revoir l'évènement complet" onclick="ouvrirDetailEvt(${groupe.evtIdx},'${sousId}',event)">détail</button>
+      ${sousId === 'cp' ? `<button type="button" class="m3-evt-decouper no-print" title="Repérer plusieurs CD dans cet évènement, chacun par une citation exacte du déclaratif" onclick="ouvrirDecoupage('${esc(evt.id)}',event)">✂ ${st.decoupe ? 'Modifier le découpage' : 'Découper'}</button>` : ''}
     </div>
+    ${st.decoupe && !decoupageAJour(evt) ? `<div class="m3-evt-alerte">Le texte de cet évènement a changé depuis le découpage : un passage cité n'y est plus. ${sousId === 'cp' ? 'Ouvrez « Modifier le découpage ».' : 'Voir le volet Comportements.'}</div>` : ''}
     ${src ? `<div class="m3-evt-source">${esc(src)}</div>` : ''}
     <div class="m3-evt-items">${groupe.items.map(it => blocItemM3(sousId, sous, it, cats, etiquettes, st, n)).join('')}</div>
   </div>`;
@@ -10863,6 +10974,361 @@ function blocItemM3(sousId, sous, item, cats, etiquettes, st, n) {
       <div style="margin-top:5px;">${catBadge}</div>
     </div>
   </div>`;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   DÉCOUPER UN ÉVÈNEMENT EN CD (Arthur et Émilie, 01/10/2026)
+   ══════════════════════════════════════════════════════════════════════
+   Le déclarant écrit souvent toute la crise d'un seul tenant. L'analyste y
+   repère plusieurs CD — en même temps, ou l'un après l'autre — sans jamais
+   réécrire le déclaratif : chaque CD est une CITATION EXACTE, sélectionnée à
+   la souris dans le texte. Le découpage fait partie du codage : il vit dans
+   state.m3.decoupages[evtId], chaque codeur fait le sien dans son codage vierge.
+   {mode: 'simultane' | 'sequence',
+    unites:     [{id, champ, debut, texte}],
+    charnieres: [{id, champ, debut, texte, intervention} | null]}  (séquence)
+   Le champ est un chemin dans l'évènement : 'comportement',
+   'resumes.comportement', 'interventions.<id>.texte'… */
+
+const cleObjDecoupe = (o, i) => (o && o.id) ? o.id : '#' + i;
+function texteChamp(evt, champ) {
+  const p = String(champ || '').split('.');
+  if (!evt) return '';
+  if (p[0] === 'resumes') return resumeEtape(evt, p[1]);
+  if (p[0] === 'antecedents' || p[0] === 'interventions') {
+    const liste = evt[p[0]] || [];
+    const x = p[1] && p[1].startsWith('#') ? liste[parseInt(p[1].slice(1), 10)] : liste.find(o => o && o.id === p[1]);
+    return x ? String(x[p[2]] || '') : '';
+  }
+  return String(evt[p[0]] || '');
+}
+
+/* Ce que l'analyste peut citer : tout le déclaratif utile à la séquence. */
+function champsCitables(evt) {
+  const out = [];
+  const add = (champ, titre, texte) => { if (texte && String(texte).trim()) out.push({champ, titre, texte: String(texte)}); };
+  add('comportement', "Ce qui s'est passé", evt.comportement);
+  add('resumes.comportement', "Ce qui s'est passé (résumé rapide)", resumeEtape(evt, 'comportement'));
+  add('gradation', 'Gradation (ancien champ)', evt.gradation);
+  (evt.antecedents || []).forEach((a, i) => add('antecedents.' + cleObjDecoupe(a, i) + '.texte', 'Juste avant', a && a.texte));
+  add('etatAvant', 'État juste avant', evt.etatAvant);
+  add('resumes.antecedent', 'Juste avant (résumé rapide)', resumeEtape(evt, 'antecedent'));
+  (evt.interventions || []).forEach((iv, i) => {
+    add('interventions.' + cleObjDecoupe(iv, i) + '.texte', "Intervention de l'entourage" + (iv && iv.effet ? ' — ' + iv.effet : ''), iv && iv.texte);
+    add('interventions.' + cleObjDecoupe(iv, i) + '.cdPostIntervention', 'Et ensuite', iv && iv.cdPostIntervention);
+  });
+  add('resumes.intervention', 'Intervention (résumé rapide)', resumeEtape(evt, 'intervention'));
+  add('obtenu', 'Ce qu\'elle a obtenu', evt.obtenu);
+  add('evite', 'Ce qu\'elle a évité', evt.evite);
+  add('finPersonne', 'Comment ça s\'est terminé', evt.finPersonne);
+  add('resumes.consequence', 'Après (résumé rapide)', resumeEtape(evt, 'consequence'));
+  return out;
+}
+
+/* Une citation est-elle toujours dans le texte ? Un déclarant peut renvoyer
+   une version corrigée de son évènement : le découpage est alors à revoir. */
+function citationTrouvee(evt, c) {
+  if (!c || !c.texte) return true;
+  return texteChamp(evt, c.champ).includes(c.texte);
+}
+function decoupageAJour(evt) {
+  const D = ((state.m3 && state.m3.decoupages) || {})[evt.id];
+  if (!D) return true;
+  return (D.unites || []).concat(D.charnieres || []).every(c => citationTrouvee(evt, c));
+}
+
+let decoupeBrouillon = null;   // {evtId, mode, unites, charnieres}
+let decoupeSel = null;         // {champ, debut, texte} : la dernière sélection dans le déclaratif
+const nouvelIdDecoupe = () => Math.random().toString(36).slice(2, 8);
+
+function ouvrirDecoupage(evtId, ev) {
+  if (ev) ev.stopPropagation();
+  fermerPopup();
+  ensureM3();
+  const evt = (state.m2.evenements || []).find(e => e.id === evtId);
+  if (!evt) return;
+  const D = (state.m3.decoupages || {})[evtId];
+  if (D) {
+    decoupeBrouillon = JSON.parse(JSON.stringify(Object.assign({mode: 'sequence', unites: [], charnieres: []}, D)));
+  } else {
+    // Point de départ : ce que le déclarant a déjà distingué (« Et ensuite ? »),
+    // sinon deux CD à la suite, vides.
+    const st = structureCD(evt);
+    if (st.cds.length > 1) {
+      const champCD = evt.comportement && evt.comportement.trim() ? 'comportement' : 'resumes.comportement';
+      const ivs = (evt.interventions || []).map((iv, i) => ({iv, i}))
+        .filter(x => effetNeedsCdPost(x.iv.effet) && x.iv.cdPostIntervention && x.iv.cdPostIntervention.trim());
+      const unites = [], charnieres = [];
+      if (texteChamp(evt, champCD).trim()) unites.push({id: nouvelIdDecoupe(), champ: champCD, debut: 0, texte: texteChamp(evt, champCD).trim()});
+      ivs.forEach(x => {
+        const cle = cleObjDecoupe(x.iv, x.i);
+        if (unites.length) charnieres.push(x.iv.texte && x.iv.texte.trim()
+          ? {id: nouvelIdDecoupe(), champ: 'interventions.' + cle + '.texte', debut: 0, texte: x.iv.texte.trim(), intervention: true} : null);
+        unites.push({id: nouvelIdDecoupe(), champ: 'interventions.' + cle + '.cdPostIntervention', debut: 0, texte: x.iv.cdPostIntervention.trim()});
+      });
+      decoupeBrouillon = {mode: 'sequence', unites, charnieres};
+    } else {
+      decoupeBrouillon = {mode: 'sequence', unites: [null, null], charnieres: [null]};
+    }
+  }
+  decoupeBrouillon.evtId = evtId;
+  decoupeSel = null;
+  renderDecoupage();
+  const o = document.getElementById('decoupe-overlay');
+  if (o) o.style.display = 'flex';
+}
+
+function fermerDecoupage() {
+  const o = document.getElementById('decoupe-overlay');
+  if (o) o.style.display = 'none';
+  decoupeBrouillon = null;
+  decoupeSel = null;
+}
+
+// La charnière k se place entre l'unité k et l'unité k + 1 : on garde les deux listes alignées.
+function alignerCharnieres() {
+  const b = decoupeBrouillon;
+  const n = Math.max(0, b.unites.length - 1);
+  b.charnieres = (b.charnieres || []).slice(0, n);
+  while (b.charnieres.length < n) b.charnieres.push(null);
+}
+
+function renderDecoupage() {
+  const b = decoupeBrouillon;
+  const el = document.getElementById('decoupe-contenu');
+  if (!b || !el) return;
+  alignerCharnieres();
+  const evts = state.m2.evenements || [];
+  const idx = evts.findIndex(e => e.id === b.evtId);
+  const evt = evts[idx];
+  const n = idx + 1;
+  const seq = b.mode === 'sequence';
+
+  // Les passages déjà pris, surlignés dans le déclaratif.
+  const marques = {};
+  b.unites.forEach((u, k) => { if (u) (marques[u.champ] = marques[u.champ] || []).push({c: u, cls: 'dec-m-cd', et: n + '.' + (k + 1)}); });
+  if (seq) b.charnieres.forEach((c, k) => { if (c) (marques[c.champ] = marques[c.champ] || []).push({c, cls: 'dec-m-entre', et: 'entre'}); });
+  const surligner = (champ, texte) => {
+    const ms = (marques[champ] || []).map(m => {
+      let d = texte.substr(m.c.debut || 0, m.c.texte.length) === m.c.texte ? (m.c.debut || 0) : texte.indexOf(m.c.texte);
+      return d < 0 ? null : {d, f: d + m.c.texte.length, cls: m.cls, et: m.et};
+    }).filter(Boolean).sort((x, y) => x.d - y.d);
+    let html = '', pos = 0;
+    ms.forEach(m => {
+      if (m.d < pos) return;   // deux passages qui se chevauchent : on n'en surligne qu'un
+      html += esc(texte.slice(pos, m.d)) + '<mark class="' + m.cls + '" data-et="' + esc(m.et) + '">' + esc(texte.slice(m.d, m.f)) + '</mark>';
+      pos = m.f;
+    });
+    return html + esc(texte.slice(pos));
+  };
+  const champs = champsCitables(evt);
+  const declaratif = champs.map(c =>
+    '<div class="dec-champ"><div class="dec-champ-titre">' + esc(c.titre) + '</div>' +
+    '<div class="dec-texte" data-champ="' + esc(c.champ) + '">' + surligner(c.champ, c.texte) + '</div></div>').join('');
+
+  const citation = (c, role, k) => {
+    const perdu = c && !citationTrouvee(evt, c);
+    return '<div class="dec-cit' + (c ? '' : ' vide') + (perdu ? ' perdue' : '') + '">' +
+      (c ? '« ' + esc(c.texte) + ' »' + (perdu ? '<div class="dec-perdue">Ce passage n\'est plus dans le texte de l\'évènement : à revoir.</div>' : '')
+         : '<span>Sélectionnez un passage dans le déclaratif, puis cliquez sur « Prendre la sélection ».</span>') +
+      '</div>' +
+      '<div class="dec-cit-actions">' +
+        '<button type="button" class="btn btn-secondary btn-sm" onclick="prendreSelectionDecoupe(\'' + role + '\',' + k + ')">⤵ Prendre la sélection</button>' +
+        (c ? '<button type="button" class="dec-vider" onclick="viderCaseDecoupe(\'' + role + '\',' + k + ')" title="Vider cette case">Vider</button>' : '') +
+        (role === 'u' && b.unites.length > 1 ? '<button type="button" class="dec-vider" onclick="retirerUniteDecoupe(' + k + ')" title="Retirer ce CD">✕ Retirer ce CD</button>' : '') +
+      '</div>';
+  };
+  let cases = '';
+  b.unites.forEach((u, k) => {
+    cases += '<div class="dec-case dec-case-cd"><div class="dec-case-titre">CD ' + n + '.' + (k + 1) + '</div>' + citation(u, 'u', k) + '</div>';
+    if (seq && k < b.unites.length - 1) {
+      const c = b.charnieres[k];
+      cases += '<div class="dec-case dec-case-entre"><div class="dec-case-titre">Entre CD ' + n + '.' + (k + 1) + ' et CD ' + n + '.' + (k + 2) +
+        ' <span class="dec-case-aide">facultatif — conséquence du premier, antécédent du suivant</span></div>' +
+        citation(c, 'c', k) +
+        (c ? '<label class="dec-iv"><input type="checkbox"' + (c.intervention !== false ? ' checked' : '') +
+          ' onchange="decoupeBrouillon.charnieres[' + k + '].intervention = this.checked; renderDecoupage()"> C\'est une intervention de l\'entourage</label>' : '') +
+        (c && c.intervention !== false && !/^interventions\.[^.]+\.texte$/.test(c.champ) && (evt.interventions || []).some(iv => iv.texte && iv.texte.trim())
+          ? '<div class="dec-double">Elle s\'ajoute au volet Interventions. Si le déclarant l\'y a déjà décrite, citez plutôt ce passage-là : elle ne sera pas comptée deux fois.</div>' : '') +
+        '</div>';
+    }
+  });
+
+  const dejaDecoupe = !!((state.m3.decoupages || {})[b.evtId]);
+  el.innerHTML =
+    '<h3 id="decoupe-titre">Découper l\'évènement ' + n + '</h3>' +
+    '<p class="sim-modal-sub">' + esc([evt.date ? formatDate(evt.date) : '', evt.heure, evt.moment, evt.declarant].filter(Boolean).join(' · ')) + '</p>' +
+    '<div class="dec-grille">' +
+      '<div class="dec-col">' +
+        '<div class="dec-col-titre">Le déclaratif <span>— il n\'est jamais modifié</span></div>' +
+        '<div class="dec-aide">Sélectionnez à la souris le passage qui décrit un CD, puis « Prendre la sélection » dans la case voulue.</div>' +
+        '<div id="decoupe-selection" class="dec-selection"></div>' +
+        declaratif +
+      '</div>' +
+      '<div class="dec-col">' +
+        '<div class="dec-col-titre">Les CD de cet évènement</div>' +
+        '<div class="dec-mode">' +
+          '<label><input type="radio" name="dec-mode" value="sequence"' + (seq ? ' checked' : '') + ' onchange="changerModeDecoupe(this.value)"> L\'un après l\'autre <span>(l\'un entraîne l\'autre)</span></label>' +
+          '<label><input type="radio" name="dec-mode" value="simultane"' + (seq ? '' : ' checked') + ' onchange="changerModeDecoupe(this.value)"> En même temps</label>' +
+        '</div>' +
+        cases +
+        '<button type="button" class="btn btn-secondary btn-sm dec-ajout" onclick="ajouterUniteDecoupe()">+ Ajouter un CD</button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="dec-pied">' +
+      (dejaDecoupe ? '<button type="button" class="btn btn-ghost btn-sm" onclick="supprimerDecoupage()">Revenir à l\'évènement non découpé</button>' : '<span></span>') +
+      '<span class="dec-pied-droite">' +
+        '<button type="button" class="btn btn-ghost btn-sm" onclick="fermerDecoupage()">Annuler</button>' +
+        '<button type="button" class="btn btn-primary btn-sm" onclick="enregistrerDecoupage()">Enregistrer le découpage</button>' +
+      '</span>' +
+    '</div>';
+  majSelectionDecoupe();
+}
+
+/* La sélection est relevée à chaque changement : un clic sur un bouton peut
+   l'effacer avant que le bouton ne la lise. */
+function lireSelectionDecoupe() {
+  const o = document.getElementById('decoupe-overlay');
+  if (!o || o.style.display === 'none' || !decoupeBrouillon) return;
+  const sel = window.getSelection();
+  if (!sel || !sel.rangeCount || sel.isCollapsed) return;
+  const r = sel.getRangeAt(0);
+  const noeud = r.commonAncestorContainer.nodeType === 1 ? r.commonAncestorContainer : r.commonAncestorContainer.parentElement;
+  const bloc = noeud && noeud.closest('.dec-texte');
+  if (!bloc || !o.contains(bloc)) {
+    if (noeud && o.contains(noeud) && noeud.closest('.dec-col')) { decoupeSel = {erreur: true}; majSelectionDecoupe(); }
+    return;
+  }
+  const avant = document.createRange();
+  avant.selectNodeContents(bloc);
+  avant.setEnd(r.startContainer, r.startOffset);
+  const brut = r.toString();
+  const texte = brut.trim();
+  if (!texte) return;
+  decoupeSel = {champ: bloc.dataset.champ, debut: avant.toString().length + (brut.length - brut.trimStart().length), texte};
+  majSelectionDecoupe();
+}
+document.addEventListener('selectionchange', lireSelectionDecoupe);
+
+function majSelectionDecoupe() {
+  const el = document.getElementById('decoupe-selection');
+  if (!el) return;
+  el.innerHTML = !decoupeSel ? ''
+    : decoupeSel.erreur ? '<span class="dec-sel-erreur">Sélectionnez dans un seul champ à la fois.</span>'
+    : 'Passage sélectionné : <b>« ' + esc(decoupeSel.texte.length > 120 ? decoupeSel.texte.slice(0, 119) + '…' : decoupeSel.texte) + ' »</b>';
+}
+
+function prendreSelectionDecoupe(role, k) {
+  const b = decoupeBrouillon;
+  if (!b) return;
+  if (!decoupeSel || decoupeSel.erreur) {
+    alert('Sélectionnez d\'abord, à la souris, un passage du déclaratif (colonne de gauche).');
+    return;
+  }
+  const ancien = (role === 'u' ? b.unites : b.charnieres)[k];
+  const c = {id: (ancien && ancien.id) || nouvelIdDecoupe(), champ: decoupeSel.champ, debut: decoupeSel.debut, texte: decoupeSel.texte};
+  if (role === 'u') b.unites[k] = c;
+  else {
+    // Par défaut, ce qui se passe entre deux CD est une intervention de l'entourage ; on peut décocher.
+    c.intervention = ancien ? ancien.intervention !== false : true;
+    b.charnieres[k] = c;
+  }
+  decoupeSel = null;
+  const s = window.getSelection();
+  if (s) s.removeAllRanges();
+  renderDecoupage();
+}
+function viderCaseDecoupe(role, k) {
+  (role === 'u' ? decoupeBrouillon.unites : decoupeBrouillon.charnieres)[k] = null;
+  renderDecoupage();
+}
+function ajouterUniteDecoupe() {
+  decoupeBrouillon.unites.push(null);
+  renderDecoupage();
+}
+function retirerUniteDecoupe(k) {
+  const b = decoupeBrouillon;
+  b.unites.splice(k, 1);
+  b.charnieres.splice(Math.min(k, b.charnieres.length - 1), 1);
+  renderDecoupage();
+}
+function changerModeDecoupe(mode) {
+  decoupeBrouillon.mode = mode === 'simultane' ? 'simultane' : 'sequence';
+  renderDecoupage();
+}
+
+/* Les éléments d'un évènement dans tous les volets (volet|identifiant), pour
+   savoir quels classements disparaissent avec un découpage. */
+function clesElementsEvt(evt) {
+  const s = new Set();
+  M3_SOUS.forEach(v => {
+    const els = elementsEvt(v.id, evt);
+    if (!els.length) s.add(v.id + '|e' + evt.id + '_vide');
+    els.forEach(e => s.add(v.id + '|' + e.id));
+  });
+  return s;
+}
+/* Applique un découpage (ou le retire, si D est null), après avoir dit quels
+   classements se perdent. Renvoie false si l'analyste renonce. */
+function appliquerDecoupage(evt, D) {
+  ensureM3();
+  if (!state.m3.decoupages) state.m3.decoupages = {};
+  const avant = clesElementsEvt(evt);
+  const ancien = state.m3.decoupages[evt.id];
+  if (D) state.m3.decoupages[evt.id] = D; else delete state.m3.decoupages[evt.id];
+  const apres = clesElementsEvt(evt);
+  const perdus = [...avant].filter(k => !apres.has(k));
+  const touches = [];
+  perdus.forEach(k => {
+    const [volet, id] = k.split('|');
+    Object.values(state.m3.categories[volet] || {}).forEach(cat => {
+      if ((cat.items || []).includes(id)) touches.push({cat, id, volet});
+    });
+  });
+  if (touches.length) {
+    const noms = [...new Set(touches.map(t => '« ' + (t.cat.nom || 'sans nom') + ' »'))].slice(0, 6).join(', ');
+    if (!confirm(touches.length + ' classement' + (touches.length > 1 ? 's portaient' : ' portait') +
+        ' sur des éléments qui disparaissent avec ce découpage (' + noms + '). ' +
+        (touches.length > 1 ? 'Ils seront retirés' : 'Il sera retiré') + ' : il faudra classer les nouveaux CD.\n\nContinuer ?')) {
+      if (ancien) state.m3.decoupages[evt.id] = ancien; else delete state.m3.decoupages[evt.id];
+      return false;
+    }
+    touches.forEach(t => { t.cat.items = t.cat.items.filter(x => x !== t.id); });
+  }
+  persist();
+  return true;
+}
+
+function enregistrerDecoupage() {
+  const b = decoupeBrouillon;
+  if (!b) return;
+  const evt = (state.m2.evenements || []).find(e => e.id === b.evtId);
+  if (!evt) return;
+  alignerCharnieres();
+  const garder = b.unites.map((u, k) => u ? k : -1).filter(k => k >= 0);
+  if (!garder.length) {
+    alert('Aucun CD n\'est rempli. Sélectionnez au moins un passage, ou annulez.');
+    return;
+  }
+  // Une case vide se retire ; la charnière qui la suivait aussi.
+  const unites = garder.map(k => b.unites[k]);
+  const charnieres = b.mode === 'sequence'
+    ? garder.slice(0, -1).map((k, j) => garder[j + 1] === k + 1 ? b.charnieres[k] : null) : [];
+  const D = {mode: b.mode === 'simultane' ? 'simultane' : 'sequence', unites, charnieres};
+  if (!appliquerDecoupage(evt, D)) return;
+  fermerDecoupage();
+  renderM3();
+  showToast('Découpage enregistré : ' + unites.length + ' CD.');
+}
+
+function supprimerDecoupage() {
+  const b = decoupeBrouillon;
+  const evt = b && (state.m2.evenements || []).find(e => e.id === b.evtId);
+  if (!evt) return;
+  if (!appliquerDecoupage(evt, null)) return;
+  fermerDecoupage();
+  renderM3();
+  showToast('Découpage retiré : l\'évènement revient tel que déclaré.');
 }
 
 // Trouver les catégories d\'un item (un item peut appartenir à plusieurs catégories)
@@ -10958,6 +11424,7 @@ function renderM3Sous(sousId) {
   if (sugEl) sugEl.innerHTML = blocSuggestionsCats(sousId);
   const catsEl = document.getElementById('m3-cats-list');
   const racines = catsRacines(sousId);
+  const etiqPuces = sousId === 'cp' ? etiquettesCD() : {};
 
   if (Object.keys(cats).length === 0) {
     catsEl.innerHTML = `<div class="event-empty">Aucune catégorie créée. Cliquez sur "Ajouter une catégorie" pour commencer.</div>`;
@@ -10987,7 +11454,7 @@ function renderM3Sous(sousId) {
             ? `<div class="m3-cat-empty">Cliquez sur un élément à gauche pour l\'assigner ici.</div>`
             : catItems.map(it => `
               <span class="m3-cat-item-chip" onclick="allerVersItem('${it.id}')" title="Voir cet élément dans la colonne de gauche" style="cursor:pointer;">
-                ${esc(it.texte.length > 50 ? it.texte.substring(0,50)+'…' : it.texte)}
+                <b class="m3-puce-ref">${etiqPuces[it.id] || 'Évt ' + (it.evtIdx + 1)}</b> ${esc(it.texte.length > 44 ? it.texte.substring(0,44)+'…' : it.texte)}
                 <button onclick="retirerDeUneCat('${sousId}','${it.id}','${catId}',event)" title="Retirer">×</button>
               </span>`).join('')
           }
@@ -17314,6 +17781,7 @@ const LEXIQUE_BAF = {
   "antécédent": "Ce qui s'est passé juste avant le comportement, dans les secondes ou minutes précédentes. Il y en a souvent plusieurs. Le déclarant peut signaler celui qui lui semble avoir déclenché — c'est un avis, pas un verdict.",
   "conséquence": "Ce qui change pour la personne après le comportement : ce qu'elle obtient, ce qu'elle évite. C'est souvent là que la fonction du comportement se lit. À ne pas confondre avec l'intervention, qui est ce que l'entourage a fait.",
   "intervention": "Ce que l'entourage a fait en réponse au comportement, et avec quel effet sur la tension. Une intervention peut apaiser, ne rien changer, ou produire à son tour un nouveau comportement-défi.",
+  "découpage": "Dans Organiser, le geste par lequel l'analyste repère plusieurs CD dans un même évènement — en même temps, ou l'un après l'autre. Chaque CD est une citation exacte du déclaratif, qui n'est jamais réécrit. Le découpage fait partie du codage : chaque codeur fait le sien, et la synthèse retient l'un des deux.",
   "CD à la suite": "Un comportement-défi qui en suit un autre dans le même évènement : des cris, puis l'éducatrice demande de se calmer, puis des coups contre le mur. Ce qui s'est passé entre les deux est la conséquence du premier CD et l'antécédent du suivant.",
   "crise": "Les comportements-défis repérés dans un même évènement. Ils sont numérotés CD 3.1, CD 3.2… : 3 pour le troisième évènement dans l'ordre chronologique, puis le rang du CD dans l'évènement.",
   "pattern": "Une séquence qui semble se répéter, composée à partir des catégories créées dans Organiser. Ce n'est pas une certitude : c'est une hypothèse de lecture, à discuter.",
@@ -17351,7 +17819,7 @@ const LEXIQUE_CLASSE = {
   "contingences synthétiques": "litterature", "typologie": "litterature", "biais potentiels": "litterature",
   "environnement": "litterature", "analyse environnementale": "litterature",
   // Les mots de la BAF
-  "évènement": "outil", "volet": "outil", "intervention": "outil", "CD à la suite": "outil",
+  "évènement": "outil", "volet": "outil", "intervention": "outil", "CD à la suite": "outil", "découpage": "outil",
   "crise": "outil", "pattern": "outil", "gradation": "outil", "indice de confiance": "outil",
   "déclarant": "outil", "source": "outil", "espace": "outil",
   "BAF": "outil", "RDAF": "outil", "ICAF": "outil", "préambule": "outil",
