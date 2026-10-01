@@ -820,7 +820,7 @@ body.tool-baf #view-baf-accueil .hero h1 i{color:var(--sauge-deep);}
 #view-idc-accueil .hero svg.bigrose{width:50px;height:50px;margin-bottom:6px;}
 #view-idc-accueil .hero .kicker{font-size:11px;margin-bottom:6px;}
 #view-idc-accueil .hero h1{font-size:28px;margin-bottom:0;}
-body.tool-idc #view-idc-accueil .hero .kicker{color:var(--prune);}
+body.tool-idc #view-idc-accueil .hero .kicker{color:var(--slate);}
 body.tool-idc #view-idc-accueil .hero svg.bigrose{color:var(--prune);}
 body.tool-idc #view-idc-accueil .hero h1 i, body.tool-idc #view-idc-accueil .hero .lettre-echo{color:var(--rose-deep);}
 #view-idc-accueil .hero svg.bigrose path[fill="var(--sauge)"]{fill:var(--rose);}
@@ -16277,7 +16277,7 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
-const ACTIVITE_CODE = {"jusqua":"2026-10-01","mois":[{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":1253,"retrait":461,"depots":16}]};
+const ACTIVITE_CODE = {"jusqua":"2026-10-01","mois":[{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":1268,"retrait":462,"depots":17}]};
 
 function svgActiviteCode() {
   const mois = ACTIVITE_CODE.mois || [];
@@ -16310,6 +16310,15 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-01',
+    version: 'v2026.10.01-4',
+    titre: "EMIA35 · BAF sur l'accueil de l'indice de confiance",
+    corps: `
+<p>Accueil de l'indice de confiance : « EMIA35 · B » reprend la couleur des autres pages ; seuls le A et le F restent en rosé.</p>
+`
+  },
 
   {
     date: '2026-10-01',
