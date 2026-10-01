@@ -1195,6 +1195,11 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
 /* synthèse */
 .synth-block{margin-bottom:22px;}
 .synth-block h4{font-size:15px;color:var(--ink);margin-bottom:10px;}
+.synth-block{position:relative;}
+.bloc-image-actions{position:absolute;top:12px;right:14px;display:flex;align-items:center;gap:4px;font-size:11px;color:var(--ink-soft);}
+.bloc-image-actions button{font:inherit;font-size:11px;font-weight:600;color:var(--slate);background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:2px 8px;cursor:pointer;}
+.bloc-image-actions button:hover{border-color:var(--slate);}
+@media (max-width:720px){ .bloc-image-actions span{display:none;} }
 .synth-vase{display:grid;grid-template-columns:minmax(120px,160px) minmax(0,1fr);gap:18px;align-items:start;margin-bottom:12px;}
 .synth-vase .vduo-bande.rempli{animation:none;}
 .synth-vase .vduo-bande, .synth-vase .vduo-nom{cursor:default;}
@@ -7330,7 +7335,7 @@ function refreshSynthese(){
       : '';
   }
   // Les graphiques de la synthèse reçoivent leurs boutons d'export après coup.
-  setTimeout(() => { try { equiperGraphiques(document.getElementById('view-synthese')); } catch(e) {} }, 0);
+  setTimeout(() => { try { equiperGraphiques(document.getElementById('view-synthese')); equiperBlocsSynthese(); } catch(e) {} }, 0);
   // Mettre à jour l'en-tête d'impression
   const printProfilEl = document.getElementById('print-profil');
   if (printProfilEl) {
@@ -13956,6 +13961,84 @@ function nomFichierGraphique(nom, ext) {
 function graphiqueDuBouton(btn) {
   const bloc = btn.closest('[data-graphique]');
   return bloc ? bloc.querySelector('svg') : null;
+}
+
+/* ── Une image de chaque bloc de la synthèse ───────────────────────────
+   Pour compléter le document Word d'analyse fonctionnelle écrit à côté
+   (Arthur et Émilie, 01/10/2026). Le bloc est recopié tel qu'il s'affiche,
+   styles calculés recopiés sur chaque élément, puis posé dans un SVG
+   (foreignObject) : c'est l'image vectorielle ; la PNG en est le rendu. Les
+   polices du site ne voyagent pas dans l'image : le navigateur prend la plus
+   proche installée. */
+const PROPRIETES_IMAGE = [
+  'display', 'position', 'top', 'right', 'bottom', 'left', 'box-sizing', 'width', 'height', 'min-width', 'max-width', 'min-height',
+  'margin-top', 'margin-right', 'margin-bottom', 'margin-left', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
+  'border-top-width', 'border-right-width', 'border-bottom-width', 'border-left-width',
+  'border-top-style', 'border-right-style', 'border-bottom-style', 'border-left-style',
+  'border-top-color', 'border-right-color', 'border-bottom-color', 'border-left-color',
+  'border-top-left-radius', 'border-top-right-radius', 'border-bottom-left-radius', 'border-bottom-right-radius',
+  'background-color', 'color', 'font-family', 'font-size', 'font-weight', 'font-style', 'line-height', 'letter-spacing',
+  'text-align', 'text-transform', 'text-decoration-line', 'white-space', 'overflow', 'overflow-wrap', 'text-overflow', 'vertical-align',
+  'flex-direction', 'flex-wrap', 'flex-grow', 'flex-shrink', 'flex-basis', 'align-items', 'align-self', 'justify-content', 'gap', 'row-gap', 'column-gap',
+  'grid-template-columns', 'grid-column', 'box-shadow', 'opacity', 'list-style-type', 'border-collapse', 'table-layout',
+  'fill', 'stroke', 'stroke-width', 'stroke-dasharray', 'fill-opacity', 'stroke-opacity', 'stop-color'
+];
+
+function blocVersSVG(bloc) {
+  const r = bloc.getBoundingClientRect();
+  const w = Math.ceil(r.width), h = Math.ceil(r.height);
+  const clone = bloc.cloneNode(true);
+  const orig = [bloc].concat(Array.from(bloc.querySelectorAll('*')));
+  const copie = [clone].concat(Array.from(clone.querySelectorAll('*')));
+  orig.forEach((o, i) => {
+    const c = copie[i];
+    if (!c) return;
+    const st = getComputedStyle(o);
+    // La police de l'image n'est pas celle de l'écran : un élément en ligne garde sa
+    // largeur naturelle, sinon son texte, un peu plus large, passe à la ligne.
+    const enLigne = /^inline-(block|flex)$/.test(st.display);
+    c.setAttribute('style', PROPRIETES_IMAGE
+      .filter(p => !(enLigne && (p === 'width' || p === 'height' || p === 'min-width')))
+      .map(p => p + ':' + st.getPropertyValue(p)).join(';') + (enLigne ? ';white-space:nowrap' : ''));
+    if (o.tagName === 'TEXTAREA' || o.tagName === 'INPUT') c.setAttribute('value', o.value);
+  });
+  // Ce qui ne s'imprime pas ne va pas dans l'image : boutons, menus, actions.
+  clone.querySelectorAll('.no-print, .bloc-image-actions, .graphique-actions, .bloc-controles, button, select').forEach(x => x.remove());
+  clone.querySelectorAll('.corr-count, .corr-pct, .synth-legend-pct').forEach(x => { x.style.whiteSpace = 'nowrap'; x.style.width = 'auto'; x.style.minWidth = 'max-content'; });
+  clone.style.margin = '0';
+  clone.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+  const texte = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">' +
+    '<foreignObject x="0" y="0" width="' + w + '" height="' + h + '">' + new XMLSerializer().serializeToString(clone) + '</foreignObject></svg>';
+  return {texte, w, h};
+}
+
+function nomImageBloc(bloc, ext) {
+  const t = ((bloc.querySelector('h4') || {}).textContent || 'synthese').replace(/\s+/g, ' ').trim().slice(0, 40);
+  return nomFichierGraphique(t, ext);
+}
+
+function exporterBlocImage(btn, format) {
+  const bloc = btn.closest('.synth-block');
+  if (!bloc) return;
+  const rendu = blocVersSVG(bloc);
+  if (format === 'svg') { telechargerFichier(rendu.texte, nomImageBloc(bloc, 'svg'), 'image/svg+xml;charset=utf-8'); return; }
+  const libelle = btn.textContent;
+  btn.disabled = true; btn.textContent = '…';
+  texteSVGversPNG(rendu, 2).then(url => fetch(url).then(x => x.blob()).then(bl => telechargerFichier(bl, nomImageBloc(bloc, 'png'), 'image/png')))
+    .catch(e => alert('Export impossible : ' + e.message))
+    .then(() => { btn.disabled = false; btn.textContent = libelle; });
+}
+
+function equiperBlocsSynthese() {
+  document.querySelectorAll('#view-synthese .synth-block').forEach(bloc => {
+    if (bloc.querySelector(':scope > .bloc-image-actions')) return;
+    const a = document.createElement('div');
+    a.className = 'bloc-image-actions no-print';
+    a.innerHTML = '<span>Image du bloc</span>' +
+      '<button type="button" onclick="exporterBlocImage(this, \'png\')" title="Image à coller dans le document d\'analyse fonctionnelle">⬇ PNG</button>' +
+      '<button type="button" onclick="exporterBlocImage(this, \'svg\')" title="Image vectorielle, nette à toutes les tailles">⬇ SVG</button>';
+    bloc.prepend(a);
+  });
 }
 
 function exporterGraphiqueSVG(btn) {
