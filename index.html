@@ -38,7 +38,7 @@
   --ocre-pale: #F5E8C8;
 
   --rose: #E8B4A0;
-  /* Il manquait un ton foncé au rosé : faute de quoi l'étiquette « C » des
+  /* Il manquait un ton foncé au rosé : faute de quoi l'étiquette « C » des
      patterns et la pastille conséquence de la synthèse écrivaient en #E8B4A0
      sur #F8E8E0, soit un contraste de 1,5 pour 1. Illisible. */
   --rose-deep: #A8503A;
@@ -48,8 +48,8 @@
   --prune-deep: #74495A;
   --prune-pale: #EFE0E4;
 
-  /* Le vase de tension avait emprunté le vert du comportement pour « ce qui
-     fait monter » et le jaune de l'antécédent pour « ce qui fait descendre ».
+  /* Le vase de tension avait emprunté le vert du comportement pour « ce qui
+     fait monter » et le jaune de l'antécédent pour « ce qui fait descendre ».
      Deux couleurs de volet employées à dire autre chose. Il a maintenant les
      siennes, prises aux deux extrémités de ses propres paliers. */
   --vase-monte: #E2562F;
@@ -235,7 +235,7 @@ header.top{
 .subbar-btn:hover{border-color:var(--hdr-accent);color:var(--slate);}
 .subbar-btn.danger:hover{border-color:#D6573F;color:#D6573F;}
 /* Importer ouvre un choix : un fichier, ou des données fictives. Le bouton
-   « Simuler » qui vivait sur l'accueil a disparu — charger un dossier est une
+   « Simuler » qui vivait sur l'accueil a disparu — charger un dossier est une
    seule action, quelle qu'en soit la source. */
 .subbar-menu{position:relative;display:inline-block;}
 .subbar-menu-liste{
@@ -255,10 +255,10 @@ header.top{
    un téléphone, y compris son texte courant. Le pied de page, large de 506 px
    lui aussi, n'était qu'un symptôme.
    Sous 620 px, les trois actions passent donc dans un menu unique. Un mot
-   lisible — « Dossier » — plutôt que trois pictogrammes seuls : sur un écran
+   lisible — « Dossier » — plutôt que trois pictogrammes seuls : sur un écran
    étroit, deviner ce que fait une icône coûte plus cher que la place gagnée. */
 .subbar-compact{display:none;}
-/* ── La bande « Où suis-je ? » ─────────────────────────────────────────
+/* ── La bande « Où suis-je ? » ─────────────────────────────────────────
    Sobre par construction : un fond de papier, pas de couleur de volet — elle
    ne désigne aucun volet — et trois lignes d'étiquette/valeur qui se lisent
    en diagonale. Elle se replie d'un clic, et la préférence vaut partout. */
@@ -291,6 +291,7 @@ header.top{
   padding:16px 18px;margin:0 0 20px;background:var(--paper);
 }
 .soma-tete{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:10px;}
+.soma-bloc .ethique{text-align:justify;text-justify:inter-word;}
 
 .vase-boutons{display:flex;flex-direction:column;gap:4px;width:100%;}
 .vase-btn{
@@ -778,7 +779,7 @@ section.view.show{display:block;animation:fadein .25s ease;}
 
 /* ── Accueil global ─────────────────────────────────────────────────────
    Deux rappels visuels demandés par Arthur. Le A et le F de BAF reprennent la
-   couleur d'« Analyse Fonctionnelle » juste au-dessus. « Outil 1 » et « outil 2 »
+   couleur d'« Analyse Fonctionnelle » juste au-dessus. « Outil 1 » et « outil 2 »
    reprennent la teinte de leur encart, juste en dessous — mais dans le ton
    foncé de chaque teinte : le sauge et le rosé des encarts, écrits tels quels
    sur le fond de la carte, tombent sous 3 pour 1 de contraste et ne se lisent
@@ -1206,7 +1207,7 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
   background:var(--paper);border:1px solid var(--line);border-radius:var(--radius-sm);
   padding:15px 18px;text-align:center;min-width:120px;flex:1 1 140px;
 }
-/* Un nom de créneau maison peut être long (« Transition / rangement ») : en
+/* Un nom de créneau maison peut être long (« Transition / rangement ») : en
    fenêtre réduite il débordait de sa case. Il passe maintenant à la ligne. */
 .kpi .val{
   font-size:20px;font-weight:700;color:var(--ink);
@@ -1891,7 +1892,7 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
   border:1px solid rgba(0,0,0,.08);
 }
 
-/* Bouton « détail » d'un item : rappelle l'évènement entier sans quitter la
+/* Bouton « détail » d'un item : rappelle l'évènement entier sans quitter la
    catégorisation. Il est dans le flux (et non posé en absolu) pour ne jamais
    recouvrir les badges de catégorie. */
 .m3-item-detail{
@@ -1906,7 +1907,7 @@ footer.bottom .footer-version:hover{color:var(--sauge-deep);}
 }
 .m3-item-detail:hover{color:var(--ocre-deep);border-color:var(--ocre);background:var(--card);}
 
-/* Fenêtre « détail » : l'évènement complet, en lecture seule. Plus large que la
+/* Fenêtre « détail » : l'évènement complet, en lecture seule. Plus large que la
    modale de simulation — c'est du texte long à lire, pas des boutons à cliquer. */
 .evt-detail{
   max-width:720px;
@@ -2793,7 +2794,7 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
   100%{box-shadow:0 0 0 0 rgba(61,79,107,0);    transform:scale(1);}
 }
 /* Couleur littérale et non var() : un raccourci comme border-color dont la
-   valeur contient un var() devient une « valeur en attente de substitution »,
+   valeur contient un var() devient une « valeur en attente de substitution »,
    que Blink ne fait pas gagner de façon fiable contre une autre règle du même
    genre. Le repère doit passer devant la teinte du volet à coup sûr. */
 .m3-item.m3-item.m3-item.item-vise{
@@ -2895,7 +2896,7 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
         <button data-go="reperes" class="nav-btn nav-btn-ressource">Repères</button>
         <button data-go="ressources" class="nav-btn nav-btn-ressource">Ressources</button>
       </span>
-      <!-- Le badge « dossier chargé » a quitté le header : il dit l'état du
+      <!-- Le badge « dossier chargé » a quitté le header : il dit l'état du
            dossier, sa place est dans la barre dossier, pas dans l'identité. -->
       <div class="idc-baf-badge" id="idc-baf-badge" style="display:none;">
         <span id="idc-baf-badge-label"></span>
@@ -2988,7 +2989,7 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
     </div>
 
     <div class="intro-card accueil-texte">
-      <p>Au cœur de nos communautés de soin, certains comportements peuvent nous troubler, voire mettre à mal le quotidien. Ces « comportements-défis » sont une tentative, pour la personne accompagnée, de répondre à un besoin, de façon plus ou moins adaptée. L'analyse fonctionnelle vise à décrypter la fonction d'un comportement qui n'est, de fait, pas là pour rien. C'est un travail d'élaboration clinique qui doit se faire <i>à plusieurs</i> et qui peut se soutenir d'outils. C'est pour cela que nous avons créé la <b class="sigle-baf">B<span class="lettre-echo">A</span><span class="lettre-echo">F</span></b>, pour vous aider à structurer la démarche d'analyse fonctionnelle avant (c'est l'<b class="outil-echo outil-1">outil 1</b>) et après (c'est l'<b class="outil-echo outil-2">outil 2</b>). Mais ce qui se passe entre les deux, c'est à vous de jouer.</p>
+      <p>Au cœur de nos communautés de soin, certains comportements peuvent nous troubler, voire mettre à mal le quotidien. Ces « comportements-défis » sont une tentative, pour la personne accompagnée, de répondre à un besoin, de façon plus ou moins adaptée. L'analyse fonctionnelle vise à décrypter la fonction d'un comportement qui n'est, de fait, pas là pour rien. C'est un travail d'élaboration clinique qui doit se faire <i>à plusieurs</i> et qui peut se soutenir d'outils. C'est pour cela que nous avons créé la <b class="sigle-baf">B<span class="lettre-echo">A</span><span class="lettre-echo">F</span></b>, pour vous aider à structurer la démarche d'analyse fonctionnelle avant (c'est l'<b class="outil-echo outil-1">outil 1</b>) et après (c'est l'<b class="outil-echo outil-2">outil 2</b>). Mais ce qui se passe entre les deux, c'est à vous de jouer.</p>
       <div class="signatures">
         <div><b class="signature-nom">Émilie Musard</b> — <i>Éducatrice spécialisée</i></div>
         <div><b class="signature-nom">Arthur Guillieux</b> — <i>Psychologue clinicien</i></div>
@@ -3055,7 +3056,7 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
       <p>Elle intervient auprès de personnes de plus de seize ans, autistes — diagnostic posé ou fortement suspecté —, dont les comportements, par leur intensité, leur fréquence ou leur durée, entraînent une souffrance, un risque de rupture de parcours, voire une mise en danger, pour elles-mêmes ou pour leur entourage. Elle peut être sollicitée par les familles, par les institutions, ou par les personnes elles-mêmes.</p>
       <p>L'équipe est pluridisciplinaire : médecin psychiatre, coordinatrices éducatrices et infirmière, ergothérapeute, assistante sociale, psychologues.</p>
       <p>Chaque intervention est confiée à un binôme — une coordinatrice et un psychologue —, autour duquel les autres professionnels interviennent selon les besoins. Elle se déroule en deux temps.</p>
-      <p><b>Prendre la mesure.</b> On l'appelle d'ordinaire « évaluation », mais nous ne sommes pas là pour noter : nous sommes là pour comprendre. Observations sur les lieux de vie, évaluations de la communication ou de la sensorialité, entretiens avec la personne, sa famille, les équipes — ce temps est chaque fois construit sur mesure. Il aboutit à un bilan d'intervention et à des préconisations.</p>
+      <p><b>Prendre la mesure.</b> On l'appelle d'ordinaire « évaluation », mais nous ne sommes pas là pour noter : nous sommes là pour comprendre. Observations sur les lieux de vie, évaluations de la communication ou de la sensorialité, entretiens avec la personne, sa famille, les équipes — ce temps est chaque fois construit sur mesure. Il aboutit à un bilan d'intervention et à des préconisations.</p>
       <p><b>Accompagner les préconisations.</b> L'équipe reste ensuite aux côtés de la personne, de sa famille ou de l'institution pour les mettre en place, et pour les ajuster — parce qu'elles s'ajustent toujours.</p>
       <p>Tout au long, la réunion d'équipe est le lieu où chacun, depuis sa place, peut dire quelque chose de la situation, et où l'analyse se construit à plusieurs.</p>
       <p>Nos professionnels ne partagent pas tous les mêmes références théoriques, et c'est une richesse. Les débats qu'elles suscitent nous amènent, peu à peu, à construire un langage commun : non pas une vérité partagée, mais un lieu de rencontre où l'analyse de chacun profite à la situation.</p>
@@ -3277,7 +3278,7 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
           <div class="entree-cta">Démarrer la cotation →</div>
         </button>
       </div>
-      <p class="entrees-note">Une analyse produite sur un autre poste ? Ouvrez d'abord son fichier avec « Importer », dans la barre sous l'en-tête : elle devient le dossier ouvert.</p>
+      <p class="entrees-note">Une analyse produite sur un autre poste ? Ouvrez d'abord son fichier avec « Importer », dans la barre sous l'en-tête : elle devient le dossier ouvert.</p>
     </div>
   </section>
 
@@ -3357,7 +3358,7 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
           <label><input type="checkbox" value="ecole" onchange="saveM1()"> École</label>
           <label><input type="checkbox" value="travail" onchange="saveM1()"> Travail / ESAT</label>
           <!-- Une case comme les autres : ajouter un lieu est un choix de même
-               rang que « famille » ou « école », pas une action à part. -->
+               rang que « famille » ou « école », pas une action à part. -->
           <label id="m1-lieu-ajout-case" onclick="basculerSaisieLieu(true); return false;" style="border-style:dashed;"><input type="checkbox" style="pointer-events:none;"> Autre lieu…</label>
         </div>
         <div class="creneau-list" id="m1-lieux-custom-list" style="margin-top:8px;"></div>
@@ -3395,7 +3396,7 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
 
       <div class="field">
         <label>Heures de coucher / lever <span style="font-weight:400;color:var(--ink-soft);">(facultatif)</span></label>
-        <div class="help">Permet d'identifier la période « nuit » comme moment de la journée possible, distincte de la journée type.</div>
+        <div class="help">Permet d'identifier la période « nuit » comme moment de la journée possible, distincte de la journée type.</div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
           <div style="flex:1;min-width:140px;">
             <label for="m1-coucher" style="font-size:12px;font-weight:600;color:var(--ink-soft);">Coucher</label>
@@ -4287,7 +4288,7 @@ const SOURCES = {
   scatterplot: {
     court: 'Touchette, MacDonald & Langer (1985)',
     complet: "Touchette, P. E., MacDonald, R. F., & Langer, S. N. (1985). A scatter plot for identifying stimulus control of problem behavior. <i>Journal of Applied Behavior Analysis</i>, 18, 343-351.",
-    adaptation: "Adapté. Le scatterplot d'origine note l'occurrence ET la non-occurrence sur des blocs de temps définis à l'avance. La BAF recueille les périodes observées à la journée, pas au créneau : une case vide peut donc encore vouloir dire « rien à ce moment-là » aussi bien que « rien de noté à ce moment-là ».",
+    adaptation: "Adapté. Le scatterplot d'origine note l'occurrence ET la non-occurrence sur des blocs de temps définis à l'avance. La BAF recueille les périodes observées à la journée, pas au créneau : une case vide peut donc encore vouloir dire « rien à ce moment-là » aussi bien que « rien de noté à ce moment-là ».",
     groupe: 'Distributions temporelles'
   },
   kahng: {
@@ -4344,7 +4345,7 @@ const SOURCES = {
   },
   has: {
     court: 'HAS / ANESM',
-    complet: "ANESM / Haute Autorité de Santé (2016). <i>Les « comportements-problèmes » au sein des établissements et services accueillant des enfants et adultes handicapés : prévention et réponses.</i> — Haute Autorité de Santé (2026). <i>Trouble du spectre de l'autisme : interventions et parcours de vie du nourrisson, de l'enfant et de l'adolescent.</i> Recommandation de bonne pratique. — Haute Autorité de Santé (2017). <i>Qualité de vie : handicap, les problèmes somatiques et les phénomènes douloureux.</i>",
+    complet: "ANESM / Haute Autorité de Santé (2016). <i>Les « comportements-problèmes » au sein des établissements et services accueillant des enfants et adultes handicapés : prévention et réponses.</i> — Haute Autorité de Santé (2026). <i>Trouble du spectre de l'autisme : interventions et parcours de vie du nourrisson, de l'enfant et de l'adolescent.</i> Recommandation de bonne pratique. — Haute Autorité de Santé (2017). <i>Qualité de vie : handicap, les problèmes somatiques et les phénomènes douloureux.</i>",
     adaptation: "Le bilan médical vient AVANT l'analyse fonctionnelle, pas après.",
     groupe: 'Cadre français'
   }
@@ -4610,7 +4611,7 @@ function majBarreDossier(outil, surAccueilOutil) {
 }
 
 /* Le menu garde l'état complet, mais il faut l'ouvrir. Depuis que la bande
-   « dossier déjà ouvert » a disparu, rien d'autre ne dirait, sur un téléphone,
+   « dossier déjà ouvert » a disparu, rien d'autre ne dirait, sur un téléphone,
    qu'un dossier est là. La barre en garde donc l'essentiel : le prénom, qui
    s'abrège s'il le faut, et le nombre, qui ne s'abrège jamais. */
 function libelleDossierCourt(outil) {
@@ -4692,8 +4693,8 @@ function exporterDossierCourant() {
   if (outilCourant === 'idc') { saveJ(); return; }
   exporterJSON();
 }
-/* Deux menus vivent maintenant dans la barre dossier — « Importer » en large,
-   « Dossier » en étroit — et un seul doit être ouvert à la fois. Le mécanisme
+/* Deux menus vivent maintenant dans la barre dossier — « Importer » en large,
+   « Dossier » en étroit — et un seul doit être ouvert à la fois. Le mécanisme
    est donc générique plutôt que dupliqué. */
 const fermerMenuDehors = {};
 function fermerMenu(idMenu, idBtn) {
@@ -4814,7 +4815,7 @@ function renderCreneauList() {
   if (!list) return;
   const creneaux = state.m1.journeeCreneaux || [];
   if (creneaux.length === 0) {
-    list.innerHTML = '<div style="color:var(--ink-soft);font-size:13px;font-style:italic;padding:4px 0;">Aucun créneau — cliquez sur « Ajouter un créneau ».</div>';
+    list.innerHTML = '<div style="color:var(--ink-soft);font-size:13px;font-style:italic;padding:4px 0;">Aucun créneau — cliquez sur « Ajouter un créneau ».</div>';
     verifierCouvertureHoraire();
     refreshM1Progress();
     return;
@@ -4965,7 +4966,7 @@ function lieuxParJour() {
     const couleur = COULEURS_LIEUX[i % COULEURS_LIEUX.length];
     ((detail[l.cle] || {}).jours || []).forEach(j => {
       // Un jour partagé entre deux lieux garde le premier déclaré, mais le
-      // signale : « Institution + 1 ».
+      // signale : « Institution + 1 ».
       if (parJour[j]) { parJour[j].partage = (parJour[j].partage || 1) + 1; parJour[j].label = parJour[j].base + ' +' + parJour[j].partage; }
       else parJour[j] = {couleur, label: l.label, base: l.label};
     });
@@ -4993,7 +4994,7 @@ function renderGrilleSemaine() {
 
   if (jours.length === 0) {
     thead.innerHTML = '';
-    tbody.innerHTML = '<tr><td colspan="2" style="color:var(--ink-soft);font-style:italic;padding:14px;">Cochez d\'abord des jours d\'accueil dans le Préambule, ou utilisez « Ajouter un jour ».</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="2" style="color:var(--ink-soft);font-style:italic;padding:14px;">Cochez d\'abord des jours d\'accueil dans le Préambule, ou utilisez « Ajouter un jour ».</td></tr>';
     return;
   }
   if (creneaux.length === 0) {
@@ -5201,7 +5202,7 @@ function saveM1(){
   const sr = document.getElementById('m1-soma-recherche'); if (sr) state.m1.somaRecherche = sr.value;
   const sp = document.getElementById('m1-soma-points');    if (sp) state.m1.somaPoints = sp.value;
   const lieuxAvant = lieuxDeclares();
-  // input[value] : la case « Autre lieu… » n'en a pas, elle ouvre une saisie.
+  // input[value] : la case « Autre lieu… » n'en a pas, elle ouvre une saisie.
   state.m1.lieux = Array.from(document.querySelectorAll('#m1-lieux input[value]:checked')).map(i=>i.value);
   const lieuxApres = lieuxDeclares();
   // Les jours/heures globaux ne sont saisis directement qu'en mono-lieu ;
@@ -5378,7 +5379,7 @@ function saveLieuDetail(i) {
   refreshM1Progress();
 }
 
-// La ligne de saisie n'apparaît qu'au clic sur la case « Autre lieu… » : tant
+// La ligne de saisie n'apparaît qu'au clic sur la case « Autre lieu… » : tant
 // qu'on n'en a pas besoin, elle n'encombre pas le formulaire.
 function basculerSaisieLieu(ouvrir) {
   const zone = document.getElementById('m1-lieu-custom-saisie');
@@ -5557,7 +5558,7 @@ const PALIERS_VASE = [
    LES ANCRES DU VASE
    ══════════════════════════════════════════════════════════════════════
    Une ancre, c'est la description observable accrochée à un niveau, pour que
-   deux personnes qui voient la même scène posent le même palier. « Tendu »
+   deux personnes qui voient la même scène posent le même palier. « Tendu »
    n'est pas une ancre : c'est une étiquette.
 
    Deux étages, et c'est ce découpage qui rend la personnalisation possible
@@ -5567,14 +5568,14 @@ const PALIERS_VASE = [
      de la personne — c'est le livrable du module Interpréter.
 
    Trois décisions à connaître :
-   · « Débordé » ne se définit PAS par le comportement-défi. Sinon le vase ne
+   · « Débordé » ne se définit PAS par le comportement-défi. Sinon le vase ne
      ferait que redire la colonne comportement. Le critère porte sur la perte
      de prise et la non-réversibilité, souvent visibles AVANT le CD — et c'est
      ce qui rend le vase utile en prévention.
    · Les paliers hauts décrivent les DEUX sens. Une échelle qui ne décrit que
-     l'escalade cote « tranquille » quelqu'un qui se fige à 80.
-   · Le palier « angoissé » porte sur la capacité de la personne à redescendre
-     seule, et non sur « il faut l'intervention d'un tiers » : ce dernier
+     l'escalade cote « tranquille » quelqu'un qui se fige à 80.
+   · Le palier « angoissé » porte sur la capacité de la personne à redescendre
+     seule, et non sur « il faut l'intervention d'un tiers » : ce dernier
      dépend des habitudes de l'entourage, pas de la personne, et deux
      déclarants qui n'interviennent pas au même moment coteraient
      différemment. */
@@ -5678,7 +5679,7 @@ function aideEchelle() {
     '</div></details>';
 }
 
-// Borne basse incluse : 40 est « tendu », pas « normal ».
+// Borne basse incluse : 40 est « tendu », pas « normal ».
 function palierDe(v) {
   if (v === null || v === undefined || v === '') return null;
   const n = Number(v);
@@ -5712,7 +5713,7 @@ function mesureTension(evt, cle) {
 
 // La montée : contexte, antécédent, pic. Les niveaux d'après intervention en
 // sont exclus à dessein — sinon un évènement bien désamorcé redescend à 20 et
-// ressort « moins grave » qu'un évènement où personne n'est intervenu. La
+// ressort « moins grave » qu'un évènement où personne n'est intervenu. La
 // statistique récompenserait l'intervention au lieu de mesurer la sévérité.
 function niveauxMontee(evt) {
   return POINTS_TENSION.map(p => mesureTension(evt, p.cle))
@@ -5747,7 +5748,7 @@ function pointsTensionEvt(evt) {
     if (v === null && !t.note) return;
     pts.push({
       cle: 'iv' + i,
-      label: 'après « ' + (iv.texte || 'intervention ' + (i + 1)) + ' »',
+      label: 'après « ' + (iv.texte || 'intervention ' + (i + 1)) + ' »',
       v: v, note: t.note || '', intervention: iv
     });
   });
@@ -5829,13 +5830,13 @@ function vaseWidget(id, mesure, question, aide, compact) {
 /* Un clic = un palier. La valeur stockée est le milieu du palier : les
    lectures en aval ne changent pas, et les cotations d'avant restent
    valides puisque les paliers ÉTAIENT déjà des tranches de cette échelle —
-   un 68 affichait « angoissé » et l'affiche toujours. Rien à convertir. */
+   un 68 affichait « angoissé » et l'affiche toujours. Rien à convertir. */
 function vaseChoisir(id, valeur) {
   const el = document.getElementById('vase-val-' + id);
   if (!el) return;
   const actuel = el.value === '' ? null : Number(el.value);
   const palActuel = palierDe(actuel), palVise = palierDe(valeur);
-  // Re-cliquer le palier déjà posé le retire : pas besoin de chercher le bouton « je ne sais pas ».
+  // Re-cliquer le palier déjà posé le retire : pas besoin de chercher le bouton « je ne sais pas ».
   el.value = (palActuel && palVise && palActuel.id === palVise.id) ? '' : valeur;
   majVase(id);
   vaseChange(id);
@@ -5889,7 +5890,7 @@ function majVase(id) {
 }
 
 // Le vase ne devient jamais 0 tout seul : 0 est une cotation, l'absence en est
-// une autre. Ce bouton permet de revenir à « non coté » après un clic malheureux.
+// une autre. Ce bouton permet de revenir à « non coté » après un clic malheureux.
 function vaseEffacer(id) {
   const vEl = document.getElementById('vase-val-' + id);
   if (vEl) vEl.value = '';
@@ -5979,7 +5980,7 @@ const RAPIDE_ETAPES = {
   },
   comportement: {
     question: "Le comportement, en quelques lignes",
-    aide: "Ce qu'une caméra aurait enregistré : les gestes, les sons, dans quel ordre, pendant combien de temps. Pas « il a fait sa crise » — ce qu'on aurait vu.",
+    aide: "Ce qu'une caméra aurait enregistré : les gestes, les sons, dans quel ordre, pendant combien de temps. Pas « il a fait sa crise » — ce qu'on aurait vu.",
     exemple: "A crié très fort pendant une trentaine de secondes, puis a retourné une chaise, puis a tapé le mur avec la main ouverte. Environ cinq minutes en tout.",
     placeholder: "Les gestes, les sons, l'ordre, la durée..."
   },
@@ -5991,7 +5992,7 @@ const RAPIDE_ETAPES = {
   },
   intervention: {
     question: "Ce que vous avez fait, en quelques lignes",
-    aide: "Votre réponse et ce qu'elle a donné. « On n'a rien fait » est une réponse : les moments où ça s'arrête sans intervention sont des données précieuses.",
+    aide: "Votre réponse et ce qu'elle a donné. « On n'a rien fait » est une réponse : les moments où ça s'arrête sans intervention sont des données précieuses.",
     exemple: "J'ai proposé un préavis de cinq minutes, puis je me suis mise en retrait. La tension est redescendue au bout de cinq minutes environ.",
     placeholder: "Ce que vous avez fait, et avec quel effet..."
   },
@@ -6003,7 +6004,7 @@ const RAPIDE_ETAPES = {
   }
 };
 
-// Une étape est « détaillée » quand ses champs propres portent quelque chose.
+// Une étape est « détaillée » quand ses champs propres portent quelque chose.
 // C'est la donnée qui fait foi, pas un drapeau d'interface.
 function etapeDetailRemplie(d, id) {
   const rempli = (x) => !!(x && String(x).trim());
@@ -6112,7 +6113,7 @@ const ETAPES = [
               `<label><input type="radio" name="ftemoin" value="${v}" ${d.temoin===v?'checked data-coche="1"':''} onclick="basculerRadio(this)"> ${v}</label>`
             ).join('')}
           </div>
-          <div class="help">« Rapporté » : un collègue, un proche vous l'a raconté. « Constaté après coup » : vous n'avez pas vu la scène, mais vous en avez vu les traces (chambre, personne encore en tension...).</div>
+          <div class="help">« Rapporté » : un collègue, un proche vous l'a raconté. « Constaté après coup » : vous n'avez pas vu la scène, mais vous en avez vu les traces (chambre, personne encore en tension...).</div>
         </div>
         <div class="field">
           <label>Votre rôle auprès de la personne</label>
@@ -6231,7 +6232,7 @@ const ETAPES = [
             ).join('')}
           </div>
         </div>
-        ${d.intensite ? `<div class="vase-ancienne">Cet évènement porte une <b>intensité déclarée avec l'ancienne échelle</b> : « ${esc(d.intensite)} ». Cette échelle a été remplacée par le vase de tension — merci de coter le vase ci-dessous. L'ancienne valeur est conservée telle quelle : elle n'est pas convertie, personne n'a jamais dit « 70 ».</div>` : ''}
+        ${d.intensite ? `<div class="vase-ancienne">Cet évènement porte une <b>intensité déclarée avec l'ancienne échelle</b> : « ${esc(d.intensite)} ». Cette échelle a été remplacée par le vase de tension — merci de coter le vase ci-dessous. L'ancienne valeur est conservée telle quelle : elle n'est pas convertie, personne n'a jamais dit « 70 ».</div>` : ''}
         ${vaseWidget('pic', mesureTension(d, 'pic'),
           'Où en était le vase au plus fort du comportement ?',
           "Votre impression, pas une mesure d'appareil : vous dites ce que vous avez perçu.")}
@@ -6469,7 +6470,7 @@ function renderAntecedentBlock(a, i, total) {
     <div class="card" style="margin-bottom:12px;background:var(--paper);" id="ant-block-${i}">
       <div class="field" style="margin-bottom:10px;">
         <label for="f-ant-texte-${i}">${i === 0 ? 'Antécédent' : 'Antécédent suivant (n°' + (i+1) + ')'}</label>
-        <input type="text" id="f-ant-texte-${i}" placeholder="ex : on lui a demandé de ranger ses affaires. Ou : l'éducatrice a prononcé le mot « piscine »." value="${esc(a.texte||'')}">
+        <input type="text" id="f-ant-texte-${i}" placeholder="ex : on lui a demandé de ranger ses affaires. Ou : l'éducatrice a prononcé le mot « piscine »." value="${esc(a.texte||'')}">
       </div>
       <label style="display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--ink-soft);cursor:pointer;">
         <input type="checkbox" id="f-ant-decl-${i}" ${a.declencheurPresume?'checked':''}> Je pense que c'est ça qui a déclenché
@@ -6554,7 +6555,7 @@ function renderInterventionBlock(iv, i, total) {
     </div>`;
 }
 
-/* Le champ « effet » dit une direction (ça monte, ça descend), le vase dit un
+/* Le champ « effet » dit une direction (ça monte, ça descend), le vase dit un
    niveau. Les deux peuvent se contredire. On ne tranche pas à la place du
    déclarant : on le signale, comme pour l'heure et le moment de la journée. */
 function niveauAvantIntervention(i) {
@@ -6582,11 +6583,11 @@ function verifierCoherenceTension(i) {
   const delta = apres - avant;
   let souci = '';
   if ((effet === 'Diminution de la tension' || effet === 'Disparition de la tension') && delta >= 0) {
-    souci = 'vous indiquez « ' + effet.toLowerCase() + ' », mais le niveau passe de ' + avant + ' à ' + apres;
+    souci = 'vous indiquez « ' + effet.toLowerCase() + ' », mais le niveau passe de ' + avant + ' à ' + apres;
   } else if (effet === 'Augmentation de la tension' && delta <= 0) {
     souci = 'vous indiquez une augmentation de la tension, mais le niveau passe de ' + avant + ' à ' + apres;
   } else if (effet === 'Aucun effet visible' && Math.abs(delta) > 15) {
-    souci = 'vous indiquez « aucun effet visible », mais le niveau passe de ' + avant + ' à ' + apres;
+    souci = 'vous indiquez « aucun effet visible », mais le niveau passe de ' + avant + ' à ' + apres;
   }
   if (!souci) { box.style.display = 'none'; return; }
   box.style.display = '';
@@ -6679,7 +6680,7 @@ function momentDeLHeure(heure) {
   for (const c of creneaux) {
     const d = enMinutes(c.debut), f = enMinutes(c.fin);
     if (d === null || f === null) continue;
-    // Un créneau de nuit enjambe minuit : la fin est « avant » le début.
+    // Un créneau de nuit enjambe minuit : la fin est « avant » le début.
     const dedans = (d <= f) ? (h >= d && h <= f) : (h >= d || h <= f);
     if (dedans) return c.nom;
   }
@@ -6705,7 +6706,7 @@ function verifierCoherenceHeureMoment() {
   const dedans = (d <= f) ? (h >= d && h <= f) : (h >= d || h <= f);
   if (dedans) { box.style.display = 'none'; return; }
   box.style.display = '';
-  box.innerHTML = `⚠ Vous avez indiqué <b>${esc(heure.replace(':','h'))}</b>, mais le moment « ${esc(moment)} » correspond à <b>${esc(creneau.debut)}–${esc(creneau.fin)}</b> dans la journée type. Ce n'est pas bloquant — si l'évènement a bien eu lieu hors du créneau habituel, laissez tel quel.`;
+  box.innerHTML = `⚠ Vous avez indiqué <b>${esc(heure.replace(':','h'))}</b>, mais le moment « ${esc(moment)} » correspond à <b>${esc(creneau.debut)}–${esc(creneau.fin)}</b> dans la journée type. Ce n'est pas bloquant — si l'évènement a bien eu lieu hors du créneau habituel, laissez tel quel.`;
 }
 
 function checkVals(name) {
@@ -6959,7 +6960,7 @@ function refreshM2List(){
         const evt = (b.editId !== null && b.editId !== undefined)
           ? evts.find(e => e.id === b.editId) : null;
         const quoi = evt
-          ? 'Modifications sur « ' + esc((evt.comportement || 'évènement sans description').substring(0,40)) + ' »'
+          ? 'Modifications sur « ' + esc((evt.comportement || 'évènement sans description').substring(0,40)) + ' »'
           : 'Nouvel évènement' + (b.draft && b.draft.date ? ' du ' + esc(formatDate(b.draft.date)) : '');
         const etape = (b.etape || 0) + 1;
         return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;">
@@ -7041,7 +7042,7 @@ function refreshM2List(){
 /* Détaillé dès qu'une seule case du mode détaillé est remplie ; rapide sinon
    (règle d'Arthur, 14/09/2026). */
 /* Un bouton radio ne se décoche pas : recliquer celui qui est coché le retire
-   (Émilie, 01/10/2026 — on doit pouvoir revenir à « non précisé »). */
+   (Émilie, 01/10/2026 — on doit pouvoir revenir à « non précisé »). */
 function basculerRadio(r) {
   if (r.dataset.coche === '1') { r.checked = false; r.dataset.coche = ''; return; }
   document.querySelectorAll('input[name="' + r.name + '"]').forEach(x => { x.dataset.coche = ''; });
@@ -7082,7 +7083,7 @@ function libelleSemaine(d) {
 }
 
 /* ── Mise à jour des stats en synthèse ─────────────────────── */
-/* Un nom de créneau maison peut être long (« Transition / rangement du matin »).
+/* Un nom de créneau maison peut être long (« Transition / rangement du matin »).
    L'ancienne version forçait le texte sur une seule ligne et réduisait la police
    jusqu'à 10 px : en dessous d'une certaine largeur elle atteignait ce plancher
    et le texte débordait quand même — et comme l'ajustement se faisait dans un
@@ -8990,10 +8991,10 @@ const _CONTROLES = [
   }},
 
   {nom:'Prendre A reprend son codage sous les mêmes noms, sans doublon', test: () => {
-    /* La synthèse a déjà « taper » et « Autre » ; A a rangé l'élément dans
-       « Taper » et dans sa sous-catégorie « Contre un pair ». Prendre A deux
-       fois : « taper » est réutilisée, la sous-catégorie créée une seule fois,
-       « Autre » perd l'élément. */
+    /* La synthèse a déjà « taper » et « Autre » ; A a rangé l'élément dans
+       « Taper » et dans sa sous-catégorie « Contre un pair ». Prendre A deux
+       fois : « taper » est réutilisée, la sous-catégorie créée une seule fois,
+       « Autre » perd l'élément. */
     ensureM3();
     const avantComp = state.comparaison;
     const avantCats = JSON.parse(JSON.stringify(state.m3.categories));
@@ -9007,12 +9008,12 @@ const _CONTROLES = [
       ' · ' + Object.keys(cats).length + ' catégories';
     state.m3.categories = avantCats;
     if (avantComp === undefined) delete state.comparaison; else state.comparaison = avantComp;
-    return _bancEgal('Synthèse de l\'élément après deux « Prendre A »', 'taper + taper › Contre un pair · 3 catégories', obtenu);
+    return _bancEgal('Synthèse de l\'élément après deux « Prendre A »', 'taper + taper › Contre un pair · 3 catégories', obtenu);
   }},
 
   {nom:'Statistiques de gradation : chaque effet reste attaché à son intervention', test: () => {
     /* Une intervention sans texte ne devient pas un élément : les suivantes
-       remontent d'un rang. Si le calcul l'oubliait, « Calmer » hériterait de
+       remontent d'un rang. Si le calcul l'oubliait, « Calmer » hériterait de
        l'augmentation de l'intervention d'avant. */
     const evts = [
       {id: 't1', comportement: 'A refusé', tension: {pic: {v: 50}}, interventions: [
@@ -9096,9 +9097,9 @@ const _CONTROLES = [
   }},
 
   {nom:'Le contexte se lit en trois façons, sur des effectifs suffisants', test: () => {
-    /* Dix évènements, tous après « Consigne ». « Nuit courte » est noté sur les
-       cinq premiers : « Refus » y apparaît 4 fois sur 5 (1 sur 5 sans), et le
-       vase monte à « angoissé » 4 fois sur 5 (1 sur 5 sans). */
+    /* Dix évènements, tous après « Consigne ». « Nuit courte » est noté sur les
+       cinq premiers : « Refus » y apparaît 4 fois sur 5 (1 sur 5 sans), et le
+       vase monte à « angoissé » 4 fois sur 5 (1 sur 5 sans). */
     const evts = [], items = (ids) => ids.map(i => 'et' + i + '_0');
     for (let i = 1; i <= 10; i++) {
       const avecContexte = i <= 5, haut = (i <= 4) || i === 6;
@@ -9146,7 +9147,7 @@ const _CONTROLES = [
       '<w:body xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">' + corps + '</w:body>', 'application/xml')
       .getElementsByTagName('parsererror').length;
     const texte = corps.replace(/<[^>]+>/g, '').replace(/&apos;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&');
-    return _bancEgal('XML bien formé, analyse écrite, ICAF facultatif, plus de « quatre étapes »', 'true,true,true,true',
+    return _bancEgal('XML bien formé, analyse écrite, ICAF facultatif, plus de « quatre étapes »', 'true,true,true,true',
       [bienForme, texte.includes("écrivent l'analyse fonctionnelle"), texte.includes('outil 2, facultatif'), !texte.includes("c'est quatre étapes")].join(','));
   }},
 
@@ -9195,7 +9196,7 @@ const _CONTROLES = [
       Object.assign(window, {alert: vrais.alert, confirm: vrais.confirm, prompt: vrais.prompt});
       persist = vrais.persist; route = vrais.route; showToast = vrais.showToast;
     }
-    return _bancEgal('Évènements, alerte, pas de faux « remplacé », provenance demandée', '3|true|false|3', obtenu);
+    return _bancEgal('Évènements, alerte, pas de faux « remplacé », provenance demandée', '3|true|false|3', obtenu);
   }},
 
   {nom:'Les déclarants se comptent sans casse ni accents', test: () => {
@@ -9229,7 +9230,13 @@ const _CONTROLES = [
       state.m1 = sauve;
       persist = vrais.persist; renderGrilleSemaine = vrais.render; renderCreneauList = vrais.crList;
     }
-    return _bancEgal('Atelier toujours « Piscine », fin propre au lundi, début hérité', 'Piscine|12h00|true', obtenu);
+    return _bancEgal('Atelier toujours « Piscine », fin propre au lundi, début hérité', 'Piscine|12h00|true', obtenu);
+  }},
+
+  {nom:'Les guillemets ne se séparent jamais de leur mot', test: () => {
+    const html = document.documentElement.innerHTML;
+    return _bancEgal('Guillemets suivis ou précédés d\'une espace sécable', 0,
+      (html.match(/\u00ab /g) || []).length + (html.match(/ \u00bb/g) || []).length);
   }},
 
   {nom:'Chaque volet a sa couleur, distincte des autres', test: () => {
@@ -9287,14 +9294,14 @@ const _CONTROLES = [
   {nom:'Chaque item du barème sait si un RDAF peut l alimenter', test: () => {
     /* La carte du périmètre est une liste tenue à la main. Un item ajouté au
        barème sans entrée correspondante passerait en silence, et la phrase
-       « X items sur Y » deviendrait fausse. */
+       « X items sur Y » deviendrait fausse. */
     const par = perimetreCotation(initDims());
     return _bancEgal('Items du barème sans périmètre déclaré', '', par.inconnu.map(x => x.code).join(','));
   }},
 
   {nom:'Le pourcentage de corrélation est bien un taux conditionnel', test: () => {
-    /* Le chiffre affiché annonce « quand cet antécédent est là, cette
-       conséquence apparaît dans X % des cas ». Il divisait par le nombre TOTAL
+    /* Le chiffre affiché annonce « quand cet antécédent est là, cette
+       conséquence apparaît dans X % des cas ». Il divisait par le nombre TOTAL
        d'évènements, donc il sous-estimait systématiquement — d'autant plus que
        la catégorisation était partielle. Recalcul naïf, à la main, sur les
        évènements eux-mêmes. */
@@ -9485,7 +9492,7 @@ const _CONTROLES = [
   {nom:'Les cotations d\'avant gardent leur palier', test: () => {
     /* Contrairement à l'intensité 1-5, il n'y a rien à convertir : les paliers
        ÉTAIENT déjà des tranches de l'échelle 0-100. Un 68 affichait
-       « angoissé » et doit continuer de l'afficher. */
+       « angoissé » et doit continuer de l'afficher. */
     const cas = [[0,'tranquille'],[19,'tranquille'],[20,'normal'],[40,'tendu'],[52,'tendu'],[68,'angoisse'],[80,'deborde'],[100,'deborde']];
     const faux = cas.filter(([v, attendu]) => { const p = palierDe(v); return !p || p.id !== attendu; })
                     .map(([v]) => v);
@@ -9520,7 +9527,7 @@ const _CONTROLES = [
   }},
 
   {nom:'Une période observée n\'est pas un évènement', test: () => {
-    /* Si un « RAS » était enregistré comme un évènement avec une case cochée,
+    /* Si un « RAS » était enregistré comme un évènement avec une case cochée,
        il faudrait l'exclure d'une cinquantaine de comptages — et le jour où on
        en oublie un, l'outil affiche une statistique fausse sans rien dire. */
     const sauve = JSON.parse(JSON.stringify(state.m2.couverture || []));
@@ -9783,7 +9790,7 @@ const _CONTROLES = [
 
   {nom:'Chaque vue a une adresse lisible', test: () => {
     /* Une vue sans adresse se route encore, mais son lien ne se partage pas
-       et le bouton « précédent » la rate. Oubli facile en ajoutant une page. */
+       et le bouton « précédent » la rate. Oubli facile en ajoutant une page. */
     const vues = Array.from(document.querySelectorAll('section.view'))
       .map(s => s.id.replace(/^view-/, ''));
     const adressees = Object.keys(ADRESSES_VUES);
@@ -9941,8 +9948,8 @@ const _CONTROLES = [
     /* Recalcul indépendant : on relit les trois points de la montée à la main,
        sans passer par niveauxMontee(). Ce n'est plus une MOYENNE : une moyenne
        d'appréciations ordinales suppose des intervalles égaux, que rien
-       n'établit — rien ne garantit que l'écart entre « normal » et « tendu »
-       vaille celui entre « angoissé » et « débordé ». La médiane des pics est
+       n'établit — rien ne garantit que l'écart entre « normal » et « tendu »
+       vaille celui entre « angoissé » et « débordé ». La médiane des pics est
        définie sur une échelle ordinale, elle. */
     const pics = [];
     evts.forEach(e => {
@@ -10240,12 +10247,12 @@ const CATEGORIES_SUGGEREES = {
             "Frustration d'un accès", 'Approche ou contact physique']
   },
   consequences: {
-    aide: "Les quatre fonctions classiquement décrites en analyse fonctionnelle, d'après Iwata et ses collègues (1982). Un même comportement peut en servir plusieurs à la fois, et dans le même contexte — n'hésitez pas à en assigner deux. Attention à « Obtient de l'attention » : l'analyse descriptive la sur-identifie, parce que l'attention suit à peu près tout ce que fait une personne en difficulté.",
+    aide: "Les quatre fonctions classiquement décrites en analyse fonctionnelle, d'après Iwata et ses collègues (1982). Un même comportement peut en servir plusieurs à la fois, et dans le même contexte — n'hésitez pas à en assigner deux. Attention à « Obtient de l'attention » : l'analyse descriptive la sur-identifie, parce que l'attention suit à peu près tout ce que fait une personne en difficulté.",
     liste: ["Obtient de l'attention", 'Échappe ou évite', 'Obtient un objet ou une activité',
             'Auto-stimulation sensorielle']
   },
   interventions: {
-    aide: "Les réponses de l'entourage les plus fréquentes. Y compris « ne rien faire », qui est une intervention et qui se lit dans les données.",
+    aide: "Les réponses de l'entourage les plus fréquentes. Y compris « ne rien faire », qui est une intervention et qui se lit dans les données.",
     liste: ['Verbalisation', 'Rappel du cadre', 'Retrait proposé', 'Contenance physique',
             'Relais de professionnel', 'Ne rien faire', 'Retrait de la demande']
   }
@@ -10319,7 +10326,7 @@ const M3_SOUS = [
   },
   {
     /* Le contexte a son propre volet. Il se catégorise autrement que
-       l'antécédent : « nuit courte » et « on lui a demandé de ranger » ne se
+       l'antécédent : « nuit courte » et « on lui a demandé de ranger » ne se
        situent pas du tout au même endroit dans le temps, et les regrouper
        forçait à inventer des catégories qui recouvraient les deux. */
     id: 'contexte',
@@ -10336,7 +10343,7 @@ const M3_SOUS = [
   {
     id: 'antecedents',
     label: 'Antécédents', icon: '⏮', couleur: 'antecedent',
-    help: 'Ce qui s\'est passé juste avant le comportement, dans les secondes ou les minutes. Le badge « présumé déclencheur » signale ce que le déclarant a coché — c\'est son avis, vous restez libre d\'en juger autrement. Un CD apparu après une intervention (badge « post-intervention ») est aussi affiché ici : il devient l\'antécédent de la suite de la crise. Le contexte, lui, a désormais son propre volet.',
+    help: 'Ce qui s\'est passé juste avant le comportement, dans les secondes ou les minutes. Le badge « présumé déclencheur » signale ce que le déclarant a coché — c\'est son avis, vous restez libre d\'en juger autrement. Un CD apparu après une intervention (badge « post-intervention ») est aussi affiché ici : il devient l\'antécédent de la suite de la crise. Le contexte, lui, a désormais son propre volet.',
     placeholder: 'ex : Transition, Fin d\'activité appréciée, Consigne, Attente…',
     extract: (evt) => {
       const parts = [];
@@ -10352,7 +10359,7 @@ const M3_SOUS = [
   {
     id: 'consequences',
     label: 'Conséquences', icon: '⏭', couleur: 'consequence',
-    help: 'Ce que la personne a obtenu ou évité suite au comportement. C\'est souvent là que la fonction du comportement se lit. Un CD apparu après une intervention (badge « post-intervention ») est aussi affiché ici : il est la conséquence directe de cette intervention.',
+    help: 'Ce que la personne a obtenu ou évité suite au comportement. C\'est souvent là que la fonction du comportement se lit. Un CD apparu après une intervention (badge « post-intervention ») est aussi affiché ici : il est la conséquence directe de cette intervention.',
     placeholder: 'ex : Obtient attention, Évite consigne, Accès à un objet, Sortie de la situation…',
     extract: (evt) => {
       const parts = [];
@@ -10392,7 +10399,7 @@ function catColorFor(idx) {
 
 // Initialiser m3.categories si besoin
 /* Séparer le contexte de l'antécédent décale les indices : l'ancien volet
-   « antécédents » commençait par le contexte quand il y en avait un. Sans
+   « antécédents » commençait par le contexte quand il y en avait un. Sans
    remappage, chaque catégorisation existante glisserait d'un cran et
    désignerait l'élément voisin. On déplace donc l'item de contexte vers le
    nouveau volet, dans une catégorie de même nom, et on recule les autres. */
@@ -10437,7 +10444,7 @@ function migrerSeparationContexte() {
   Object.keys(versContexte).forEach(catId => {
     cats.contexte[catId] = versContexte[catId];
     // Une sous-catégorie déplacée sans sa parente rendrait son chemin illisible :
-    // on recrée la parente, vide, pour que « Parent › Enfant » reste vrai.
+    // on recrée la parente, vide, pour que « Parent › Enfant » reste vrai.
     const p = versContexte[catId].parent;
     if (p && !cats.contexte[p] && cats.antecedents[p]) {
       cats.contexte[p] = {nom: cats.antecedents[p].nom, color: cats.antecedents[p].color, items: []};
@@ -10691,7 +10698,7 @@ function renderM3Sous(sousId) {
 }
 
 /* ── Sous-catégories : un seul niveau ────────────────────────────────
-   « Taper » peut se décliner en « contre un pro » et « contre un pair ».
+   « Taper » peut se décliner en « contre un pro » et « contre un pair ».
    La distinction sert à l'analyse (histogrammes, patterns, exploration), donc
    une sous-catégorie est une catégorie à part entière, simplement rattachée à
    une autre. On s'arrête à un niveau : au-delà, la lecture des graphiques
@@ -10816,7 +10823,7 @@ function fermerPopup() {
   popupItemId = null;
 }
 
-// ── Fenêtre « détail » ─────────────────────────────────────────────────────
+// ── Fenêtre « détail » ─────────────────────────────────────────────────────
 // Rappel de l'évènement entier pendant qu'on catégorise. Rien n'y est
 // modifiable : c'est une relecture, pas une deuxième saisie — on ne retouche
 // jamais le déclaratif. Le volet en cours de catégorisation est surligné pour
@@ -11056,7 +11063,7 @@ function ensureM4() {
   if (!Array.isArray(state.m4.vase.descend)) state.m4.vase.descend = [];
   // Migration idempotente : un tag était une chaîne, il devient un objet
   // porteur de sa source. Les tags déjà saisis n'ont pas de source — on ne
-  // devine pas à leur place, ils sont proposés « à situer ».
+  // devine pas à leur place, ils sont proposés « à situer ».
   ['monte','descend'].forEach(k => {
     state.m4.vase[k] = state.m4.vase[k].map(t =>
       (typeof t === 'string') ? {texte: t, source: ''} : t
@@ -11111,7 +11118,7 @@ function statsCategories() {
   return {nA, nB, nC, nAB, nBC, nABC, categorises, evtA, evtB, evtC, total: evts.length};
 }
 
-/* Un taux brut ne dit rien tout seul : « 50 % » n'a de sens que comparé à ce
+/* Un taux brut ne dit rien tout seul : « 50 % » n'a de sens que comparé à ce
    que fait cette catégorie d'ordinaire. On ne signale donc un lien que s'il
    est nettement plus fréquent après tel antécédent qu'en moyenne, et on donne
    toujours les deux chiffres pour que la comparaison soit vérifiable. */
@@ -11194,7 +11201,7 @@ function suggestionsPatterns() {
    compte donc pas comme un antécédent de plus. Trois lectures :
    1. contexte → comportement, à côté du taux d'ensemble ;
    2. contexte → hauteur du vase : la part des évènements qui montent au moins
-      à « angoissé », avec ce contexte et sans lui ;
+      à « angoissé », avec ce contexte et sans lui ;
    3. le contexte qui change l'effet d'un antécédent : après le même antécédent,
       la part d'un comportement avec ce contexte et sans lui.
    Mêmes seuils que les suggestions de patterns : au moins trois fois, et au
@@ -11221,7 +11228,7 @@ function statsContexte(evts, categories) {
     X.forEach(x => { plus(st.nX, x); B.forEach(b => plus(st.nXB, x + SEP + b)); });
     const pal = palierDe(tensionPicEvt(evt));
     if (pal) {
-      const haut = pal.min >= 60;   // « angoissé » ou « débordé »
+      const haut = pal.min >= 60;   // « angoissé » ou « débordé »
       st.nCotes++;
       if (haut) st.nHaut++;
       X.forEach(x => { const v = st.vase[x] || (st.vase[x] = {n: 0, haut: 0}); v.n++; if (haut) v.haut++; });
@@ -11275,7 +11282,7 @@ function phrasesContexte() {
     '</b> apparaît ' + ch(l.n + ' fois') + ', soit ' + ch(pct(l.avec) + ' %') + ' — contre ' + ch(pct(l.base) + ' %') +
     ' en moyenne sur l\'ensemble des évènements.' + reserveEffectif(l.nX)));
   lec.vase.slice(0, 2).forEach(v => out.push(
-    'Avec le contexte <b>' + esc(v.x) + '</b>, le vase monte au moins jusqu\'à « angoissé » dans ' + ch(v.haut + ' évènements sur ' + v.n) +
+    'Avec le contexte <b>' + esc(v.x) + '</b>, le vase monte au moins jusqu\'à « angoissé » dans ' + ch(v.haut + ' évènements sur ' + v.n) +
     ' (' + ch(pct(v.avec) + ' %') + ') ; sans ce contexte, ' + ch(v.hautSans + ' sur ' + v.nSans) + ' (' + ch(pct(v.sans) + ' %') + ').' +
     reserveEffectif(Math.min(v.n, v.nSans))));
   lec.modulations.slice(0, 2).forEach(m => out.push(
@@ -11480,7 +11487,7 @@ function renderExploration() {
   const clesChoisies = choisis.map(t => t.cle);
 
   if (!sousEns.length) {
-    const detail = etapes.map(e => '« ' + esc(e.libelle) + ' » : ' + e.seul + ' seul, ' + e.cumul + ' en cumul').join(' · ');
+    const detail = etapes.map(e => '« ' + esc(e.libelle) + ' » : ' + e.seul + ' seul, ' + e.cumul + ' en cumul').join(' · ');
     el.innerHTML = `<div class="card"><div style="font-style:italic;color:var(--ink-soft);">Aucun évènement ne réunit ces critères.</div><div class="explorer-entonnoir" style="margin-top:10px;">${detail}</div></div>`;
     return;
   }
@@ -11497,7 +11504,7 @@ function renderExploration() {
 
   // Fiche rédigée : des décomptes mis en phrases, jamais une conclusion.
   const phrases = [];
-  phrases.push(`<b>${sousEns.length}</b> évènement${sousEns.length>1?'s':''} sur ${tous.length} (${pct}%) ${sousEns.length>1?'réunissent':'réunit'} ${choisis.length>1?'ces critères':'ce critère'} : « ${esc(libelle)} ».`);
+  phrases.push(`<b>${sousEns.length}</b> évènement${sousEns.length>1?'s':''} sur ${tous.length} (${pct}%) ${sousEns.length>1?'réunissent':'réunit'} ${choisis.length>1?'ces critères':'ce critère'} : « ${esc(libelle)} ».`);
   if (sousEns.length < 5) phrases.push('<i>Sur un effectif aussi faible, ce qui suit se lit comme une série de cas, pas comme une tendance.</i>');
   if (jourTop) phrases.push(`Le jour le plus représenté est <b>${esc(jourTop[0])}</b> (${jourTop[1]} fois).`);
   if (momentTop) phrases.push(`Le moment le plus représenté est <b>${esc(momentTop[0])}</b> (${momentTop[1]} fois).`);
@@ -11508,8 +11515,8 @@ function renderExploration() {
 
   el.innerHTML = `
     <div class="card">
-      <h4 style="font-size:15px;margin-bottom:10px;">Autour de « ${esc(libelle)} »</h4>
-      ${choisis.length > 1 ? `<div class="explorer-entonnoir">Entonnoir : ${etapes.map((e,i) => (i ? ' puis ' : '') + '« <b>' + esc(e.libelle) + '</b> » → ' + e.cumul).join('')} évènement${sousEns.length>1?'s':''} au bout.</div>` : ''}
+      <h4 style="font-size:15px;margin-bottom:10px;">Autour de « ${esc(libelle)} »</h4>
+      ${choisis.length > 1 ? `<div class="explorer-entonnoir">Entonnoir : ${etapes.map((e,i) => (i ? ' puis ' : '') + '« <b>' + esc(e.libelle) + '</b> » → ' + e.cumul).join('')} évènement${sousEns.length>1?'s':''} au bout.</div>` : ''}
       <div class="explorer-fiche">${phrases.map(p=>`<p>${p}</p>`).join('')}</div>
       <div class="explorer-avert">Ce sont des décomptes sur vos catégorisations, pas des liens de cause à effet.</div>
     </div>
@@ -11892,7 +11899,7 @@ function svgPaliersComportements(lignes) {
 }
 
 /* Les trois lectures de la montée, une partie chacune : dans Interpréter sous
-   la gradation, et dans la synthèse sous « Ce que les chiffres montrent ». */
+   la gradation, et dans la synthèse sous « Ce que les chiffres montrent ». */
 function partiesStatsGradation() {
   ensureM3();
   const st = statsGradation(state.m2.evenements || [], state.m3.categories);
@@ -12745,7 +12752,7 @@ function buildScatterplot(evts) {
   el.innerHTML = `
     <div style="display:flex;justify-content:flex-end;">${choixMode}</div>
     ${noteSource('scatterplot')}${noteSource('kahng')}
-    <div class="scatter-sub">Fond de la case = nombre d'évènements · rond = <b>palier le plus haut atteint</b> · survolez pour le détail.<br>Le maximum, et non une moyenne : sur une échelle à paliers nommés, rien ne garantit que l'écart entre « normal » et « tendu » vaille celui entre « angoissé » et « débordé ». Une moyenne supposerait des intervalles égaux, un maximum non. Les niveaux d'après intervention sont exclus, sinon un évènement bien désamorcé passerait pour calme. C'est une hétéro-évaluation déclarative, pas une mesure.</div>
+    <div class="scatter-sub">Fond de la case = nombre d'évènements · rond = <b>palier le plus haut atteint</b> · survolez pour le détail.<br>Le maximum, et non une moyenne : sur une échelle à paliers nommés, rien ne garantit que l'écart entre « normal » et « tendu » vaille celui entre « angoissé » et « débordé ». Une moyenne supposerait des intervalles égaux, un maximum non. Les niveaux d'après intervention sont exclus, sinon un évènement bien désamorcé passerait pour calme. C'est une hétéro-évaluation déclarative, pas une mesure.</div>
     <div class="scatter-svg-outer">${svg}</div>
     <div class="scatter-legend">${legend}</div>`;
   equiperGraphiques(el);
@@ -12917,7 +12924,7 @@ function repartitionHeures(evts) {
    à embarquer un compresseur.
 
    Pourquoi pas un .doc HTML, plus court à produire ? Parce que Word affiche
-   alors « le format du fichier ne correspond pas à l'extension », ce qui est
+   alors « le format du fichier ne correspond pas à l'extension », ce qui est
    alarmant pour une famille. Un vrai .docx s'ouvre sans un mot. */
 
 const _TABLE_CRC = (() => {
@@ -12936,7 +12943,7 @@ function crc32(octets) {
   return (c ^ 0xFFFFFFFF) >>> 0;
 }
 
-// Archive ZIP « stored » : en-tête local, données, répertoire central, fin.
+// Archive ZIP « stored » : en-tête local, données, répertoire central, fin.
 function zipStocke(fichiers) {
   const enc = new TextEncoder();
   const d = new Date();
@@ -13172,7 +13179,7 @@ function corpsGrilleABC() {
     enTete('Contexte', 'Ce qui s\'était passé avant, de loin : la nuit, le week-end, un changement, une douleur, un remplacement.', DOCX_C.contexte, DOCX_C.contexteTexte),
     enTete('Antécédent', 'Ce qui s\'est passé juste avant, et dans quel état il ou elle était.', DOCX_C.antecedent, DOCX_C.antecedentTexte),
     enTete('Comportement', 'Ce qu\'une caméra aurait filmé : les gestes, les sons, l\'ordre, la durée.', DOCX_C.comportement, DOCX_C.comportementTexte),
-    enTete('Intervention · effet', 'Ce que vous avez fait, et ce que ça a donné. « On n\'a rien fait » est une réponse.', DOCX_C.intervention, DOCX_C.interventionTexte),
+    enTete('Intervention · effet', 'Ce que vous avez fait, et ce que ça a donné. « On n\'a rien fait » est une réponse.', DOCX_C.intervention, DOCX_C.interventionTexte),
     enTete('Conséquence pour la personne', 'Ce qu\'elle a obtenu, ce qu\'elle a évité. Pas ce que vous avez fait.', DOCX_C.consequence, DOCX_C.consequenceTexte),
     enTete('Vase', 'De 0 à 100.', DOCX_C.papierFonce, DOCX_C.ink),
     enTete('Entourage · commentaire', 'Ce que ça a produit chez les autres. Ce qui ne rentrait nulle part.', DOCX_C.papierFonce, DOCX_C.ink)
@@ -13205,7 +13212,7 @@ function corpsGrilleABC() {
 
     docxP([
       {t: 'Avant de commencer. ', gras: true},
-      {t: 'Écrivez ce qu\'une caméra aurait enregistré : les gestes, les sons, dans quel ordre, pendant combien de temps. Pas « il a fait sa crise », pas « elle était énervée » — ce qu\'on aurait vu. Le guide de remplissage donne un exemple pour chaque colonne.'}
+      {t: 'Écrivez ce qu\'une caméra aurait enregistré : les gestes, les sons, dans quel ordre, pendant combien de temps. Pas « il a fait sa crise », pas « elle était énervée » — ce qu\'on aurait vu. Le guide de remplissage donne un exemple pour chaque colonne.'}
     ], {apres: 60}) +
 
     docxP([
@@ -13339,13 +13346,13 @@ function corpsGuide() {
     docxP('Vous n\'avez rien à conclure. Décrire suffit, et c\'est déjà beaucoup.') +
 
     docxTitre(2, 'La règle de la caméra') +
-    docxP('Imaginez qu\'une caméra filmait la scène. Qu\'aurait-elle enregistré exactement ? Pas « il a fait sa crise habituelle », pas « elle a été difficile » — mais quels gestes, quels sons, dans quel ordre, pendant combien de temps.') +
-    docxP('C\'est la règle la plus utile de toutes, et la plus difficile à tenir. Elle a une raison précise : deux personnes qui écrivent « il était agressif » ne parlent pas forcément de la même chose, alors que deux personnes qui écrivent « il a donné un coup de pied dans la chaise » parlent bien du même fait.') +
+    docxP('Imaginez qu\'une caméra filmait la scène. Qu\'aurait-elle enregistré exactement ? Pas « il a fait sa crise habituelle », pas « elle a été difficile » — mais quels gestes, quels sons, dans quel ordre, pendant combien de temps.') +
+    docxP('C\'est la règle la plus utile de toutes, et la plus difficile à tenir. Elle a une raison précise : deux personnes qui écrivent « il était agressif » ne parlent pas forcément de la même chose, alors que deux personnes qui écrivent « il a donné un coup de pied dans la chaise » parlent bien du même fait.') +
     exemple('A crié très fort pendant une trentaine de secondes, puis a retourné une chaise, puis a tapé le mur avec la main ouverte.',
             'Il a fait une grosse crise, il était très agressif.') +
 
     docxTitre(2, 'Observer n\'est pas interpréter') +
-    docxP('« Il tournait en rond depuis dix minutes » est une observation. « Il était anxieux » est une conclusion — peut-être juste, mais c\'est déjà une interprétation, et elle ferme la question au lieu de l\'ouvrir.') +
+    docxP('« Il tournait en rond depuis dix minutes » est une observation. « Il était anxieux » est une conclusion — peut-être juste, mais c\'est déjà une interprétation, et elle ferme la question au lieu de l\'ouvrir.') +
     docxP('Notez le signe, pas ce que vous en déduisez. L\'interprétation viendra plus tard, en équipe, avec l\'ensemble des données sous les yeux.') +
     exemple('Se bouchait les oreilles et se mettait en retrait près de la porte.',
             'Était en surcharge sensorielle.') +
@@ -13358,8 +13365,8 @@ function corpsGuide() {
     docxP('Si vous hésitez, posez-vous la question : est-ce que ça vient de se produire, ou est-ce que c\'était déjà là en arrivant ?', {italique: true, couleur: DOCX_C.inkSoft}) +
 
     docxTitre(2, 'La conséquence, c\'est pour la personne') +
-    docxP('La colonne « conséquence » ne demande pas ce que vous avez fait — ça, c\'est la colonne « intervention ». Elle demande ce qui a changé pour la personne : ce qu\'elle a obtenu, ce qu\'elle a évité.') +
-    docxP('C\'est là que se lit la raison pour laquelle le comportement « marche » pour elle. Un comportement qui permet régulièrement d\'échapper à une demande a toutes les chances de revenir, même si personne ne l\'a voulu.') +
+    docxP('La colonne « conséquence » ne demande pas ce que vous avez fait — ça, c\'est la colonne « intervention ». Elle demande ce qui a changé pour la personne : ce qu\'elle a obtenu, ce qu\'elle a évité.') +
+    docxP('C\'est là que se lit la raison pour laquelle le comportement « marche » pour elle. Un comportement qui permet régulièrement d\'échapper à une demande a toutes les chances de revenir, même si personne ne l\'a voulu.') +
     exemple('A obtenu cinq minutes de plus sur son activité, et n\'a pas eu à aller au repas tout de suite.',
             'On a fini par céder.') +
 
@@ -13390,7 +13397,7 @@ function corpsGuide() {
       'Lundi 7 septembre, vers 11h20, fin de l\'activité du matin, dans le hall. Karim, éducateur. Vu directement.',
       DOCX_C.papierFonce, DOCX_C.ink) +
     colonne('Contexte',
-      'Où, avec qui, et ce qui s\'était passé avant — de loin. Le ratio d\'encadrement compte : « 1 pro, 8 résidents » n\'est pas la même chose que « 2 pros, 3 résidents ».',
+      'Où, avec qui, et ce qui s\'était passé avant — de loin. Le ratio d\'encadrement compte : « 1 pro, 8 résidents » n\'est pas la même chose que « 2 pros, 3 résidents ».',
       'Au foyer, dans le hall. 1 pro pour 9 résidents. Retour de week-end famille ce matin, il a peu dormi d\'après sa mère.',
       DOCX_C.contexte, DOCX_C.contexteTexte) +
     colonne('Antécédent',
@@ -13402,7 +13409,7 @@ function corpsGuide() {
       'A crié très fort pendant une trentaine de secondes, puis a retourné une chaise, puis a tapé le mur avec la main ouverte. Environ cinq minutes en tout.',
       DOCX_C.comportement, DOCX_C.comportementTexte) +
     colonne('Intervention · effet',
-      'Votre réponse et ce qu\'elle a donné. « On n\'a rien fait » est une réponse précieuse : les moments où ça s\'arrête sans intervention se perdent souvent. Si un nouveau comportement est apparu après votre intervention, notez-le : c\'est un comportement à part entière.',
+      'Votre réponse et ce qu\'elle a donné. « On n\'a rien fait » est une réponse précieuse : les moments où ça s\'arrête sans intervention se perdent souvent. Si un nouveau comportement est apparu après votre intervention, notez-le : c\'est un comportement à part entière.',
       'J\'ai proposé un préavis de cinq minutes, puis je me suis mise en retrait. La tension est redescendue au bout de cinq minutes environ.',
       DOCX_C.intervention, DOCX_C.interventionTexte) +
     colonne('Conséquence pour la personne',
@@ -13506,7 +13513,7 @@ async function validerCodeEMIA(ev) {
    le binôme coordinatrice–psychologue devient le référent et le clinicien, le
    RDS devient le dossier partagé.
 
-   « Coter » reste réservé à l'ICAF : pour la catégorisation à deux, on parle
+   « Coter » reste réservé à l'ICAF : pour la catégorisation à deux, on parle
    de double codage. Un même mot pour deux gestes différents, dans un document
    destiné à des équipes qui découvrent, c'est une confusion garantie. */
 function corpsModeEmploiGeneral() {
@@ -13558,9 +13565,9 @@ function corpsModeEmploiGeneral() {
     '',
     'Pour réaliser ce recueil :',
     "•  Ouvrez le navigateur de votre ordinateur ou de votre téléphone et allez sur l'adresse suivante : https://emia35.github.io/baf/#participer. La BAF fonctionne entièrement dans votre navigateur : rien n'est envoyé sur un serveur.",
-    "•  Cliquez sur le bouton « Importer mon fichier » et sélectionnez le fichier joint à ce message. Sur téléphone, enregistrez d'abord la pièce jointe (dans « Fichiers » ou « Téléchargements »).",
-    "•  La BAF fonctionne comme un logiciel, et ce fichier .json comme un document : l'importer dans la BAF, c'est comme ouvrir un document dans Word. Si vous n'enregistrez pas, tout peut se perdre. Pour enregistrer, appuyez sur « Télécharger pour sauvegarder » : la BAF télécharge un nouveau fichier .json avec ce que vous avez ajouté. La fois suivante, revenez à la même adresse et ouvrez toujours le dernier fichier en date.",
-    "•  En établissement, rangez le fichier dans votre dossier partagé, repartez toujours du dernier, une personne à la fois, et cliquez sur « Effacer » avant de fermer la BAF.",
+    "•  Cliquez sur le bouton « Importer mon fichier » et sélectionnez le fichier joint à ce message. Sur téléphone, enregistrez d'abord la pièce jointe (dans « Fichiers » ou « Téléchargements »).",
+    "•  La BAF fonctionne comme un logiciel, et ce fichier .json comme un document : l'importer dans la BAF, c'est comme ouvrir un document dans Word. Si vous n'enregistrez pas, tout peut se perdre. Pour enregistrer, appuyez sur « Télécharger pour sauvegarder » : la BAF télécharge un nouveau fichier .json avec ce que vous avez ajouté. La fois suivante, revenez à la même adresse et ouvrez toujours le dernier fichier en date.",
+    "•  En établissement, rangez le fichier dans votre dossier partagé, repartez toujours du dernier, une personne à la fois, et cliquez sur « Effacer » avant de fermer la BAF.",
     '',
     "À la fin de la période, envoyez-nous par mail le dernier fichier .json que vous avez sauvegardé. Si vous ne pouvez pas ou ne souhaitez pas utiliser l'outil numérique, nous pouvons vous transmettre des grilles papier. Pour cela, comme pour toute question, vous pouvez joindre [nom], référent·e de la démarche, à [adresse] ou au [téléphone].",
     '',
@@ -13593,7 +13600,7 @@ function corpsModeEmploiGeneral() {
 
     etape('2. Organiser et interpréter', 'le binôme · dans la BAF : Organiser, Interpréter') +
     pf('Primo codage, séparément : ', "le référent et le clinicien catégorisent chacun de leur côté, dans une copie vierge (kit de codage), à partir du seul déclaratif, sans aucune catégorie de départ.") +
-    pf('Synthèse, à deux : ', "sur un seul poste, dans le fichier socle : le comparateur affiche les deux copies côte à côte, on arbitre, y compris les signes qui entrent dans le vase de tension. « Terminer la synthèse » efface les copies : seule la synthèse reste.") +
+    pf('Synthèse, à deux : ', "sur un seul poste, dans le fichier socle : le comparateur affiche les deux copies côte à côte, on arbitre, y compris les signes qui entrent dans le vase de tension. « Terminer la synthèse » efface les copies : seule la synthèse reste.") +
     pf('Interpréter ', 'se fait directement en synthèse, à deux.') +
 
     etape('3. Formuler les hypothèses fonctionnelles', "le binôme et l'équipe · hors de la BAF") +
@@ -13660,7 +13667,7 @@ function corpsModeEmploiGeneral() {
     puce('Une cause somatique a-t-elle été recherchée ? ', "Par qui, quand, avec quelle conclusion ? Une douleur non identifiée est la première cause à écarter : le bilan médical vient avant l'analyse fonctionnelle, pas après.") +
     puce('Combien de temps durera le recueil ? ', "Fixez une date de début et une date de fin, en gardant le temps d'analyser.") +
     puce('Qui seront les déclarants ? ', 'Au moins une personne pour chaque lieu de vie : famille, foyer, accueil de jour, travail, transports…') +
-    puce('Par quels moyens ? ', "En ligne sur la BAF, avec un kit déclarant, ou sur papier, avec les documents de la catégorie « Version papier » des Ressources.") +
+    puce('Par quels moyens ? ', "En ligne sur la BAF, avec un kit déclarant, ou sur papier, avec les documents de la catégorie « Version papier » des Ressources.") +
     puce('Qui porte la démarche, qui la supervise ? ', "Un référent, du lancement à la synthèse ; un clinicien, psychologue ou psychiatre, qui la supervise.") +
     encadre([
       {t: "Un prénom d'emprunt. ", gras: true, couleur: DOCX_C.consequenceTexte},
@@ -13673,7 +13680,7 @@ function corpsModeEmploiGeneral() {
     texte("Il appelle ensuite chaque déclarant qu'il veut mobiliser, pour vérifier les informations du préambule et lui présenter la démarche d'analyse fonctionnelle.") +
     encadre([
       {t: 'Où la BAF garde-t-elle votre travail ? ', gras: true},
-      {t: "Dès que vous remplissez la moindre case, la BAF garde une mémoire de l'analyse dans le navigateur de cet ordinateur. Cette mémoire est locale : c'est comme un document Word ouvert et pas encore enregistré. Pour enregistrer, cliquez sur « Exporter », dans la barre sous l'en-tête (sur téléphone, dans le menu « Dossier ») : la BAF télécharge un fichier .json — le <b>fichier socle</b> —, qui est la sauvegarde de votre analyse tout entière."}
+      {t: "Dès que vous remplissez la moindre case, la BAF garde une mémoire de l'analyse dans le navigateur de cet ordinateur. Cette mémoire est locale : c'est comme un document Word ouvert et pas encore enregistré. Pour enregistrer, cliquez sur « Exporter », dans la barre sous l'en-tête (sur téléphone, dans le menu « Dossier ») : la BAF télécharge un fichier .json — le <b>fichier socle</b> —, qui est la sauvegarde de votre analyse tout entière."}
     ], DOCX_C.papierFonce, bleu) +
     puce('À la fin de chaque séance, ', "exportez le fichier et rangez-le dans le dossier partagé de la personne. Gardez les versions précédentes : la date et l'heure sont dans le nom de chaque fichier.") +
     puce('Au début de chaque séance, ', "importez le dernier fichier du dossier partagé, même si la BAF affiche déjà un dossier : c'est la version de votre dernière séance, et un collègue a pu avancer depuis.") +
@@ -13698,10 +13705,10 @@ function corpsModeEmploiGeneral() {
     ], DOCX_C.papierFonce, bleu) +
 
     sousPartie('Organiser : le double codage') +
-    dansBaf('Organiser → « Double codage » : « Exporter un kit de codage » (une copie vierge par codeur), puis « Comparer les deux copies » ; « Effacer le codage » pour repartir d\'une page blanche') +
+    dansBaf('Organiser → « Double codage » : « Exporter un kit de codage » (une copie vierge par codeur), puis « Comparer les deux copies » ; « Effacer le codage » pour repartir d\'une page blanche') +
     texte("Organiser, c'est regrouper en catégories ce qui se ressemble, volet par volet : contexte, antécédent, comportement, conséquence, intervention. Or catégoriser, c'est déjà mesurer : c'est ce geste qui transforme un texte en une donnée qui sera comptée. Le référent et le clinicien organisent donc d'abord chacun de leur côté, pour permettre la richesse d'un double codage.") +
-    puce('Primo codage, chacun de son côté, à partir du seul déclaratif et sans aucune catégorie de départ : ', "le référent exporte un kit de codage, une copie vierge du fichier socle (tous les évènements, aucune catégorie, rien dans Interpréter). Chacun ouvre sa copie, réalise son codage et l'enregistre de son côté avec « Exporter ». Le fichier socle, lui, reste vierge côté Organiser.") +
-    puce('Synthèse, à deux : ', "en réunion, sur un seul poste. Le référent ouvre le fichier socle, puis « Comparer les deux copies », et importe les deux copies. Chaque élément se lit sur une ligne : le codage A, le codage B, et la synthèse que vous arbitrez — prendre A, prendre B, ou une autre catégorie. Les signes qui entrent dans le vase de tension s'arbitrent aussi en synthèse. « Terminer la synthèse » efface les deux copies du fichier socle : la synthèse devient le seul codage. Supprimez aussi les fichiers des copies.") +
+    puce('Primo codage, chacun de son côté, à partir du seul déclaratif et sans aucune catégorie de départ : ', "le référent exporte un kit de codage, une copie vierge du fichier socle (tous les évènements, aucune catégorie, rien dans Interpréter). Chacun ouvre sa copie, réalise son codage et l'enregistre de son côté avec « Exporter ». Le fichier socle, lui, reste vierge côté Organiser.") +
+    puce('Synthèse, à deux : ', "en réunion, sur un seul poste. Le référent ouvre le fichier socle, puis « Comparer les deux copies », et importe les deux copies. Chaque élément se lit sur une ligne : le codage A, le codage B, et la synthèse que vous arbitrez — prendre A, prendre B, ou une autre catégorie. Les signes qui entrent dans le vase de tension s'arbitrent aussi en synthèse. « Terminer la synthèse » efface les deux copies du fichier socle : la synthèse devient le seul codage. Supprimez aussi les fichiers des copies.") +
     aEviter("Catégoriser en pensant déjà à la fonction. On regroupe ce qui se ressemble ; l'hypothèse vient après, et pas avant.") +
 
     sousPartie('Interpréter : chercher ce qui se répète, en binôme') +
@@ -13967,7 +13974,7 @@ function equiperGraphiques(racine) {
    un camembert vit dans un .synth-chart-block sans titre, lui-même dans un
    .synth-niveau qui en a un. On remonte donc jusqu'au premier titre qui dise
    quelque chose, plutôt que de s'arrêter au plus proche et de produire un
-   fichier nommé « graphique ». */
+   fichier nommé « graphique ». */
 function titreGraphique(svg) {
   const SEL = ':scope > h5, :scope > h4, :scope > .synth-chart-title, :scope > .scatter-title,' +
               ' :scope > .volet-histo-titre, :scope > .synth-niveau-tete > h5, :scope > .mod-header > h2';
@@ -14333,7 +14340,7 @@ function renderParcours() {
 
    2. Un déclarant ne voit pas l'outil amputé, il le voit entier. Les modules
       réservés s'ouvrent et disent ce qu'ils font et qui s'en occupe. Cacher
-      la moitié de l'outil derrière une « simplicité » de façade serait moins
+      la moitié de l'outil derrière une « simplicité » de façade serait moins
       honnête que de montrer le chemin complet.
 
    Ce bloc est déclaré AVANT le routage initial : route() interroge
@@ -14478,7 +14485,7 @@ function perteSiOuverture(metaFichier) {
   }
   if (declarantNonSauvegarde()) {
     return "Ce navigateur contient des modifications que vous n'avez pas sauvegardées (" + n + " évènement" + (n > 1 ? 's' : '') + " au total).\n\n" +
-           "Si vous ouvrez ce fichier, elles seront perdues. Pour les garder : Annuler, puis « 💾 Télécharger pour sauvegarder ».\n\nOuvrir quand même ?";
+           "Si vous ouvrez ce fichier, elles seront perdues. Pour les garder : Annuler, puis « 💾 Télécharger pour sauvegarder ».\n\nOuvrir quand même ?";
   }
   const d = state.declarant || {};
   if (metaFichier && metaFichier.envoye && d.sauvegarde && metaFichier.idContribution === d.idContribution &&
@@ -14534,7 +14541,7 @@ function effacerFichierDeclarant() {
   const n = ((state.m2 && state.m2.evenements) || []).length;
   const msg = declarantNonSauvegarde()
     ? "⚠ Des modifications n'ont pas été sauvegardées (" + n + " évènement" + (n > 1 ? 's' : '') + " au total). Si vous effacez maintenant, elles seront perdues.\n\n" +
-      "Pour les garder : Annuler, puis « 💾 Télécharger pour sauvegarder ».\n\nEffacer quand même ?"
+      "Pour les garder : Annuler, puis « 💾 Télécharger pour sauvegarder ».\n\nEffacer quand même ?"
     : "Effacer ce que contient ce navigateur ?\n\nVotre fichier sauvegardé n'est pas touché : c'est lui que vous rouvrirez la prochaine fois.";
   if (!confirm(msg)) return;
   replaceState({
@@ -14674,8 +14681,8 @@ function renderDeclarant() {
         importer('Importer mon fichier', true) +
         '<p>Le fichier se termine par <b>.json</b>. La première fois, c\'est celui que vous avez reçu par mail ; ' +
         'les fois suivantes, c\'est le <b>dernier fichier que vous avez sauvegardé</b>.</p>' +
-        '<p class="declarant-note"><b>Sur téléphone :</b> enregistrez d\'abord la pièce jointe (dans « Fichiers » ou ' +
-        '« Téléchargements »), puis appuyez sur le bouton.</p>' +
+        '<p class="declarant-note"><b>Sur téléphone :</b> enregistrez d\'abord la pièce jointe (dans « Fichiers » ou ' +
+        '« Téléchargements »), puis appuyez sur le bouton.</p>' +
       '</div>' +
       rgpd +
       '<p class="declarant-note" style="text-align:center;">Vous n\'avez pas reçu de fichier ? Contactez la personne qui vous a sollicité.</p>';
@@ -14709,7 +14716,7 @@ function renderDeclarant() {
       '</div>' +
       '<div class="field" style="margin:18px 0 0;">' +
         '<label for="declarant-provenance">D\'où déclarez-vous ?</label>' +
-        '<div class="help">Un mot : « domicile », « foyer », « accueil de jour »… L\'équipe saura d\'où vient chaque observation.</div>' +
+        '<div class="help">Un mot : « domicile », « foyer », « accueil de jour »… L\'équipe saura d\'où vient chaque observation.</div>' +
         '<input type="text" id="declarant-provenance" placeholder="ex : domicile" value="' + esc(d.provenance || '') + '" ' +
           'oninput="if(state.declarant){state.declarant.provenance=this.value.trim();persist();majBarreDeclarant();}">' +
       '</div>' +
@@ -14719,13 +14726,13 @@ function renderDeclarant() {
       '<p>La BAF fonctionne comme un logiciel, et votre fichier <b>.json</b> comme un document : l\'importer dans la BAF, ' +
       'c\'est comme ouvrir un document dans Word. <b>Si vous n\'enregistrez pas, ce que vous avez écrit peut se perdre.</b></p>' +
       '<div class="decl-etape"><span class="decl-num">1</span><div><b>Sauvegardez à chaque fois que vous écrivez.</b> ' +
-        'Le bouton « 💾 Télécharger pour sauvegarder », en haut de la page, télécharge un nouveau fichier avec tout ce que ' +
+        'Le bouton « 💾 Télécharger pour sauvegarder », en haut de la page, télécharge un nouveau fichier avec tout ce que ' +
         'vous avez écrit. Son nom porte la date et l\'heure.</div></div>' +
       '<div class="decl-etape"><span class="decl-num">2</span><div><b>La fois suivante, repartez du dernier fichier.</b> ' +
         'Revenez à la même adresse et importez le fichier le plus récent.' + importer('Importer un fichier', false) + '</div></div>' +
       '<div class="decl-etape"><span class="decl-num">3</span><div><b>Sur un ordinateur partagé, en établissement :</b> ' +
         'rangez le fichier dans votre dossier partagé, repartez toujours du dernier, une personne à la fois, et cliquez sur ' +
-        '« 🗑 Effacer », en haut de la page, avant de fermer la BAF.</div></div>' +
+        '« 🗑 Effacer », en haut de la page, avant de fermer la BAF.</div></div>' +
       '<div class="decl-etape"><span class="decl-num">4</span><div><b>À la fin de la période,</b> envoyez votre dernier ' +
         'fichier par mail à la personne qui vous a sollicité.</div></div>' +
     '</div>' +
@@ -14763,7 +14770,7 @@ function lireFichierDeclarant(fichier) {
   lecteur.readAsText(fichier);
 }
 
-/* ── La page « réservé » ───────────────────────────────────────────── */
+/* ── La page « réservé » ───────────────────────────────────────────── */
 function renderReserve(nomVue) {
   const el = document.getElementById('reserve-contenu');
   const info = VUES_RESERVEES[nomVue];
@@ -14802,21 +14809,21 @@ function appliquerModeDeclarant() {
    comportement-défi a eu lieu. Aucun moyen de déclarer une journée observée
    sans comportement. Toute la statistique mesurait donc un taux de SIGNALEMENT
    et non un taux de comportement, et la carte jour × moment ne pouvait pas
-   distinguer une case vide qui veut dire « rien ne s'est passé » d'une case
-   vide qui veut dire « personne n'observait ».
+   distinguer une case vide qui veut dire « rien ne s'est passé » d'une case
+   vide qui veut dire « personne n'observait ».
 
-   Deux informations, pas une. « Personne n'observait » et « quelqu'un observait
-   et il ne s'est rien passé » ne se confondent pas — et c'est la seconde qui a
+   Deux informations, pas une. « Personne n'observait » et « quelqu'un observait
+   et il ne s'est rien passé » ne se confondent pas — et c'est la seconde qui a
    de la valeur clinique, puisque les contextes de non-apparition orientent
    directement l'intervention.
 
-   OBJET SÉPARÉ, et c'est délibéré. Un « RAS » enregistré comme un évènement
+   OBJET SÉPARÉ, et c'est délibéré. Un « RAS » enregistré comme un évènement
    avec une case cochée obligerait à l'exclure d'une cinquantaine de comptages ;
    le jour où on en oublie un, l'outil affiche une statistique fausse sans rien
    dire. Ici rien de ce qui existe ne bouge, et les nouveaux dénominateurs se
    calculent explicitement.
 
-   Conséquence assumée : le mot « fréquence » change de sens. Avant, c'était
+   Conséquence assumée : le mot « fréquence » change de sens. Avant, c'était
    évènements / jours d'accueil du calendrier. Avec une couverture déclarée,
    c'est évènements / jours réellement observés. Deux nombres différents sur le
    même dossier — l'outil dit lequel il affiche. */
@@ -15055,7 +15062,7 @@ function categoriesVides() {
   return c;
 }
 
-/* Organiser et Interpréter vides. Les drapeaux de migration (clés en « _ »)
+/* Organiser et Interpréter vides. Les drapeaux de migration (clés en « _ »)
    sont gardés : sans eux, une migration qui n'est pas idempotente se
    rejouerait sur des données qui n'en ont pas besoin. */
 function codageVierge() {
@@ -15156,20 +15163,20 @@ function renderDoubleCodage() {
   let html = '';
   if (enCodage) {
     html += '<p class="dc-texte"><b>Vous catégorisez à partir du seul déclaratif</b>, sans catégorie de départ et sans voir le codage de l\'autre.</p>' +
-      '<p class="dc-texte">Cette copie ne remplace pas le fichier socle. Sauvegardez-la avec « 💾 Exporter » et apportez-la à la ' +
+      '<p class="dc-texte">Cette copie ne remplace pas le fichier socle. Sauvegardez-la avec « 💾 Exporter » et apportez-la à la ' +
       'réunion de synthèse. <b>Interpréter se fera ensemble</b>, dans le fichier socle.</p>' +
       '<div class="dc-actions">' + effacer + '</div>';
   } else {
     html += '<p class="dc-texte">La catégorisation est un acte de mesure : c\'est elle qui transforme un texte en une donnée ' +
       'qui sera comptée. Elle se fait donc à deux.</p>' +
       '<ol class="dc-etapes">' +
-        '<li><b>Primo codage, séparément.</b> « Exporter un kit de codage » produit une copie vierge : le préambule et les ' +
+        '<li><b>Primo codage, séparément.</b> « Exporter un kit de codage » produit une copie vierge : le préambule et les ' +
           'évènements, aucune catégorie, rien dans Interpréter. Une copie par codeur ; chacun catégorise dans la sienne, ' +
           'à partir du seul déclaratif.</li>' +
-        '<li><b>Synthèse, à deux.</b> En réunion, sur un seul poste : ouvrez le fichier socle, puis « Comparer les deux copies », ' +
+        '<li><b>Synthèse, à deux.</b> En réunion, sur un seul poste : ouvrez le fichier socle, puis « Comparer les deux copies », ' +
           'et importez-les. Chaque élément se lit sur une ligne, le codage A à côté du codage B, et vous arbitrez la synthèse, qui s\'écrit ici. ' +
           'Les signes qui entrent dans le vase de tension s\'arbitrent aussi en synthèse, et Interpréter se fait directement en synthèse.</li>' +
-        '<li><b>La synthèse est le seul codage.</b> « Terminer la synthèse », dans le comparateur, efface les deux copies du fichier socle. ' +
+        '<li><b>La synthèse est le seul codage.</b> « Terminer la synthèse », dans le comparateur, efface les deux copies du fichier socle. ' +
           'Supprimez aussi leurs fichiers, là où ils sont rangés.</li>' +
       '</ol>' +
       '<div class="dc-actions">' +
@@ -15207,7 +15214,7 @@ let cmpSous = 'cp';
 let cmpFiltre = 'tous';
 let cmpSlot = 'A';
 
-/* Deux codeurs n'écrivent jamais « Hétéro-agressivité » tout à fait pareil :
+/* Deux codeurs n'écrivent jamais « Hétéro-agressivité » tout à fait pareil :
    on compare les noms sans accents, sans casse et sans ponctuation. Les
    identifiants, eux, diffèrent toujours — chaque copie crée les siens. */
 function normNomCat(nom) {
@@ -15271,7 +15278,7 @@ function accueillirCopieCodage(slot, objet, nomFichier) {
   if (!lu.ok) return lu;
   const d = lu.dossier;
   if (!(d.codage && d.codage.actif)) {
-    return {ok:false, raison:"Ce fichier est un dossier, pas une copie de primo codage. La copie est celle que chaque codeur a exportée depuis son kit de codage : son nom commence par « RDAF-primo-codage_ »."};
+    return {ok:false, raison:"Ce fichier est un dossier, pas une copie de primo codage. La copie est celle que chaque codeur a exportée depuis son kit de codage : son nom commence par « RDAF-primo-codage_ »."};
   }
   const idCopie = (lu.enveloppe && lu.enveloppe.idDossier) || d.idDossier || null;
   if (idCopie && state.idDossier && idCopie !== state.idDossier) {
@@ -15282,7 +15289,7 @@ function accueillirCopieCodage(slot, objet, nomFichier) {
   const autreSlot = slot === 'A' ? 'B' : 'A';
   const autre = state.comparaison && state.comparaison[autreSlot];
   if (autre && autre.exporte === exporte && JSON.stringify(autre.categories) === JSON.stringify(categories)) {
-    return {ok:false, raison:'Cette copie est déjà importée en ' + autreSlot + ' (« ' + (autre.nom || autreSlot) + ' »). Importez celle de l\'autre codeur.'};
+    return {ok:false, raison:'Cette copie est déjà importée en ' + autreSlot + ' (« ' + (autre.nom || autreSlot) + ' »). Importez celle de l\'autre codeur.'};
   }
   if (!state.comparaison) state.comparaison = {};
   const avant = state.comparaison[slot];
@@ -15350,7 +15357,7 @@ function celluleSyntheseCmp(sousId, item, l) {
     const cat = cats[id];
     const chemin = esc(cheminCatDans(cats, id));
     return '<span class="cmp-chip" style="background:' + esc((cat && cat.color) || '#3D4F6B') + ';">' + chemin +
-      '<button type="button" class="cmp-chip-x" aria-label="Retirer de « ' + chemin + ' »" title="Retirer" ' +
+      '<button type="button" class="cmp-chip-x" aria-label="Retirer de « ' + chemin + ' »" title="Retirer" ' +
         'onclick="cmpRetirer(\'' + sousId + '\', \'' + idItem + '\', \'' + esc(id) + '\')">×</button></span>';
   }).join('');
   const bouton = (slot, libelle) =>
@@ -15387,7 +15394,7 @@ function actionsComparateur(sousId, lignes) {
 }
 
 /* Une catégorie de même nom (au même niveau) déjà présente dans la synthèse est
-   réutilisée : prendre A puis B ne doit pas créer « Fuite » et « fuite ». */
+   réutilisée : prendre A puis B ne doit pas créer « Fuite » et « fuite ». */
 function trouverOuCreerCat(sousId, nom, parentId) {
   const cats = state.m3.categories[sousId];
   const cle = normNomCat(nom);
@@ -15556,7 +15563,7 @@ function renderComparateur() {
     const c = comp[slot];
     if (!c) return '<td class="cmp-cell cmp-copie"></td>';
     const evt = evts[item.evtIdx];
-    // Un évènement reçu après l'export du kit n'existe pas dans la copie : ce n'est pas un « non catégorisé ».
+    // Un évènement reçu après l'export du kit n'existe pas dans la copie : ce n'est pas un « non catégorisé ».
     if (c.evenements && c.evenements.length && evt && evt.id && c.evenements.indexOf(evt.id) === -1) {
       return '<td class="cmp-cell cmp-copie"><span class="cmp-rien">Évènement arrivé après cette copie</span></td>';
     }
@@ -15581,7 +15588,7 @@ function renderComparateur() {
   let corps;
   if (!comp.A && !comp.B) {
     corps = '<tr><td colspan="4" class="cmp-vide">Importez les deux copies de primo codage, celle de chaque codeur. ' +
-      'Leur nom commence par « RDAF-primo-codage_ ».</td></tr>';
+      'Leur nom commence par « RDAF-primo-codage_ ».</td></tr>';
   } else if (!lignes.length) {
     const pourquoi = {
       tous: 'Aucun élément décrit pour ce volet.',
@@ -15622,7 +15629,7 @@ function renderComparateur() {
    ══════════════════════════════════════════════════════════════════════
    Ce qui revient d'un déclarant ne contient que du déclaratif. On le verse
    dans la chronologie du dossier, chaque évènement gardant la trace d'où il
-   vient — « ce que dit le domicile » et « ce que dit le foyer » ne se lisent
+   vient — « ce que dit le domicile » et « ce que dit le foyer » ne se lisent
    pas de la même façon, et c'est précisément ce qu'on cherche à comparer.
 
    Trois règles :
@@ -15641,9 +15648,9 @@ function provenanceEvt(e) {
 }
 
 /* ── Importer : on lit d'abord, on aiguille ensuite ──────────────────
-   Avant, la question « remplacer le dossier ouvert ? » tombait avant même de
+   Avant, la question « remplacer le dossier ouvert ? » tombait avant même de
    savoir ce qu'on importait, et un fichier déclarant ouvert depuis la barre
-   proposait « OK » pour basculer en mode déclarant : le réflexe envoyait le
+   proposait « OK » pour basculer en mode déclarant : le réflexe envoyait le
    référent sur la page Participer (Arthur, 01/10/2026). Désormais la BAF lit
    le ou les fichiers, puis dit ce que c'est et propose des boutons qui disent
    ce qu'ils font. */
@@ -15675,7 +15682,7 @@ function aiguillerImport(lus, versOutil2) {
   const refuses = lus.filter(x => !x.lu.ok);
   const bons = lus.filter(x => x.lu.ok);
   if (refuses.length) {
-    alert(refuses.map(x => '« ' + x.nom + ' » : ' + x.lu.raison).join('\n\n') +
+    alert(refuses.map(x => '« ' + x.nom + ' » : ' + x.lu.raison).join('\n\n') +
       (bons.length ? '\n\n' + (refuses.length > 1 ? 'Ces fichiers sont laissés' : 'Ce fichier est laissé') + ' de côté.' : ''));
   }
   if (!bons.length) return;
@@ -15783,8 +15790,8 @@ function trierParEnvoi(lus) {
 /* ── D'où viennent les évènements ──────────────────────────────────────
    Voir d'un coup d'œil, dans la chronologie, ce qui vient de la famille, du
    foyer, de l'école (Arthur, 01/10/2026). Chaque fichier déclarant est une
-   source, avec sa couleur ; ce que le référent saisit lui-même est « Équipe ».
-   Deux fichiers déclarants de même provenance (« domicile » pour les deux
+   source, avec sa couleur ; ce que le référent saisit lui-même est « Équipe ».
+   Deux fichiers déclarants de même provenance (« domicile » pour les deux
    parents) partagent la même couleur : c'est le lieu qu'on compare. */
 const COULEURS_SOURCES = ['#2F6FB5', '#B4401F', '#7A9A8C', '#7B4EA0', '#C9A84C', '#1F7A6C', '#A8503A', '#46566B'];
 let filtreSourceChrono = null;
@@ -15855,7 +15862,7 @@ function demanderProvenances(lus) {
     if (m.idContribution && deja.has(m.idContribution)) return;
     const morceaux = String(x.nom || '').replace(/\.json$/i, '').split('_');
     const lieu = morceaux.length >= 4 && morceaux[2] && morceaux[2] !== 'declarant' ? morceaux[2] : '';
-    const reponse = prompt('D\'où vient le fichier « ' + x.nom + ' » ?\n\nEx. : domicile, foyer, accueil de jour, école. ' +
+    const reponse = prompt('D\'où vient le fichier « ' + x.nom + ' » ?\n\nEx. : domicile, foyer, accueil de jour, école. ' +
       'Le déclarant ne l\'a pas précisé ; c\'est ce qui permet de voir d\'où viennent les évènements.', lieu);
     const p = (reponse || '').trim();
     if (!p) return;
@@ -15908,7 +15915,7 @@ function importerContribution(ev) {
   if (!fichiers.length) return;
   lireFichiersBAF(fichiers, ['contribution']).then(lus => {
     const refuses = lus.filter(x => !x.lu.ok);
-    if (refuses.length) alert(refuses.map(x => '« ' + x.nom + ' » : ' + x.lu.raison).join('\n\n'));
+    if (refuses.length) alert(refuses.map(x => '« ' + x.nom + ' » : ' + x.lu.raison).join('\n\n'));
     const bons = lus.filter(x => x.lu.ok);
     if (bons.length) fusionnerLot(bons);
   });
@@ -16012,7 +16019,7 @@ function fusionnerContribution(lu, nomFichier, opts) {
   else if (!ajoutes && !remplaces && !absents.length) msg += '· Rien de nouveau dans ce fichier.\n';
   if (couvAjoutees) msg += '· ' + couvAjoutees + ' période' + (couvAjoutees > 1 ? 's' : '') + ' observée' + (couvAjoutees > 1 ? 's' : '') + ' sans comportement-défi\n';
   if (ignorees.length) msg += '· Ignoré : ' + ignorees.join(', ') + ' — un fichier déclarant n\'apporte que le déclaratif.\n';
-  if (nomFichier) msg = '« ' + nomFichier + ' »\n' + msg;
+  if (nomFichier) msg = '« ' + nomFichier + ' »\n' + msg;
   if (opts && opts.lot) return msg;
   migrerIdsCategorisation();
   persist();
@@ -16073,7 +16080,7 @@ const NOTES_VERSION = [
     version: 'v2026.09.15-6',
     titre: "EMIA35 · BAF sur l'accueil principal",
     corps: `
-<p>Sous la boussole de l'accueil principal, « EMIA35 · Outil clinique » devient <b>EMIA35 · BAF</b>, écrit comme sur l'accueil des deux outils : le A et le F de BAF reprennent la couleur d'« Analyse Fonctionnelle », juste en dessous.</p>
+<p>Sous la boussole de l'accueil principal, « EMIA35 · Outil clinique » devient <b>EMIA35 · BAF</b>, écrit comme sur l'accueil des deux outils : le A et le F de BAF reprennent la couleur d'« Analyse Fonctionnelle », juste en dessous.</p>
 `
   },
 
@@ -16084,8 +16091,8 @@ const NOTES_VERSION = [
     corps: `
 <h4>Deux retouches</h4>
 <ul>
-<li><b>Accueil</b> : « en savoir plus » est écrit dans l'encart « Aucune donnée n'est collectée », en italique ; tout l'encart ouvre la fenêtre.</li>
-<li><b>Accueil de l'indice de confiance</b> : l'en-tête garde la mise en page de l'outil 1, dans les couleurs de l'outil 2 — le A et le F de BAF et « Analyse Fonctionnelle » en rosé foncé, l'aiguille de la boussole en rosé.</li>
+<li><b>Accueil</b> : « en savoir plus » est écrit dans l'encart « Aucune donnée n'est collectée », en italique ; tout l'encart ouvre la fenêtre.</li>
+<li><b>Accueil de l'indice de confiance</b> : l'en-tête garde la mise en page de l'outil 1, dans les couleurs de l'outil 2 — le A et le F de BAF et « Analyse Fonctionnelle » en rosé foncé, l'aiguille de la boussole en rosé.</li>
 </ul>
 `
   },
@@ -16096,16 +16103,16 @@ const NOTES_VERSION = [
     titre: "Un accueil plus léger, des flèches bleues, Recueillir centré, et l'accueil de l'indice de confiance revu",
     corps: `
 <h4>Accueil</h4>
-<p>L'encart sur les données laisse la place à une petite étiquette « Aucune donnée n'est collectée », suivie de « en savoir plus » : un clic ouvre le texte dans une petite fenêtre.</p>
+<p>L'encart sur les données laisse la place à une petite étiquette « Aucune donnée n'est collectée », suivie de « en savoir plus » : un clic ouvre le texte dans une petite fenêtre.</p>
 
 <h4>Préambule</h4>
 <p>Dans le vase de tension, ce qui fait redescendre est signalé par une flèche bleue, en face des flèches rouges de la montée.</p>
 
 <h4>Recueillir</h4>
-<p>L'encart « Ajouter un évènement » et la période couverte sont centrés ; le nombre de jours non renseignés suit directement la période.</p>
+<p>L'encart « Ajouter un évènement » et la période couverte sont centrés ; le nombre de jours non renseignés suit directement la période.</p>
 
 <h4>L'accueil de l'indice de confiance</h4>
-<p>Il reprend l'en-tête de l'outil 1 : la boussole, « EMIA35 · BAF », et « Indice de Confiance pour une Analyse Fonctionnelle ». Un seul encart : « Avant de commencer », puis « À quoi sert cet outil ? ». Deux entrées restent — coter le dossier ouvert, coter une analyse faite sans le recueil de données ; une analyse produite ailleurs s'ouvre d'abord avec « Importer », dans la barre sous l'en-tête. Le bouton « Effacer les données et recommencer » et l'encart sur la posture du cotateur ont été retirés.</p>
+<p>Il reprend l'en-tête de l'outil 1 : la boussole, « EMIA35 · BAF », et « Indice de Confiance pour une Analyse Fonctionnelle ». Un seul encart : « Avant de commencer », puis « À quoi sert cet outil ? ». Deux entrées restent — coter le dossier ouvert, coter une analyse faite sans le recueil de données ; une analyse produite ailleurs s'ouvre d'abord avec « Importer », dans la barre sous l'en-tête. Le bouton « Effacer les données et recommencer » et l'encart sur la posture du cotateur ont été retirés.</p>
 `
   },
 
@@ -16116,7 +16123,7 @@ const NOTES_VERSION = [
     corps: `
 <h4>Le mode d'emploi pour tous, corrigé</h4>
 <p>Sa première page laissait croire qu'on passait directement des analystes à l'indice de confiance. Elle dit maintenant que le binôme organise et interprète les données, puis <b>écrit l'analyse fonctionnelle</b>.</p>
-<p>L'ICAF y devient <b>facultatif</b> : c'est un travail long, à réserver aux équipes qui peuvent y consacrer du temps. Dans ce document, une analyse fonctionnelle compte trois étapes ; l'évaluation de sa qualité vient ensuite, « pour aller plus loin ». La version EMIA n'est pas concernée.</p>
+<p>L'ICAF y devient <b>facultatif</b> : c'est un travail long, à réserver aux équipes qui peuvent y consacrer du temps. Dans ce document, une analyse fonctionnelle compte trois étapes ; l'évaluation de sa qualité vient ensuite, « pour aller plus loin ». La version EMIA n'est pas concernée.</p>
 
 <h4>L'indice de confiance, facultatif dans l'outil</h4>
 <p>Le schéma du parcours et les Repères le disent aussi : la case de l'indice de confiance est en pointillé.</p>
@@ -16132,13 +16139,13 @@ const NOTES_VERSION = [
 <p>La synthèse montre maintenant le vase, rempli jusqu'au palier le plus souvent atteint au plus fort des évènements, à côté des paliers tels que l'équipe les a décrits et de l'état de l'échelle, figée ou non. Ce qui le fait monter et ce qui le fait redescendre — d'elle ou de lui, du dehors — reprend les couleurs d'Interpréter. Les observations complémentaires, qui ne s'affichaient nulle part, apparaissent enfin. Un vase dont seuls les paliers sont décrits compte désormais comme un travail d'Interpréter commencé.</p>
 
 <h4>La montée en tension dans la synthèse</h4>
-<p>Les séquences de montée s'affichent en entier, étape par étape, avec leur note. Sous « Ce que les chiffres montrent », les trois lectures de la montée sont reprises : les interventions suivies d'une augmentation de la tension, le palier atteint par catégorie de comportement, le comportement apparu après une intervention. Leurs barres sont désormais dessinées en graphiques, ce qui leur permet de passer dans l'export Word.</p>
+<p>Les séquences de montée s'affichent en entier, étape par étape, avec leur note. Sous « Ce que les chiffres montrent », les trois lectures de la montée sont reprises : les interventions suivies d'une augmentation de la tension, le palier atteint par catégorie de comportement, le comportement apparu après une intervention. Leurs barres sont désormais dessinées en graphiques, ce qui leur permet de passer dans l'export Word.</p>
 
 <h4>Un double codage en cours se signale</h4>
 <p>Tant que les deux copies de primo codage sont encore dans le fichier officiel, un bandeau le dit en haut de la synthèse et dans le document Word : les catégories, les chiffres et les suggestions reflètent une synthèse en cours.</p>
 
 <h4>Le contexte entre dans les calculs</h4>
-<p>Le contexte ne déclenche rien tout seul : il remplit le vase, et fait qu'un même antécédent ne produit pas le même effet d'un jour à l'autre. Trois lectures le prennent désormais en compte, dans « Ce que les données suggèrent » comme dans la synthèse : le comportement plus fréquent quand un contexte est noté ; le vase qui monte plus haut avec ce contexte que sans lui ; l'antécédent dont l'effet change selon le contexte. Ce sont les mêmes seuils que pour les autres suggestions, et l'effectif est toujours donné — avec une réserve dès que l'un des deux côtés de la comparaison est mince.</p>
+<p>Le contexte ne déclenche rien tout seul : il remplit le vase, et fait qu'un même antécédent ne produit pas le même effet d'un jour à l'autre. Trois lectures le prennent désormais en compte, dans « Ce que les données suggèrent » comme dans la synthèse : le comportement plus fréquent quand un contexte est noté ; le vase qui monte plus haut avec ce contexte que sans lui ; l'antécédent dont l'effet change selon le contexte. Ce sont les mêmes seuils que pour les autres suggestions, et l'effectif est toujours donné — avec une réserve dès que l'un des deux côtés de la comparaison est mince.</p>
 <p>Un pattern peut aussi commencer par un <b>contexte</b>, facultatif, avant l'antécédent. La synthèse et le document Word le reprennent.</p>
 `
   },
@@ -16148,16 +16155,16 @@ const NOTES_VERSION = [
     titre: "Le parcours en trois temps, le vase qui redescend d'elle ou du dehors, et le mode d'emploi EMIA à jour",
     corps: `
 <h4>Le parcours en trois temps</h4>
-<p>Le schéma « Comment la BAF s'enchaîne » laissait croire qu'on passait directement de la synthèse à l'indice de confiance. Il montre désormais trois temps : <b>construire un déclaratif de qualité</b> — le préambule, Recueillir, Organiser, Interpréter et la synthèse, avec la boucle des déclarants —, puis <b>l'analyse fonctionnelle</b>, écrite par le binôme à partir de la synthèse, puis <b>l'indice de confiance</b>, qui la cote. Les trois ensemble font l'AF évaluée. Les boussoles d'Interpréter, de la Synthèse et de l'indice de confiance le disent aussi.</p>
+<p>Le schéma « Comment la BAF s'enchaîne » laissait croire qu'on passait directement de la synthèse à l'indice de confiance. Il montre désormais trois temps : <b>construire un déclaratif de qualité</b> — le préambule, Recueillir, Organiser, Interpréter et la synthèse, avec la boucle des déclarants —, puis <b>l'analyse fonctionnelle</b>, écrite par le binôme à partir de la synthèse, puis <b>l'indice de confiance</b>, qui la cote. Les trois ensemble font l'AF évaluée. Les boussoles d'Interpréter, de la Synthèse et de l'indice de confiance le disent aussi.</p>
 
 <h4>Ce qui fait redescendre, d'elle ou du dehors</h4>
 <p>Le vase distinguait déjà, pour ce qui le fait monter, ce qui vient de la personne et ce qui vient du dehors. <b>Ce qui le fait redescendre se range désormais de la même façon</b>, dans Interpréter comme dans le préambule et sa version papier. Les éléments saisis avant ce changement ne sont rangés nulle part d'office : ils attendent qu'on les situe. L'ancienne case du préambule reste affichée, avec son texte, tant qu'elle n'est pas vidée.</p>
 
 <h4>Recueillir</h4>
-<p>Le niveau de détail de chaque évènement se lit en une icône, juste à gauche de la poubelle : ⚡ rapide, 🔬 détaillé. Le préambule et le guide papier parlent eux aussi de mode <b>détaillé</b>, et non plus « approfondi ».</p>
+<p>Le niveau de détail de chaque évènement se lit en une icône, juste à gauche de la poubelle : ⚡ rapide, 🔬 détaillé. Le préambule et le guide papier parlent eux aussi de mode <b>détaillé</b>, et non plus « approfondi ».</p>
 
 <h4>Le mode d'emploi, version EMIA</h4>
-<p>Il décrit maintenant la synthèse du double codage telle qu'elle se fait : sur un seul poste, avec « Comparer les deux copies », puis « Terminer la synthèse », qui efface les deux copies du fichier officiel.</p>
+<p>Il décrit maintenant la synthèse du double codage telle qu'elle se fait : sur un seul poste, avec « Comparer les deux copies », puis « Terminer la synthèse », qui efface les deux copies du fichier officiel.</p>
 `
   },
 
@@ -16168,11 +16175,11 @@ const NOTES_VERSION = [
     corps: `
 <h4>Des pages plus légères</h4>
 <ul>
-<li><b>« Où suis-je ? »</b> devient une petite boussole à côté du titre de chaque page. Un clic ouvre une fenêtre qui dit ce qu'on fait ici, d'où ça vient et où ça repart.</li>
-<li><b>Recueillir</b> commence par « Ajouter un évènement ». Juste en dessous, la période couverte, avec en rouge le nombre de jours non renseignés : un clic ouvre la liste de ces jours, à cocher. Le déclarant la voit aussi, puisque c'est lui qui sait ce qui s'est passé. La déclaration d'une longue période a été retirée.</li>
-<li>« Exporter un kit déclarant » et « Ajouter une contribution » ouvrent chacun une petite fenêtre. Les contributions reçues sont listées dans la seconde, et comptées sous le bouton.</li>
+<li><b>« Où suis-je ? »</b> devient une petite boussole à côté du titre de chaque page. Un clic ouvre une fenêtre qui dit ce qu'on fait ici, d'où ça vient et où ça repart.</li>
+<li><b>Recueillir</b> commence par « Ajouter un évènement ». Juste en dessous, la période couverte, avec en rouge le nombre de jours non renseignés : un clic ouvre la liste de ces jours, à cocher. Le déclarant la voit aussi, puisque c'est lui qui sait ce qui s'est passé. La déclaration d'une longue période a été retirée.</li>
+<li>« Exporter un kit déclarant » et « Ajouter une contribution » ouvrent chacun une petite fenêtre. Les contributions reçues sont listées dans la seconde, et comptées sous le bouton.</li>
 <li>Chaque évènement de la chronologie porte une pastille <b>rapide</b> ou <b>détaillé</b> : détaillé dès qu'une case du mode détaillé est remplie.</li>
-<li><b>Organiser</b> perd sa bande de légende. Chaque volet porte sa bulle de couleur sous son nom, plus intense sur le volet ouvert, et les volets sont centrés. « Pour démarrer » se replie derrière « Besoin d'aide pour démarrer ? », et le double codage derrière un petit bouton.</li>
+<li><b>Organiser</b> perd sa bande de légende. Chaque volet porte sa bulle de couleur sous son nom, plus intense sur le volet ouvert, et les volets sont centrés. « Pour démarrer » se replie derrière « Besoin d'aide pour démarrer ? », et le double codage derrière un petit bouton.</li>
 </ul>
 
 <h4>Le contexte a sa propre couleur</h4>
@@ -16180,10 +16187,10 @@ const NOTES_VERSION = [
 
 <h4>Comparer les deux primo codages</h4>
 <ul>
-<li>Dans Organiser, « Double codage », puis <b>« Comparer les deux copies »</b>. En réunion, sur un seul poste : le fichier officiel est ouvert, et on importe la copie de chaque codeur. Une copie d'un autre dossier, ou la même copie importée deux fois, est refusée.</li>
-<li><b>Une ligne par élément décrit</b>, comme un comparateur : le codage A, le codage B, et la synthèse. Les lignes codées à l'identique sont teintées ; un filtre montre les désaccords seuls, un autre ce qui n'est pas encore arbitré. Deux catégories dont le nom est tapé autrement — « Hétéro-agressivité », « hetero agressivite » — comptent comme identiques. Aucun taux d'accord.</li>
-<li><b>Arbitrer</b> : « Prendre A », « Prendre B », ou une autre catégorie de la synthèse, y compris une nouvelle. Une catégorie qui manque est créée sous le même nom. « Reprendre les codages identiques » fait entrer d'un coup, avec confirmation, ce que A et B ont codé pareil.</li>
-<li>Les deux copies restent dans le fichier officiel jusqu'à <b>« Terminer la synthèse »</b>, qui les efface : la synthèse devient le seul codage. La BAF prévient s'il reste des éléments codés par A ou B sans catégorie dans la synthèse.</li>
+<li>Dans Organiser, « Double codage », puis <b>« Comparer les deux copies »</b>. En réunion, sur un seul poste : le fichier officiel est ouvert, et on importe la copie de chaque codeur. Une copie d'un autre dossier, ou la même copie importée deux fois, est refusée.</li>
+<li><b>Une ligne par élément décrit</b>, comme un comparateur : le codage A, le codage B, et la synthèse. Les lignes codées à l'identique sont teintées ; un filtre montre les désaccords seuls, un autre ce qui n'est pas encore arbitré. Deux catégories dont le nom est tapé autrement — « Hétéro-agressivité », « hetero agressivite » — comptent comme identiques. Aucun taux d'accord.</li>
+<li><b>Arbitrer</b> : « Prendre A », « Prendre B », ou une autre catégorie de la synthèse, y compris une nouvelle. Une catégorie qui manque est créée sous le même nom. « Reprendre les codages identiques » fait entrer d'un coup, avec confirmation, ce que A et B ont codé pareil.</li>
+<li>Les deux copies restent dans le fichier officiel jusqu'à <b>« Terminer la synthèse »</b>, qui les efface : la synthèse devient le seul codage. La BAF prévient s'il reste des éléments codés par A ou B sans catégorie dans la synthèse.</li>
 <li>Sur ordinateur ou tablette : trois colonnes de texte ne tiennent pas sur un téléphone.</li>
 </ul>
 
@@ -16191,7 +16198,7 @@ const NOTES_VERSION = [
 <p>Dans Interpréter, la gradation s'ouvre sur <b>ce que les données disent de la montée</b> : après quelles interventions la tension augmente, à côté du taux d'ensemble ; jusqu'à quel palier du vase monte chaque catégorie de comportement, rangées en un ordre de montée à discuter ; et quel comportement apparaît après une intervention, et après laquelle. Chaque chiffre est donné avec son effectif.</p>
 
 <h4>Le vase qui se remplit</h4>
-<p>Dans « À quoi ressemblent les paliers », le vase est dessiné à côté des cinq paliers. Cliquer un palier remplit le vase jusqu'à lui ; un repère marque le palier le plus souvent atteint au plus fort des évènements.</p>
+<p>Dans « À quoi ressemblent les paliers », le vase est dessiné à côté des cinq paliers. Cliquer un palier remplit le vase jusqu'à lui ; un repère marque le palier le plus souvent atteint au plus fort des évènements.</p>
 
 <h4>Un mot</h4>
 <p>On parle désormais d'<b>AF évaluée</b>, partout.</p>
@@ -16207,40 +16214,40 @@ const NOTES_VERSION = [
 <p>Juste en dessous, les deux outils, qui portent désormais leur sigle — <b>outil 1 — RDAF</b>, <b>outil 2 — ICAF</b> —, puis l'encart sur les données. L'en-tête et le texte ont été resserrés : sur un écran d'ordinateur, les deux outils se voient sans descendre.</p>
 
 <h4>L'accueil de l'outil 1</h4>
-<p>Il s'intitule désormais <b>Recueil de Données pour une Analyse Fonctionnelle</b> — le RDAF —, sous « EMIA35 · BAF ». La phrase d'accroche, le bouton « Repères et lexique » et l'encart bleu autour de « Avant de commencer » ont disparu, et l'en-tête s'est resserré : en arrivant, on voit le préambule et les modules.</p>
-<p>La bande « Un dossier est déjà ouvert sur ce poste » a été retirée : la barre sous l'en-tête indique déjà le dossier en cours. Sur téléphone, où la place manque, elle en garde désormais l'essentiel : le prénom et le nombre d'évènements.</p>
+<p>Il s'intitule désormais <b>Recueil de Données pour une Analyse Fonctionnelle</b> — le RDAF —, sous « EMIA35 · BAF ». La phrase d'accroche, le bouton « Repères et lexique » et l'encart bleu autour de « Avant de commencer » ont disparu, et l'en-tête s'est resserré : en arrivant, on voit le préambule et les modules.</p>
+<p>La bande « Un dossier est déjà ouvert sur ce poste » a été retirée : la barre sous l'en-tête indique déjà le dossier en cours. Sur téléphone, où la place manque, elle en garde désormais l'essentiel : le prénom et le nombre d'évènements.</p>
 
 <h4>Le préambule</h4>
-<p>« Se connaître » s'appelle désormais <b>Préambule</b>, partout. Il ne se commente plus dans l'outil : il est vérifié au téléphone avec chaque partenaire avant le recueil, et seul le référent le modifie. Le déclarant le lit, et une note lui dit qui appeler s'il faut le corriger.</p>
+<p>« Se connaître » s'appelle désormais <b>Préambule</b>, partout. Il ne se commente plus dans l'outil : il est vérifié au téléphone avec chaque partenaire avant le recueil, et seul le référent le modifie. Le déclarant le lit, et une note lui dit qui appeler s'il faut le corriger.</p>
 
 <h4>Pour les déclarants : un seul fichier, et une page pour l'ouvrir</h4>
 <ul>
-<li><b>Le lien du mail</b>, emia35.github.io/baf/#participer, ouvre une page sans menu, avec un bouton « Importer mon fichier » et une zone où glisser le fichier.</li>
-<li><b>Un seul fichier.</b> Le déclarant ouvre le kit la première fois, puis son dernier fichier sauvegardé. « 💾 Télécharger pour sauvegarder » télécharge le fichier à jour — le préambule reçu, ses évènements, ses périodes observées —, avec la date et l'heure dans son nom. C'est ce même fichier qu'il envoie à la fin.</li>
-<li><b>« 🗑 Effacer » remplace « Quitter »</b> : sur un poste partagé, on efface avant de partir. La BAF prévient s'il reste des modifications non sauvegardées, et quand le fichier qu'on ouvre est plus ancien que la dernière sauvegarde.</li>
+<li><b>Le lien du mail</b>, emia35.github.io/baf/#participer, ouvre une page sans menu, avec un bouton « Importer mon fichier » et une zone où glisser le fichier.</li>
+<li><b>Un seul fichier.</b> Le déclarant ouvre le kit la première fois, puis son dernier fichier sauvegardé. « 💾 Télécharger pour sauvegarder » télécharge le fichier à jour — le préambule reçu, ses évènements, ses périodes observées —, avec la date et l'heure dans son nom. C'est ce même fichier qu'il envoie à la fin.</li>
+<li><b>« 🗑 Effacer » remplace « Quitter »</b> : sur un poste partagé, on efface avant de partir. La BAF prévient s'il reste des modifications non sauvegardées, et quand le fichier qu'on ouvre est plus ancien que la dernière sauvegarde.</li>
 <li><b>Un kit corrigé</b> met à jour le préambule sans effacer les évènements déjà décrits.</li>
-<li><b>Sa page</b> explique comment la sauvegarde fonctionne, et dit clairement que rien n'est envoyé sur un serveur. Dans Recueillir, il ne voit plus « Recevoir une contribution » ni les boutons vers les parties réservées : seuls les référents voient l'ensemble des évènements.</li>
+<li><b>Sa page</b> explique comment la sauvegarde fonctionne, et dit clairement que rien n'est envoyé sur un serveur. Dans Recueillir, il ne voit plus « Recevoir une contribution » ni les boutons vers les parties réservées : seuls les référents voient l'ensemble des évènements.</li>
 </ul>
 
 <h4>Côté équipe</h4>
 <ul>
 <li><b>Recevoir une contribution</b> : chaque fichier contient tout ce que le déclarant a écrit ; les évènements déjà reçus sont mis à jour, les nouveaux s'ajoutent, et un fichier plus ancien que le dernier reçu ne remplace rien.</li>
-<li><b>Le double codage se fait sans comparaison automatique.</b> « Exporter un kit de codage » produit une copie vierge — aucune catégorie, rien dans Interpréter —, une par codeur. La synthèse se saisit à deux dans le fichier officiel, signes du vase compris, et Interpréter se fait directement en synthèse. « Effacer le codage » repart d'une page blanche.</li>
+<li><b>Le double codage se fait sans comparaison automatique.</b> « Exporter un kit de codage » produit une copie vierge — aucune catégorie, rien dans Interpréter —, une par codeur. La synthèse se saisit à deux dans le fichier officiel, signes du vase compris, et Interpréter se fait directement en synthèse. « Effacer le codage » repart d'une page blanche.</li>
 <li>Les fichiers exportés portent la date et l'heure dans leur nom.</li>
 </ul>
 
 <h4>Les Repères réécrits, en trois parties</h4>
 <ul>
-<li><b>Trois parties, à un clic</b> depuis le haut de la page : la <b>FAQ</b>, le <b>lexique</b>, et une <b>bibliographie</b> — « Sur quoi la BAF s'appuie », qui se trouvait jusqu'ici dans Ressources.</li>
+<li><b>Trois parties, à un clic</b> depuis le haut de la page : la <b>FAQ</b>, le <b>lexique</b>, et une <b>bibliographie</b> — « Sur quoi la BAF s'appuie », qui se trouvait jusqu'ici dans Ressources.</li>
 <li><b>Les questions sur l'analyse fonctionnelle</b> reprennent la langue de la capsule vidéo de l'EMIA : l'iceberg, le comportement qui n'est pas là pour rien, le puzzle qu'on rassemble avant de l'assembler, l'hypothèse fonctionnelle qui se teste, le comportement fonctionnellement équivalent. Onze questions.</li>
-<li><b>Les questions sur l'outil</b> gagnent « Qui fait quoi dans la BAF ? » — déclarant, analyste, cotateur — et « Pourquoi déclarer les journées où il ne se passe rien ? ». « Comment travailler à plusieurs » décrit le circuit du kit déclarant et le double codage.</li>
+<li><b>Les questions sur l'outil</b> gagnent « Qui fait quoi dans la BAF ? » — déclarant, analyste, cotateur — et « Pourquoi déclarer les journées où il ne se passe rien ? ». « Comment travailler à plusieurs » décrit le circuit du kit déclarant et le double codage.</li>
 <li><b>Le lexique se divise en deux</b> : les mots de l'analyse fonctionnelle, qu'on retrouve dans toute la littérature, et les mots propres à la BAF. Une quinzaine de termes ont été ajoutés.</li>
 </ul>
 
 <h4>Deux modes d'emploi dans Ressources</h4>
 <ul>
-<li><b>« Mode d'emploi : faire une analyse fonctionnelle avec la BAF — Pour tous »</b>, pour toute équipe qui se lance : une fiche process d'une page, puis la notice — les rôles, les quatre étapes, où la BAF garde votre travail et comment le sauvegarder, un modèle de courriel pour les déclarants, le double codage.</li>
-<li><b>« Mode d'emploi : faire une analyse fonctionnelle avec la BAF — Version EMIA »</b> : le document écrit par Arthur pour l'EMIA 35, fiche process en tête. Il est réservé à l'équipe : un code est demandé pour le télécharger.</li>
+<li><b>« Mode d'emploi : faire une analyse fonctionnelle avec la BAF — Pour tous »</b>, pour toute équipe qui se lance : une fiche process d'une page, puis la notice — les rôles, les quatre étapes, où la BAF garde votre travail et comment le sauvegarder, un modèle de courriel pour les déclarants, le double codage.</li>
+<li><b>« Mode d'emploi : faire une analyse fonctionnelle avec la BAF — Version EMIA »</b> : le document écrit par Arthur pour l'EMIA 35, fiche process en tête. Il est réservé à l'équipe : un code est demandé pour le télécharger.</li>
 </ul>
 <p>Les Ressources se rangent désormais en deux catégories : les modes d'emploi d'abord, puis la version papier.</p>
 
@@ -16250,7 +16257,7 @@ const NOTES_VERSION = [
 <h4>Corrigé</h4>
 <ul>
 <li><b>Ouvrir un lien direct vers la page Repères arrêtait l'outil</b> : la page s'affichait vide, et l'indice de confiance ne fonctionnait plus jusqu'au rechargement.</li>
-<li>L'encart « Utilisation partagée entre plusieurs postes » décrivait encore un circuit retiré : il a disparu de l'accueil du recueil.</li>
+<li>L'encart « Utilisation partagée entre plusieurs postes » décrivait encore un circuit retiré : il a disparu de l'accueil du recueil.</li>
 </ul>
 
 <h4>Pas encore stabilisé</h4>
@@ -16268,14 +16275,14 @@ const NOTES_VERSION = [
 
 <h4>Trois chiffres étaient faux</h4>
 <ul>
-<li><b>Le plus grave était invisible.</b> Dans la synthèse, le tableau « Antécédent → Conséquence » annonçait un taux conditionnel et divisait par le nombre total d'évènements du dossier. Un lien réel à 47 % s'affichait à 15 %. Ce tableau ouvre la synthèse et part dans l'export Word, donc dans les bilans. Le calcul est corrigé, et le <b>taux d'ensemble est affiché à côté</b> : un pourcentage seul ne dit rien, c'est la comparaison qui informe.</li>
+<li><b>Le plus grave était invisible.</b> Dans la synthèse, le tableau « Antécédent → Conséquence » annonçait un taux conditionnel et divisait par le nombre total d'évènements du dossier. Un lien réel à 47 % s'affichait à 15 %. Ce tableau ouvre la synthèse et part dans l'export Word, donc dans les bilans. Le calcul est corrigé, et le <b>taux d'ensemble est affiché à côté</b> : un pourcentage seul ne dit rien, c'est la comparaison qui informe.</li>
 <li>Une dimension de l'indice de confiance pouvait s'afficher à <b>200 %</b>.</li>
 <li>Le même dossier ne donnait pas le même indice selon qu'on le cotait depuis la page ou depuis un fichier importé.</li>
-<li>Une cotation partielle affichait un indice effondré, sans un mot. Désormais, <b>aucun indice global ne s'affiche tant que les six dimensions n'ont pas été regardées</b>, et chaque dimension porte sa couverture — « 5 cotés sur 28 ».</li>
+<li>Une cotation partielle affichait un indice effondré, sans un mot. Désormais, <b>aucun indice global ne s'affiche tant que les six dimensions n'ont pas été regardées</b>, et chaque dimension porte sa couverture — « 5 cotés sur 28 ».</li>
 </ul>
 
 <h4>Les journées sans comportement-défi existent enfin</h4>
-<p>C'était le manque central. La BAF ne savait enregistrer qu'un évènement où quelque chose s'était passé : elle ne pouvait donc pas distinguer « il ne s'est rien passé » de « personne n'a rempli », et la fréquence qu'elle affichait mesurait les <b>signalements</b>, pas les comportements.</p>
+<p>C'était le manque central. La BAF ne savait enregistrer qu'un évènement où quelque chose s'était passé : elle ne pouvait donc pas distinguer « il ne s'est rien passé » de « personne n'a rempli », et la fréquence qu'elle affichait mesurait les <b>signalements</b>, pas les comportements.</p>
 <p>On déclare maintenant une journée ou une plage de dates, avec deux états : <b>observé sans comportement-défi</b>, ou <b>personne n'était en situation d'observer</b>. Ce ne sont pas la même information, et la première est celle qui a de la valeur clinique — les contextes de non-apparition orientent l'intervention.</p>
 <p>Et surtout : <b>la chronologie repère ses trous et vous relance.</b> Pour chaque période sans information, deux boutons. Avec la consigne qui va avec : si vous ne savez pas, allez le demander plutôt que de deviner.</p>
 
@@ -16288,7 +16295,7 @@ const NOTES_VERSION = [
 <p>Ce n'est plus une échelle qu'on applique, c'est un <b>résultat d'analyse</b>. Le déclarant pose un palier parmi cinq — la valeur libre de 0 à 100 disparaît, une impression subjective ne porte pas cent degrés de discrimination — et ce palier sert surtout à ranger l'observation associée.</p>
 <p>C'est l'équipe qui, à partir de ces signaux, écrit <b>l'échelle décrite de cette personne</b> : à quoi on reconnaît chaque palier chez elle. Cette échelle est une pièce du document d'analyse fonctionnelle, et elle peut être <b>figée</b> pour servir de repère au recueil suivant — jamais en cours de route, sinon l'unité de mesure se déplacerait pendant qu'on mesure.</p>
 <p>En attendant, cinq descriptions génériques servent de repère. Vos cotations d'avant ne changent pas : les paliers étaient déjà des tranches de l'ancienne échelle.</p>
-<p>La <b>moyenne disparaît</b> des statistiques, le pic reste. Une moyenne suppose que l'écart entre « normal » et « tendu » vaut celui entre « angoissé » et « débordé », ce que rien n'établit. Un maximum, lui, se calcule sur une échelle à paliers.</p>
+<p>La <b>moyenne disparaît</b> des statistiques, le pic reste. Une moyenne suppose que l'écart entre « normal » et « tendu » vaut celui entre « angoissé » et « débordé », ce que rien n'établit. Un maximum, lui, se calcule sur une échelle à paliers.</p>
 
 <h4>La piste somatique, avant l'analyse</h4>
 <p>Une douleur non identifiée est une cause fréquente de comportement-défi, et les recommandations françaises placent le bilan médical <b>avant</b> l'analyse fonctionnelle. Le préambule pose maintenant deux questions : une cause somatique a-t-elle été recherchée, par qui et quand — et ce qui est connu côté corps. Avec un renvoi aux échelles d'hétéro-évaluation de la douleur utilisables chez une personne qui ne la dit pas avec des mots (ESDDA, GED-DI).</p>
@@ -16313,7 +16320,7 @@ const NOTES_VERSION = [
 <ul>
 <li>La carte jour × moment demande une couverture au créneau, pas à la journée, pour distinguer case par case l'absence de comportement de l'absence d'observation.</li>
 <li>Les cinq descriptions génériques des paliers sont une première proposition, à ajuster.</li>
-<li>Le protocole s'arrête à la cotation : il n'y a pas encore d'étape « de l'hypothèse au plan d'intervention ».</li>
+<li>Le protocole s'arrête à la cotation : il n'y a pas encore d'étape « de l'hypothèse au plan d'intervention ».</li>
 <li>L'outil ne mesure pas encore l'accord entre deux déclarants décrivant le même évènement.</li>
 </ul>`
   },
@@ -16325,7 +16332,7 @@ const NOTES_VERSION = [
     corps: `
 <h4>La BAF tient enfin sur un téléphone</h4>
 <p>Sur un écran de téléphone, le document se dessinait plus large que l'écran : il fallait <b>balayer latéralement pour lire une phrase</b>, sur toutes les pages. Trois boutons de la barre dossier, qui refusaient de rétrécir, en étaient la cause.</p>
-<p>Sous 620 pixels de large, ces trois actions passent dans un menu unique « Dossier », qui reprend au passage l'état du dossier ouvert. Le pied de page s'empile sur deux lignes — il se comprimait au point que les noms des auteurs disparaissaient. La tablette, elle, n'avait jamais rien eu.</p>
+<p>Sous 620 pixels de large, ces trois actions passent dans un menu unique « Dossier », qui reprend au passage l'état du dossier ouvert. Le pied de page s'empile sur deux lignes — il se comprimait au point que les noms des auteurs disparaissaient. La tablette, elle, n'avait jamais rien eu.</p>
 
 <h4>Faire participer d'autres personnes : le kit et la contribution</h4>
 <p>C'est le gros morceau. Une famille, un foyer, un accueil de jour voient des choses que l'équipe ne voit pas — mais ils n'ont pas à faire l'analyse fonctionnelle. Le circuit est maintenant en place :</p>
@@ -16334,16 +16341,16 @@ const NOTES_VERSION = [
 <li><b>La personne qui le reçoit ouvre la BAF</b> et charge ce fichier. L'outil passe en <b>mode déclarant</b> : une page d'accueil qui explique ce qu'on lui demande et ce qu'on ne lui demande pas, le préambule en lecture seule, et Recueillir.</li>
 <li><b>Elle peut contester le préambule</b>, section par section, sans pouvoir le modifier. Si chacun le réécrivait de son côté, les observations ne se compareraient plus.</li>
 <li><b>Organiser, Interpréter, la Synthèse et l'indice de confiance restent visibles</b> mais s'ouvrent sur une page qui dit ce qu'ils font et qui s'en charge. L'outil ne cache rien : il montre où s'arrête la part de chacun.</li>
-<li><b>Elle renvoie sa contribution</b>, un fichier que l'équipe fusionne dans Recueillir. Chaque évènement garde la trace de sa provenance — « domicile », « foyer » — et les envois successifs d'une même personne ne se dupliquent pas.</li>
-<li><b>Les remarques sur le préambule</b> apparaissent dans « Se connaître », groupées par section et étiquetées de leur provenance. Présentées, jamais appliquées : c'est l'équipe qui corrige.</li>
+<li><b>Elle renvoie sa contribution</b>, un fichier que l'équipe fusionne dans Recueillir. Chaque évènement garde la trace de sa provenance — « domicile », « foyer » — et les envois successifs d'une même personne ne se dupliquent pas.</li>
+<li><b>Les remarques sur le préambule</b> apparaissent dans « Se connaître », groupées par section et étiquetées de leur provenance. Présentées, jamais appliquées : c'est l'équipe qui corrige.</li>
 </ul>
-<p>La provenance devient aussi un terme d'Explorer : croiser « domicile » avec une catégorie est désormais une question qu'on peut poser.</p>
+<p>La provenance devient aussi un terme d'Explorer : croiser « domicile » avec une catégorie est désormais une question qu'on peut poser.</p>
 
-<h4>« Où suis-je ? » — la même bande sur chaque module</h4>
+<h4>« Où suis-je ? » — la même bande sur chaque module</h4>
 <p>Trois questions, toujours les mêmes, toujours au même endroit : <b>ce qu'on fait ici</b>, <b>d'où ça vient</b>, <b>où ça repart</b>. Parce que ce qui perd quelqu'un dans la BAF, ce n'est pas le manque d'explications — c'est de ne pas voir la chaîne, et de croire qu'on ressaisit ce qu'on a déjà écrit.</p>
-<p>La bande se replie d'un clic et s'en souvient sur toutes les pages. Une nouvelle page <b>« Le parcours »</b> dessine l'enchaînement complet, boucle des déclarants comprise.</p>
+<p>La bande se replie d'un clic et s'en souvient sur toutes les pages. Une nouvelle page <b>« Le parcours »</b> dessine l'enchaînement complet, boucle des déclarants comprise.</p>
 
-<h4>Un quatrième document : « Faire une analyse fonctionnelle avec la BAF »</h4>
+<h4>Un quatrième document : « Faire une analyse fonctionnelle avec la BAF »</h4>
 <p>Le protocole, dans l'ordre, à poser à côté du clavier : ouvrir le dossier, faire valider le préambule par les parties, envoyer les kits, fusionner les contributions, organiser, interpréter, coter. Huit étapes, chacune avec l'endroit où elle se passe dans l'outil et le piège qui la guette.</p>
 
 <h4>Sous le capot</h4>
@@ -16375,25 +16382,25 @@ const NOTES_VERSION = [
 <p>Une seule notion dans tout l'outil : un vase qui se remplit de ce que la personne vit. L'échelle de 1 à 5 laisse place à une échelle <b>0 à 100 à valeur libre</b>, avec cinq paliers nommés — <i>tranquille</i> (0-20), <i>normal</i> (20-40), <i>tendu</i> (40-60), <i>angoissé</i> (60-80), <i>débordé</i> (80-100). Ce sont des repères de lecture, pas des crans : 52 et 68 sont des valeurs parfaitement légitimes.</p>
 <p>On mesure <b>quatre fois</b> dans un évènement : dans le contexte, juste avant, au plus fort, puis une fois par intervention. Le curseur démarre <b>non coté</b> et ne devient jamais 0 tout seul.</p>
 <p>Chaque mesure porte une note libre : <i>à quoi ça se voyait</i>. C'est le point important — cette matière est récoltée plus loin, dans Interpréter.</p>
-<p><b>Les anciens dossiers ne sont pas convertis.</b> Là où une intensité 1-5 existe, elle reste affichée en lecture seule, avec une invitation à coter le vase. Traduire « 4 — Forte » en « 70 » fabriquerait un chiffre que personne n'a produit.</p>
+<p><b>Les anciens dossiers ne sont pas convertis.</b> Là où une intensité 1-5 existe, elle reste affichée en lecture seule, avec une invitation à coter le vase. Traduire « 4 — Forte » en « 70 » fabriquerait un chiffre que personne n'a produit.</p>
 <p>Sur la carte thermique, le rond porte désormais le niveau de tension, au choix en moyenne de la montée ou en pic. La moyenne <b>exclut les niveaux d'après intervention</b> : sinon un évènement bien désamorcé ressortirait moins grave qu'un évènement où personne n'est intervenu.</p>
 
 <h4>Interpréter : l'onglet Vase de tension ne part plus d'une page blanche, il récolte</h4>
 <ul>
-<li><b>Les paliers.</b> Toutes les notes « à quoi ça se voyait » sont rangées selon le niveau posé par le déclarant, les notes identiques regroupées avec leur nombre. C'est ce qui fait apparaître un signe précurseur récurrent. L'équipe lit, regroupe, et écrit à quoi ressemble chaque palier chez cette personne.</li>
+<li><b>Les paliers.</b> Toutes les notes « à quoi ça se voyait » sont rangées selon le niveau posé par le déclarant, les notes identiques regroupées avec leur nombre. C'est ce qui fait apparaître un signe précurseur récurrent. L'équipe lit, regroupe, et écrit à quoi ressemble chaque palier chez cette personne.</li>
 <li><b>Ce qui le remplit, ce qui le vide</b>, en trois colonnes : ce qui vient d'elle ou de lui, ce qui vient du dehors, ce qui fait redescendre. Le préambule pose la même question, avant qu'on regarde les données.</li>
 <li><b>La courbe, une journée à la fois.</b> Trait plein entre deux mesures d'un même évènement, pointillés entre deux évènements — personne n'a déclaré ce qui s'est passé entre les deux. Les interventions sont des repères verticaux.</li>
 </ul>
 
 <h4>Recueillir : un mode rapide</h4>
 <p>À côté du formulaire déroulé, un <b>mode rapide</b> : une seule case libre par étape, exactement la forme d'une colonne de grille ABC papier. Le choix se fait <b>étape par étape</b> — on peut résumer le contexte et dérouler le comportement — et il se retient pour la suite. Chaque case porte sa consigne et un exemple de ce qu'on en attend.</p>
-<p>Basculer en rapide <b>n'efface jamais</b> ce qui a été saisi en détaillé. Organiser récolte les résumés comme des éléments catégorisables, badgés « résumé rapide » : on ne fait pas passer un résumé pour une réponse déroulée. L'indice de confiance gagne un dixième critère, le niveau de détail du recueil.</p>
+<p>Basculer en rapide <b>n'efface jamais</b> ce qui a été saisi en détaillé. Organiser récolte les résumés comme des éléments catégorisables, badgés « résumé rapide » : on ne fait pas passer un résumé pour une réponse déroulée. L'indice de confiance gagne un dixième critère, le niveau de détail du recueil.</p>
 <p>Aussi : l'heure d'un nouvel évènement est pré-remplie à l'heure courante avec le créneau correspondant — suggestion, pas contrainte — et l'étape 5/7 est reformulée.</p>
 
 <h4>Organiser</h4>
 <ul>
 <li><b>Le contexte a son propre volet.</b> Il était mélangé à l'antécédent, ce qui obligeait à inventer des catégories recouvrant deux moments très différents. Les catégorisations déjà faites ont été reportées : elles désignent exactement les mêmes textes qu'avant.</li>
-<li><b>Un bouton « détail »</b> sur chaque élément rappelle l'évènement entier en fenêtre, en lecture seule, le volet en cours surligné. Plus besoin de quitter la catégorisation pour se rappeler le contexte.</li>
+<li><b>Un bouton « détail »</b> sur chaque élément rappelle l'évènement entier en fenêtre, en lecture seule, le volet en cours surligné. Plus besoin de quitter la catégorisation pour se rappeler le contexte.</li>
 <li><b>Des catégories proposées</b> par volet, tirées de la littérature. Rien n'est créé d'office : on clique ce qu'on veut, on renomme, on supprime.</li>
 <li>Un élément classé prend <b>la couleur de son volet</b>, et cliquer dessus montre franchement où il se trouve dans la colonne de gauche.</li>
 <li>L'aide à la catégorisation est devenue un bouton lisible plutôt qu'un chevron muet.</li>
@@ -16414,7 +16421,7 @@ const NOTES_VERSION = [
 <h4>Ressources : trois documents à imprimer</h4>
 <ul>
 <li><b>La grille ABC</b>, en paysage, pour une famille ou une structure qui ne peut pas utiliser l'outil numérique. Elle reprend <b>colonne pour colonne le mode rapide</b> : la recopie ne demande aucune décision.</li>
-<li><b>Le préambule</b>, qui reprend le module « Se connaître ».</li>
+<li><b>Le préambule</b>, qui reprend le module « Se connaître ».</li>
 <li><b>Le guide de remplissage</b>, écrit à partir des consignes de l'outil — le papier dit la même chose que l'écran — avec un exemple pour chaque colonne.</li>
 </ul>
 <p>Les trois rappellent de n'inscrire ni nom de famille, ni ville, ni structure.</p>
@@ -16430,7 +16437,7 @@ const NOTES_VERSION = [
 <h4>Retiré</h4>
 <ul>
 <li>L'échelle d'intensité 1-5 pour les nouveaux recueils (conservée en lecture seule dans les anciens dossiers).</li>
-<li>Le bascule rapide/approfondi de Recueillir, Organiser et Interpréter : il n'ouvrait qu'un panneau « en construction ».</li>
+<li>Le bascule rapide/approfondi de Recueillir, Organiser et Interpréter : il n'ouvrait qu'un panneau « en construction ».</li>
 <li>Le bouton Simuler isolé sur les pages d'accueil, et les numéros ① ② ③ de l'en-tête.</li>
 </ul>
 
@@ -16438,7 +16445,7 @@ const NOTES_VERSION = [
 <ul>
 <li><b>Ouvrir la Synthèse sur un dossier neuf</b> interrompait silencieusement l'affichage — c'est-à-dire au tout premier usage de l'outil.</li>
 <li><b>L'outil 2 ne fonctionnait plus du tout</b> dès qu'on ouvrait un lien direct vers la page indice de confiance.</li>
-<li>Le « moment dominant » qui débordait de sa case, et un titre de carte thermique affiché deux fois.</li>
+<li>Le « moment dominant » qui débordait de sa case, et un titre de carte thermique affiché deux fois.</li>
 </ul>
 
 <h4>Pas encore stabilisé</h4>
@@ -16467,7 +16474,7 @@ const NOTES_VERSION = [
 
 <h4>Une barre dossier unique</h4>
 <ul>
-<li>Une seule barre pour les deux outils : d'où l'on vient à gauche, l'état du dossier au centre, ce qu'on peut en faire à droite. Elle dit ce qui est chargé, ou « aucun fichier chargé — travail local ».</li>
+<li>Une seule barre pour les deux outils : d'où l'on vient à gauche, l'état du dossier au centre, ce qu'on peut en faire à droite. Elle dit ce qui est chargé, ou « aucun fichier chargé — travail local ».</li>
 <li><b>Exporter, Importer et Effacer sont accessibles depuis n'importe quelle page</b>, au lieu d'être coincés sur l'accueil du recueil. Importer prévient que le dossier ouvert sera remplacé, et ne fait rien si on renonce.</li>
 <li>Chaque bouton d'export annonce son format : <b>.json</b> pour reprendre le travail, <b>.doc</b> pour un bilan.</li>
 <li><b>Les fichiers exportés changent de nom</b> : BAF_… devient RDAF_… (recueil de données), EQAF devient ICAF (indice de confiance).</li>
@@ -16486,12 +16493,12 @@ const NOTES_VERSION = [
 <h4>Affichage</h4>
 <ul>
 <li>Dans le planning hebdomadaire, chaque jour prend la couleur de son lieu d'accueil dès qu'il y en a plusieurs, avec le nom du lieu sous le jour.</li>
-<li>« Autre lieu… » devient une case comme les autres ; la ligne de saisie n'apparaît qu'au clic.</li>
+<li>« Autre lieu… » devient une case comme les autres ; la ligne de saisie n'apparaît qu'au clic.</li>
 <li>Repères et Ressources passent à droite de l'en-tête : ce sont des ressources de consultation, pas des étapes du parcours.</li>
 </ul>
 
 <h4>Corrigé</h4>
-<p>L'« intensité moyenne » de l'outil 2 n'avait jamais pu s'afficher : la table de correspondance attendait un format que le formulaire ne produisait pas, et la conversion échouait à tous les coups.</p>`
+<p>L'« intensité moyenne » de l'outil 2 n'avait jamais pu s'afficher : la table de correspondance attendait un format que le formulaire ne produisait pas, et la conversion échouait à tous les coups.</p>`
   },
 
   {
@@ -16504,7 +16511,7 @@ const NOTES_VERSION = [
 <h4>Juin 2026 — la fondation</h4>
 <ul>
 <li>Le recueil de données et l'indice de confiance étaient <b>deux pages séparées</b>. Elles fusionnent en un seul fichier le 21 juin : depuis, les deux outils partagent le même dossier.</li>
-<li>Le module « Apprenons à nous connaître » prend sa forme : journée type, trajets, emploi du temps, progression.</li>
+<li>Le module « Apprenons à nous connaître » prend sa forme : journée type, trajets, emploi du temps, progression.</li>
 <li>Le formulaire d'évènement est réordonné en étapes, avec un mode brouillon et un tri automatique.</li>
 <li>L'intervention de l'entourage devient une liste : une intervention, son effet, et un nouveau comportement post-intervention quand l'effet est nul ou aggravant.</li>
 <li>Organiser accepte qu'un même élément aille dans plusieurs catégories.</li>
@@ -16513,7 +16520,7 @@ const NOTES_VERSION = [
 
 <h4>10 septembre — le vocabulaire, puis deux gros lots</h4>
 <ul>
-<li><b>Le vocabulaire est fixé</b> : « antécédent lointain » devient <b>contexte</b>, « antécédent immédiat » devient <b>antécédent</b>. Le témoin direct, l'échelle d'effet à quatre niveaux et la numérotation des crises apparaissent.</li>
+<li><b>Le vocabulaire est fixé</b> : « antécédent lointain » devient <b>contexte</b>, « antécédent immédiat » devient <b>antécédent</b>. Le témoin direct, l'échelle d'effet à quatre niveaux et la numérotation des crises apparaissent.</li>
 <li><b>Premier lot</b> : brouillons multiples, plusieurs lieux d'accueil avec leurs jours et leurs heures, fusion de l'antécédent et du déclencheur en un seul volet, export Word sélectif, et les modules <b>Repères</b> et <b>Ressources</b>.</li>
 <li><b>Second lot</b> : sous-catégories, fréquence des évènements, répartition temporelle à quatre échelles, histogrammes par volet, distinction entre ce que disent les chiffres et ce qu'en pense l'équipe, patterns enrichis, et le module <b>Explorer</b>.</li>
 </ul>`
@@ -16565,7 +16572,7 @@ const GL={
 "espace":"Tous les lieux de vie : famille, institution(s) médico-sociales, scolaires, sanitaires, professionnelles, PEC libérales, taxi, SAT, séjour, loisirs…",
 "biais potentiels":"Facteurs déformant l'interprétation : mémorisation, confirmation, interprétation, halo, fatigue du déclarant, passif institutionnel, surreprésentation de certains contextes…",
 "environnement":"Facteurs matériels (agencement, charge sensorielle, rythme, transport, multiplicité des lieux) et affectifs (dynamique institutionnelle, familiale : décès, changements, départs, ruptures).",
-"typologie":"Description factuelle et observable : pas « crise » ou « violence » mais « donne des coups de poing au visage », « se mord le dos de la main jusqu'à laisser une marque rouge visible ».",
+"typologie":"Description factuelle et observable : pas « crise » ou « violence » mais « donne des coups de poing au visage », « se mord le dos de la main jusqu'à laisser une marque rouge visible ».",
 "contingences synthétiques":"Un même comportement maintenu simultanément par plusieurs fonctions dans un même contexte (ex : obtenir de l'attention ET éviter une tâche).",
 "analyse environnementale":"Évaluation structurée de l'environnement matériel et affectif : espaces, organisation du quotidien, dynamiques relationnelles, charges sensorielles, transitions."
 };
@@ -16577,7 +16584,7 @@ const REPERES = [
       {q: "Qu'est-ce qu'une analyse fonctionnelle ?",
        r: `<p>Prenons l'image d'un iceberg. La partie émergée, ce sont les comportements : ce qu'on voit. Dessous, il y a tout ce qui les détermine — c'est complexe, et difficile d'accès. Mais cela dit une chose essentielle : <b>un comportement n'est pas là pour rien</b>. Il sert à quelque chose.</p>
            <p>L'analyse fonctionnelle cherche à répondre à une question : <i>à quoi sert ce comportement ?</i> C'est un processus, une méthode, et son but est d'abord de comprendre — avant de savoir ce qu'on va en faire.</p>`},
-      {q: "Pourquoi parle-t-on de « comportement-défi » ?",
+      {q: "Pourquoi parle-t-on de « comportement-défi » ?",
        r: `<p>Parce qu'il fait défi <i>pour nous</i> — pour l'entourage, l'institution, l'équipe — et pas nécessairement pour la personne elle-même.</p>
            <p>Pour elle, c'est une tentative de répondre à un besoin, de façon plus ou moins adaptée. Un comportement-défi est une alerte : il n'est pas là pour déranger, il est là pour dire quelque chose.</p>`},
       {q: "Pourquoi est-ce si difficile à décrypter ?",
@@ -16603,7 +16610,7 @@ const REPERES = [
            <p>Chez une personne qui ne dit pas sa douleur avec des mots, l'évaluation passe par une hétéro-évaluation, avec un professionnel de santé.</p>`},
       {q: "Faut-il attendre la crise pour commencer à observer ?",
        r: `<p>Non, c'est même l'inverse. L'analyse fonctionnelle ne commence pas au moment du pic.</p>
-           <p>Un comportement-défi est souvent précédé de signaux plus discrets, qui montent bien avant l'explosion visible : une agitation, un retrait, une stéréotypie inhabituelle, que personne ne repère comme des « défis ». Ce sont les premières marches de la montée en tension. Les ignorer, c'est arriver trop tard.</p>`},
+           <p>Un comportement-défi est souvent précédé de signaux plus discrets, qui montent bien avant l'explosion visible : une agitation, un retrait, une stéréotypie inhabituelle, que personne ne repère comme des « défis ». Ce sont les premières marches de la montée en tension. Les ignorer, c'est arriver trop tard.</p>`},
       {q: "Pourquoi parler de tension plutôt que de comportement ?",
        r: `<p>Plutôt que d'étudier isolément un comportement-défi, on cherche à lire <i>la tension qui s'accumule</i> chez la personne : ce qui la fait monter, ce qui la fait redescendre, ce qui la régule ou l'amplifie. C'est ce que la BAF appelle le vase de tension.</p>
            <p>Ce déplacement du regard rend l'analyse utile pour proposer des accompagnements durables : on n'attend plus le débordement, on apprend à reconnaître le remplissage.</p>`},
@@ -16636,7 +16643,7 @@ const REPERES = [
            <p><b>Pour organiser</b>, référent et clinicien font d'abord un primo codage chacun de leur côté, dans la copie vierge que produit le <i>kit de codage</i>, à partir du seul déclaratif. Ils se réunissent ensuite et arbitrent ensemble, dans le fichier socle, la catégorisation de synthèse, qui devient le seul codage. Interpréter se fait directement en synthèse.</p>
            <p>Le fichier socle, lui, ne circule pas : il reste chez le référent. Ce qui part vers l'extérieur, c'est le document d'analyse fonctionnelle.</p>`},
       {q: "Pourquoi déclarer les journées où il ne se passe rien ?",
-       r: `<p>Parce qu'une journée sans comportement-défi est une donnée, pas un vide. Sans elle, l'outil ne peut pas distinguer « il ne s'est rien passé » de « personne n'a rempli » : la fréquence qu'il affiche mesure alors les signalements, pas les comportements.</p>
+       r: `<p>Parce qu'une journée sans comportement-défi est une donnée, pas un vide. Sans elle, l'outil ne peut pas distinguer « il ne s'est rien passé » de « personne n'a rempli » : la fréquence qu'il affiche mesure alors les signalements, pas les comportements.</p>
            <p>Et les moments où le comportement n'apparaît pas sont souvent les plus instructifs : ils disent ce qui aide la personne.</p>`},
     ]
   },
@@ -16647,8 +16654,8 @@ const REPERES = [
    elle-même, et on les retrouve dans toute la littérature et dans toute
    démarche, avec ou sans la BAF. D'autres sont des mots d'usage de l'outil :
    ils n'ont pas cours ailleurs, ou pas dans ce sens précis. Les mélanger
-   laisserait croire qu'un « kit déclarant » est une notion de la littérature,
-   ou qu'une « fonction » est une invention de l'outil.
+   laisserait croire qu'un « kit déclarant » est une notion de la littérature,
+   ou qu'une « fonction » est une invention de l'outil.
 
    Les définitions restent là où elles vivaient : GL sert aussi aux info-bulles
    de l'outil 2 et ne change pas de forme. Le classement est une table à part,
@@ -16675,7 +16682,7 @@ const LEXIQUE_BAF = {
   "kit déclarant": "Le fichier envoyé à tous les déclarants : le préambule, sans aucun évènement ni travail d'analyse. Chacun l'ouvre depuis la page Participer de la BAF.",
   "fichier socle": "Le fichier du référent : le préambule, tous les évènements reçus, et tout le travail d'analyse. C'est lui qu'on exporte et qu'on range dans le dossier partagé de l'équipe ; il ne circule pas au-dehors.",
   "fichier déclarant": "Le fichier propre à chaque déclarant : le préambule reçu, ses évènements et ses périodes observées. Il le sauvegarde à chaque séance, repart toujours du dernier, et envoie le dernier. Le référent l'ajoute à son fichier socle, chaque évènement gardant sa provenance. Une personne, un fichier : à deux sur le même fichier, on se marche dessus.",
-  "période observée": "Une journée ou une plage de jours déclarée comme observée, avec ou sans comportement-défi. Sans elle, l'outil ne peut pas distinguer « il ne s'est rien passé » de « personne n'a rempli ».",
+  "période observée": "Une journée ou une plage de jours déclarée comme observée, avec ou sans comportement-défi. Sans elle, l'outil ne peut pas distinguer « il ne s'est rien passé » de « personne n'a rempli ».",
   "vase de tension": "L'image qu'emploie la BAF pour la tension qui s'accumule chez la personne, en cinq paliers. Le déclarant pose un palier et note les signes de tension qu'il a remarqués ; l'équipe en tire l'échelle décrite propre à la personne.",
   "double codage": "La catégorisation faite d'abord séparément par deux personnes — le référent et le clinicien, par exemple —, chacune dans une copie vierge et à partir du seul déclaratif, puis saisie à deux, en synthèse, dans le fichier socle. La synthèse devient le seul codage.",
   "kit de codage": "Une copie vierge du fichier socle pour le primo codage : le préambule et les évènements, aucune catégorie, rien dans Interpréter. Une par codeur.",
@@ -16832,7 +16839,7 @@ function gf(text){
    en D, E et F — non parce que le travail est mauvais, mais parce que l'outil
    ne fabrique pas ces objets.
 
-   L'outil rendait cette erreur facile : un bouton « Coter le dossier ouvert »
+   L'outil rendait cette erreur facile : un bouton « Coter le dossier ouvert »
    mène droit dessus. On ne retire pas le bouton — lire le recueil à travers le
    barème est utile — on dit ce qu'on cote.
 
@@ -16928,7 +16935,7 @@ const DIMS=[
   "Les sources sont précisées (méthode de recueil : entretien, observation, grille, questionnaire)"
  ]},
 {code:"A2",name:"Niveau de détail des sources",
- examples:"Ex : « 14h15, salle d'activité, donne un coup de pied dans la chaise, durée ~5s, 2 pros présents, intensité 6/10. »",
+ examples:"Ex : « 14h15, salle d'activité, donne un coup de pied dans la chaise, durée ~5s, 2 pros présents, intensité 6/10. »",
  bafRefs:{
    1:"contexte",
    2:"intensite",
@@ -16944,7 +16951,7 @@ const DIMS=[
   "Le volume et la période des sources sont détaillés",
   "La personne a été consultée ou la raison de sa non-consultation est justifiée"
  ]},
-{code:"A3",name:"Analyse critique des sources",examples:"Ex : « Transmissions sur 6 mois mais exclusivement du groupe 2 — transport et domicile non documentés. Remplissage a posteriori = biais de mémorisation. »",
+{code:"A3",name:"Analyse critique des sources",examples:"Ex : « Transmissions sur 6 mois mais exclusivement du groupe 2 — transport et domicile non documentés. Remplissage a posteriori = biais de mémorisation. »",
  subItems:[
   "La distinction entre données observées et rapportées est explicite",
   "Les biais potentiels des sources sont identifiés",
@@ -16952,7 +16959,7 @@ const DIMS=[
   "L'analyse prend en compte les comportements dans leur globalité, pas uniquement les comportements-défis",
   "La qualité des sources est discutée (lacunes, limites, forces)"
  ]},
-{code:"A4",name:"Prise en compte du profil global de la personne",examples:"Ex : « Le profil sensoriel Dunn 2025 montre une hyporéactivité vestibulaire — mise en lien avec les balancements pré-crise. »",
+{code:"A4",name:"Prise en compte du profil global de la personne",examples:"Ex : « Le profil sensoriel Dunn 2025 montre une hyporéactivité vestibulaire — mise en lien avec les balancements pré-crise. »",
  subItems:[
   "Le profil sensoriel, basé sur une évaluation fine et récente, est décrit",
   "Le profil sensoriel est pris en compte (mis en lien avec les comportements)",
@@ -16968,7 +16975,7 @@ const DIMS=[
 ]},
 {code:"B",name:"Capacité à organiser les données",items:[
 {code:"B1",name:"Définition opérationnelle du/des comportement(s)-cible(s)",
- examples:"Ex : « CC1 : coups de poing fermé au visage d'un pair. Début : premier coup. Fin : 10s sans nouveau coup. »",
+ examples:"Ex : « CC1 : coups de poing fermé au visage d'un pair. Début : premier coup. Fin : 10s sans nouveau coup. »",
  subItems:[
   "Le(s) CC est/sont nommés par une typologie factuelle, explicite",
   "La description permettrait à un observateur extérieur d'identifier le comportement",
@@ -16976,7 +16983,7 @@ const DIMS=[
   "Le début et la fin du CC sont identifiables"
  ]},
 {code:"B2",name:"Données descriptives sur les CC",
- examples:"Ex : « CC1 : 47 fois sur sept.–déc. 2025 (~3/sem). Intensité moy. 5.2/10. Hausse en novembre. Absence de données les mercredis. »",
+ examples:"Ex : « CC1 : 47 fois sur sept.–déc. 2025 (~3/sem). Intensité moy. 5.2/10. Hausse en novembre. Absence de données les mercredis. »",
  bafRefs:{
    0:"frequence",
    1:"intensiteMoy"
@@ -16990,7 +16997,7 @@ const DIMS=[
   "Une synthèse quantitative est présente (valeurs chiffrées)"
  ]},
 {code:"B3",name:"Organisation des antécédents et conséquences",
- examples:"Ex : « Antécédent : sollicitation activité. Setting event : nuit agitée. Conséquence : retrait demande. Intervention : contention. Résultat : apaisement 15 min. »",
+ examples:"Ex : « Antécédent : sollicitation activité. Setting event : nuit agitée. Conséquence : retrait demande. Intervention : contention. Résultat : apaisement 15 min. »",
  subItems:[
   "Les antécédents immédiats sont identifiés et observables",
   "Les antécédents sont suffisamment spécifiques pour orienter une intervention",
@@ -17004,7 +17011,7 @@ const DIMS=[
 ]},
 {code:"C",name:"Capacité à repérer des patterns",items:[
 {code:"C1",name:"Identification de régularités temporelles et contextuelles",
- examples:"Ex : « 78% des CC entre 9h–11h, mardis et vendredis, transitions. Aucun CC en activité sportive. Plus fréquents après nuit < 5h. »",
+ examples:"Ex : « 78% des CC entre 9h–11h, mardis et vendredis, transitions. Aucun CC en activité sportive. Plus fréquents après nuit < 5h. »",
  bafRefs:{0:"scatterplot"},
  subItems:[
   "Des patterns temporels (moment, jour, période) sont identifiés",
@@ -17015,7 +17022,7 @@ const DIMS=[
   "Les contextes de non-apparition sont utilisés pour affiner l'analyse"
  ]},
 {code:"C2",name:"Analyse des contingences de renforcement",
- examples:"Ex : « 80% des épisodes suivis d'un retrait de la demande → renforcement négatif probable. L'attention mobilisée = renforcement positif involontaire. »",
+ examples:"Ex : « 80% des épisodes suivis d'un retrait de la demande → renforcement négatif probable. L'attention mobilisée = renforcement positif involontaire. »",
  subItems:[
   "Les relations ABC sont analysées au-delà de la description",
   "Des régularités dans les séquences ABC sont dégagées",
@@ -17024,7 +17031,7 @@ const DIMS=[
   "Les renforcements involontaires sont identifiés"
  ]},
 {code:"C3",name:"Repérage d'une gradation / escalade",
- examples:"Ex : « Retrait → verbalisation → pleurs → cris → coups mobilier → hétéroagressivité. Contention après cris précipite passage à l'hétéroagressivité (5/6). »",
+ examples:"Ex : « Retrait → verbalisation → pleurs → cris → coups mobilier → hétéroagressivité. Contention après cris précipite passage à l'hétéroagressivité (5/6). »",
  bafRefs:{1:"gradation"},
  subItems:[
   "Les signaux précurseurs sont distingués des comportements de crise",
@@ -17036,7 +17043,7 @@ const DIMS=[
 ]},
 {code:"D",name:"Capacité à produire des hypothèses fonctionnelles testables",items:[
 {code:"D1",name:"Formulation des hypothèses fonctionnelles",
- examples:"Ex : « Sollicitation transition (antécédent) → cris + frappe mobilier (comportement) → éviter/retarder le départ (fonction). Cohérent : demande retirée dans 80% des cas. »",
+ examples:"Ex : « Sollicitation transition (antécédent) → cris + frappe mobilier (comportement) → éviter/retarder le départ (fonction). Cohérent : demande retirée dans 80% des cas. »",
  subItems:[
   "Au moins une hypothèse fonctionnelle est formulée",
   "L'hypothèse contient : antécédent + comportement + fonction",
@@ -17046,7 +17053,7 @@ const DIMS=[
   "La fonction est particularisée au fonctionnement de la personne"
  ]},
 {code:"D2",name:"Prise en compte de la complexité",
- examples:"Ex : « Évitement + régulation sensorielle (Dunn). Changement d'équipe = facteur aggravant. »",
+ examples:"Ex : « Évitement + régulation sensorielle (Dunn). Changement d'équipe = facteur aggravant. »",
  subItems:[
   "La possibilité de fonctions multiples selon les contextes est explorée",
   "La possibilité de contingences synthétiques est envisagée",
@@ -17054,7 +17061,7 @@ const DIMS=[
   "Les facteurs du profil global (sensoriel, communicationnel, environnemental, psychologique, somatique) sont intégrés"
  ]},
 {code:"D3",name:"Testabilité et rigueur épistémique",
- examples:"Ex : « Si transition préparée (pictogrammes + timer), fréquence devrait baisser. Sinon → réviser. Limite : pas de données domicile. »",
+ examples:"Ex : « Si transition préparée (pictogrammes + timer), fréquence devrait baisser. Sinon → réviser. Limite : pas de données domicile. »",
  subItems:[
   "Les hypothèses sont présentées comme des hypothèses",
   "Les hypothèses sont réfutables",
@@ -17066,7 +17073,7 @@ const DIMS=[
 ]},
 {code:"E",name:"Capacité à produire des préconisations",items:[
 {code:"E1",name:"Lien hypothèses → préconisations",
- examples:"Ex : « (1) Structurer transitions (antécédent), (2) pictogramme « j'ai besoin d'un temps » (comportement équivalent), (3) ne plus retirer la demande (conséquence). »",
+ examples:"Ex : « (1) Structurer transitions (antécédent), (2) pictogramme « j'ai besoin d'un temps » (comportement équivalent), (3) ne plus retirer la demande (conséquence). »",
  subItems:[
   "Les préconisations découlent des hypothèses",
   "Le bilan explique pourquoi chaque préconisation est proposée",
@@ -17077,7 +17084,7 @@ const DIMS=[
   "L'absence d'un levier est justifiée"
  ]},
 {code:"E2",name:"Opérationnalité et faisabilité",
- examples:"Ex : « Timer 5 min avant transition, par le référent, 4 semaines. Évaluation : CC/sem. Protocole crise à rédiger en équipe avec la personne. »",
+ examples:"Ex : « Timer 5 min avant transition, par le référent, 4 semaines. Évaluation : CC/sem. Protocole crise à rédiger en équipe avec la personne. »",
  subItems:[
   "Elles précisent quoi faire concrètement",
   "Elles sont hiérarchisées ou priorisées",
@@ -17110,7 +17117,7 @@ const DIMS=[
   "Évite le jargon inutile"
  ]},
 {code:"F3",name:"Posture épistémique et transmissibilité",
- examples:"Ex : « Ces hypothèses devront être confrontées à l'expertise de l'équipe. La contention, bien que protectrice, maintient-elle le cycle ? »",
+ examples:"Ex : « Ces hypothèses devront être confrontées à l'expertise de l'équipe. La contention, bien que protectrice, maintient-elle le cycle ? »",
  subItems:[
   "Distingue faits, interprétations et hypothèses",
   "Caractère hypothétique rappelé",
@@ -17236,8 +17243,8 @@ function computeBafMeta(baf){
    une aide à la saisie, pas un verdict.
    Le tri sous-item par sous-item reste à faire avec Arthur et Émilie :
    cette table est délibérément courte et conservatrice. */
-// Correspondance par texte EXACT du sous-item, jamais par mot-clé : « vécu
-// subjectif du déclarant » contient le mot « déclarant » sans rien avoir à
+// Correspondance par texte EXACT du sous-item, jamais par mot-clé : « vécu
+// subjectif du déclarant » contient le mot « déclarant » sans rien avoir à
 // voir avec leur nombre. Une règle approximative produirait justement la
 // fausse précision qu'on cherche à éviter.
 const PRECOTATION_OBJECTIVABLE = {
@@ -17268,7 +17275,7 @@ const PRECOTATION_OBJECTIVABLE = {
 /* Le barème est binaire : le bouton de cotation ne produit que null, 1 et 0.
    Les règles ci-dessus distinguent trois niveaux et renvoyaient 2, écrit sans
    borne dans le tableau des scores — d'où une dimension affichée à 200 %, un
-   bouton sans style, et un sous-item compté « non coté » tout en pesant 2.
+   bouton sans style, et un sous-item compté « non coté » tout en pesant 2.
    Le niveau intermédiaire n'entre pas par la porte de derrière : c'est un
    JUGEMENT, pas un fait objectivable, donc la règle s'abstient et laisse la
    main au cotateur. C'était la justification même de la pré-cotation. */
@@ -17423,7 +17430,7 @@ function majEntreeDossierOuvert(){
   const n = (state.m2.evenements || []).length;
   const prenom = (state.m1.prenom || '').trim();
   if (!n && !prenom) {
-    el.textContent = "Aucun dossier ouvert pour l'instant. Remplissez le Recueil des données, lancez une simulation, ou importez un fichier avec « Importer », dans la barre sous l'en-tête.";
+    el.textContent = "Aucun dossier ouvert pour l'instant. Remplissez le Recueil des données, lancez une simulation, ou importez un fichier avec « Importer », dans la barre sous l'en-tête.";
     return;
   }
   el.innerHTML = `Dossier en cours : <b>${esc(prenom || 'sans prénom')}</b>, ${n} évènement${n>1?'s':''}. Les deux outils partagent la même page : il est lu directement, sans passer par un fichier.`;
