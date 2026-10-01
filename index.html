@@ -1361,6 +1361,12 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
   outline:1px solid var(--sauge);border-radius:2px;
 }
 .semaine-grid td input[type=text]::placeholder{color:var(--line);}
+.semaine-grid .case-heures{display:block;font:inherit;font-size:9.5px;color:var(--ink-soft);background:none;border:none;padding:0 3px;cursor:pointer;text-align:left;}
+.semaine-grid .case-heures:hover{color:var(--ink);text-decoration:underline;}
+.semaine-grid .case-heures.propre{color:var(--rose-deep);font-weight:700;}
+.semaine-grid .case-heures-edit{display:flex;gap:2px;}
+.semaine-grid .case-heures-ok{font:inherit;font-size:10px;font-weight:700;color:var(--sauge-deep);background:none;border:none;cursor:pointer;padding:0 2px;}
+.semaine-grid .case-heures-edit select{min-width:0 !important;width:44%;font-size:10px;padding:1px;}
 .semaine-grid tr:hover td{background:var(--paper);}
 .semaine-grid tr:hover td.col-horaire{background:var(--paper-deep);}
 .semaine-grid tr.row-provenance td{background:var(--paper-deep);padding:2px 4px;}
@@ -3303,7 +3309,7 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
       <div class="card">
         <div class="semaine-toolbar">
           <span style="font-size:13px;font-weight:700;color:var(--ink);">📅 Emploi du temps hebdomadaire</span>
-          <button class="btn btn-ghost btn-sm" onclick="dupliquerJourneeType()" title="Copier la journée type sur tous les jours actifs">⬇ Depuis la journée type</button>
+          <button class="btn btn-ghost btn-sm" onclick="dupliquerJourneeType()" title="Remplir les cases vides avec la journée type, sans toucher à ce qui est écrit">⬇ Compléter depuis la journée type</button>
           <button class="btn btn-ghost btn-sm" onclick="ajouterJourSemaine()">＋ Ajouter un jour</button>
           <button class="btn btn-ghost btn-sm" onclick="effacerEmploiDuTemps()" title="Tout effacer">🗑 Effacer l'emploi du temps</button>
           <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--ink-soft);font-weight:600;margin-left:auto;">
@@ -4858,7 +4864,8 @@ function ajouterCreneau() {
   state.m1.journeeCreneaux.push({
     debut: last ? last.fin : '08h00',
     fin:   last ? avancerHeure(last.fin) : '09h00',
-    nom:   ''
+    nom:   '',
+    id:    nouvelIdentifiant('cr')
   });
   trierEtComblerCreneaux();
   renderCreneauList();
@@ -4875,8 +4882,17 @@ function supprimerCreneau(idx) {
 }
 
 function updateCreneau(idx, champ, val) {
-  if (!state.m1.journeeCreneaux[idx]) return;
-  state.m1.journeeCreneaux[idx][champ] = val;
+  const c = state.m1.journeeCreneaux[idx];
+  if (!c) return;
+  if (champ === 'nom') {
+    assurerIdsCreneaux();
+    propagerNomCreneau(c, c.nom || '', val);
+    c.nom = val;
+    renderGrilleSemaine();
+    persist();
+    return;
+  }
+  c[champ] = val;
   if (champ === 'debut' || champ === 'fin') {
     trierEtComblerCreneaux();
     renderCreneauList();
@@ -4972,7 +4988,7 @@ function renderGrilleSemaine() {
 
   ensureSemaineCreneaux();
   const jours = joursActifs();
-  const creneaux = (state.m1.journeeCreneaux || []).filter(c => !c.transition);
+  const creneaux = creneauxReels();
   const semaine = semaineCreneauxObj();
 
   if (jours.length === 0) {
@@ -4982,7 +4998,7 @@ function renderGrilleSemaine() {
   }
   if (creneaux.length === 0) {
     thead.innerHTML = '';
-    tbody.innerHTML = '<tr><td colspan="' + (jours.length+1) + '" style="color:var(--ink-soft);font-style:italic;padding:14px;">Créez d\'abord des créneaux en mode Rapide, puis revenez ici.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="' + (jours.length+1) + '" style="color:var(--ink-soft);font-style:italic;padding:14px;">Créez d\'abord des créneaux dans la journée type (mode Rapide), puis revenez ici.</td></tr>';
     return;
   }
 
@@ -5008,10 +5024,16 @@ function renderGrilleSemaine() {
   tbody.innerHTML = creneaux.map((c, ci) => {
     const horaire = `${c.debut||'?'} → ${c.fin||'?'}`;
     const cells = jours.map(j => {
-      const val = ((semaine[j.id] || [])[ci] || {}).activite || '';
-      return `<td><input type="text" value="${esc(val)}"
+      const x = caseSemaine(semaine, j.id, c.id) || {};
+      const debut = x.debut || c.debut || '', fin = x.fin || c.fin || '';
+      const propre = !!(x.debut || x.fin);
+      const ouverte = celluleHeuresOuverte === j.id + '|' + c.id;
+      const heures = ouverte
+        ? `<span class="case-heures-edit">${makeHeureSelect(debut, `updateHeureJour('${j.id}','${c.id}','debut',this.value)`)}${makeHeureSelect(fin, `updateHeureJour('${j.id}','${c.id}','fin',this.value)`)}<button type="button" class="case-heures-ok" onclick="ouvrirHeuresJour('${j.id}','${c.id}')" title="Fermer">✓</button></span>`
+        : `<button type="button" class="case-heures${propre ? ' propre' : ''}" onclick="ouvrirHeuresJour('${j.id}','${c.id}')" title="${propre ? 'Horaires propres à ce jour — cliquer pour les modifier' : 'Cliquer pour modifier les horaires de ce jour seulement'}">${esc(debut)}–${esc(fin)}</button>`;
+      return `<td><input type="text" value="${esc(x.activite || '')}"
         placeholder="${esc(c.nom||'')}"
-        oninput="updateSemaine('${j.id}',${ci},this.value)"></td>`;
+        oninput="updateSemaine('${j.id}','${c.id}',this.value)">${heures}</td>`;
     }).join('');
     return `<tr><td class="col-horaire"><span>${esc(horaire)}</span><span style="font-size:10px;color:var(--sauge-deep);font-weight:600;">${esc(c.nom||'')}</span></td>${cells}</tr>`;
   }).join('') +
@@ -5028,42 +5050,93 @@ function updateProvenanceJour(jourId, champ, val) {
   persist();
 }
 
+/* ── La grille détaillée retient ses créneaux par identité ──────────────
+   Elle rangeait ses cases par position : supprimer un créneau dans la journée
+   type, ou en ajouter un qui se triait au milieu, faisait glisser tout ce qui
+   était écrit en dessous d'une ligne, sans rien dire. Chaque créneau porte
+   désormais un identifiant, et chaque case de la semaine le sien. Les horaires
+   se modifient jour par jour (Émilie, 01/10/2026) : une case qui garde les
+   horaires de la journée type ne stocke rien, elle les suit. */
+function assurerIdsCreneaux() {
+  (state.m1.journeeCreneaux || []).forEach(c => { if (!c.transition && !c.id) c.id = nouvelIdentifiant('cr'); });
+}
+function creneauxReels() {
+  assurerIdsCreneaux();
+  return (state.m1.journeeCreneaux || []).filter(c => !c.transition);
+}
+// Ancien format : un tableau par jour, rangé par position. On le relit dans
+// l'ordre où il s'affichait — c'est ce que l'équipe avait sous les yeux.
+function migrerSemaineParPosition(semaine, reels) {
+  Object.keys(semaine || {}).forEach(jourId => {
+    const t = semaine[jourId];
+    if (!Array.isArray(t) || !t.some(x => x && !x.cle)) return;
+    semaine[jourId] = t.map((x, i) => (x && x.cle) ? x : (reels[i] ? {cle: reels[i].id, activite: (x && x.activite) || ''} : null))
+      .filter(Boolean);
+  });
+}
+function caseSemaine(semaine, jourId, cle) {
+  return (semaine[jourId] || []).find(x => x.cle === cle) || null;
+}
+
 function ensureSemaineCreneaux() {
+  const reels = creneauxReels();
+  migrerSemaineParPosition(state.m1.semaineCreneaux, reels);
+  migrerSemaineParPosition(state.m1.semaineCreneauxB, reels);
   const semaine = semaineCreneauxObj();
-  const jours = joursActifs();
-  const nb = (state.m1.journeeCreneaux || []).filter(c => !c.transition).length;
-  jours.forEach(j => {
-    if (!Array.isArray(semaine[j.id])) {
-      semaine[j.id] = [];
-    }
-    while (semaine[j.id].length < nb) {
-      semaine[j.id].push({activite:''});
-    }
+  joursActifs().forEach(j => {
+    if (!Array.isArray(semaine[j.id])) semaine[j.id] = [];
+    // Un créneau ajouté dans la journée type arrive tout seul dans chaque jour.
+    reels.forEach(c => { if (!caseSemaine(semaine, j.id, c.id)) semaine[j.id].push({cle: c.id, activite: c.nom || ''}); });
   });
 }
 
-function updateSemaine(jourId, creneauIdx, val) {
+function updateSemaine(jourId, cle, val) {
   ensureSemaineCreneaux();
-  const semaine = semaineCreneauxObj();
-  if (!Array.isArray(semaine[jourId])) semaine[jourId] = [];
-  if (!semaine[jourId][creneauIdx]) {
-    semaine[jourId][creneauIdx] = {};
-  }
-  semaine[jourId][creneauIdx].activite = val;
+  const x = caseSemaine(semaineCreneauxObj(), jourId, cle);
+  if (x) x.activite = val;
   persist();
 }
 
+let celluleHeuresOuverte = null;
+function ouvrirHeuresJour(jourId, cle) {
+  celluleHeuresOuverte = (celluleHeuresOuverte === jourId + '|' + cle) ? null : jourId + '|' + cle;
+  renderGrilleSemaine();
+}
+// Une heure égale à celle de la journée type n'est pas stockée : la case la suit.
+function updateHeureJour(jourId, cle, champ, val) {
+  ensureSemaineCreneaux();
+  const x = caseSemaine(semaineCreneauxObj(), jourId, cle);
+  const c = creneauxReels().find(k => k.id === cle);
+  if (!x || !c) return;
+  if (val === c[champ]) delete x[champ]; else x[champ] = val;
+  persist();
+  renderGrilleSemaine();
+}
+
+/* Renommer un créneau suit dans les jours où la case disait la même chose. */
+function propagerNomCreneau(c, ancien, nouveau) {
+  [state.m1.semaineCreneaux, state.m1.semaineCreneauxB].forEach(semaine => {
+    Object.keys(semaine || {}).forEach(jourId => {
+      (semaine[jourId] || []).forEach(x => {
+        if (x.cle === c.id && (!x.activite || x.activite === ancien)) x.activite = nouveau;
+      });
+    });
+  });
+}
+
+// Remplit les cases vides depuis la journée type, sans toucher à ce qui a été écrit.
 function dupliquerJourneeType() {
   ensureSemaineCreneaux();
-  const creneaux = (state.m1.journeeCreneaux || []).filter(c => !c.transition);
-  const jours = joursActifs();
   const semaine = semaineCreneauxObj();
-  jours.forEach(j => {
-    semaine[j.id] = creneaux.map(c => ({activite: c.nom || ''}));
-  });
+  let n = 0;
+  joursActifs().forEach(j => creneauxReels().forEach(c => {
+    const x = caseSemaine(semaine, j.id, c.id);
+    if (x && !(x.activite || '').trim() && c.nom) { x.activite = c.nom; n++; }
+  }));
   renderGrilleSemaine();
   persist();
-  showToast('Journée type dupliquée sur tous les jours actifs.');
+  showToast(n ? n + ' case' + (n > 1 ? 's vides remplies' : ' vide remplie') + ' depuis la journée type. Ce que vous aviez écrit est gardé.'
+              : 'Aucune case vide : rien n\'a changé.');
 }
 
 function ajouterJourSemaine() {
@@ -9128,6 +9201,35 @@ const _CONTROLES = [
   {nom:'Les déclarants se comptent sans casse ni accents', test: () => {
     const cles = new Set(['camille', 'Camille ', 'CAMILLE', 'Guillaume', 'Hélène', 'helene'].map(cleDeclarant));
     return _bancEgal('Trois personnes', 3, cles.size);
+  }},
+
+  {nom:'La semaine détaillée ne glisse plus quand la journée type change', test: () => {
+    /* Le bug d'Émilie (01/10/2026) : la grille rangeait ses cases par position. */
+    const sauve = JSON.parse(JSON.stringify(state.m1));
+    const vrais = {persist, render: renderGrilleSemaine, crList: renderCreneauList};
+    persist = () => {}; renderGrilleSemaine = () => {}; renderCreneauList = () => {};
+    let obtenu;
+    try {
+      state.m1.jours = ['lundi']; state.m1.joursExtras = []; state.m1.semaineEnCours = 'A';
+      state.m1.journeeCreneaux = [{debut: '08h00', fin: '09h00', nom: 'Lever'}, {debut: '10h00', fin: '11h00', nom: 'Atelier'}];
+      // Ancien format, rangé par position : il doit être relu tel qu'il s'affichait.
+      state.m1.semaineCreneaux = {lundi: [{activite: 'Lever'}, {activite: 'Piscine'}]};
+      ensureSemaineCreneaux();
+      const atelier = state.m1.journeeCreneaux.find(c => c.nom === 'Atelier').id;
+      const lire = () => (caseSemaine(state.m1.semaineCreneaux, 'lundi', atelier) || {}).activite;
+      ajouterCreneau();                                   // un créneau de plus, en fin
+      const nouveau = state.m1.journeeCreneaux.filter(c => !c.transition).slice(-1)[0];
+      updateCreneau(state.m1.journeeCreneaux.indexOf(nouveau), 'debut', '06h00');  // qui se trie en tête
+      updateCreneau(state.m1.journeeCreneaux.findIndex(c => c.nom === 'Lever'), 'nom', 'Réveil');
+      supprimerCreneau(state.m1.journeeCreneaux.findIndex(c => c.nom === 'Réveil'));
+      updateHeureJour('lundi', atelier, 'fin', '12h00');
+      const x = caseSemaine(state.m1.semaineCreneaux, 'lundi', atelier);
+      obtenu = [lire(), x.fin, x.debut === undefined].join('|');
+    } finally {
+      state.m1 = sauve;
+      persist = vrais.persist; renderGrilleSemaine = vrais.render; renderCreneauList = vrais.crList;
+    }
+    return _bancEgal('Atelier toujours « Piscine », fin propre au lundi, début hérité', 'Piscine|12h00|true', obtenu);
   }},
 
   {nom:'Chaque volet a sa couleur, distincte des autres', test: () => {
