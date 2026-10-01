@@ -1978,12 +1978,10 @@ details.voir-plus{margin-top:4px;}
 .palette-cat button{width:22px;height:22px;border-radius:50%;border:2px solid var(--card);box-shadow:0 0 0 1px var(--line);cursor:pointer;padding:0;}
 .palette-cat button.on, .palette-cat button:hover{box-shadow:0 0 0 2px var(--ink);}
 /* Sur ordinateur, la colonne des catégories reste en vue quand on fait défiler
-   les éléments à gauche (Émilie, 01/10/2026) ; elle défile elle-même si elle est longue. */
+   les éléments à gauche (Émilie, 01/10/2026), sans barre de défilement à elle
+   (Arthur, 01/10/2026) : son point d'accroche est calculé par ajusterColonneCats(). */
 @media (min-width:721px){
-  .m3-col-cats{
-    position:sticky;top:calc(var(--header-h,60px) + var(--subbar-h,0px) + 12px);
-    max-height:calc(100vh - var(--header-h,60px) - var(--subbar-h,0px) - 24px);overflow-y:auto;
-  }
+  .m3-col-cats{position:sticky;top:calc(var(--header-h,60px) + var(--subbar-h,0px) + 12px);}
 }
 .m3-cat-name{
   flex:1;font-size:13.5px;font-weight:700;color:var(--ink);
@@ -9300,6 +9298,28 @@ const _CONTROLES = [
     return _bancEgal('Anciens termes encore présents', '', bannis.filter(t => textes.includes(t)).join(', '));
   }},
 
+  {nom:'Les couleurs des catégories se distinguent deux à deux', test: () => {
+    /* Ce qui fait confondre deux catégories, c'est la teinte : les deux violets
+       d'avant n'étaient séparés que de 10°, les deux rouges de 13°. Entre deux
+       couleurs franches, au moins 25° ; une seule couleur presque grise. */
+    const tsl = h => {
+      const [r, g, b] = [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255);
+      const M = Math.max(r, g, b), m = Math.min(r, g, b), d = M - m, l = (M + m) / 2;
+      const s = d ? d / (1 - Math.abs(2 * l - 1)) : 0;
+      let t = 0;
+      if (d) t = M === r ? ((g - b) / d) % 6 : M === g ? (b - r) / d + 2 : (r - g) / d + 4;
+      return {t: (t * 60 + 360) % 360, s};
+    };
+    const fr = CAT_COLORS.map(tsl).filter(c => c.s >= 0.25);
+    const neutres = CAT_COLORS.length - fr.length;
+    let min = 360;
+    fr.forEach((a, i) => fr.slice(i + 1).forEach(b => {
+      const e = Math.abs(a.t - b.t);
+      min = Math.min(min, Math.min(e, 360 - e));
+    }));
+    return _bancEgal('Teintes à 25° au moins, une seule quasi grise', 'true|true', [min >= 25, neutres <= 1].join('|'));
+  }},
+
   {nom:'Chaque volet a sa couleur, distincte des autres', test: () => {
     /* Le contexte et l'antécédent ont longtemps partagé le même jaune : on ne
        distinguait plus, à l'œil, deux volets que l'outil sépare. */
@@ -10448,10 +10468,11 @@ const M3_SOUS = [
   }
 ];
 
-// Palette de couleurs pour les catégories
+// Palette des catégories : une couleur par famille de teintes (vert-bleu, brique,
+// or, olive, bleu, ardoise, violet, framboise), texte blanc lisible sur chacune.
 const CAT_COLORS = [
-  '#1F7A6C','#C2431F','#D69A1F','#46566B','#7B4EA0',
-  '#2563EB','#D97706','#059669','#DC2626','#7C3AED'
+  '#1F7A6C','#C2431F','#9A6A00','#4D7C0F',
+  '#2563EB','#46566B','#7B4EA0','#BE185D'
 ];
 
 function catColorFor(idx) {
@@ -11066,6 +11087,24 @@ function fermerPaletteCat() {
   const p = document.getElementById('palette-cat');
   if (p) p.remove();
 }
+/* Plus haute que l'écran, la colonne s'accroche par le bas (top négatif) : elle
+   défile avec la page jusqu'à montrer sa fin, puis s'arrête. Recalculée dès que sa
+   hauteur change (catégorie ajoutée, élément rangé) ou que la fenêtre change. */
+function ajusterColonneCats() {
+  const col = document.querySelector('.m3-col-cats');
+  if (!col) return;
+  if (window.innerWidth < 721) { col.style.top = ''; return; }
+  const racine = getComputedStyle(document.documentElement);
+  const haut = (parseFloat(racine.getPropertyValue('--header-h')) || 60) + (parseFloat(racine.getPropertyValue('--subbar-h')) || 0) + 12;
+  const dispo = window.innerHeight - haut - 12;
+  col.style.top = (col.offsetHeight <= dispo ? haut : window.innerHeight - col.offsetHeight - 12) + 'px';
+}
+if (typeof ResizeObserver === 'function') {
+  const colCats = document.querySelector('.m3-col-cats');
+  if (colCats) new ResizeObserver(ajusterColonneCats).observe(colCats);
+}
+window.addEventListener('resize', ajusterColonneCats);
+
 function changerCouleurCat(sousId, catId, couleur) {
   const cats = (state.m3.categories || {})[sousId] || {};
   const cat = cats[catId];
@@ -16276,7 +16315,7 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
-const ACTIVITE_CODE = {"jusqua":"2026-10-01","mois":[{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":1279,"retrait":464,"depots":18}]};
+const ACTIVITE_CODE = {"jusqua":"2026-10-01","mois":[{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":1289,"retrait":466,"depots":19}]};
 
 function svgActiviteCode() {
   const mois = ACTIVITE_CODE.mois || [];
@@ -16309,6 +16348,18 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-01',
+    version: 'v2026.10.01-6',
+    titre: "Organiser : des couleurs de catégories bien distinctes, et un seul défilement",
+    corps: `
+<ul>
+<li><b>Organiser</b> : les couleurs proposées pour les catégories se distinguent mieux — il y avait deux violets, deux rouges, deux orangés et deux verts trop proches ; il en reste huit, une par famille de teintes. Les catégories déjà créées gardent leur couleur ; un clic sur la pastille permet d'en changer.</li>
+<li>La colonne des catégories n'a plus sa propre barre de défilement : elle reste en vue si elle tient dans l'écran, et sinon elle défile avec la page jusqu'à montrer sa fin.</li>
+</ul>
+`
+  },
 
   {
     date: '2026-10-01',
