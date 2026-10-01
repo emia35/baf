@@ -1962,7 +1962,23 @@ details.voir-plus{margin-top:4px;}
   border-bottom:1px solid var(--line);
 }
 .m3-cat-color{
-  width:12px;height:12px;border-radius:50%;flex-shrink:0;
+  width:14px;height:14px;border-radius:50%;flex-shrink:0;
+  border:2px solid var(--card);box-shadow:0 0 0 1px var(--line);padding:0;cursor:pointer;
+}
+.m3-cat-color:hover{box-shadow:0 0 0 2px var(--slate);}
+.palette-cat{
+  position:absolute;z-index:300;display:grid;grid-template-columns:repeat(5,22px);gap:6px;
+  background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px;box-shadow:var(--shadow-card);
+}
+.palette-cat button{width:22px;height:22px;border-radius:50%;border:2px solid var(--card);box-shadow:0 0 0 1px var(--line);cursor:pointer;padding:0;}
+.palette-cat button.on, .palette-cat button:hover{box-shadow:0 0 0 2px var(--ink);}
+/* Sur ordinateur, la colonne des catégories reste en vue quand on fait défiler
+   les éléments à gauche (Émilie, 01/10/2026) ; elle défile elle-même si elle est longue. */
+@media (min-width:721px){
+  .m3-col-cats{
+    position:sticky;top:calc(var(--header-h,60px) + var(--subbar-h,0px) + 12px);
+    max-height:calc(100vh - var(--header-h,60px) - var(--subbar-h,0px) - 24px);overflow-y:auto;
+  }
 }
 .m3-cat-name{
   flex:1;font-size:13.5px;font-weight:700;color:var(--ink);
@@ -10685,7 +10701,7 @@ function renderM3Sous(sousId) {
       const enfants = estEnfant ? [] : catsEnfants(sousId, catId);
       return `<div class="m3-cat${estEnfant?' m3-cat-enfant':''}" id="mcat-${catId}">
         <div class="m3-cat-header">
-          <div class="m3-cat-color" style="background:${color};"></div>
+          <button type="button" class="m3-cat-color" style="background:${color};" title="Changer la couleur" aria-label="Changer la couleur de cette catégorie" onclick="ouvrirPaletteCat('${sousId}','${catId}',this,event)"></button>
           <input class="m3-cat-name" value="${esc(cat.nom)}"
             onchange="renommerCat('${sousId}','${catId}',this.value)"
             placeholder="${estEnfant ? 'Nom de la sous-catégorie' : 'Nom de la catégorie'}">
@@ -10993,6 +11009,42 @@ function allerVersItem(itemId) {
   void el.offsetWidth; // relancer l'animation si on reclique sur le même item
   el.classList.add('item-vise');
   minuteurVise = setTimeout(() => { rendreBordureVise(el); minuteurVise = null; }, 2300);
+}
+
+/* Changer la couleur d'une catégorie d'un clic sur sa pastille (Émilie,
+   01/10/2026). Les sous-catégories qui portaient la même couleur suivent. */
+function ouvrirPaletteCat(sousId, catId, bouton, ev) {
+  if (ev) ev.stopPropagation();
+  fermerPaletteCat();
+  const cat = ((state.m3.categories || {})[sousId] || {})[catId];
+  if (!cat) return;
+  const p = document.createElement('div');
+  p.id = 'palette-cat';
+  p.className = 'palette-cat';
+  p.innerHTML = CAT_COLORS.map(c =>
+    '<button type="button" style="background:' + c + ';"' + (c === cat.color ? ' class="on"' : '') +
+    ' aria-label="Couleur ' + c + '" onclick="changerCouleurCat(\'' + sousId + '\',\'' + catId + '\',\'' + c + '\')"></button>').join('');
+  document.body.appendChild(p);
+  const r = bouton.getBoundingClientRect();
+  p.style.top = (r.bottom + window.scrollY + 6) + 'px';
+  p.style.left = Math.max(8, Math.min(r.left + window.scrollX - 8, window.innerWidth - p.offsetWidth - 8)) + 'px';
+  setTimeout(() => document.addEventListener('click', fermerPaletteCat, {once: true}), 0);
+}
+function fermerPaletteCat() {
+  const p = document.getElementById('palette-cat');
+  if (p) p.remove();
+}
+function changerCouleurCat(sousId, catId, couleur) {
+  const cats = (state.m3.categories || {})[sousId] || {};
+  const cat = cats[catId];
+  if (!cat) return;
+  const ancienne = cat.color;
+  cat.color = couleur;
+  Object.keys(cats).forEach(id => { if (cats[id].parent === catId && (!cats[id].color || cats[id].color === ancienne)) cats[id].color = couleur; });
+  fermerPaletteCat();
+  persist();
+  renderM3Sous(sousId);
+  renderM3Tabs();
 }
 
 function ajouterCategorie() {
