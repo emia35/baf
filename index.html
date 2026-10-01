@@ -16277,7 +16277,7 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
-const ACTIVITE_CODE = {"jusqua":"2026-10-01","mois":[{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":1208,"retrait":449,"depots":14}]};
+const ACTIVITE_CODE = {"jusqua":"2026-10-01","mois":[{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":1253,"retrait":461,"depots":16}]};
 
 function svgActiviteCode() {
   const mois = ACTIVITE_CODE.mois || [];
@@ -16310,6 +16310,20 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-01',
+    version: 'v2026.10.01-3',
+    titre: "Correctif : la page s'arrêtait au chargement quand un dossier était enregistré",
+    corps: `
+<p><b>Correctif important.</b> Depuis le 1<sup>er</sup> octobre, quand un dossier était déjà enregistré dans le navigateur, la page s'arrêtait en cours de chargement : le sous-header (Importer, Exporter) disparaissait, le numéro de version du pied de page aussi, et l'accueil de l'indice de confiance retombait sur ses anciennes couleurs. C'est corrigé.</p>
+<ul>
+<li>Un lien direct vers la cotation de l'indice de confiance arrêtait aussi la page : corrigé.</li>
+<li>La page « Comparer les deux copies » affiche désormais le sous-header, comme les autres pages de l'outil 1.</li>
+<li>Si une erreur empêche un jour la page de se charger entièrement, un bandeau rouge le dit désormais, avec le message à transmettre à l'équipe, au lieu de laisser des éléments disparaître sans explication.</li>
+</ul>
+`
+  },
 
   {
     date: '2026-10-01',
