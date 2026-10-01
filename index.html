@@ -3713,7 +3713,7 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
 
       <h4 class="vase-part-titre">1 · À quoi ressemblent les paliers chez <span id="vase-prenom">cette personne</span></h4>
       <div class="vase-part-aide">
-        Chaque palier rassemble ce que les déclarants ont écrit sous « à quoi ça se voyait », rangé selon le niveau qu'ils avaient posé. Vous n'avez rien à ressaisir : vous lisez, vous regroupez, vous écrivez la synthèse.
+        Chaque palier rassemble les signes de tension que les déclarants ont notés, rangé selon le niveau qu'ils avaient posé. Vous n'avez rien à ressaisir : vous lisez, vous regroupez, vous écrivez la synthèse.
         <div class="vase-prudence">⚠ Ce que vous écrivez ici devient l'aide affichée aux déclarants au moment de coter. Si vous réécrivez un palier plus tard, les cotations passées gardent leur chiffre mais changent un peu de sens — le nombre reste la donnée, la description est une aide à la lecture.</div>
       </div>
       <div class="vase-duo">
@@ -5744,8 +5744,10 @@ function vaseWidget(id, mesure, question, aide, compact) {
       '</div>' +
     '</div>' +
     '<div class="field vase-note-field">' +
-      '<label for="vase-note-' + id + '">À quoi ça se voyait ?</label>' +
-      '<div class="help">Les signes que vous avez observés à ce moment-là. C\'est cette matière que l\'analyse fonctionnelle récoltera ensuite pour décrire les paliers du vase chez cette personne.</div>' +
+      '<label for="vase-note-' + id + '">Quels signes de tension avez-vous remarqués ? <span style="font-weight:400;color:var(--ink-soft);">(facultatif)</span></label>' +
+      '<div class="help">La voix, le regard, la posture, l\'agitation… <b>pas le comportement lui-même</b>. ' +
+        (id === 'pic' ? 'Si c\'est déjà dans la description du comportement, laissez vide. ' : '') +
+        'Mis bout à bout sur tous les évènements, ces signes permettront de décrire les paliers du vase chez cette personne.</div>' +
       '<textarea id="vase-note-' + id + '" placeholder="ex : se balance d\'un pied sur l\'autre, parle plus fort, regarde souvent vers la porte...">' + esc(note) + '</textarea>' +
     '</div>' +
   '</div>';
@@ -5937,7 +5939,7 @@ function etapeDetailRemplie(d, id) {
     case 'comportement': return rempli(d.comportement);
     case 'antecedent':   return (d.antecedents || []).some(a => rempli(a && a.texte)) || rempli(d.etatAvant);
     case 'intervention': return (d.interventions || []).some(iv => rempli(iv && iv.texte)) || rempli(d.interAutre);
-    case 'consequence':  return rempli(d.obtenu) || rempli(d.evite) || rempli(d.finPersonne);
+    case 'consequence':  return rempli(d.obtenu) || rempli(d.evite) || rempli(d.finPersonne) || rempli(d.entourage);
     default: return false;
   }
 }
@@ -6034,7 +6036,7 @@ const ETAPES = [
           <label>Avez-vous vu la scène vous-même ?</label>
           <div class="choice-row" id="f-temoin">
             ${['Témoin direct','Rapporté par un tiers','Constaté après coup'].map(v =>
-              `<label><input type="radio" name="ftemoin" value="${v}" ${d.temoin===v?'checked':''}> ${v}</label>`
+              `<label><input type="radio" name="ftemoin" value="${v}" ${d.temoin===v?'checked data-coche="1"':''} onclick="basculerRadio(this)"> ${v}</label>`
             ).join('')}
           </div>
           <div class="help">« Rapporté » : un collègue, un proche vous l'a raconté. « Constaté après coup » : vous n'avez pas vu la scène, mais vous en avez vu les traces (chambre, personne encore en tension...).</div>
@@ -6262,11 +6264,17 @@ const ETAPES = [
           <label for="f-finpersonne">Comment s'est terminé l'épisode pour la personne ?</label>
           <textarea id="f-finpersonne" placeholder="ex : s'est calmée progressivement, a fini par s'asseoir seule dans un coin. S'est endormie. A repris l'activité.">${esc(d.finPersonne||'')}</textarea>
         </div>
+        <div class="field champ-entourage">
+          <label for="f-entourage">Et pour l'entourage ? <span style="font-weight:400;color:var(--ink-soft);">(facultatif)</span></label>
+          <div class="help">Ce que le comportement a produit chez les autres : la peur, une blessure, la fatigue, la fratrie… Ce n'est pas la conséquence pour la personne, mais ça compte.</div>
+          <textarea id="f-entourage" placeholder="ex : sa petite sœur s'est réfugiée dans sa chambre. J'ai eu mal au bras toute la soirée.">${esc(d.entourage||'')}</textarea>
+        </div>
       </div>`,
     collect: () => ({
       obtenu: val('f-obtenu'),
       evite: val('f-evite'),
       finPersonne: val('f-finpersonne'),
+      entourage: val('f-entourage'),
     })
   },
   {
@@ -6290,6 +6298,7 @@ const ETAPES = [
           ${recapBloc('💧 Vase de tension', resumeTensionTexte(d) || '—', d.intensite ? 'Ancienne échelle conservée : ' + d.intensite : '')}
           ${d.gradation ? recapBloc('📈 Gradation', d.gradation) : ''}
           ${recapEtape(d, 'consequence', `🔄 Conséquence pour ${prenom}`, [d.obtenu ? 'Obtenu : '+d.obtenu : '', d.evite ? 'Évité : '+d.evite : '', d.finPersonne ? 'Fin : '+d.finPersonne : ''].filter(Boolean).join(' / '))}
+          ${d.entourage && d.entourage.trim() ? recapBloc('👥 Pour l’entourage', d.entourage) : ''}
           ${recapEtape(d, 'intervention', '🙌 Intervention', (d.interventions||[]).map((iv, i) => {
               if (!iv.texte && !iv.effet) return null;
               const detail = effetNeedsCdPost(iv.effet)
@@ -6958,6 +6967,14 @@ function refreshM2List(){
 
 /* Détaillé dès qu'une seule case du mode détaillé est remplie ; rapide sinon
    (règle d'Arthur, 14/09/2026). */
+/* Un bouton radio ne se décoche pas : recliquer celui qui est coché le retire
+   (Émilie, 01/10/2026 — on doit pouvoir revenir à « non précisé »). */
+function basculerRadio(r) {
+  if (r.dataset.coche === '1') { r.checked = false; r.dataset.coche = ''; return; }
+  document.querySelectorAll('input[name="' + r.name + '"]').forEach(x => { x.dataset.coche = ''; });
+  r.dataset.coche = '1';
+}
+
 function cleDeclarant(s) {
   return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
 }
@@ -10777,6 +10794,7 @@ function ouvrirDetailEvt(evtIdx, sousId, event) {
     d.gradation ? detailBloc('📈 Gradation', d.gradation, '', 'cp', sousId) : '',
     detailBloc('🔄 Conséquence pour ' + prenom + (etapeDetailRemplie(d,'consequence') ? '' : (resumeEtape(d,'consequence') ? ' — résumé rapide' : '')), etapeDetailRemplie(d,'consequence') ? consequences : resumeEtape(d,'consequence'), '', 'consequences', sousId),
     detailBloc('🙌 Intervention de l’entourage' + (etapeDetailRemplie(d,'intervention') ? '' : (resumeEtape(d,'intervention') ? ' — résumé rapide' : '')), etapeDetailRemplie(d,'intervention') ? interventions : resumeEtape(d,'intervention'), '', 'interventions', sousId),
+    d.entourage && d.entourage.trim() ? detailBloc('👥 Pour l’entourage', d.entourage) : '',
     d.commentaire ? detailBloc('💬 Commentaire libre', d.commentaire) : ''
   ].filter(Boolean).join('');
 
@@ -12079,7 +12097,7 @@ function renderVasePaliers() {
           return '<span class="vase-signe" title="' + esc(detail + reste) + '">' + esc(g.texte) +
                  (g.occurrences.length > 1 ? '<b>× ' + g.occurrences.length + '</b>' : '') + '</span>';
         }).join('') + '</div>'
-      : '<div class="vase-signes-vide">Aucun signe rapporté à ce palier pour l\'instant. Les déclarants n\'ont pas encore coté d\'évènement à ce niveau, ou n\'ont pas rempli « à quoi ça se voyait ».</div>';
+      : '<div class="vase-signes-vide">Aucun signe rapporté à ce palier pour l\'instant. Les déclarants n\'ont pas encore coté d\'évènement à ce niveau, ou n\'ont pas noté de signes de tension.</div>';
     return '<div class="vase-palier-bloc' + (p.id === vasePalierChoisi ? ' choisi' : '') + '" data-palier="' + p.id + '" style="border-left-color:' + p.couleur + ';">' +
       '<button type="button" class="vase-palier-tete" aria-pressed="' + (p.id === vasePalierChoisi) + '" ' +
         'onclick="choisirPalierVase(\'' + p.id + '\')" title="Remplir le vase jusqu\'à ce palier">' +
@@ -13055,7 +13073,7 @@ function corpsGrilleABC() {
     enTete('Intervention · effet', 'Ce que vous avez fait, et ce que ça a donné. « On n\'a rien fait » est une réponse.', DOCX_C.intervention, DOCX_C.interventionTexte),
     enTete('Conséquence pour la personne', 'Ce qu\'elle a obtenu, ce qu\'elle a évité. Pas ce que vous avez fait.', DOCX_C.consequence, DOCX_C.consequenceTexte),
     enTete('Vase', 'De 0 à 100.', DOCX_C.papierFonce, DOCX_C.ink),
-    enTete('Commentaire', 'Ce qui ne rentrait nulle part.', DOCX_C.papierFonce, DOCX_C.ink)
+    enTete('Entourage · commentaire', 'Ce que ça a produit chez les autres. Ce qui ne rentrait nulle part.', DOCX_C.papierFonce, DOCX_C.ink)
   ];
 
   const celluleVase = () => ({contenu: [
@@ -13255,7 +13273,7 @@ function corpsGuide() {
     ]], [1927, 1927, 1928, 1928, 1928], {}) +
     docxP('Ce sont des repères, pas des crans : 52 ou 68 sont des réponses parfaitement valables. C\'est votre perception, pas une mesure — personne ne vous demande d\'être exact, on vous demande d\'être sincère.') +
     docxP([{t: 'Si vous ne savez pas, laissez vide. ', gras: true}, {t: 'Une case vide est une information ; un chiffre inventé n\'en est pas une.'}]) +
-    docxP('Et si vous le pouvez, écrivez à quoi ça se voyait — c\'est cette matière, mise bout à bout sur tous les évènements, qui permettra de décrire les signes précurseurs propres à cette personne.') +
+    docxP('Et si vous le pouvez, notez les signes de tension que vous avez remarqués (la voix, le regard, la posture), pas le comportement lui-même — c\'est cette matière, mise bout à bout sur tous les évènements, qui permettra de décrire les signes précurseurs propres à cette personne.') +
     exemple('Tension 70. Il tournait en rond et regardait souvent vers la porte.',
             'Tension 70.') +
 
@@ -16556,7 +16574,7 @@ const LEXIQUE_BAF = {
   "fichier socle": "Le fichier du référent : le préambule, tous les évènements reçus, et tout le travail d'analyse. C'est lui qu'on exporte et qu'on range dans le dossier partagé de l'équipe ; il ne circule pas au-dehors.",
   "fichier déclarant": "Le fichier propre à chaque déclarant : le préambule reçu, ses évènements et ses périodes observées. Il le sauvegarde à chaque séance, repart toujours du dernier, et envoie le dernier. Le référent l'ajoute à son fichier socle, chaque évènement gardant sa provenance. Une personne, un fichier : à deux sur le même fichier, on se marche dessus.",
   "période observée": "Une journée ou une plage de jours déclarée comme observée, avec ou sans comportement-défi. Sans elle, l'outil ne peut pas distinguer « il ne s'est rien passé » de « personne n'a rempli ».",
-  "vase de tension": "L'image qu'emploie la BAF pour la tension qui s'accumule chez la personne, en cinq paliers. Le déclarant pose un palier et note à quoi ça se voyait ; l'équipe en tire l'échelle décrite propre à la personne.",
+  "vase de tension": "L'image qu'emploie la BAF pour la tension qui s'accumule chez la personne, en cinq paliers. Le déclarant pose un palier et note les signes de tension qu'il a remarqués ; l'équipe en tire l'échelle décrite propre à la personne.",
   "double codage": "La catégorisation faite d'abord séparément par deux personnes — le référent et le clinicien, par exemple —, chacune dans une copie vierge et à partir du seul déclaratif, puis saisie à deux, en synthèse, dans le fichier socle. La synthèse devient le seul codage.",
   "kit de codage": "Une copie vierge du fichier socle pour le primo codage : le préambule et les évènements, aucune catégorie, rien dans Interpréter. Une par codeur.",
 };
