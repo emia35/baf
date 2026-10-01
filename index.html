@@ -4080,6 +4080,18 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
 <div class="toast" id="toast"></div>
 
 <script>
+window.addEventListener('error', function (ev) {
+  try {
+    if (document.getElementById('bandeau-erreur')) return;
+    var b = document.createElement('div');
+    b.id = 'bandeau-erreur';
+    b.setAttribute('role', 'alert');
+    b.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:9999;background:#A8503A;color:#fff;padding:10px 16px;font:14px/1.5 system-ui,sans-serif;';
+    b.textContent = 'La BAF a rencontré une erreur : une partie de la page peut manquer. Rechargez la page ; si le problème revient, transmettez ce message à l\'équipe : ' +
+      (ev.message || 'erreur inconnue') + (ev.lineno ? ' (ligne ' + ev.lineno + ')' : '');
+    (document.body || document.documentElement).appendChild(b);
+  } catch (e) {}
+});
 
 // ============================================================
 // TOGGLE RAPIDE / APPROFONDI
@@ -4586,7 +4598,7 @@ function route(name, fromHistory){
   document.body.classList.toggle('mode-codage', !!(state.codage && state.codage.actif));
 
   // Barre fixe sous le header : flèche retour + export, propre à chaque outil
-  const dansOutil1 = ['baf-accueil','m1','m2','m2-form','m3','m4','synthese'].includes(name);
+  const dansOutil1 = ['baf-accueil','m1','m2','m2-form','m3','comparer','m4','synthese'].includes(name);
   const dansOutil2 = ['idc-accueil','idc-main'].includes(name);
   const surAccueilOutil = (name === 'baf-accueil' || name === 'idc-accueil');
   const subbar = document.getElementById('tool-subbar');
@@ -14285,6 +14297,16 @@ function renderCharts() {
   equiperGraphiques(el);
 }
 
+/* État des écrans, déclaré AVANT le démarrage ci-dessous : refreshM2List() et les
+   autres rendus appelés à l'ouverture les lisent. Une variable déclarée plus bas
+   arrête tout le script (zone morte temporelle) — c'est arrivé en passe 117. */
+let cmpSous = 'cp';
+let cmpFiltre = 'tous';
+let cmpSlot = 'A';
+let fichiersDeclarantsEnAttente = [];
+const COULEURS_SOURCES = ['#2F6FB5', '#B4401F', '#7A9A8C', '#7B4EA0', '#C9A84C', '#1F7A6C', '#A8503A', '#46566B'];
+let filtreSourceChrono = null;
+
 loadPersisted();
 loadM1FromState();
 refreshM2List();
@@ -15398,9 +15420,6 @@ function renderDoubleCodage() {
    que la synthèse n'est pas terminée : une réunion peut s'interrompre et
    reprendre un autre jour. Ordinateur ou tablette seulement. */
 
-let cmpSous = 'cp';
-let cmpFiltre = 'tous';
-let cmpSlot = 'A';
 
 /* Deux codeurs n'écrivent jamais « Hétéro-agressivité » tout à fait pareil :
    on compare les noms sans accents, sans casse et sans ponctuation. Les
@@ -15919,7 +15938,6 @@ function socleOuvert() {
 }
 
 /* ── La fenêtre des fichiers déclarants ── */
-let fichiersDeclarantsEnAttente = [];
 
 function ouvrirFenetreFichiersDeclarants(declarants) {
   fichiersDeclarantsEnAttente = declarants;
@@ -15981,8 +15999,6 @@ function trierParEnvoi(lus) {
    source, avec sa couleur ; ce que le référent saisit lui-même est « Équipe ».
    Deux fichiers déclarants de même provenance (« domicile » pour les deux
    parents) partagent la même couleur : c'est le lieu qu'on compare. */
-const COULEURS_SOURCES = ['#2F6FB5', '#B4401F', '#7A9A8C', '#7B4EA0', '#C9A84C', '#1F7A6C', '#A8503A', '#46566B'];
-let filtreSourceChrono = null;
 
 function libelleSource(e) {
   if (!e || !e.source) return 'Équipe';
@@ -17055,10 +17071,7 @@ function allerAPartieReperes(id) {
   if (cible) cible.scrollIntoView({block: 'start'});
 }
 
-const vueInitiale = vueDepuisAdresse(location.hash) || 'accueil';
-history.replaceState({route:vueInitiale}, '', '#'+adresseDeVue(vueInitiale));
-route(vueInitiale, true);
-majPiedVersion();
+// Le routage de la page d'arrivée se fait à la toute fin du script (voir plus bas).
 
 // ============================================================
 // INDICE DE CONFIANCE (ICAF) — logique fusionnée ici.
@@ -18323,6 +18336,14 @@ const helpObserver = new MutationObserver(() => {
 });
 helpObserver.observe(document.body, {childList:true, subtree:true});
 setupHelpToggles();
+
+/* Le routage de la page d'arrivée, en DERNIER : toutes les variables du script
+   sont déclarées. Le placer plus haut a déjà arrêté la page deux fois (passe 117,
+   et le lien direct vers la cotation). Ne rien écrire après. */
+const vueInitiale = vueDepuisAdresse(location.hash) || 'accueil';
+history.replaceState({route:vueInitiale}, '', '#'+adresseDeVue(vueInitiale));
+route(vueInitiale, true);
+majPiedVersion();
 
 </script>
 
