@@ -528,9 +528,22 @@ body.mode-codage .codage-seul{display:block;}
 .contrib-prov{font-size:13.5px;font-weight:700;color:var(--ink);}
 .contrib-detail{font-size:12px;color:var(--ink-soft);}
 .event-source-tag{
-  display:inline-block;background:var(--sauge-pale);color:var(--sauge-deep);
+  display:inline-block;background:var(--slate);color:#FFFFFF;
   font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:10px;margin-left:6px;
 }
+.sources-barre{display:flex;height:8px;border-radius:4px;overflow:hidden;margin:6px 0 8px;background:var(--line-soft);}
+.sources-liste{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+.source-filtre{
+  display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:12.5px;color:var(--ink);
+  background:var(--paper);border:1.5px solid var(--line);border-radius:999px;padding:3px 11px;cursor:pointer;
+}
+.source-filtre i{width:10px;height:10px;border-radius:50%;display:inline-block;}
+.source-filtre b{font-weight:700;}
+.source-filtre .source-pct{color:var(--ink-soft);font-size:11.5px;}
+.source-filtre.on{border-color:var(--slate);background:var(--card);box-shadow:var(--shadow-soft);}
+.source-tout{font:inherit;font-size:12px;color:var(--slate);background:none;border:none;text-decoration:underline;cursor:pointer;}
+input.contrib-prov{font:inherit;font-size:13.5px;font-weight:700;color:var(--ink);background:transparent;border:1px solid transparent;border-radius:6px;padding:2px 6px;}
+input.contrib-prov:hover, input.contrib-prov:focus{border-color:var(--line);background:var(--card);}
 
 /* ── Mode déclarant ────────────────────────────────────────────────────
    Même gabarit que la barre dossier, teinte différente : le déclarant doit
@@ -3527,6 +3540,7 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
     <div class="card">
       <h4 style="font-size:16px;color:var(--ink);margin-bottom:4px;">Évènements déjà décrits <span id="m2-compteur" style="color:var(--ink-soft);font-weight:400;font-size:13px;"></span></h4>
       <div id="m2-brouillon-banner" class="ethique no-print" style="display:none;background:var(--rose-pale);border-left:3px solid var(--sauge-deep);padding:10px 14px;margin-bottom:14px;font-size:13px;"></div>
+      <div id="m2-sources" class="no-print"></div>
       <div class="event-list" id="m2-event-list">
         <div class="event-empty">Aucun évènement déclaré pour le moment.</div>
       </div>
@@ -6884,11 +6898,16 @@ function refreshM2List(){
   const brs = ensureBrouillons();
   const idsAvecBrouillon = new Set(brs.map(b => b.editId).filter(Boolean));
 
+  const src = sourcesDuSocle();
+  const pastilles = sourcesVisibles();
+  renderSourcesChrono(src);
+
   // Regroupement par mois puis par semaine : au-delà de quelques dizaines
   // d'évènements, une liste plate n'est plus lisible.
   let html = '';
   let moisCourant = null, semaineCourante = null;
   evts.forEach((e, i) => {
+    if (filtreSourceChrono && libelleSource(e) !== filtreSourceChrono) return;
     const d = e.date ? new Date(e.date) : null;
     const dateValide = d && !isNaN(d);
     const mois = dateValide ? d.toLocaleDateString('fr-FR', {month:'long', year:'numeric'}) : 'Date non précisée';
@@ -6912,8 +6931,8 @@ function refreshM2List(){
     // Une icône plutôt qu'un mot (Arthur, 15/09/2026) : ⚡ rapide, 🔬 détaillé, comme les boutons du formulaire.
     const libNiveau = niveau === 'detaille' ? 'Saisi en mode détaillé' : 'Saisi en mode rapide';
     const niveauTag = `<span class="event-niveau-ico ${niveau}" role="img" aria-label="${libNiveau}" title="${libNiveau}">${niveau === 'detaille' ? '🔬' : '⚡'}</span>`;
-    const prov = provenanceEvt(e);
-    const sourceTag = prov ? `<span class="event-source-tag" title="Déclaré depuis : ${esc(prov)}">${esc(prov)}</span>` : '';
+    const lib = libelleSource(e);
+    const sourceTag = pastilles ? `<span class="event-source-tag" style="background:${src.couleur[lib]};" title="${e.source ? 'Déclaré depuis : ' : 'Saisi par '}${esc(lib)}">${esc(lib)}</span>` : '';
     html += `<div class="event-item" onclick="ouvrirFormulaireEvenement(${i})">
       <div class="ev-num">${i+1}</div>
       <div class="ev-info">
@@ -9027,8 +9046,8 @@ const _CONTROLES = [
        la dernière ayant perdu un évènement du milieu (deux parents repartis du
        même fichier). Réunies dans n'importe quel ordre : les quatre évènements. */
     const sauve = JSON.parse(JSON.stringify(state));
-    const vrais = {alert: window.alert, confirm: window.confirm, persist, route, showToast};
-    window.alert = () => {}; window.confirm = () => true; persist = () => {}; route = () => {}; showToast = () => {};
+    const vrais = {alert: window.alert, confirm: window.confirm, prompt: window.prompt, persist, route, showToast};
+    window.alert = () => {}; window.confirm = () => true; window.prompt = () => ''; persist = () => {}; route = () => {}; showToast = () => {};
     const fichier = (envoye, ids) => ({nom: envoye + '.json', lu: lireFichierBAF({
       baf: {schema: SCHEMA_DOSSIER, type: 'contribution', idDossier: 'dos_banc_famille', exporte: envoye},
       contribution: {idContribution: 'ctr_banc_famille', idDossier: 'dos_banc_famille', provenance: '', envoye},
@@ -9041,9 +9060,33 @@ const _CONTROLES = [
       obtenu = [state.m1.prenom, state.m2.evenements.length, !!state.provisoire, state.idDossier].join('|');
     } finally {
       replaceState(sauve);
-      window.alert = vrais.alert; window.confirm = vrais.confirm; persist = vrais.persist; route = vrais.route; showToast = vrais.showToast;
+      window.alert = vrais.alert; window.confirm = vrais.confirm; window.prompt = vrais.prompt; persist = vrais.persist; route = vrais.route; showToast = vrais.showToast;
     }
     return _bancEgal('Prénom, évènements, provisoire, identité', 'Banc|4|true|dos_banc_famille', obtenu);
+  }},
+
+  {nom:'Un fichier plus récent qui a perdu un évènement est signalé, et rien n\'est effacé', test: () => {
+    const sauve = JSON.parse(JSON.stringify(state));
+    const vrais = {alert: window.alert, confirm: window.confirm, prompt: window.prompt, persist, route, showToast};
+    let message = '';
+    window.alert = m => { message += m; }; window.confirm = () => true; window.prompt = () => 'domicile';
+    persist = () => {}; route = () => {}; showToast = () => {};
+    const fichier = (envoye, ids) => ({nom: 'RDAF-declarant_X_declarant_' + envoye + '.json', lu: lireFichierBAF({
+      baf: {schema: SCHEMA_DOSSIER, type: 'contribution', idDossier: 'dos_banc_par', exporte: envoye},
+      contribution: {idContribution: 'ctr_banc_par', idDossier: 'dos_banc_par', provenance: '', envoye},
+      m1: {prenom: 'Banc'}, m2: {evenements: ids.map(id => ({id, date: '2026-09-' + id.slice(-2), comportement: 'x'}))}
+    }, ['contribution'])});
+    let obtenu;
+    try {
+      creerSocleProvisoire([fichier('2026-09-28T19:00:00Z', ['e25', 'h28']), fichier('2026-09-30T11:00:00Z', ['e25', 'g29'])]);
+      const src = sourcesDuSocle();
+      obtenu = [state.m2.evenements.length, /ne figure plus/.test(message), /remplacé/.test(message), src.compte['domicile']].join('|');
+    } finally {
+      replaceState(sauve);
+      Object.assign(window, {alert: vrais.alert, confirm: vrais.confirm, prompt: vrais.prompt});
+      persist = vrais.persist; route = vrais.route; showToast = vrais.showToast;
+    }
+    return _bancEgal('Évènements, alerte, pas de faux « remplacé », provenance demandée', '3|true|false|3', obtenu);
   }},
 
   {nom:'Chaque volet a sa couleur, distincte des autres', test: () => {
@@ -15593,7 +15636,96 @@ function trierParEnvoi(lus) {
   return lus.slice().sort((a, b) => envoi(a).localeCompare(envoi(b)));
 }
 
+/* ── D'où viennent les évènements ──────────────────────────────────────
+   Voir d'un coup d'œil, dans la chronologie, ce qui vient de la famille, du
+   foyer, de l'école (Arthur, 01/10/2026). Chaque fichier déclarant est une
+   source, avec sa couleur ; ce que le référent saisit lui-même est « Équipe ».
+   Deux fichiers déclarants de même provenance (« domicile » pour les deux
+   parents) partagent la même couleur : c'est le lieu qu'on compare. */
+const COULEURS_SOURCES = ['#2F6FB5', '#B4401F', '#7A9A8C', '#7B4EA0', '#C9A84C', '#1F7A6C', '#A8503A', '#46566B'];
+let filtreSourceChrono = null;
+
+function libelleSource(e) {
+  if (!e || !e.source) return 'Équipe';
+  return provenanceEvt(e) || 'Provenance non précisée';
+}
+
+function sourcesDuSocle() {
+  const compte = {};
+  (state.m2.evenements || []).forEach(e => { const l = libelleSource(e); compte[l] = (compte[l] || 0) + 1; });
+  const libelles = Object.keys(compte).sort((a, b) => (a === 'Équipe') - (b === 'Équipe') || compte[b] - compte[a] || a.localeCompare(b, 'fr'));
+  const couleur = {};
+  let k = 0;
+  libelles.forEach(l => { couleur[l] = l === 'Équipe' ? '#3D4F6B' : COULEURS_SOURCES[k++ % COULEURS_SOURCES.length]; });
+  return {libelles, compte, couleur};
+}
+
+// Les pastilles n'ont de sens que si au moins un fichier déclarant a été reçu.
+function sourcesVisibles() {
+  return !modeDeclarantActif() && (state.m2.evenements || []).some(e => e.source);
+}
+
+function renderSourcesChrono(src) {
+  const el = document.getElementById('m2-sources');
+  if (!el) return;
+  if (!sourcesVisibles()) { el.innerHTML = ''; filtreSourceChrono = null; return; }
+  const total = (state.m2.evenements || []).length;
+  if (filtreSourceChrono && !src.compte[filtreSourceChrono]) filtreSourceChrono = null;
+  el.innerHTML = '<div class="sources-barre" title="Part de chaque source dans la chronologie">' +
+    src.libelles.map(l => '<span style="flex:' + src.compte[l] + ';background:' + src.couleur[l] + ';"></span>').join('') + '</div>' +
+    '<div class="sources-liste">' +
+    src.libelles.map(l => {
+      const on = filtreSourceChrono === l;
+      return '<button type="button" class="source-filtre' + (on ? ' on' : '') + '" aria-pressed="' + on + '" ' +
+        'onclick="filtrerSourceChrono(this.dataset.source)" data-source="' + esc(l) + '">' +
+        '<i style="background:' + src.couleur[l] + ';"></i>' + esc(l) + ' <b>' + src.compte[l] + '</b>' +
+        '<span class="source-pct">' + Math.round(src.compte[l] / total * 100) + ' %</span></button>';
+    }).join('') +
+    (filtreSourceChrono ? '<button type="button" class="source-tout" onclick="filtrerSourceChrono(null)">Tout afficher</button>' : '') +
+    '</div>';
+}
+
+function filtrerSourceChrono(l) {
+  filtreSourceChrono = (l && l !== filtreSourceChrono) ? l : null;
+  refreshM2List();
+}
+
+/* La provenance se corrige après coup, dans la fenêtre des fichiers reçus. */
+function renommerProvenance(idC, valeur) {
+  const c = (state.contributions || {})[idC];
+  if (!c) return;
+  c.provenance = String(valeur || '').trim();
+  persist();
+  refreshM2List();
+}
+
+/* Un fichier déclarant sans provenance : on la demande au moment de l'ajouter,
+   une fois par déclarant. Le lieu écrit dans le nom du fichier sert de proposition. */
+function demanderProvenances(lus) {
+  const deja = new Set();
+  lus.forEach(x => {
+    const m = (x.lu.dossier && x.lu.dossier.contribution) || null;
+    if (!m || (m.provenance || '').trim()) return;
+    const connue = m.idContribution && ((state.contributions || {})[m.idContribution] || {}).provenance;
+    if (connue) { m.provenance = connue; return; }
+    if (m.idContribution && deja.has(m.idContribution)) return;
+    const morceaux = String(x.nom || '').replace(/\.json$/i, '').split('_');
+    const lieu = morceaux.length >= 4 && morceaux[2] && morceaux[2] !== 'declarant' ? morceaux[2] : '';
+    const reponse = prompt('D\'où vient le fichier « ' + x.nom + ' » ?\n\nEx. : domicile, foyer, accueil de jour, école. ' +
+      'Le déclarant ne l\'a pas précisé ; c\'est ce qui permet de voir d\'où viennent les évènements.', lieu);
+    const p = (reponse || '').trim();
+    if (!p) return;
+    if (m.idContribution) deja.add(m.idContribution);
+    lus.forEach(y => {
+      const my = (y.lu.dossier && y.lu.dossier.contribution) || {};
+      if (my.idContribution && my.idContribution === m.idContribution && !(my.provenance || '').trim()) my.provenance = p;
+    });
+    m.provenance = p;
+  });
+}
+
 function fusionnerLot(lus) {
+  demanderProvenances(lus);
   const tries = trierParEnvoi(lus);
   const messages = tries.map(x => fusionnerContribution(x.lu, x.nom, {lot: true})).filter(Boolean);
   migrerIdsCategorisation();
@@ -15662,13 +15794,22 @@ function fusionnerContribution(lu, nomFichier, opts) {
   const plusAncien = !!(precedent && precedent.envoye && meta.envoye && meta.envoye < precedent.envoye);
   const memeEnvoi = !!(precedent && meta.envoye && meta.envoye === precedent.envoye);
   const neRienRemplacer = plusAncien || memeEnvoi;
-  let ajoutes = 0, remplaces = 0, gardes = 0;
+  let ajoutes = 0, remplaces = 0, gardes = 0, inchanges = 0;
+  /* Un fichier plus récent du même déclarant qui ne contient plus un évènement
+     reçu avant : deux personnes ont travaillé en parallèle sur le même fichier
+     (la famille du 01/10/2026). Rien n'est effacé ici, mais il faut le dire. */
+  const idsEntrants = new Set(entrants.map(b => b && b.id).filter(Boolean));
+  const absents = (precedent && !neRienRemplacer)
+    ? (state.m2.evenements || []).filter(e => e.source === idC && !idsEntrants.has(e.id)) : [];
   entrants.forEach(brut => {
     const e = JSON.parse(JSON.stringify(brut));
     if (!e.id) e.id = nouvelIdentifiant('evt');
     e.source = idC;
     if (parId.has(e.id)) {
+      const present = state.m2.evenements[parId.get(e.id)];
+      const pareil = JSON.stringify(Object.assign({}, present, {source: idC})) === JSON.stringify(e);
       if (neRienRemplacer) gardes++;
+      else if (pareil) inchanges++;
       else { state.m2.evenements[parId.get(e.id)] = e; remplaces++; }
     }
     else { parId.set(e.id, state.m2.evenements.length); state.m2.evenements.push(e); ajoutes++; }
@@ -15701,7 +15842,7 @@ function fusionnerContribution(lu, nomFichier, opts) {
   state.contributions = state.contributions || {};
   const dejaVue = !!state.contributions[idC];
   if (!plusAncien) state.contributions[idC] = {
-    provenance: (meta.provenance || '').trim(),
+    provenance: (meta.provenance || '').trim() || ((precedent && precedent.provenance) || ''),
     envoye: meta.envoye || '',
     recu: new Date().toISOString(),
     fichier: nomFichier || '',
@@ -15716,9 +15857,15 @@ function fusionnerContribution(lu, nomFichier, opts) {
     msg += '· ' + remplaces + ' déjà présent' + (remplaces > 1 ? 's' : '') + ', remplacé' + (remplaces > 1 ? 's' : '') +
            ' par la version la plus récente\n  ⚠ Si vous les aviez déjà catégorisés, vérifiez que les catégories correspondent toujours au texte.\n';
   }
+  if (absents.length) {
+    msg += '· ⚠ ' + absents.length + ' évènement' + (absents.length > 1 ? 's' : '') + ' reçu' + (absents.length > 1 ? 's' : '') + ' plus tôt de ce déclarant ' +
+      (absents.length > 1 ? 'ne figurent' : 'ne figure') + ' plus dans ce fichier (' + absents.map(e => e.date ? formatDate(e.date) : 'sans date').join(', ') + '). ' +
+      'Rien n\'est effacé ici. C\'est le signe que deux personnes ont repris le même fichier chacune de leur côté : ' +
+      'conseillez-leur d\'avoir chacune son propre fichier.\n';
+  }
   if (memeEnvoi) msg += '· Ce fichier avait déjà été ajouté : rien n\'a changé.\n';
   else if (plusAncien) msg += '· Ce fichier est plus ancien que le dernier reçu de ce déclarant : ' + gardes + ' évènement' + (gardes > 1 ? 's' : '') + ' déjà présent' + (gardes > 1 ? 's' : '') + ' laissé' + (gardes > 1 ? 's' : '') + ' tel' + (gardes > 1 ? 's' : '') + ' quel' + (gardes > 1 ? 's' : '') + '.\n';
-  else if (dejaVue && !remplaces) msg += '· Cet envoi avait déjà été reçu.\n';
+  else if (!ajoutes && !remplaces && !absents.length) msg += '· Rien de nouveau dans ce fichier.\n';
   if (couvAjoutees) msg += '· ' + couvAjoutees + ' période' + (couvAjoutees > 1 ? 's' : '') + ' observée' + (couvAjoutees > 1 ? 's' : '') + ' sans comportement-défi\n';
   if (ignorees.length) msg += '· Ignoré : ' + ignorees.join(', ') + ' — un fichier déclarant n\'apporte que le déclaratif.\n';
   if (nomFichier) msg = '« ' + nomFichier + ' »\n' + msg;
@@ -15750,7 +15897,8 @@ function renderContributions() {
       const n = compte[k] || 0;
       const quand = x.recu ? new Date(x.recu).toLocaleDateString('fr-FR') : '';
       return '<div class="contrib-item">' +
-        '<span class="contrib-prov">' + esc(x.provenance || 'provenance non précisée') + '</span>' +
+        '<input class="contrib-prov" value="' + esc(x.provenance || '') + '" placeholder="Provenance non précisée" ' +
+          'aria-label="Provenance de ce fichier déclarant" title="Corriger la provenance" onchange="renommerProvenance(\'' + k + '\', this.value)">' +
         '<span class="contrib-detail">' + n + ' évènement' + (n > 1 ? 's' : '') +
           (quand ? ' · reçu le ' + esc(quand) : '') +
         '</span></div>';
