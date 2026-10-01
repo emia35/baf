@@ -6040,8 +6040,8 @@ const RAPIDE_ETAPES = {
     placeholder: "Où, qui était là, et ce qui s'était passé avant dans la journée ou la semaine..."
   },
   comportement: {
-    question: "Le comportement, en quelques lignes",
-    aide: "Ce qu'une caméra aurait enregistré : les gestes, les sons, dans quel ordre, pendant combien de temps. Pas « il a fait sa crise » — ce qu'on aurait vu.",
+    question: "Ce qui s'est passé, en quelques lignes",
+    aide: "Ce qu'une caméra aurait enregistré, du début à la fin : les gestes, les sons, dans quel ordre, pendant combien de temps. Même si plusieurs choses se sont enchaînées, tout va ici. Pas « il a fait sa crise » — ce qu'on aurait vu.",
     exemple: "A crié très fort pendant une trentaine de secondes, puis a retourné une chaise, puis a tapé le mur avec la main ouverte. Environ cinq minutes en tout.",
     placeholder: "Les gestes, les sons, l'ordre, la durée..."
   },
@@ -6274,14 +6274,15 @@ const ETAPES = [
   },
   {
     id: 'comportement',
-    label: 'Comportement (B)', court: 'Comportement',
+    label: "Ce qui s'est passé (B)", court: "Ce qui s'est passé",
     render: (d) => `
       <div class="card">
         <div style="background:var(--vol-comportement-pale);border-left:3px solid var(--vol-comportement);padding:13px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;" title="Vert sauge : le comportement.">
           <b>Imaginez qu'une caméra filmait la scène.</b> Qu'est-ce qu'elle aurait enregistré exactement ? Pas "il a fait sa crise habituelle", pas "il a été difficile" — mais quels gestes, quels sons, dans quel ordre, pendant combien de temps ?
+          <br><b>Racontez toute la scène ici, du début à la fin</b>, même si plusieurs choses se sont enchaînées. Vous n'avez rien à découper : c'est l'équipe qui y repérera ensuite le ou les comportements à analyser.
         </div>
         <div class="field">
-          <label for="f-comportement">Décrivez le comportement, dans l'ordre où ça s'est passé</label>
+          <label for="f-comportement">Décrivez toute la scène, dans l'ordre où ça s'est passé</label>
           <div class="help">Quoi en premier ? Quoi ensuite ? La séquence compte. Soyez précis sur les actes : "a frappé la table avec son poing", pas "a été violent".</div>
           <textarea id="f-comportement" style="min-height:100px;" placeholder="ex : d'abord il a crié très fort (environ 30 secondes), puis il a saisi la chaise et l'a retournée, puis s'est mis à taper sur le mur avec sa main ouverte.">${esc(d.comportement||'')}</textarea>
         </div>
@@ -6295,7 +6296,7 @@ const ETAPES = [
         </div>
         ${d.intensite ? `<div class="vase-ancienne">Cet évènement porte une <b>intensité déclarée avec l'ancienne échelle</b> : « ${esc(d.intensite)} ». Cette échelle a été remplacée par le vase de tension — merci de coter le vase ci-dessous. L'ancienne valeur est conservée telle quelle : elle n'est pas convertie, personne n'a jamais dit « 70 ».</div>` : ''}
         ${vaseWidget('pic', mesureTension(d, 'pic'),
-          'Où en était le vase au plus fort du comportement ?',
+          'Où en était le vase au moment le plus fort ?',
           "Votre impression, pas une mesure d'appareil : vous dites ce que vous avez perçu.")}
       </div>`,
     collect: () => ({
@@ -6429,7 +6430,7 @@ const ETAPES = [
               .map(a => a.texte.trim() + (a.declencheurPresume ? ' (présumé déclencheur)' : ''))
               .concat(d.etatAvant ? ['État avant : ' + d.etatAvant] : [])
               .join(' · ')) || '—')}
-          ${recapEtape(d, 'comportement', '🎥 Comportement', d.comportement, d.duree ? `Durée : ${d.duree}` : '')}
+          ${recapEtape(d, 'comportement', "🎥 Ce qui s'est passé", d.comportement, d.duree ? `Durée : ${d.duree}` : '')}
           ${recapBloc('💧 Vase de tension', resumeTensionTexte(d) || '—', d.intensite ? 'Ancienne échelle conservée : ' + d.intensite : '')}
           ${d.gradation ? recapBloc('📈 Gradation', d.gradation) : ''}
           ${recapEtape(d, 'consequence', `🔄 Conséquence pour ${prenom}`, [d.obtenu ? 'Obtenu : '+d.obtenu : '', d.evite ? 'Évité : '+d.evite : '', d.finPersonne ? 'Fin : '+d.finPersonne : ''].filter(Boolean).join(' / '))}
@@ -6437,7 +6438,7 @@ const ETAPES = [
           ${recapEtape(d, 'intervention', '🙌 Intervention', (d.interventions||[]).map((iv, i) => {
               if (!iv.texte && !iv.effet) return null;
               const detail = effetNeedsCdPost(iv.effet)
-                ? (iv.cdPostIntervention ? ' (nouveau CD : '+iv.cdPostIntervention+')' : '')
+                ? (iv.cdPostIntervention ? ' (ensuite : '+iv.cdPostIntervention+')' : '')
                 : (iv.precision ? ' ('+iv.precision+')' : '');
               return (i === 0 ? '' : 'puis : ') + (iv.texte||'—') + (iv.effet ? ' → '+iv.effet : '') + detail;
             }).filter(Boolean).join(' / '))}
@@ -6604,8 +6605,8 @@ function renderInterventionBlock(iv, i, total) {
         <textarea id="f-inter-precision-${i}" style="min-height:56px;" placeholder="ex : apaisement progressif sur 15 min, puis rebond verbal.">${esc(iv.precision||'')}</textarea>
       </div>
       <div class="field" id="f-inter-cdpost-wrap-${i}" style="display:${needsCdPost?'':'none'};">
-        <label for="f-inter-cdpost-${i}">Si un nouveau CD apparaît, décrivez-le</label>
-        <div class="help">Il sera automatiquement consigné comme CD post-intervention dans le module Organiser : la réponse a elle-même produit un nouveau comportement-défi à analyser.</div>
+        <label for="f-inter-cdpost-${i}">Et ensuite, que s'est-il passé ? <span style="font-weight:400;color:var(--ink-soft);">(facultatif)</span></label>
+        <div class="help">Si la situation a pris une autre tournure après cette intervention, vous pouvez la décrire ici. Vous pouvez aussi tout raconter dans « Ce qui s'est passé » : l'équipe s'y retrouvera.</div>
         <textarea id="f-inter-cdpost-${i}" style="min-height:56px;" placeholder="ex : est passé des cris à des coups contre le mur.">${esc(iv.cdPostIntervention||'')}</textarea>
       </div>
       ${vaseWidget('iv' + i, iv.tension,
@@ -9348,6 +9349,16 @@ const _CONTROLES = [
       seule + '|' + tout + '|' + aide);
   }},
 
+  {nom:'Le formulaire ne demande pas de CD au déclarant', test: () => {
+    /* Lexique du 01/10/2026 : le déclarant décrit un évènement ; le CD, c'est
+       l'analyste qui le repère. On relit l'étape détaillée et le mode rapide. */
+    const etape = ETAPES.find(e => e.id === 'comportement');
+    const texte = (etape.label + ' ' + etape.render({}) + ' ' + JSON.stringify(RAPIDE_ETAPES.comportement) +
+      ' ' + renderInterventionBlock({effet: 'Augmentation de la tension'}, 0, 1)).replace(/<[^>]+>/g, ' ');
+    const fautifs = ['nouveau CD', 'CD post-intervention', 'Décrivez le comportement'].filter(t => texte.includes(t));
+    return _bancEgal('Termes qui demandent un CD au déclarant', '', fautifs.join(', '));
+  }},
+
   {nom:'Les couleurs des catégories se distinguent deux à deux', test: () => {
     /* Ce qui fait confondre deux catégories, c'est la teinte : les deux violets
        d'avant n'étaient séparés que de 10°, les deux rouges de 13°. Entre deux
@@ -11048,7 +11059,7 @@ function ouvrirDetailEvt(evtIdx, sousId, event) {
   const interventions = (d.interventions || []).map((iv, i) => {
     if (!iv.texte && !iv.effet) return null;
     const precision = effetNeedsCdPost(iv.effet)
-      ? (iv.cdPostIntervention ? ' (nouveau CD : ' + iv.cdPostIntervention + ')' : '')
+      ? (iv.cdPostIntervention ? ' (ensuite : ' + iv.cdPostIntervention + ')' : '')
       : (iv.precision ? ' (' + iv.precision + ')' : '');
     return (i === 0 ? '' : 'puis : ') + (iv.texte || '—') + (iv.effet ? ' → ' + iv.effet : '') + precision;
   }).filter(Boolean).join('\n');
@@ -11064,7 +11075,7 @@ function ouvrirDetailEvt(evtIdx, sousId, event) {
     detailBloc('📍 Où / qui était présent', [d.lieu, d.presences].filter(Boolean).join(' — ')),
     detailBloc('⏮ Contexte' + (etapeDetailRemplie(d,'contexte') ? '' : (resumeEtape(d,'contexte') ? ' — résumé rapide' : '')), etapeDetailRemplie(d,'contexte') ? d.avantLoin : resumeEtape(d,'contexte'), '', 'antecedents', sousId),
     detailBloc('⚡ Antécédent' + (etapeDetailRemplie(d,'antecedent') ? '' : (resumeEtape(d,'antecedent') ? ' — résumé rapide' : '')), etapeDetailRemplie(d,'antecedent') ? antecedents : resumeEtape(d,'antecedent'), d.etatAvant ? 'État avant : ' + d.etatAvant : '', 'antecedents', sousId),
-    detailBloc('🎥 Comportement' + (etapeDetailRemplie(d,'comportement') ? '' : (resumeEtape(d,'comportement') ? ' — résumé rapide' : '')), etapeDetailRemplie(d,'comportement') ? d.comportement : resumeEtape(d,'comportement'), dureeIntens, 'cp', sousId),
+    detailBloc("🎥 Ce qui s'est passé" + (etapeDetailRemplie(d,'comportement') ? '' : (resumeEtape(d,'comportement') ? ' — résumé rapide' : '')), etapeDetailRemplie(d,'comportement') ? d.comportement : resumeEtape(d,'comportement'), dureeIntens, 'cp', sousId),
     detailBloc('💧 Vase de tension', resumeTensionTexte(d), notesTension(d), 'cp', sousId),
     d.gradation ? detailBloc('📈 Gradation', d.gradation, '', 'cp', sousId) : '',
     detailBloc('🔄 Conséquence pour ' + prenom + (etapeDetailRemplie(d,'consequence') ? '' : (resumeEtape(d,'consequence') ? ' — résumé rapide' : '')), etapeDetailRemplie(d,'consequence') ? consequences : resumeEtape(d,'consequence'), '', 'consequences', sousId),
@@ -13417,7 +13428,7 @@ function corpsGrilleABC() {
     enTete('Quand · Qui', 'Date, heure, moment de la journée, lieu.\nQui remplit, et à quel titre.\n☐ J\'ai vu la scène moi-même', DOCX_C.papierFonce, DOCX_C.ink),
     enTete('Contexte', 'Ce qui s\'était passé avant, de loin : la nuit, le week-end, un changement, une douleur, un remplacement.', DOCX_C.contexte, DOCX_C.contexteTexte),
     enTete('Antécédent', 'Ce qui s\'est passé juste avant, et dans quel état il ou elle était.', DOCX_C.antecedent, DOCX_C.antecedentTexte),
-    enTete('Comportement', 'Ce qu\'une caméra aurait filmé : les gestes, les sons, l\'ordre, la durée.', DOCX_C.comportement, DOCX_C.comportementTexte),
+    enTete('Ce qui s\'est passé', 'Ce qu\'une caméra aurait filmé, du début à la fin : les gestes, les sons, l\'ordre, la durée.', DOCX_C.comportement, DOCX_C.comportementTexte),
     enTete('Intervention · effet', 'Ce que vous avez fait, et ce que ça a donné. « On n\'a rien fait » est une réponse.', DOCX_C.intervention, DOCX_C.interventionTexte),
     enTete('Conséquence pour la personne', 'Ce qu\'elle a obtenu, ce qu\'elle a évité. Pas ce que vous avez fait.', DOCX_C.consequence, DOCX_C.consequenceTexte),
     enTete('Vase', 'De 0 à 100.', DOCX_C.papierFonce, DOCX_C.ink),
@@ -13643,12 +13654,12 @@ function corpsGuide() {
       'Les secondes ou les minutes qui précèdent, et l\'état dans lequel il ou elle était. S\'il y a plusieurs éléments, notez-les tous ; si l\'un vous semble avoir déclenché, soulignez-le.',
       'On lui a demandé de ranger ses affaires pour passer au repas. Il tournait en rond dans le couloir depuis une dizaine de minutes et regardait souvent vers la porte.',
       DOCX_C.antecedent, DOCX_C.antecedentTexte) +
-    colonne('Comportement',
-      'Les gestes, les sons, l\'ordre, la durée. La séquence compte autant que les actes.',
+    colonne('Ce qui s\'est passé',
+      'Toute la scène, du début à la fin : les gestes, les sons, l\'ordre, la durée. Si plusieurs choses se sont enchaînées, écrivez-les toutes, dans l\'ordre : c\'est l\'équipe qui y repérera ensuite le ou les comportements à analyser.',
       'A crié très fort pendant une trentaine de secondes, puis a retourné une chaise, puis a tapé le mur avec la main ouverte. Environ cinq minutes en tout.',
       DOCX_C.comportement, DOCX_C.comportementTexte) +
     colonne('Intervention · effet',
-      'Votre réponse et ce qu\'elle a donné. « On n\'a rien fait » est une réponse précieuse : les moments où ça s\'arrête sans intervention se perdent souvent. Si un nouveau comportement est apparu après votre intervention, notez-le : c\'est un comportement à part entière.',
+      'Votre réponse et ce qu\'elle a donné. « On n\'a rien fait » est une réponse précieuse : les moments où ça s\'arrête sans intervention se perdent souvent. Si la situation a pris une autre tournure ensuite, notez-le aussi.',
       'J\'ai proposé un préavis de cinq minutes, puis je me suis mise en retrait. La tension est redescendue au bout de cinq minutes environ.',
       DOCX_C.intervention, DOCX_C.interventionTexte) +
     colonne('Conséquence pour la personne',
@@ -17150,7 +17161,7 @@ const REPERES = [
    et un contrôle de banc vérifie qu'aucun mot n'y échappe. */
 
 const LEXIQUE_BAF = {
-  "évènement": "Une entrée déclarative : une situation décrite par une personne qui l'a observée. Un évènement peut se rapporter à un ou plusieurs comportements-défis. C'est l'unité de base du recueil.",
+  "évènement": "Le déclaratif : une scène décrite, comme une caméra l'aurait filmée, par une personne qui l'a observée. Le déclarant ne désigne pas de comportement-défi : c'est l'analyste qui, dans Organiser, repère dans l'évènement un ou plusieurs CD. C'est l'unité de base du recueil.",
   "volet": "Les différentes faces d'un même évènement : contexte, antécédent, comportement, conséquence, intervention. On parle de volet plutôt que d'étape, parce qu'ils ne se suivent pas toujours dans cet ordre.",
   "antécédent": "Ce qui s'est passé juste avant le comportement, dans les secondes ou minutes précédentes. Il y en a souvent plusieurs. Le déclarant peut signaler celui qui lui semble avoir déclenché — c'est un avis, pas un verdict.",
   "conséquence": "Ce qui change pour la personne après le comportement : ce qu'elle obtient, ce qu'elle évite. C'est souvent là que la fonction du comportement se lit. À ne pas confondre avec l'intervention, qui est ce que l'entourage a fait.",
