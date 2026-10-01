@@ -16261,7 +16261,7 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
-const ACTIVITE_CODE = {"jusqua":"2026-10-01","mois":[{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":1161,"retrait":448,"depots":13}]};
+const ACTIVITE_CODE = {"jusqua":"2026-10-01","mois":[{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":1208,"retrait":449,"depots":14}]};
 
 function svgActiviteCode() {
   const mois = ACTIVITE_CODE.mois || [];
@@ -16294,6 +16294,18 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-01',
+    version: 'v2026.10.01-2',
+    titre: "Le rythme du travail en tête des notes, et l'accueil de l'indice de confiance dans ses couleurs",
+    corps: `
+<ul>
+<li><b>Le rythme du travail</b> : en tête de cette page, un histogramme des lignes de code ajoutées chaque mois. Le code écrit avant le premier dépôt, importé d'un bloc en juin, n'est pas compté ; le détail des lignes retirées s'affiche au survol d'une barre.</li>
+<li><b>Accueil de l'indice de confiance</b> : la mention « EMIA35 · BAF » et le contour de la boussole passent dans le ton de l'outil 2, comme l'aiguille, le A et le F de BAF et « Analyse Fonctionnelle ».</li>
+</ul>
+`
+  },
 
   {
     date: '2026-10-01',
