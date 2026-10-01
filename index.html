@@ -3272,7 +3272,6 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
 
   <section id="view-idc-accueil" class="view">
     <div class="wrap">
-      <div class="crumb"><button onclick="route('accueil')">← Accueil</button></div>
       <div class="hero">
         <svg class="bigrose" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="1">
 <circle cx="100" cy="100" r="96"/>
@@ -16277,7 +16276,7 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
-const ACTIVITE_CODE = {"jusqua":"2026-10-01","mois":[{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":1268,"retrait":462,"depots":17}]};
+const ACTIVITE_CODE = {"jusqua":"2026-10-01","mois":[{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":1279,"retrait":464,"depots":18}]};
 
 function svgActiviteCode() {
   const mois = ACTIVITE_CODE.mois || [];
@@ -16310,6 +16309,15 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-01',
+    version: 'v2026.10.01-5',
+    titre: "Un bouton en double retiré de l'accueil de l'indice de confiance",
+    corps: `
+<p>Accueil de l'indice de confiance : le petit bouton « ← Accueil » resté d'une ancienne version disparaît ; le retour se fait par le sous-header, comme dans l'outil 1.</p>
+`
+  },
 
   {
     date: '2026-10-01',
