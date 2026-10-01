@@ -6026,7 +6026,9 @@ const ETAPES = [
         <div class="field">
           <label for="f-declarant">Votre prénom <span style="font-weight:400;color:var(--ink-soft);">(pour traçabilité)</span></label>
           <div class="help">Pas de nom de famille, pas de ville, pas de structure nommée.</div>
-          <input type="text" id="f-declarant" placeholder="ex : Sophie, l'éducatrice du soir..." value="${esc(d.declarant||'')}">
+          <input type="text" id="f-declarant" list="f-declarant-liste" autocomplete="off" placeholder="ex : Sophie, l'éducatrice du soir..." value="${esc(d.declarant || (modeDeclarantActif() && !d.id ? dernierDeclarant() : '') || '')}">
+          <datalist id="f-declarant-liste">${optionsDeclarants()}</datalist>
+          <div class="help">Écrivez-le toujours de la même façon : sinon, l'outil croit avoir affaire à plusieurs personnes.</div>
         </div>
         <div class="field">
           <label>Avez-vous vu la scène vous-même ?</label>
@@ -6956,6 +6958,23 @@ function refreshM2List(){
 
 /* Détaillé dès qu'une seule case du mode détaillé est remplie ; rapide sinon
    (règle d'Arthur, 14/09/2026). */
+function cleDeclarant(s) {
+  return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+}
+// Les prénoms déjà saisis, proposés sous le champ : on ne retape pas son prénom autrement à chaque fiche.
+function dernierDeclarant() {
+  const evts = (state.m2.evenements || []).filter(e => (e.declarant || '').trim());
+  return evts.length ? evts[evts.length - 1].declarant.trim() : '';
+}
+function optionsDeclarants() {
+  const vus = new Map();
+  (state.m2.evenements || []).forEach(e => {
+    const p = (e.declarant || '').trim();
+    if (p && !vus.has(cleDeclarant(p))) vus.set(cleDeclarant(p), p);
+  });
+  return [...vus.values()].sort((a, b) => a.localeCompare(b, 'fr')).map(p => '<option value="' + esc(p) + '"></option>').join('');
+}
+
 function niveauDetailEvt(e) {
   return Object.keys(RAPIDE_ETAPES).some(id => etapeDetailRemplie(e || {}, id)) ? 'detaille' : 'rapide';
 }
@@ -7383,7 +7402,7 @@ function computeIndice() {
 
   // Déclarants uniques (par prénom/initiales)
   const declarantsSet = new Set(
-    evts.map(e => (e.declarant||'').trim().toLowerCase()).filter(Boolean)
+    evts.map(e => cleDeclarant(e.declarant)).filter(Boolean)
   );
   const nbDeclarants = declarantsSet.size;
 
@@ -9087,6 +9106,11 @@ const _CONTROLES = [
       persist = vrais.persist; route = vrais.route; showToast = vrais.showToast;
     }
     return _bancEgal('Évènements, alerte, pas de faux « remplacé », provenance demandée', '3|true|false|3', obtenu);
+  }},
+
+  {nom:'Les déclarants se comptent sans casse ni accents', test: () => {
+    const cles = new Set(['camille', 'Camille ', 'CAMILLE', 'Guillaume', 'Hélène', 'helene'].map(cleDeclarant));
+    return _bancEgal('Trois personnes', 3, cles.size);
   }},
 
   {nom:'Chaque volet a sa couleur, distincte des autres', test: () => {
@@ -17007,7 +17031,7 @@ function computeBafMeta(baf){
   if(n===0) return {};
 
   // Déclarants distincts
-  const decls = [...new Set(evts.map(e=>e.declarant||'').filter(Boolean))];
+  const decls = [...new Set(evts.map(e=>cleDeclarant(e.declarant)).filter(Boolean))];
   const roles = [...new Set(evts.map(e=>e.role||'').filter(Boolean))];
 
   // Contexte complet : date + heure + lieu + moment + presences
