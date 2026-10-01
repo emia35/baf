@@ -2890,13 +2890,13 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
     <div class="subbar-dossier" id="subbar-dossier"></div>
     <div class="subbar-dossier-court" id="subbar-dossier-court"></div>
     <div class="subbar-actions">
-      <button class="subbar-btn subbar-large" id="subbar-export" onclick="exporterDossierCourant()" title="Enregistrer le dossier en cours">💾 Exporter</button>
+      <button class="subbar-btn subbar-large" id="subbar-export" onclick="exporterDossierCourant()" title="Télécharger le fichier socle à jour">💾 Exporter</button>
       <span class="subbar-menu subbar-large">
         <button class="subbar-btn" id="subbar-import-btn" aria-haspopup="true" aria-expanded="false"
                 onclick="basculerMenuImport(event)" title="Charger un dossier dans l'outil">📂 Importer ▾</button>
         <span class="subbar-menu-liste" id="subbar-import-menu" hidden>
           <button type="button" onclick="importDepuisFichier()">
-            <b>📄 À partir d'un fichier</b><i>Un dossier .json exporté de la BAF</i>
+            <b>📄 À partir d'un fichier</b><i>Un fichier socle .json, ou un fichier déclarant</i>
           </button>
           <button type="button" onclick="importDepuisSimulation()">
             <b>🧪 Simuler un dossier</b><i>Des données fictives, pour découvrir l'outil</i>
@@ -3507,7 +3507,7 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
     <div class="m2-partage analyste-seul" id="m2-partage">
       <button class="btn btn-secondary" onclick="ouvrirFenetre('kit-overlay')">✉ Exporter un kit déclarant</button>
       <div class="m2-partage-droite">
-        <button class="btn btn-secondary" onclick="ouvrirFenetre('contrib-overlay')">📥 Ajouter une contribution</button>
+        <button class="btn btn-secondary" onclick="ouvrirFenetre('contrib-overlay')">📥 Ajouter des fichiers déclarants</button>
         <span class="m2-contrib-compteur" id="m2-contrib-compteur"></span>
       </div>
     </div>
@@ -3640,7 +3640,7 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
     </div>
 
     <div class="card codage-seul declarant-visibilite">
-      <b>Copie de primo codage.</b> Interpréter se fait à deux, directement en synthèse, dans le fichier officiel : rien à remplir ici.
+      <b>Copie de primo codage.</b> Interpréter se fait à deux, directement en synthèse, dans le fichier socle : rien à remplir ici.
     </div>
 
     <div id="m4-rapide-content">
@@ -3865,7 +3865,7 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
 
     <div class="actions-row">
       <div class="export-choix">
-        <button class="btn btn-gold" onclick="exporterJSON()">💾 Exporter le dossier</button>
+        <button class="btn btn-gold" onclick="exporterJSON()">💾 Exporter le fichier socle</button>
         <span class="export-format">fichier <b>.json</b> — pour reprendre le travail dans la BAF</span>
       </div>
       <div class="export-choix">
@@ -3926,8 +3926,8 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
 
 <div id="contrib-overlay" class="sim-modal-overlay" style="display:none;" onclick="fermerFenetre('contrib-overlay', event)">
   <div class="sim-modal fenetre-simple" role="dialog" aria-modal="true" aria-labelledby="contrib-titre">
-    <h3 id="contrib-titre">Ajouter une contribution</h3>
-    <p class="fenetre-texte">Le fichier d'un déclarant vient se verser dans la chronologie, et chaque évènement garde sa provenance.
+    <h3 id="contrib-titre">Ajouter des fichiers déclarants</h3>
+    <p class="fenetre-texte">Le <b>fichier déclarant</b> renvoyé par chaque déclarant vient se verser dans votre <b>fichier socle</b>, et chaque évènement garde sa provenance.
       Chaque fichier contient tout ce que le déclarant a écrit depuis le début : les évènements déjà reçus sont mis à jour,
       les nouveaux s'ajoutent, et un fichier plus ancien ne remplace rien. Seul le déclaratif remonte : le préambule reste le vôtre.</p>
     <div class="fenetre-actions">
@@ -4418,9 +4418,9 @@ function loadPersisted(){
    pas, restent lisibles, et le contenu garde sa forme. */
 
 const TYPES_FICHIER = {
-  dossier:        'un dossier complet',
+  dossier:        'un fichier socle',
   kit:            'un kit déclarant',
-  contribution:   'le fichier d\'un déclarant',
+  contribution:   'un fichier déclarant',
   'codage-kit':   'un kit de codage (une copie vierge pour le primo codage)',
   codage:         'le codage d\'un second codeur, selon l\'ancienne méthode que la BAF n\'utilise plus'
 };
@@ -7800,7 +7800,7 @@ function exporterJSON(){
   const a = document.createElement('a');
   const prenom = state.m1.prenom ? state.m1.prenom.replace(/[^a-zA-Z0-9]/g,'_') : 'sans_nom';
   a.href = url;
-  a.download = (state.codage && state.codage.actif ? 'RDAF-primo-codage_' : 'RDAF_') + prenom + '_' + horodatageFichier() + '.json';
+  a.download = (state.codage && state.codage.actif ? 'RDAF-primo-codage_' : 'RDAF-socle_') + prenom + '_' + horodatageFichier() + '.json';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -13391,11 +13391,11 @@ function corpsModeEmploiGeneral() {
     pf('Remplir le préambule, ', "puis appeler chaque déclarant pour le vérifier et lui présenter la démarche : personne ne doit être surpris par le mail de lancement.") +
     pf('Lancer le recueil : ', "exporter un kit déclarant et l'envoyer à tous par mail (modèle en 1.3), avec le lien emia35.github.io/baf/#participer.") +
     pf('Pendant le recueil, ', "chaque déclarant sauvegarde son fichier à chaque fois qu'il écrit. En établissement, il le range dans le dossier partagé, repart toujours du dernier fichier, et efface la BAF avant de partir. À la fin, il vous envoie son dernier fichier.") +
-    pf('Recevoir : ', "ajouter chaque contribution dans la BAF (Recueillir → Ajouter une contribution), puis relancer sur les journées sans information.") +
+    pf('Recevoir : ', "ajouter les fichiers déclarants à votre fichier socle (Recueillir → Ajouter des fichiers déclarants), puis relancer sur les journées sans information.") +
 
     etape('2. Organiser et interpréter', 'le binôme · dans la BAF : Organiser, Interpréter') +
     pf('Primo codage, séparément : ', "le référent et le clinicien catégorisent chacun de leur côté, dans une copie vierge (kit de codage), à partir du seul déclaratif, sans aucune catégorie de départ.") +
-    pf('Synthèse, à deux : ', "on compare, on arbitre, et on saisit le codage de synthèse dans le fichier officiel, y compris les signes qui entrent dans le vase de tension. Les deux copies sont ensuite supprimées : seule la synthèse reste.") +
+    pf('Synthèse, à deux : ', "sur un seul poste, dans le fichier socle : le comparateur affiche les deux copies côte à côte, on arbitre, y compris les signes qui entrent dans le vase de tension. « Terminer la synthèse » efface les copies : seule la synthèse reste.") +
     pf('Interpréter ', 'se fait directement en synthèse, à deux.') +
 
     etape('3. Formuler les hypothèses fonctionnelles', "le binôme et l'équipe · hors de la BAF") +
@@ -13410,7 +13410,7 @@ function corpsModeEmploiGeneral() {
     reflexe('Toujours repartir du dernier fichier. ', "Importez-le à chaque séance de travail, même si la BAF affiche déjà un dossier : un collègue a pu avancer depuis.") +
     reflexe('On ne retouche jamais le déclaratif. ', 'Ce que les déclarants ont écrit reste tel quel.') +
     reflexe("Un prénom d'emprunt. ", 'Aucun nom de famille, aucune ville, aucune structure nommée.') +
-    reflexe("Le dossier complet ne sort pas de l'équipe. ", "Ce qui circule vers l'extérieur, c'est le document d'analyse fonctionnelle.") +
+    reflexe("Le fichier socle ne sort pas de l'équipe. ", "Ce qui circule vers l'extérieur, c'est le document d'analyse fonctionnelle.") +
 
     saut +
 
@@ -13475,7 +13475,7 @@ function corpsModeEmploiGeneral() {
     texte("Il appelle ensuite chaque déclarant qu'il veut mobiliser, pour vérifier les informations du préambule et lui présenter la démarche d'analyse fonctionnelle.") +
     encadre([
       {t: 'Où la BAF garde-t-elle votre travail ? ', gras: true},
-      {t: "Dès que vous remplissez la moindre case, la BAF garde une mémoire de l'analyse dans le navigateur de cet ordinateur. Cette mémoire est locale : c'est comme un document Word ouvert et pas encore enregistré. Pour enregistrer, cliquez sur « Exporter », dans la barre sous l'en-tête (sur téléphone, dans le menu « Dossier ») : la BAF télécharge un fichier .json, qui est la sauvegarde de votre analyse tout entière."}
+      {t: "Dès que vous remplissez la moindre case, la BAF garde une mémoire de l'analyse dans le navigateur de cet ordinateur. Cette mémoire est locale : c'est comme un document Word ouvert et pas encore enregistré. Pour enregistrer, cliquez sur « Exporter », dans la barre sous l'en-tête (sur téléphone, dans le menu « Dossier ») : la BAF télécharge un fichier .json — le <b>fichier socle</b> —, qui est la sauvegarde de votre analyse tout entière."}
     ], DOCX_C.papierFonce, bleu) +
     puce('À la fin de chaque séance, ', "exportez le fichier et rangez-le dans le dossier partagé de la personne. Gardez les versions précédentes : la date et l'heure sont dans le nom de chaque fichier.") +
     puce('Au début de chaque séance, ', "importez le dernier fichier du dossier partagé, même si la BAF affiche déjà un dossier : c'est la version de votre dernière séance, et un collègue a pu avancer depuis.") +
@@ -13486,9 +13486,9 @@ function corpsModeEmploiGeneral() {
     courriel.map((l, i) => ligneCourriel(l, i === 0)).join('') +
     docxP('', {apres: 140}) +
 
-    sousPartie('1.4 Recevoir les contributions') +
-    dansBaf('Recueillir → Ajouter une contribution') +
-    puce('Versez chaque contribution dans la BAF. ', "Chaque évènement garde sa provenance, et la BAF range les évènements dans l'ordre chronologique. Chaque fichier contient tout ce que le déclarant a écrit depuis le début : la BAF met à jour les évènements déjà reçus et ajoute les nouveaux, et un fichier plus ancien que le dernier reçu ne remplace rien.") +
+    sousPartie('1.4 Recevoir les fichiers déclarants') +
+    dansBaf('Recueillir → Ajouter des fichiers déclarants') +
+    puce('Ajoutez les fichiers déclarants à votre fichier socle, ', "plusieurs à la fois si vous voulez. Chaque évènement garde sa provenance, et la BAF range les évènements dans l'ordre chronologique. Chaque fichier contient tout ce que le déclarant a écrit depuis le début : la BAF met à jour les évènements déjà reçus et ajoute les nouveaux, et un fichier plus ancien que le dernier reçu ne remplace rien.") +
     puce('Saisissez les grilles papier ', "telles qu'elles ont été écrites : la grille reprend colonne pour colonne le mode rapide, la recopie ne demande aucune décision. Recopiez les mots tels quels.") +
     puce('Regardez les périodes observées. ', "L'outil repère les journées sans information : allez demander ce qui s'est passé plutôt que de deviner. Une journée sans comportement-défi est une donnée, pas un vide.") +
 
@@ -13502,13 +13502,13 @@ function corpsModeEmploiGeneral() {
     sousPartie('Organiser : le double codage') +
     dansBaf('Organiser → « Double codage » : « Exporter un kit de codage » (une copie vierge par codeur), puis « Comparer les deux copies » ; « Effacer le codage » pour repartir d\'une page blanche') +
     texte("Organiser, c'est regrouper en catégories ce qui se ressemble, volet par volet : contexte, antécédent, comportement, conséquence, intervention. Or catégoriser, c'est déjà mesurer : c'est ce geste qui transforme un texte en une donnée qui sera comptée. Le référent et le clinicien organisent donc d'abord chacun de leur côté, pour permettre la richesse d'un double codage.") +
-    puce('Primo codage, chacun de son côté, à partir du seul déclaratif et sans aucune catégorie de départ : ', "le référent exporte un kit de codage, une copie vierge du fichier officiel (tous les évènements, aucune catégorie, rien dans Interpréter). Chacun ouvre sa copie, réalise son codage et l'enregistre de son côté avec « Exporter ». Le fichier officiel, lui, reste vierge côté Organiser.") +
-    puce('Synthèse, à deux : ', "en réunion, sur un seul poste. Le référent ouvre le fichier officiel, puis « Comparer les deux copies », et importe les deux copies. Chaque élément se lit sur une ligne : le codage A, le codage B, et la synthèse que vous arbitrez — prendre A, prendre B, ou une autre catégorie. Les signes qui entrent dans le vase de tension s'arbitrent aussi en synthèse. « Terminer la synthèse » efface les deux copies du fichier officiel : la synthèse devient le seul codage. Supprimez aussi les fichiers des copies.") +
+    puce('Primo codage, chacun de son côté, à partir du seul déclaratif et sans aucune catégorie de départ : ', "le référent exporte un kit de codage, une copie vierge du fichier socle (tous les évènements, aucune catégorie, rien dans Interpréter). Chacun ouvre sa copie, réalise son codage et l'enregistre de son côté avec « Exporter ». Le fichier socle, lui, reste vierge côté Organiser.") +
+    puce('Synthèse, à deux : ', "en réunion, sur un seul poste. Le référent ouvre le fichier socle, puis « Comparer les deux copies », et importe les deux copies. Chaque élément se lit sur une ligne : le codage A, le codage B, et la synthèse que vous arbitrez — prendre A, prendre B, ou une autre catégorie. Les signes qui entrent dans le vase de tension s'arbitrent aussi en synthèse. « Terminer la synthèse » efface les deux copies du fichier socle : la synthèse devient le seul codage. Supprimez aussi les fichiers des copies.") +
     aEviter("Catégoriser en pensant déjà à la fonction. On regroupe ce qui se ressemble ; l'hypothèse vient après, et pas avant.") +
 
     sousPartie('Interpréter : chercher ce qui se répète, en binôme') +
     dansBaf('Interpréter les données') +
-    texte("Interpréter se fait directement en synthèse, à deux, dans le fichier officiel. Les séquences qui reviennent, les moments et les lieux où le comportement apparaît — et ceux où il n'apparaît pas —, la façon dont la tension monte chez la personne. La BAF compte et signale ; elle ne conclut pas. Un pourcentage calculé sur quelques évènements est une piste, pas une tendance, et l'outil le dit à chaque fois.") +
+    texte("Interpréter se fait directement en synthèse, à deux, dans le fichier socle. Les séquences qui reviennent, les moments et les lieux où le comportement apparaît — et ceux où il n'apparaît pas —, la façon dont la tension monte chez la personne. La BAF compte et signale ; elle ne conclut pas. Un pourcentage calculé sur quelques évènements est une piste, pas une tendance, et l'outil le dit à chaque fois.") +
     puce('Proposer un vase de tension. ', "Le choix des signes qui y entrent se tranche lors de la synthèse. À partir des signes précurseurs que les déclarants ont décrits, le binôme écrit à quoi ressemble chaque palier chez cette personne. Ce vase est un résultat de l'analyse, à rendre aux équipes. Une fois figé, il remplace les descriptions génériques pour les recueils suivants — jamais en cours de recueil : on ne déplace pas l'unité de mesure pendant qu'on mesure.") +
 
     /* ── 3 ── */
@@ -13534,7 +13534,7 @@ function corpsModeEmploiGeneral() {
       {t: '\nAF évaluée = AF + ICAF + ce que la cotation fait aller chercher', gras: true}
     ], DOCX_C.papierFonce, bleu) +
     encadre([
-      {t: "Le dossier complet ne sort pas de l'équipe. ", gras: true},
+      {t: "Le fichier socle ne sort pas de l'équipe. ", gras: true},
       {t: "Il contient l'ensemble du matériel et le travail d'analyse. Ce qui circule vers l'extérieur, c'est le document d'analyse fonctionnelle — pas le fichier."}
     ], DOCX_C.consequence, DOCX_C.consequenceTrait)
   );
@@ -13926,7 +13926,7 @@ const SITUER = {
   },
   m2: {
     ici: "Des évènements décrits un par un, tels qu'ils se sont passés.",
-    vient: "De vous, et des contributions que d'autres personnes vous renvoient.",
+    vient: "De vous, et des fichiers déclarants que d'autres personnes vous renvoient.",
     repart: "Vers Organiser : chaque phrase écrite ici y devient un élément à catégoriser."
   },
   m3: {
@@ -14078,7 +14078,7 @@ function renderParcours() {
     texte(222, 164, 'le kit', 11, 'var(--sauge-deep)', false, 'start') +
     '<line x1="316" y1="196" x2="316" y2="' + (Y + H + 6) + '" stroke="var(--sauge-deep)" stroke-width="1.6" stroke-dasharray="5 4"/>' +
     '<polygon points="316,' + (Y + H) + ' 311.5,' + (Y + H + 8) + ' 320.5,' + (Y + H + 8) + '" fill="var(--sauge-deep)"/>' +
-    texte(326, 164, 'la contribution', 11, 'var(--sauge-deep)', false, 'start') +
+    texte(326, 164, 'le fichier déclarant', 11, 'var(--sauge-deep)', false, 'start') +
 
     // 2 · Analyse fonctionnelle
     flecheBas(185, 272, 318, 'var(--slate)') +
@@ -14162,7 +14162,7 @@ const VUES_RESERVEES = {
   synthese: {
     titre: 'La synthèse',
     quoi: "La vue d'ensemble : les chiffres, les graphiques, les régularités repérées sur l'ensemble des évènements déclarés.",
-    qui: "Elle se construit à partir de l'ensemble des contributions. L'EMIA vous en restituera ce qui vous concerne."
+    qui: "Elle se construit à partir de l'ensemble des observations reçues. L'EMIA vous en restituera ce qui vous concerne."
   },
   'idc-accueil': {
     titre: "L'indice de confiance",
@@ -14841,7 +14841,7 @@ function fermerFenetresClavier(ev) {
    Le protocole, arrêté par Arthur le 14/09/2026 :
    · le PRIMO CODAGE se fait séparément, chacun dans une copie vierge, à partir
      du seul déclaratif — aucune catégorie de départ, rien dans Interpréter ;
-   · la SYNTHÈSE se saisit à deux, dans le fichier officiel, y compris les
+   · la SYNTHÈSE se saisit à deux, dans le fichier socle, y compris les
      signes qui entrent dans le vase de tension ; Interpréter se fait
      directement en synthèse ;
    · la synthèse est le seul codage : les copies se suppriment ensuite.
@@ -14921,7 +14921,7 @@ function effacerCodage() {
   if (!confirm("Effacer tout le codage de ce dossier ?\n\n" +
       "· Organiser : " + nbCats + " catégorie" + (nbCats > 1 ? 's' : '') + " et les éléments qui y sont rangés\n" +
       "· Interpréter : " + nbSeq + " séquence" + (nbSeq > 1 ? 's' : '') + ", les signes du vase de tension et ses paliers\n\n" +
-      "Le préambule, les évènements et les contributions reçues sont conservés. " +
+      "Le préambule, les évènements et les fichiers déclarants reçus sont conservés. " +
       "Exportez d'abord si vous voulez garder une trace de ce codage.\n\nEffacer ?")) return;
   const vierge = codageVierge();
   state.m3 = vierge.m3;
@@ -14958,8 +14958,8 @@ function renderDoubleCodage() {
   let html = '';
   if (enCodage) {
     html += '<p class="dc-texte"><b>Vous catégorisez à partir du seul déclaratif</b>, sans catégorie de départ et sans voir le codage de l\'autre.</p>' +
-      '<p class="dc-texte">Cette copie ne remplace pas le fichier officiel. Sauvegardez-la avec « 💾 Exporter » et apportez-la à la ' +
-      'réunion de synthèse. <b>Interpréter se fera ensemble</b>, dans le fichier officiel.</p>' +
+      '<p class="dc-texte">Cette copie ne remplace pas le fichier socle. Sauvegardez-la avec « 💾 Exporter » et apportez-la à la ' +
+      'réunion de synthèse. <b>Interpréter se fera ensemble</b>, dans le fichier socle.</p>' +
       '<div class="dc-actions">' + effacer + '</div>';
   } else {
     html += '<p class="dc-texte">La catégorisation est un acte de mesure : c\'est elle qui transforme un texte en une donnée ' +
@@ -14968,10 +14968,10 @@ function renderDoubleCodage() {
         '<li><b>Primo codage, séparément.</b> « Exporter un kit de codage » produit une copie vierge : le préambule et les ' +
           'évènements, aucune catégorie, rien dans Interpréter. Une copie par codeur ; chacun catégorise dans la sienne, ' +
           'à partir du seul déclaratif.</li>' +
-        '<li><b>Synthèse, à deux.</b> En réunion, sur un seul poste : ouvrez le fichier officiel, puis « Comparer les deux copies », ' +
+        '<li><b>Synthèse, à deux.</b> En réunion, sur un seul poste : ouvrez le fichier socle, puis « Comparer les deux copies », ' +
           'et importez-les. Chaque élément se lit sur une ligne, le codage A à côté du codage B, et vous arbitrez la synthèse, qui s\'écrit ici. ' +
           'Les signes qui entrent dans le vase de tension s\'arbitrent aussi en synthèse, et Interpréter se fait directement en synthèse.</li>' +
-        '<li><b>La synthèse est le seul codage.</b> « Terminer la synthèse », dans le comparateur, efface les deux copies du fichier officiel. ' +
+        '<li><b>La synthèse est le seul codage.</b> « Terminer la synthèse », dans le comparateur, efface les deux copies du fichier socle. ' +
           'Supprimez aussi leurs fichiers, là où ils sont rangés.</li>' +
       '</ol>' +
       '<div class="dc-actions">' +
@@ -14991,7 +14991,7 @@ function renderDoubleCodage() {
 /* ══════════════════════════════════════════════════════════════════════
    COMPARER LES DEUX PRIMO CODAGES
    ══════════════════════════════════════════════════════════════════════
-   En réunion, sur un seul poste : le fichier officiel est ouvert, on importe
+   En réunion, sur un seul poste : le fichier socle est ouvert, on importe
    les deux copies de primo codage, et chaque élément du déclaratif se lit sur
    une ligne — le codage A, le codage B, la synthèse qu'on arbitre. Comme un
    comparateur de produits (Arthur, 14/09/2026).
@@ -15001,7 +15001,7 @@ function renderDoubleCodage() {
    pousserait à coder pour tomber d'accord. On montre ce qui diffère, on n'en
    fait pas une note.
 
-   Les deux copies restent dans le fichier officiel (state.comparaison) tant
+   Les deux copies restent dans le fichier socle (state.comparaison) tant
    que la synthèse n'est pas terminée : une réunion peut s'interrompre et
    reprendre un autre jour. Ordinateur ou tablette seulement. */
 
@@ -15077,7 +15077,7 @@ function accueillirCopieCodage(slot, objet, nomFichier) {
   }
   const idCopie = (lu.enveloppe && lu.enveloppe.idDossier) || d.idDossier || null;
   if (idCopie && state.idDossier && idCopie !== state.idDossier) {
-    return {ok:false, raison:"Cette copie a été faite à partir d'un autre dossier. Ouvrez le fichier officiel dont vient le kit de codage, puis importez-la."};
+    return {ok:false, raison:"Cette copie a été faite à partir d'un autre fichier socle. Ouvrez le fichier socle dont vient le kit de codage, puis importez-la."};
   }
   const categories = JSON.parse(JSON.stringify((d.m3 && d.m3.categories) || {}));
   const exporte = (lu.enveloppe && lu.enveloppe.exporte) || '';
@@ -15287,7 +15287,7 @@ function terminerSynthese() {
   delete state.comparaison;
   persist();
   renderComparateur();
-  showToast('Synthèse terminée : les deux copies sont effacées. Exportez le fichier officiel pour la garder.');
+  showToast('Synthèse terminée : les deux copies sont effacées. Exportez le fichier socle pour la garder.');
 }
 
 function renderComparateur() {
@@ -15296,7 +15296,7 @@ function renderComparateur() {
   ensureM3();
   if (state.codage && state.codage.actif) {
     zone.innerHTML = '<div class="card cmp-message"><p>Vous êtes dans une <b>copie de primo codage</b>. ' +
-      'Le comparateur s\'ouvre dans le fichier officiel du dossier : c\'est là qu\'on importe les deux copies et qu\'on écrit la synthèse.</p></div>';
+      'Le comparateur s\'ouvre dans le fichier socle : c\'est là qu\'on importe les deux copies et qu\'on écrit la synthèse.</p></div>';
     return;
   }
   if (!M3_SOUS.some(s => s.id === cmpSous)) cmpSous = 'cp';
@@ -15410,7 +15410,7 @@ function renderComparateur() {
         '<th class="cmp-th cmp-th-el">Élément décrit</th>' +
         enteteCopie('A') + enteteCopie('B') +
         '<th class="cmp-th cmp-th-synth"><div class="cmp-slot"><span class="cmp-slot-lettre cmp-lettre-s">✓</span>Synthèse</div>' +
-          '<div class="cmp-fichier">Le fichier officiel : ce qui est retenu s\'écrit dans Organiser</div></th>' +
+          '<div class="cmp-fichier">Le fichier socle : ce qui est retenu s\'écrit dans Organiser</div></th>' +
       '</tr></thead>' +
       '<tbody>' + corps + '</tbody>' +
     '</table></div>';
@@ -15466,8 +15466,8 @@ function fusionnerContribution(lu, nomFichier) {
 
   if (meta.idDossier && state.idDossier && meta.idDossier !== state.idDossier) {
     if (!confirm(
-      "Cette contribution a été produite à partir d'un AUTRE dossier que celui qui est ouvert.\n\n" +
-      "Cela arrive si le kit venait d'un dossier recréé depuis. Les évènements s'ajouteront quand même, " +
+      "Ce fichier déclarant vient d'un kit fait à partir d'un AUTRE fichier socle que celui qui est ouvert.\n\n" +
+      "Cela arrive si le kit venait d'un fichier socle recréé depuis. Les évènements s'ajouteront quand même, " +
       "mais vérifiez qu'il s'agit bien de la même personne.\n\nAjouter quand même ?")) return;
   }
 
@@ -15539,7 +15539,7 @@ function fusionnerContribution(lu, nomFichier) {
   refreshSynthese();
   route('m2');
 
-  let msg = 'Contribution' + (state.contributions[idC].provenance ? ' — ' + state.contributions[idC].provenance : '') + '\n\n';
+  let msg = 'Fichier déclarant' + (state.contributions[idC].provenance ? ' — ' + state.contributions[idC].provenance : '') + '\n\n';
   msg += '· ' + ajoutes + ' évènement' + (ajoutes > 1 ? 's' : '') + ' ajouté' + (ajoutes > 1 ? 's' : '') + '\n';
   if (remplaces) {
     msg += '· ' + remplaces + ' déjà présent' + (remplaces > 1 ? 's' : '') + ', remplacé' + (remplaces > 1 ? 's' : '') +
@@ -15549,7 +15549,7 @@ function fusionnerContribution(lu, nomFichier) {
   else if (plusAncien) msg += '· Ce fichier est plus ancien que le dernier reçu de ce déclarant : ' + gardes + ' évènement' + (gardes > 1 ? 's' : '') + ' déjà présent' + (gardes > 1 ? 's' : '') + ' laissé' + (gardes > 1 ? 's' : '') + ' tel' + (gardes > 1 ? 's' : '') + ' quel' + (gardes > 1 ? 's' : '') + '.\n';
   else if (dejaVue && !remplaces) msg += '· Cet envoi avait déjà été reçu.\n';
   if (couvAjoutees) msg += '· ' + couvAjoutees + ' période' + (couvAjoutees > 1 ? 's' : '') + ' observée' + (couvAjoutees > 1 ? 's' : '') + ' sans comportement-défi\n';
-  if (ignorees.length) msg += '· Ignoré : ' + ignorees.join(', ') + ' — une contribution ne remonte que le déclaratif.\n';
+  if (ignorees.length) msg += '· Ignoré : ' + ignorees.join(', ') + ' — un fichier déclarant n\'apporte que le déclaratif.\n';
   alert(msg);
 }
 
@@ -15560,7 +15560,7 @@ function renderContributions() {
   const c = state.contributions || {};
   const cles = Object.keys(c);
   const compteur = document.getElementById('m2-contrib-compteur');
-  if (compteur) compteur.textContent = cles.length ? cles.length + ' contribution' + (cles.length > 1 ? 's' : '') + ' reçue' + (cles.length > 1 ? 's' : '') : '';
+  if (compteur) compteur.textContent = cles.length ? cles.length + ' fichier' + (cles.length > 1 ? 's' : '') + ' déclarant' + (cles.length > 1 ? 's' : '') + ' reçu' + (cles.length > 1 ? 's' : '') : '';
   if (!cles.length) { el.innerHTML = ''; return; }
   const compte = {};
   (state.m2.evenements || []).forEach(e => { if (e.source) compte[e.source] = (compte[e.source] || 0) + 1; });
@@ -16160,9 +16160,9 @@ const REPERES = [
        r: `<p>Jamais. Le déclaratif est la donnée de base : c'est le discours d'un professionnel ou d'une famille, avec son point de vue et ses biais propres, et il doit garder ce caractère.</p>
            <p>Le travail de l'analyste ne commence qu'à l'étape <b>Organiser</b>. Tout ce qui y est produit — catégories, regroupements — se lit par-dessus et n'est jamais réécrit dans l'évènement. On peut donc toujours revenir au matériau d'origine.</p>`},
       {q: "Comment travailler à plusieurs sur la même analyse ?",
-       r: `<p><b>Pour recueillir</b>, le référent envoie à chaque déclarant un <i>kit déclarant</i> : un fichier qui contient le préambule, sans aucun évènement ni travail d'analyse. Le déclarant l'ouvre depuis la page Participer de la BAF, décrit ce qu'il observe et sauvegarde son fichier au fur et à mesure ; à la fin, il envoie le dernier, sa <i>contribution</i>. Le référent la verse dans le dossier : chaque évènement garde sa provenance, et les envois successifs ne se dupliquent pas. Ceux qui ne peuvent pas utiliser l'outil numérique remplissent une grille ABC papier, disponible dans Ressources.</p>
-           <p><b>Pour organiser</b>, référent et clinicien font d'abord un primo codage chacun de leur côté, dans la copie vierge que produit le <i>kit de codage</i>, à partir du seul déclaratif. Ils se réunissent ensuite et saisissent ensemble, dans le fichier officiel, la catégorisation de synthèse, qui devient le seul codage. Interpréter se fait directement en synthèse.</p>
-           <p>Le dossier complet, lui, ne circule pas : il reste chez le référent. Ce qui part vers l'extérieur, c'est le document d'analyse fonctionnelle.</p>`},
+       r: `<p><b>Pour recueillir</b>, le référent envoie à chaque déclarant un <i>kit déclarant</i> : un fichier qui contient le préambule, sans aucun évènement ni travail d'analyse. Le déclarant l'ouvre depuis la page Participer de la BAF, décrit ce qu'il observe et sauvegarde son fichier au fur et à mesure ; à la fin, il envoie le dernier : son <i>fichier déclarant</i>. Le référent l'ajoute à son <i>fichier socle</i> : chaque évènement garde sa provenance, et les envois successifs ne se dupliquent pas. Ceux qui ne peuvent pas utiliser l'outil numérique remplissent une grille ABC papier, disponible dans Ressources.</p>
+           <p><b>Pour organiser</b>, référent et clinicien font d'abord un primo codage chacun de leur côté, dans la copie vierge que produit le <i>kit de codage</i>, à partir du seul déclaratif. Ils se réunissent ensuite et arbitrent ensemble, dans le fichier socle, la catégorisation de synthèse, qui devient le seul codage. Interpréter se fait directement en synthèse.</p>
+           <p>Le fichier socle, lui, ne circule pas : il reste chez le référent. Ce qui part vers l'extérieur, c'est le document d'analyse fonctionnelle.</p>`},
       {q: "Pourquoi déclarer les journées où il ne se passe rien ?",
        r: `<p>Parce qu'une journée sans comportement-défi est une donnée, pas un vide. Sans elle, l'outil ne peut pas distinguer « il ne s'est rien passé » de « personne n'a rempli » : la fréquence qu'il affiche mesure alors les signalements, pas les comportements.</p>
            <p>Et les moments où le comportement n'apparaît pas sont souvent les plus instructifs : ils disent ce qui aide la personne.</p>`},
@@ -16198,14 +16198,15 @@ const LEXIQUE_BAF = {
   "ICAF": "L'outil 2, l'indice de confiance. Il évalue la qualité méthodologique d'une analyse fonctionnelle terminée — pas la personne, pas les déclarants.",
   "préambule": "Ce que l'équipe sait déjà de la personne avant toute observation : lieux de vie, journée type, piste somatique, vase de tension connu. C'est le point de départ commun à tous les déclarants.",
   "analyste": "Celui ou celle qui organise et interprète les données, puis fait l'analyse fonctionnelle. Dans la démarche proposée, c'est le binôme formé par le référent et le clinicien.",
-  "référent": "Le professionnel qui porte la démarche : il la prépare, lance le recueil, reçoit les contributions et fait l'analyse avec le clinicien qui la supervise.",
+  "référent": "Le professionnel qui porte la démarche : il la prépare, lance le recueil, reçoit les fichiers déclarants et fait l'analyse avec le clinicien qui la supervise.",
   "cotateur": "Celui ou celle qui remplit l'ICAF sur une analyse fonctionnelle terminée. Coter à plusieurs, séparément, est plus instructif que la note elle-même.",
   "kit déclarant": "Le fichier envoyé à tous les déclarants : le préambule, sans aucun évènement ni travail d'analyse. Chacun l'ouvre depuis la page Participer de la BAF.",
-  "contribution": "Le fichier d'un déclarant : le préambule reçu, ses évènements et ses périodes observées. Il le sauvegarde à chaque séance, le rouvre la fois suivante, et envoie le dernier. Le référent la verse dans le dossier, chaque évènement gardant sa provenance.",
+  "fichier socle": "Le fichier du référent : le préambule, tous les évènements reçus, et tout le travail d'analyse. C'est lui qu'on exporte et qu'on range dans le dossier partagé de l'équipe ; il ne circule pas au-dehors.",
+  "fichier déclarant": "Le fichier propre à chaque déclarant : le préambule reçu, ses évènements et ses périodes observées. Il le sauvegarde à chaque séance, repart toujours du dernier, et envoie le dernier. Le référent l'ajoute à son fichier socle, chaque évènement gardant sa provenance. Une personne, un fichier : à deux sur le même fichier, on se marche dessus.",
   "période observée": "Une journée ou une plage de jours déclarée comme observée, avec ou sans comportement-défi. Sans elle, l'outil ne peut pas distinguer « il ne s'est rien passé » de « personne n'a rempli ».",
   "vase de tension": "L'image qu'emploie la BAF pour la tension qui s'accumule chez la personne, en cinq paliers. Le déclarant pose un palier et note à quoi ça se voyait ; l'équipe en tire l'échelle décrite propre à la personne.",
-  "double codage": "La catégorisation faite d'abord séparément par deux personnes — le référent et le clinicien, par exemple —, chacune dans une copie vierge et à partir du seul déclaratif, puis saisie à deux, en synthèse, dans le fichier officiel. La synthèse devient le seul codage.",
-  "kit de codage": "Une copie vierge du dossier pour le primo codage : le préambule et les évènements, aucune catégorie, rien dans Interpréter. Une par codeur.",
+  "double codage": "La catégorisation faite d'abord séparément par deux personnes — le référent et le clinicien, par exemple —, chacune dans une copie vierge et à partir du seul déclaratif, puis saisie à deux, en synthèse, dans le fichier socle. La synthèse devient le seul codage.",
+  "kit de codage": "Une copie vierge du fichier socle pour le primo codage : le préambule et les évènements, aucune catégorie, rien dans Interpréter. Une par codeur.",
 };
 
 const LEXIQUE_AF = {
@@ -16230,7 +16231,7 @@ const LEXIQUE_CLASSE = {
   "déclarant": "outil", "source": "outil", "espace": "outil",
   "BAF": "outil", "RDAF": "outil", "ICAF": "outil", "préambule": "outil",
   "analyste": "outil", "référent": "outil", "cotateur": "outil",
-  "kit déclarant": "outil", "contribution": "outil", "période observée": "outil",
+  "kit déclarant": "outil", "fichier socle": "outil", "fichier déclarant": "outil", "période observée": "outil",
   "vase de tension": "outil", "double codage": "outil", "kit de codage": "outil",
 };
 
