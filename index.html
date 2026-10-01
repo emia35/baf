@@ -1692,6 +1692,11 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
   margin:0 0 6px 24px;font-size:11.5px;color:var(--rose-deep);background:var(--rose-pale, #FBEDEF);
   border-radius:6px;padding:4px 9px;
 }
+.cmp-tag-cd{background:var(--vol-comportement-deep);color:#fff;}
+.cmp-dec-titre{font-size:12px;font-weight:700;color:var(--ink);margin-bottom:3px;}
+.cmp-dec-ligne{font-size:12px;line-height:1.4;color:var(--ink);margin-bottom:2px;}
+.cmp-dec-entre{color:var(--vol-intervention-deep);font-style:italic;padding-left:10px;}
+.cmp-sous-titre td{font-size:12px;color:var(--ink-soft);font-style:italic;padding:8px 10px;background:var(--paper-deep);}
 .m3-puce-ref{font-weight:700;margin-right:2px;}
 .decoupe-fenetre{max-width:1040px;max-height:calc(100vh - 32px);overflow-y:auto;}
 .dec-grille{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:6px;}
@@ -7374,7 +7379,7 @@ function computeFrequence() {
   const libelle = parJour >= 1
     ? parJour.toFixed(1).replace('.', ',') + ' / jour'
     : '1 tous les ' + Math.round(1 / parJour) + ' j';
-  return {libelle, detail: `${evts.length} CD sur ${denominateur} ${base}${reserve}`};
+  return {libelle, detail: `${evts.length} évènement${evts.length > 1 ? 's' : ''} sur ${denominateur} ${base}${reserve}`};
 }
 
 function modeArray(arr) {
@@ -7682,14 +7687,14 @@ function computeIndice() {
   const criteres = [
     {
       id: 'volume',
-      label: 'Volume de comportements-défis décrits',
+      label: 'Volume d\'évènements décrits',
       seuils: {ok: 20, partial: 10},
       valeur: n,
       score: n >= 20 ? 1 : n >= 10 ? 0.5 : 0,
-      affichage: n + ' CD décrit' + (n > 1 ? 's' : ''),
+      affichage: n + ' évènement' + (n > 1 ? 's' : '') + ' décrit' + (n > 1 ? 's' : ''),
       conseils: {
-        0: 'Moins de 10 CD : l\'analyse repose sur trop peu d\'évènements pour dégager des patterns fiables. Continuez le recueil.',
-        0.5: 'Entre 10 et 19 CD : les tendances émergent, mais restent fragiles. Visez au moins 20 évènements.',
+        0: 'Moins de 10 évènements : l\'analyse repose sur trop peu de données pour dégager des patterns fiables. Continuez le recueil.',
+        0.5: 'Entre 10 et 19 évènements : les tendances émergent, mais restent fragiles. Visez au moins 20 évènements.',
         1: null
       }
     },
@@ -7902,6 +7907,146 @@ function catsDeEvt(sousId, evtId) {
   return result;
 }
 
+/* ── Les séquences A → CD → C (01/10/2026) ─────────────────────────────
+   Les croisements se comptaient par évènement. Quand les CD d'un évènement se
+   suivent, chacun a ses propres antécédents et conséquences : le premier, ceux
+   du déclaratif ; les suivants, ce qui s'est passé juste avant eux ; le
+   dernier, les conséquences du déclaratif. On compte donc par SÉQUENCE : une
+   par évènement, ou une par CD quand ils se suivent. Des CD simultanés forment
+   une seule séquence (ils partagent ce qui précède et ce qui suit). Sans CD à
+   la suite, rien ne change : une séquence = un évènement. */
+function unitesABC() {
+  ensureM3();
+  const cats = state.m3.categories || {};
+  const noms = (volet, ids) => {
+    const c = cats[volet] || {}, out = [];
+    ids.forEach(id => catsDeItemDans(c, id).forEach(cid => {
+      const n = cheminCatDans(c, cid);
+      if (out.indexOf(n) === -1) out.push(n);
+    }));
+    return out;
+  };
+  const unites = [];
+  (state.m2.evenements || []).forEach(evt => {
+    if (!evt) return;
+    if (!evt.id) evt.id = 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    const st = structureCD(evt);
+    if (st.mode !== 'sequence') {
+      unites.push({evt, A: catsDeEvt('antecedents', evt.id), B: catsDeEvt('cp', evt.id), C: catsDeEvt('consequences', evt.id)});
+      return;
+    }
+    const ant = elementsEvt('antecedents', evt), cons = elementsEvt('consequences', evt);
+    const dernier = st.cds.length - 1;
+    st.cds.forEach((cd, k) => {
+      const A = ant.filter(e => k === 0 ? e.tag !== 'charniere' : (e.tag === 'charniere' && e.relie === k)).map(e => e.id);
+      const C = cons.filter(e => k === dernier ? e.tag !== 'charniere' : (e.tag === 'charniere' && e.relie === k)).map(e => e.id);
+      unites.push({evt, cd: k, A: noms('antecedents', A), B: noms('cp', [cd.id]), C: noms('consequences', C)});
+    });
+  });
+  return unites;
+}
+
+/* L'intervention qui s'est glissée entre deux CD, telle qu'elle est catégorisée. */
+function ivDeChamp(evt, champ) {
+  const p = String(champ || '').split('.');
+  if (p[0] !== 'interventions' || !evt) return null;
+  const liste = evt.interventions || [];
+  return (p[1] && p[1].startsWith('#') ? liste[parseInt(p[1].slice(1), 10)] : liste.find(o => o && o.id === p[1])) || null;
+}
+function nomsIvCharniere(evt, c, avecTexte, catsIv, nomsDe) {
+  if (!c || !c.intervention) return [];
+  if (!c.depuisIntervention) return nomsDe(catsIv, 'e' + evt.id + '_' + c.cle + '_i');
+  const iv = ivDeChamp(evt, c.champ);
+  const k = iv ? avecTexte.indexOf(iv) : -1;
+  return k >= 0 ? nomsDe(catsIv, 'e' + evt.id + '_' + k) : [];
+}
+
+/* ── Le double codage et les découpages ─────────────────────────────────
+   Le découpage fait partie du codage : chaque codeur découpe dans sa copie.
+   Deux découpages sont « les mêmes » s'ils citent les mêmes passages dans le
+   même ordre, quels que soient leurs identifiants internes. Tant que la
+   synthèse n'a pas retenu le découpage d'une copie, les CD de cette copie ne se
+   comparent pas élément par élément : on le dit plutôt que de mal apparier. */
+function sigDecoupage(D) {
+  if (!D || !(D.unites || []).length) return 'aucun';
+  return JSON.stringify({
+    m: D.mode === 'simultane' ? 'simultane' : 'sequence',
+    u: D.unites.map(u => [u.champ, u.texte]),
+    c: D.mode === 'simultane' ? [] : (D.charnieres || []).map(c => c ? [c.champ, c.texte, c.intervention !== false] : null)
+  });
+}
+function decoupageDeCopie(copie, evtId) { return ((copie && copie.decoupages) || {})[evtId] || null; }
+function decoupageSocle(evtId) { return ((state.m3 && state.m3.decoupages) || {})[evtId] || null; }
+
+/* L'identifiant, dans une copie, de l'élément de la synthèse ; null si la copie
+   a découpé l'évènement autrement. */
+function idDansCopie(copie, evt, itemId, dependant) {
+  if (!dependant || !evt) return itemId;
+  const dS = decoupageSocle(evt.id), dC = decoupageDeCopie(copie, evt.id);
+  if (sigDecoupage(dS) !== sigDecoupage(dC)) return null;
+  if (!dS) return itemId;
+  const pre = 'e' + evt.id + '_';
+  for (let k = 0; k < dS.unites.length; k++) {
+    if (itemId === pre + 'u' + dS.unites[k].id) return pre + 'u' + dC.unites[k].id;
+  }
+  for (let k = 0; k < (dS.charnieres || []).length; k++) {
+    const cS = dS.charnieres[k], cC = (dC.charnieres || [])[k];
+    if (cS && cC && itemId.startsWith(pre + 'c' + cS.id + '_')) return pre + 'c' + cC.id + itemId.slice((pre + 'c' + cS.id).length);
+  }
+  return itemId;
+}
+function idCopiePour(slot, sousId, itemId) {
+  const copie = state.comparaison && state.comparaison[slot];
+  if (!copie) return null;
+  const item = extraireItems(sousId).find(it => it.id === itemId);
+  if (!item) return itemId;
+  return idDansCopie(copie, (state.m2.evenements || [])[item.evtIdx], itemId, sousId === 'cp' || item.tag === 'charniere');
+}
+
+function resumeDecoupage(D, evt, n) {
+  const court = t => { t = String(t || ''); return esc(t.length > 70 ? t.slice(0, 69) + '…' : t); };
+  if (!D || !(D.unites || []).length) {
+    const st = structureCD(evt, {});
+    return '<div class="cmp-dec-titre">Non découpé · ' + st.cds.length + ' CD</div>' +
+      (st.cds.length > 1 ? '<div class="cmp-dec-ligne">tel que le déclarant l\'a distingué (« Et ensuite ? »)</div>' : '');
+  }
+  const seq = D.mode !== 'simultane' && D.unites.length > 1;
+  let html = '<div class="cmp-dec-titre">' + D.unites.length + ' CD ' + (D.unites.length < 2 ? '' : seq ? 'à la suite' : 'en même temps') + '</div>';
+  D.unites.forEach((u, k) => {
+    html += '<div class="cmp-dec-ligne"><b>CD ' + n + '.' + (k + 1) + '</b> « ' + court(u.texte) + ' »</div>';
+    const c = seq ? (D.charnieres || [])[k] : null;
+    if (c && k < D.unites.length - 1) html += '<div class="cmp-dec-ligne cmp-dec-entre">entre : « ' + court(c.texte) + ' »</div>';
+  });
+  return html;
+}
+
+/* Les évènements dont le découpage est à arbitrer : une copie l'a découpé, et
+   la synthèse ne l'a pas encore aligné sur elle. */
+function evtsDecoupageCmp() {
+  const comp = state.comparaison || {};
+  if (!comp.A && !comp.B) return [];
+  return (state.m2.evenements || []).map((evt, idx) => {
+    const sA = comp.A ? sigDecoupage(decoupageDeCopie(comp.A, evt.id)) : null;
+    const sB = comp.B ? sigDecoupage(decoupageDeCopie(comp.B, evt.id)) : null;
+    const sS = sigDecoupage(decoupageSocle(evt.id));
+    const touche = [sA, sB, sS].some(s => s && s !== 'aucun');
+    if (!touche) return null;
+    return {evt, idx, sA, sB, sS, desaccord: !!(comp.A && comp.B) && sA !== sB, arbitre: sS === sA || sS === sB};
+  }).filter(x => x && (x.sA !== x.sS || x.sB !== x.sS || x.desaccord));
+}
+
+function cmpPrendreDecoupage(slot, evtId) {
+  const evt = (state.m2.evenements || []).find(e => e.id === evtId);
+  if (!evt) return;
+  let D = null;
+  if (slot === 'A' || slot === 'B') {
+    const dC = decoupageDeCopie(state.comparaison && state.comparaison[slot], evtId);
+    D = dC ? JSON.parse(JSON.stringify(dC)) : null;
+  }
+  if (!appliquerDecoupage(evt, D)) return;
+  renderComparateur();
+}
+
 function computeCorrelations() {
   ensureM3();
   const evts = state.m2.evenements || [];
@@ -7918,11 +8063,11 @@ function computeCorrelations() {
      CETTE conséquence. */
   const baseAnte = {}, baseCp = {}, baseCons = {};
 
-  evts.forEach((evt, idx) => {
-    if (!evt.id) evt.id = 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
-    const antes = [...new Set(catsDeEvt('antecedents', evt.id))];
-    const cps   = [...new Set(catsDeEvt('cp', evt.id))];
-    const conss = [...new Set(catsDeEvt('consequences', evt.id))];
+  const unites = unitesABC();
+  unites.forEach(u => {
+    const antes = [...new Set(u.A)];
+    const cps   = [...new Set(u.B)];
+    const conss = [...new Set(u.C)];
     antes.forEach(a => { baseAnte[a] = (baseAnte[a] || 0) + 1; });
     cps.forEach(b   => { baseCp[b]   = (baseCp[b]   || 0) + 1; });
     conss.forEach(c => { baseCons[c] = (baseCons[c] || 0) + 1; });
@@ -7937,7 +8082,7 @@ function computeCorrelations() {
       const k = b + ' ‣ ' + c;
       pairsCpCons[k] = (pairsCpCons[k] || 0) + 1;
     }));
-    // Triplet complet A → B → C observé dans le même évènement. On le compte,
+    // Triplet complet A → B → C observé dans la même séquence. On le compte,
     // on ne l'interprète pas : c'est au professionnel d'en faire un pattern.
     antes.forEach(a => cps.forEach(b => conss.forEach(c => {
       const k = a + ' ‣ ' + b + ' ‣ ' + c;
@@ -7954,7 +8099,7 @@ function computeCorrelations() {
     .sort((a, b) => b.n - a.n);
 
   return {
-    nEvts: evts.length,
+    nEvts: unites.length,
     baseCons,
     ante_cons: toSorted(pairsAnteCons, baseAnte),
     cp_cons: toSorted(pairsCpCons, baseCp),
@@ -8017,7 +8162,7 @@ function renderCorrelations() {
   if (ante_cons.length > 0) {
     html += `<div class="corr-section">
       <div class="corr-section-title">⏮ Antécédent → ⏭ Conséquence</div>
-      ${noteSource('conditionnel')}${noteSource('attention')}<div class="corr-note">Lecture : sur les évènements qui portent cet antécédent, quelle part porte aussi cette conséquence. Le second chiffre dit à quelle fréquence cette conséquence apparaît dans l'ensemble du dossier — c'est la comparaison qui donne du sens au premier, pas le pourcentage seul.</div>
+      ${noteSource('conditionnel')}${noteSource('attention')}<div class="corr-note">Lecture : sur les séquences qui portent cet antécédent, quelle part porte aussi cette conséquence. Le second chiffre dit à quelle fréquence cette conséquence apparaît dans l'ensemble du dossier — c'est la comparaison qui donne du sens au premier, pas le pourcentage seul.</div>
       ${ante_cons.map(p => corrLine(p, 'var(--ocre-pale)', 'var(--rose-pale)', '→')).join('')}
     </div>`;
   }
@@ -8025,14 +8170,14 @@ function renderCorrelations() {
   if (triplets.length > 0) {
     html += `<div class="corr-section">
       <div class="corr-section-title">⏮ 🎥 ⏭ Séquences complètes qui reviennent</div>
-      <div class="corr-note">Ces trois éléments ont été catégorisés ensemble sur un même évènement, ce nombre de fois. C'est un décompte, pas une hypothèse : à vous d'en faire un pattern dans Interpréter, ou non.</div>
+      <div class="corr-note">Ces trois éléments ont été catégorisés ensemble dans une même séquence (antécédent → CD → conséquence), ce nombre de fois. C'est un décompte, pas une hypothèse : à vous d'en faire un pattern dans Interpréter, ou non.</div>
       ${triplets.map(t => `<div class="corr-row">
         <span class="corr-tag" style="background:var(--ocre-pale);">${esc(t.a)}</span>
         <span class="corr-arrow">→</span>
         <span class="corr-tag" style="background:var(--sauge-pale);">${esc(t.b)}</span>
         <span class="corr-arrow">→</span>
         <span class="corr-tag" style="background:var(--rose-pale);">${esc(t.c)}</span>
-        <span class="corr-count">${t.n} fois sur ${evts.length}</span>
+        <span class="corr-count">${t.n} fois sur ${correl.nEvts || evts.length} séquence${(correl.nEvts || evts.length) > 1 ? 's' : ''}</span>
       </div>`).join('')}
     </div>`;
   }
@@ -8040,7 +8185,7 @@ function renderCorrelations() {
   if (cp_cons.length > 0) {
     html += `<div class="corr-section">
       <div class="corr-section-title">🎥 Comportement → ⏭ Conséquence</div>
-      <div class="corr-note">Sur les évènements qui portent ce comportement, quelle part porte aussi cette conséquence. C'est souvent là que la fonction se lit — à condition de comparer au taux d'ensemble donné à côté.</div>
+      <div class="corr-note">Sur les séquences qui portent ce comportement, quelle part porte aussi cette conséquence. C'est souvent là que la fonction se lit — à condition de comparer au taux d'ensemble donné à côté.</div>
       ${cp_cons.map(p => corrLine(p, 'var(--sauge-pale)', 'var(--rose-pale)', '→')).join('')}
     </div>`;
   }
@@ -9488,6 +9633,44 @@ const _CONTROLES = [
     return _bancEgal('Refus : rien ne bouge | accord : classement retiré', 'false|true|true', [refuse, garde, retire].join('|'));
   }},
 
+  {nom:'Une séquence de CD se compte CD par CD, avec ce qui s\'est passé entre deux', test: () => {
+    ensureM3();
+    const sauveEvts = state.m2.evenements, sauveCats = state.m3.categories, sauveD = state.m3.decoupages;
+    state.m2.evenements = [{id: 'banc_abc', comportement: 'Crie', antecedents: [{id: 'a1', texte: 'Consigne'}], obtenu: 'Reste',
+      interventions: [{id: 'iv1', texte: 'Calmer', effet: 'Augmentation de la tension', cdPostIntervention: 'Tape'}]}];
+    state.m3.decoupages = {};
+    state.m3.categories = {contexte: {}, interventions: {iv: {nom: 'Rappel du cadre', items: ['ebanc_abc_0']}},
+      cp: {b1: {nom: 'Cris', items: ['ebanc_abc_0']}, b2: {nom: 'Coups', items: ['ebanc_abc_1']}},
+      antecedents: {a1: {nom: 'Consigne', items: ['ebanc_abc_0']}, a2: {nom: 'Intervention', items: ['ebanc_abc_piv1_a']}},
+      consequences: {c1: {nom: 'Intervention', items: ['ebanc_abc_piv1_c']}, c2: {nom: 'Obtient', items: ['ebanc_abc_0']}}};
+    const u = unitesABC().map(x => x.A.join('+') + '>' + x.B.join('+') + '>' + x.C.join('+')).join(' | ');
+    const gr = statsGradation(state.m2.evenements, state.m3.categories);
+    const chaine = Object.values(gr.chaines).map(c => c.de + '→' + c.vers + ' après ' + Object.keys(c.apres).join('+')).join(' | ');
+    state.m2.evenements = sauveEvts; state.m3.categories = sauveCats;
+    if (sauveD) state.m3.decoupages = sauveD; else delete state.m3.decoupages;
+    return _bancEgal('Séquences | enchaînement', 'Consigne>Cris>Intervention | Intervention>Coups>Obtient|Cris→Coups après Rappel du cadre', u + '|' + chaine);
+  }},
+
+  {nom:'Comparateur : un CD découpé de la même façon se compare, découpé autrement non', test: () => {
+    ensureM3();
+    const evt = (state.m2.evenements || [])[0];
+    if (!evt) return _bancEgal('Sans évènement', true, true);
+    const sauveComp = state.comparaison, sauveD = state.m3.decoupages;
+    const D = (ids) => ({mode: 'sequence', unites: [{id: ids[0], champ: 'comportement', debut: 0, texte: 'x'}, {id: ids[1], champ: 'comportement', debut: 0, texte: 'y'}],
+      charnieres: [{id: ids[2], champ: 'comportement', debut: 0, texte: 'z', intervention: true}]});
+    state.m3.decoupages = {[evt.id]: D(['s1', 's2', 's3'])};
+    state.comparaison = {A: {categories: {}, decoupages: {[evt.id]: D(['a1', 'a2', 'a3'])}},
+                         B: {categories: {}, decoupages: {[evt.id]: {mode: 'simultane', unites: [{id: 'b1', champ: 'comportement', debut: 0, texte: 'x'}]}}}};
+    const idA = idDansCopie(state.comparaison.A, evt, 'e' + evt.id + '_us2', true);
+    const idAc = idDansCopie(state.comparaison.A, evt, 'e' + evt.id + '_cs3_a', true);
+    const idB = idDansCopie(state.comparaison.B, evt, 'e' + evt.id + '_us2', true);
+    const decs = evtsDecoupageCmp().filter(d => d.evt.id === evt.id).map(d => [d.desaccord, d.arbitre].join(',')).join('');
+    state.comparaison = sauveComp;
+    if (sauveD) state.m3.decoupages = sauveD; else delete state.m3.decoupages;
+    return _bancEgal('Identifiant dans A | charnière dans A | dans B | découpage : désaccord, arbitré',
+      'e' + evt.id + '_ua2|e' + evt.id + '_ca3_a|null|true,true', [idA, idAc, String(idB), decs].join('|'));
+  }},
+
   {nom:'Les couleurs des catégories se distinguent deux à deux', test: () => {
     /* Ce qui fait confondre deux catégories, c'est la teinte : les deux violets
        d'avant n'étaient séparés que de 10°, les deux rouges de 13°. Entre deux
@@ -9577,13 +9760,13 @@ const _CONTROLES = [
        la catégorisation était partielle. Recalcul naïf, à la main, sur les
        évènements eux-mêmes. */
     const c = computeCorrelations() || {};
-    const evts = state.m2.evenements || [];
+    const unites = unitesABC();
     const ecarts = [];
     (c.ante_cons || []).slice(0, 5).forEach(p => {
       let base = 0, ensemble = 0;
-      evts.forEach(e => {
-        const a = catsDeEvt('antecedents', e.id);
-        const cs = catsDeEvt('consequences', e.id);
+      unites.forEach(u => {
+        const a = u.A;
+        const cs = u.C;
         if (a.indexOf(p.left) !== -1) {
           base++;
           if (cs.indexOf(p.right) !== -1) ensemble++;
@@ -10185,7 +10368,7 @@ const _CONTROLES = [
       if (!jours.length || jours.indexOf(NOMS[d.getDay()]) !== -1) n++;
     }
     const attendu = n + ' ' + (jours.length ? 'jours d\'accueil' : 'jours');
-    return _bancEgal('Détail de la fréquence', evts.length + ' CD sur ' + attendu, String(f.detail || '').split(' · ')[0]);
+    return _bancEgal('Détail de la fréquence', evts.length + ' évènement' + (evts.length > 1 ? 's' : '') + ' sur ' + attendu, String(f.detail || '').split(' · ')[0]);
   }},
 
   {nom:'Indice de confiance dans [0,100]', test: () => {
@@ -10342,12 +10525,12 @@ const _CONTROLES = [
     return _bancEgal('Interpréter dans [0,100]', true, p >= 0 && p <= 100);
   }},
 
-  {nom:'Corrélations : jamais plus d\'occurrences que d\'évènements', test: () => {
-    const n = (state.m2.evenements||[]).length;
+  {nom:'Corrélations : jamais plus d\'occurrences que de séquences', test: () => {
+    const n = unitesABC().length;
     const c = computeCorrelations();
     const excès = [].concat(c.ante_cons, c.cp_cons).filter(p => p.n > n).map(p=>p.left+'→'+p.right+'='+p.n);
     const excèsT = (c.triplets||[]).filter(t => t.n > n).map(t=>t.a+'→'+t.b+'→'+t.c+'='+t.n);
-    return _bancEgal('Occurrences ≤ nombre d\'évènements', [], excès.concat(excèsT));
+    return _bancEgal('Occurrences ≤ nombre de séquences', [], excès.concat(excèsT));
   }},
 
   {nom:'CD n.k : n est le rang de l\'évènement, k se suit sans trou', test: () => {
@@ -10771,8 +10954,9 @@ function ensureM3() {
    {decoupe, mode: 'un' | 'simultane' | 'sequence', cds: [{id, texte}],
     charnieres: [{cle, texte, intervention, depuisIntervention} | null]}
    charnieres[k] se place entre cds[k] et cds[k + 1] (séquence seulement). */
-function structureCD(evt) {
-  const D = (((state.m3 && state.m3.decoupages) || {})[evt && evt.id]) || null;
+function structureCD(evt, decoupages) {
+  const source = decoupages !== undefined ? decoupages : ((state.m3 && state.m3.decoupages) || {});
+  const D = ((source || {})[evt && evt.id]) || null;
   if (D && (D.unites || []).length) {
     const cds = D.unites.map(u => ({id: 'e' + evt.id + '_u' + u.id, texte: String(u.texte || '').trim()}));
     const seq = D.mode === 'sequence' && cds.length > 1;
@@ -10780,7 +10964,7 @@ function structureCD(evt) {
       const c = (D.charnieres || [])[k];
       if (!c || !String(c.texte || '').trim()) return null;
       return {
-        cle: 'c' + c.id, texte: String(c.texte).trim(),
+        cle: 'c' + c.id, texte: String(c.texte).trim(), champ: c.champ,
         intervention: c.intervention !== false,
         // Citée dans une intervention déjà décrite : elle est déjà un élément du volet.
         depuisIntervention: /^interventions\.[^.]+\.texte$/.test(c.champ || '')
@@ -10800,7 +10984,8 @@ function structureCD(evt) {
   const cds = parts.filter(p => !p.post).slice(0, 1).concat(parts.filter(p => p.post));
   const charnieres = cds.slice(1).map(cd => {
     const t = cd.iv && cd.iv.texte && cd.iv.texte.trim();
-    return t ? {cle: 'p' + cd.iv.id, texte: t, intervention: true, depuisIntervention: true} : null;
+    const cle = cd.iv ? cleObjDecoupe(cd.iv, (evt.interventions || []).indexOf(cd.iv)) : '';
+    return t ? {cle: 'p' + cle, texte: t, intervention: true, depuisIntervention: true, champ: 'interventions.' + cle + '.texte'} : null;
   });
   return {decoupe: false, mode: cds.length > 1 ? 'sequence' : 'un', cds: cds.map(c => ({id: c.id, texte: c.texte, post: c.post})), charnieres};
 }
@@ -11942,14 +12127,11 @@ const SUGG_MAX_PHRASES = 6;
 
 function statsCategories() {
   ensureM3();
-  const evts = state.m2.evenements || [];
+  const unites = unitesABC();
   const nA = {}, nB = {}, nC = {}, nAB = {}, nBC = {}, nABC = {};
   let categorises = 0, evtA = 0, evtB = 0, evtC = 0;
-  evts.forEach(evt => {
-    if (!evt.id) return;
-    const A = catsDeEvt('antecedents', evt.id);
-    const B = catsDeEvt('cp', evt.id);
-    const C = catsDeEvt('consequences', evt.id);
+  unites.forEach(u => {
+    const A = u.A, B = u.B, C = u.C;
     if (A.length || B.length || C.length) categorises++;
     if (A.length) evtA++;
     if (B.length) evtB++;
@@ -11963,7 +12145,7 @@ function statsCategories() {
       const k = a + '\u00a6' + x + '\u00a6' + c; nABC[k] = (nABC[k] || 0) + 1;
     })));
   });
-  return {nA, nB, nC, nAB, nBC, nABC, categorises, evtA, evtB, evtC, total: evts.length};
+  return {nA, nB, nC, nAB, nBC, nABC, categorises, evtA, evtB, evtC, total: unites.length};
 }
 
 /* Un taux brut ne dit rien tout seul : « 50 % » n'a de sens que comparé à ce
@@ -12021,7 +12203,7 @@ function suggestionsPatterns() {
     .slice(0, 2)
     .forEach((t, rang) => {
       phrases.push(ch(t.n + ' fois') + ' <b>' + esc(t.a) + '</b> → <b>' + esc(t.b) + '</b> → <b>' + esc(t.c) + '</b>' +
-        '<span class="sp-detail"> · séquence complète' + (rang === 0 ? ' la plus fréquente' : '') + ', ' + pct(t.n, st.nA[t.a]) + ' % des évènements où ' + esc(t.a) + ' est noté</span>' +
+        '<span class="sp-detail"> · séquence complète' + (rang === 0 ? ' la plus fréquente' : '') + ', ' + pct(t.n, st.nA[t.a]) + ' % des séquences où ' + esc(t.a) + ' est noté</span>' +
         reserveEffectif(st.nA[t.a]));
     });
 
@@ -12029,7 +12211,7 @@ function suggestionsPatterns() {
   const domC = Object.keys(st.nC).map(c => ({c, n: st.nC[c]})).sort((p, q) => q.n - p.n)[0];
   if (domC && st.evtC >= 8 && domC.n / st.evtC >= 0.4) {
     phrases.push(ch(pct(domC.n, st.evtC) + ' %') + ' <b>' + esc(domC.c) + '</b>, la conséquence la plus présente' +
-      '<span class="sp-detail"> · ' + domC.n + ' sur ' + st.evtC + ' évènements catégorisés : à interroger en premier</span>');
+      '<span class="sp-detail"> · ' + domC.n + ' sur ' + st.evtC + ' séquences catégorisées : à interroger en premier</span>');
   }
 
   const vues = new Set();
@@ -12640,7 +12822,7 @@ function medianeStatsGrad(valeurs) {
 }
 
 /* Pure : prend les évènements et les catégories, ne lit rien d'autre. */
-function statsGradation(evts, categories) {
+function statsGradation(evts, categories, decoupages) {
   const catsIv = (categories && categories.interventions) || {};
   const catsCp = (categories && categories.cp) || {};
   const nomsDe = (cats, itemId) => catsDeItemDans(cats, itemId).map(id => cheminCatDans(cats, id));
@@ -12669,18 +12851,17 @@ function statsGradation(evts, categories) {
       });
     });
 
-    // 2 et 3. Les comportements de départ, et ceux apparus après une intervention —
-    // dans l'ordre même où extraireCDPostIntervention les a posés.
-    const ivPost = interventions.filter(iv => effetNeedsCdPost(iv.effet) && iv.cdPostIntervention && iv.cdPostIntervention.trim());
+    // 2 et 3. Le premier CD (ou les CD simultanés), puis ceux venus à la suite,
+    // avec ce qui s'est passé entre deux : du déclarant (« Et ensuite ? ») ou d'un découpage.
+    const sc = structureCD(evt, decoupages);
     const depart = new Set();
     const apres = [];
-    let kPost = 0;
-    elementsEvtVolet('cp', evt).forEach(el => {
-      const noms = nomsDe(catsCp, el.id);
-      if (!el.post) { noms.forEach(n => depart.add(n)); return; }
-      const iv = ivPost[kPost++];
-      const k = iv ? avecTexte.indexOf(iv) : -1;
-      if (noms.length) apres.push({noms, nomsIv: k >= 0 ? nomsDe(catsIv, 'e' + evt.id + '_' + k) : []});
+    (sc.mode === 'sequence' ? sc.cds.slice(0, 1) : sc.cds).forEach(cd => nomsDe(catsCp, cd.id).forEach(n => depart.add(n)));
+    // L'ancien champ « gradation » compte avec le comportement de départ, comme avant.
+    if (!sc.decoupe) elementsEvt('cp', evt).filter(el => el.relie === undefined).forEach(el => nomsDe(catsCp, el.id).forEach(n => depart.add(n)));
+    if (sc.mode === 'sequence') sc.cds.slice(1).forEach((cd, j) => {
+      const noms = nomsDe(catsCp, cd.id);
+      if (noms.length) apres.push({noms, nomsIv: nomsIvCharniere(evt, sc.charnieres[j], avecTexte, catsIv, nomsDe)});
     });
     if (!depart.size) return;
 
@@ -16196,13 +16377,16 @@ function cleCodage(cats, itemId) {
 
 /* Pure : ce que dit une ligne du comparateur, sans rien afficher.
    catsA ou catsB à null = copie pas encore importée. */
-function lectureLigneCodage(catsA, catsB, catsS, itemId) {
-  const a = catsA ? catsDeItemDans(catsA, itemId) : null;
-  const b = catsB ? catsDeItemDans(catsB, itemId) : null;
+function lectureLigneCodage(catsA, catsB, catsS, itemId, idA, idB) {
+  // Un CD découpé porte, dans chaque copie, son propre identifiant.
+  idA = idA || itemId;
+  idB = idB || itemId;
+  const a = catsA ? catsDeItemDans(catsA, idA) : null;
+  const b = catsB ? catsDeItemDans(catsB, idB) : null;
   const s = catsDeItemDans(catsS, itemId);
   const deux = !!(catsA && catsB);
-  const cleA = catsA ? cleCodage(catsA, itemId) : '';
-  const cleB = catsB ? cleCodage(catsB, itemId) : '';
+  const cleA = catsA ? cleCodage(catsA, idA) : '';
+  const cleB = catsB ? cleCodage(catsB, idB) : '';
   return {
     a, b, s, cleA, cleB,
     cleS: cleCodage(catsS, itemId),
@@ -16220,8 +16404,18 @@ function lignesComparateur(sousId) {
   const catsA = comp.A ? ((comp.A.categories || {})[sousId] || {}) : null;
   const catsB = comp.B ? ((comp.B.categories || {})[sousId] || {}) : null;
   const catsS = (state.m3.categories || {})[sousId] || {};
+  const evts = state.m2.evenements || [];
   return extraireItems(sousId)
-    .map(item => ({item, l: lectureLigneCodage(catsA, catsB, catsS, item.id)}))
+    .map(item => {
+      const evt = evts[item.evtIdx];
+      const dep = sousId === 'cp' || item.tag === 'charniere';
+      const idA = comp.A ? idDansCopie(comp.A, evt, item.id, dep) : null;
+      const idB = comp.B ? idDansCopie(comp.B, evt, item.id, dep) : null;
+      const l = lectureLigneCodage(idA ? catsA : null, idB ? catsB : null, catsS, item.id, idA, idB);
+      l.autreA = !!(comp.A && !idA);
+      l.autreB = !!(comp.B && !idB);
+      return {item, l};
+    })
     // Un volet non renseigné n'a rien à comparer, sauf si quelqu'un l'a quand même codé.
     .filter(x => !x.item.vide || (x.l.a && x.l.a.length) || (x.l.b && x.l.b.length) || x.l.s.length);
 }
@@ -16254,7 +16448,9 @@ function accueillirCopieCodage(slot, objet, nomFichier) {
     exporte,
     importe: new Date().toISOString(),
     evenements: ((d.m2 && d.m2.evenements) || []).map(e => e && e.id).filter(Boolean),
-    categories
+    categories,
+    // Le découpage fait partie du codage : chaque copie a le sien.
+    decoupages: JSON.parse(JSON.stringify((d.m3 && d.m3.decoupages) || {}))
   };
   return {ok:true};
 }
@@ -16374,10 +16570,12 @@ function reprendreCodage(slot, sousId, itemId) {
   const copie = state.comparaison && state.comparaison[slot];
   if (!copie) return false;
   const catsC = (copie.categories || {})[sousId] || {};
+  const idCopie = idCopiePour(slot, sousId, itemId);
+  if (!idCopie) return false;   // découpé autrement : on arbitre d'abord le découpage
   if (!state.m3.categories[sousId]) state.m3.categories[sousId] = {};
   const cats = state.m3.categories[sousId];
   Object.keys(cats).forEach(id => { cats[id].items = (cats[id].items || []).filter(i => i !== itemId); });
-  catsDeItemDans(catsC, itemId).forEach(idC => {
+  catsDeItemDans(catsC, idCopie).forEach(idC => {
     const c = catsC[idC];
     const parent = c.parent && catsC[c.parent];
     const id = trouverOuCreerCat(sousId, c.nom, parent ? trouverOuCreerCat(sousId, parent.nom, null) : null);
@@ -16466,7 +16664,7 @@ function renderComparateur() {
   const evts = state.m2.evenements || [];
 
   const onglets = '<div class="m3-tabs cmp-onglets">' + M3_SOUS.map(s => {
-    const n = deux ? lignesComparateur(s.id).filter(x => x.l.desaccord).length : 0;
+    const n = deux ? lignesComparateur(s.id).filter(x => x.l.desaccord).length + (s.id === 'cp' ? evtsDecoupageCmp().filter(d => d.desaccord).length : 0) : 0;
     const titre = deux ? n + ' désaccord' + (n > 1 ? 's' : '') + ' entre A et B' : '';
     return '<button class="m3-tab' + (s.id === sousId ? ' on' : '') + '" data-volet="' + esc(s.couleur || '') + '" ' +
       'onclick="cmpChangerSous(\'' + s.id + '\')"' + (titre ? ' title="' + esc(titre) + '"' : '') + '>' +
@@ -16476,8 +16674,9 @@ function renderComparateur() {
   }).join('') + '</div>';
 
   const toutes = lignesComparateur(sousId);
-  const nDesaccords = toutes.filter(x => x.l.desaccord).length;
-  const nAArbitrer = toutes.filter(x => ligneAArbitrer(x.l)).length;
+  const decsCompte = sousId === 'cp' ? evtsDecoupageCmp() : [];
+  const nDesaccords = toutes.filter(x => x.l.desaccord).length + decsCompte.filter(d => d.desaccord).length;
+  const nAArbitrer = toutes.filter(x => ligneAArbitrer(x.l)).length + decsCompte.filter(d => !d.arbitre).length;
   if (['tous', 'desaccords', 'a-arbitrer'].indexOf(cmpFiltre) === -1) cmpFiltre = 'tous';
   const lignes = cmpFiltre === 'desaccords' ? toutes.filter(x => x.l.desaccord)
     : cmpFiltre === 'a-arbitrer' ? toutes.filter(x => ligneAArbitrer(x.l))
@@ -16514,7 +16713,7 @@ function renderComparateur() {
       '<button type="button" class="cmp-lien" onclick="choisirCopieCodage(\'' + slot + '\')">Remplacer cette copie</button>' +
     '</th>';
   };
-  const celluleCopie = (slot, item, ids) => {
+  const celluleCopie = (slot, item, ids, autre) => {
     const c = comp[slot];
     if (!c) return '<td class="cmp-cell cmp-copie"></td>';
     const evt = evts[item.evtIdx];
@@ -16522,6 +16721,7 @@ function renderComparateur() {
     if (c.evenements && c.evenements.length && evt && evt.id && c.evenements.indexOf(evt.id) === -1) {
       return '<td class="cmp-cell cmp-copie"><span class="cmp-rien">Évènement arrivé après cette copie</span></td>';
     }
+    if (autre) return '<td class="cmp-cell cmp-copie"><span class="cmp-rien">Découpé autrement : arbitrez d\'abord le découpage de l\'évènement, en haut du tableau</span></td>';
     const cats = (c.categories || {})[sousId] || {};
     return '<td class="cmp-cell cmp-copie">' +
       (ids.length ? ids.map(id => puceCatCmp(cats, id)).join('') : '<span class="cmp-rien">Non catégorisé</span>') +
@@ -16530,8 +16730,9 @@ function renderComparateur() {
   const celluleElement = (item) => {
     const src = [item.date ? formatDate(item.date) : '', item.moment].filter(Boolean).join(' · ');
     const tag = item.vide ? 'non renseigné'
-      : ({'post-intervention': 'post-intervention', 'presume-declencheur': 'déclencheur présumé', 'resume': 'résumé rapide'})[item.tag] || '';
+      : ({'post-intervention': 'après une intervention', 'presume-declencheur': 'déclencheur présumé', 'resume': 'résumé rapide', 'charniere': 'entre deux CD'})[item.tag] || '';
     return '<td class="cmp-cell cmp-el">' +
+      (etiqCmp[item.id] ? '<span class="cmp-tag cmp-tag-cd">' + etiqCmp[item.id] + '</span>' : '') +
       (tag ? '<span class="cmp-tag">' + tag + '</span>' : '') +
       '<div class="cmp-el-texte">' + esc(item.texte) + '</div>' +
       '<div class="cmp-el-source">Évt. ' + (item.evtIdx + 1) + (src ? ' — ' + esc(src) : '') + ' · ' +
@@ -16539,6 +16740,27 @@ function renderComparateur() {
       '</div>' +
     '</td>';
   };
+
+  const etiqCmp = sousId === 'cp' ? etiquettesCD() : {};
+  // Les découpages s'arbitrent d'abord : ils décident quels CD existent dans la synthèse.
+  const decs = sousId === 'cp' ? evtsDecoupageCmp() : [];
+  const decsVus = cmpFiltre === 'desaccords' ? decs.filter(d => d.desaccord) : cmpFiltre === 'a-arbitrer' ? decs.filter(d => !d.arbitre) : decs;
+  const lignesDecoupage = decsVus.map(d => {
+    const n = d.idx + 1;
+    const bouton = (slot, lib) => '<button type="button" class="cmp-prendre" onclick="cmpPrendreDecoupage(\'' + slot + '\', \'' + esc(d.evt.id) + '\')">' + lib + '</button>';
+    const prendre = (comp.A && d.sA !== d.sS ? bouton('A', comp.B && d.sA === d.sB ? 'Prendre A = B' : 'Prendre A') : '') +
+      (comp.B && d.sB !== d.sS && !(comp.A && d.sA === d.sB) ? bouton('B', 'Prendre B') : '') +
+      (d.sS !== 'aucun' ? bouton('aucun', 'Ne pas découper') : '');
+    return '<tr class="cmp-ligne cmp-ligne-dec' + (d.desaccord ? ' cmp-desaccord' : (comp.A && comp.B ? ' cmp-identique' : '')) + '">' +
+      '<td class="cmp-cell cmp-el"><span class="cmp-tag">découpage</span><div class="cmp-el-texte">Évènement ' + n + '</div>' +
+        '<div class="cmp-el-source">' + esc([d.evt.date ? formatDate(d.evt.date) : '', d.evt.moment].filter(Boolean).join(' · ')) + ' · ' +
+        '<button type="button" class="cmp-lien cmp-lien-seul" onclick="ouvrirDetailEvt(' + d.idx + ',\'cp\',event)">détail</button></div></td>' +
+      '<td class="cmp-cell cmp-copie">' + (comp.A ? resumeDecoupage(decoupageDeCopie(comp.A, d.evt.id), d.evt, n) : '') + '</td>' +
+      '<td class="cmp-cell cmp-copie">' + (comp.B ? resumeDecoupage(decoupageDeCopie(comp.B, d.evt.id), d.evt, n) : '') + '</td>' +
+      '<td class="cmp-cell cmp-synth">' + resumeDecoupage(decoupageSocle(d.evt.id), d.evt, n) +
+        (prendre ? '<div class="cmp-arbitrer">' + prendre + '</div>' : '') + '</td>' +
+    '</tr>';
+  }).join('');
 
   let corps;
   if (!comp.A && !comp.B) {
@@ -16555,10 +16777,15 @@ function renderComparateur() {
     corps = lignes.map(({item, l}) =>
       '<tr class="cmp-ligne' + (l.identiques ? ' cmp-identique' : '') + (l.desaccord ? ' cmp-desaccord' : '') + '" data-item-id="' + esc(item.id) + '">' +
         celluleElement(item) +
-        celluleCopie('A', item, l.a || []) +
-        celluleCopie('B', item, l.b || []) +
+        celluleCopie('A', item, l.a || [], l.autreA) +
+        celluleCopie('B', item, l.b || [], l.autreB) +
         celluleSyntheseCmp(sousId, item, l) +
       '</tr>').join('');
+  }
+
+  if (lignesDecoupage) {
+    corps = '<tr class="cmp-sous-titre"><td colspan="4">Découpages à arbitrer d\'abord : tant que la synthèse n\'a pas retenu le découpage d\'une copie, ses CD ne se comparent pas élément par élément.</td></tr>' +
+      lignesDecoupage + (lignes.length ? corps : '');
   }
 
   // Chaque arbitrage redessine le tableau : sans ça, on remonterait en haut à chaque clic.
@@ -17783,6 +18010,7 @@ const LEXIQUE_BAF = {
   "intervention": "Ce que l'entourage a fait en réponse au comportement, et avec quel effet sur la tension. Une intervention peut apaiser, ne rien changer, ou produire à son tour un nouveau comportement-défi.",
   "découpage": "Dans Organiser, le geste par lequel l'analyste repère plusieurs CD dans un même évènement — en même temps, ou l'un après l'autre. Chaque CD est une citation exacte du déclaratif, qui n'est jamais réécrit. Le découpage fait partie du codage : chaque codeur fait le sien, et la synthèse retient l'un des deux.",
   "CD à la suite": "Un comportement-défi qui en suit un autre dans le même évènement : des cris, puis l'éducatrice demande de se calmer, puis des coups contre le mur. Ce qui s'est passé entre les deux est la conséquence du premier CD et l'antécédent du suivant.",
+  "séquence": "Une suite antécédent → CD → conséquence. Un évènement en compte une ; quand ses CD se suivent, une par CD : ce qui s'est passé entre deux CD est la conséquence de l'un et l'antécédent du suivant. Les croisements d'Interpréter se comptent par séquence.",
   "crise": "Les comportements-défis repérés dans un même évènement. Ils sont numérotés CD 3.1, CD 3.2… : 3 pour le troisième évènement dans l'ordre chronologique, puis le rang du CD dans l'évènement.",
   "pattern": "Une séquence qui semble se répéter, composée à partir des catégories créées dans Organiser. Ce n'est pas une certitude : c'est une hypothèse de lecture, à discuter.",
   "gradation": "La façon dont la tension monte chez la personne : un signe discret d'abord, puis ça s'intensifie. Repérer la gradation permet d'intervenir avant le pic.",
@@ -17819,7 +18047,7 @@ const LEXIQUE_CLASSE = {
   "contingences synthétiques": "litterature", "typologie": "litterature", "biais potentiels": "litterature",
   "environnement": "litterature", "analyse environnementale": "litterature",
   // Les mots de la BAF
-  "évènement": "outil", "volet": "outil", "intervention": "outil", "CD à la suite": "outil", "découpage": "outil",
+  "évènement": "outil", "volet": "outil", "intervention": "outil", "CD à la suite": "outil", "découpage": "outil", "séquence": "outil",
   "crise": "outil", "pattern": "outil", "gradation": "outil", "indice de confiance": "outil",
   "déclarant": "outil", "source": "outil", "espace": "outil",
   "BAF": "outil", "RDAF": "outil", "ICAF": "outil", "préambule": "outil",
