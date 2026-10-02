@@ -1729,11 +1729,23 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
 .dec-sel-erreur{color:var(--rose-deep);}
 .dec-champ{margin-bottom:10px;}
 .dec-champ-titre{font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;}
+/* Un document, pas un formulaire : aucun cadre de saisie, un filet à gauche. */
 .dec-texte{
-  font-size:13.5px;line-height:1.55;color:var(--ink);white-space:pre-wrap;
-  background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:8px 11px;
+  font-size:13.5px;line-height:1.6;color:var(--ink);white-space:pre-wrap;
+  background:none;border:none;border-left:3px solid var(--line);border-radius:0;padding:2px 0 2px 12px;
   user-select:text;cursor:text;
 }
+.dec-texte::selection, .dec-texte *::selection{background:var(--vol-comportement-pale);}
+.dec-champ-principal .dec-texte{font-size:14.5px;border-left-color:var(--vol-comportement);}
+.dec-champ-second .dec-texte{font-size:12.5px;}
+.dec-champ-second .dec-champ-titre{font-size:10.5px;}
+.dec-ailleurs-titre{font-size:12px;font-weight:700;color:var(--ink);margin:16px 0 2px;padding-top:10px;border-top:1px solid var(--line-soft);}
+.dec-ailleurs-aide{font-size:11.5px;color:var(--ink-soft);margin-bottom:8px;}
+.dec-etapes{margin:2px 0 14px 18px;padding:0;font-size:12.5px;color:var(--ink);}
+.dec-etapes li{margin-bottom:2px;}
+.dec-prendre:disabled{opacity:.45;cursor:not-allowed;}
+#decoupe-overlay.dec-pret .dec-prendre{background:var(--vol-comportement-pale);border-color:var(--vol-comportement);color:var(--vol-comportement-deep);}
+#decoupe-overlay.dec-pret .dec-cit.vide{outline:2px dashed var(--vol-comportement);outline-offset:3px;border-radius:4px;}
 .dec-texte mark{border-radius:3px;padding:0 1px;color:inherit;}
 .dec-texte mark.dec-m-cd{background:var(--vol-comportement-pale);box-shadow:inset 0 -2px 0 var(--vol-comportement);}
 .dec-texte mark.dec-m-entre{background:var(--vol-intervention-pale);box-shadow:inset 0 -2px 0 var(--vol-intervention);}
@@ -9786,6 +9798,24 @@ const _CONTROLES = [
       b.unites.map(u => u.id).join(',') + '|' + b.charnieres.findIndex(x => x && x.id === 'k1'));
   }},
 
+  {nom:'Découper : le déclaratif en lecture seule, « Prendre la sélection » grisé sans sélection', test: () => {
+    const evt = (state.m2.evenements || []).find(e => champsCitables(e).length);
+    if (!evt || !document.getElementById('decoupe-overlay')) return _bancEgal('Sans évènement', true, true);
+    const avant = decoupeSel;
+    decoupeSel = null;
+    ouvrirDecoupage(String(evt.id));
+    const o = document.getElementById('decoupe-overlay');
+    const bts = [...o.querySelectorAll('.dec-prendre')];
+    const grises = bts.length > 0 && bts.every(b => b.disabled);
+    const saisie = o.querySelectorAll('.dec-col textarea, .dec-col input[type="text"], .dec-texte[contenteditable="true"]').length;
+    decoupeSel = {champ: champsCitables(evt)[0].champ, debut: 0, texte: 'x'};
+    majSelectionDecoupe();
+    const allumes = bts.every(b => !b.disabled) && o.classList.contains('dec-pret');
+    fermerDecoupage();
+    decoupeSel = avant;
+    return _bancEgal('Grisés sans sélection | champs de saisie | allumés avec', 'true|0|true', [grises, saisie, allumes].join('|'));
+  }},
+
   {nom:'Les couleurs des catégories se distinguent deux à deux', test: () => {
     /* Ce qui fait confondre deux catégories, c'est la teinte : les deux violets
        d'avant n'étaient séparés que de 10°, les deux rouges de 13°. Entre deux
@@ -11451,18 +11481,28 @@ function renderDecoupage() {
     return html + esc(texte.slice(pos));
   };
   const champs = champsCitables(evt);
-  const declaratif = champs.map(c =>
-    '<div class="dec-champ"><div class="dec-champ-titre">' + esc(c.titre) + '</div>' +
-    '<div class="dec-texte" data-champ="' + esc(c.champ) + '">' + surligner(c.champ, c.texte) + '</div></div>').join('');
+  // « Ce qui s'est passé » d'abord : c'est là qu'on repère les CD. Le reste se cite aussi.
+  const PRINCIPAUX = ['comportement', 'resumes.comportement', 'gradation'];
+  const blocChamp = (c, cls) =>
+    '<div class="dec-champ ' + cls + '"><div class="dec-champ-titre">' + esc(c.titre) + '</div>' +
+    '<div class="dec-texte" data-champ="' + esc(c.champ) + '">' + surligner(c.champ, c.texte) + '</div></div>';
+  const autres = champs.filter(c => PRINCIPAUX.indexOf(c.champ) === -1);
+  const declaratif = champs.filter(c => PRINCIPAUX.indexOf(c.champ) !== -1).map(c => blocChamp(c, 'dec-champ-principal')).join('') +
+    (autres.length
+      ? '<div class="dec-ailleurs-titre">Ailleurs dans le déclaratif</div>' +
+        '<div class="dec-ailleurs-aide">On peut aussi y sélectionner un passage — notamment ce qui s\'est passé entre deux CD.</div>' +
+        autres.map(c => blocChamp(c, 'dec-champ-second')).join('')
+      : '');
+  const selOk = !!(decoupeSel && !decoupeSel.erreur);
 
   const citation = (c, role, k) => {
     const perdu = c && !citationTrouvee(evt, c);
     return '<div class="dec-cit' + (c ? '' : ' vide') + (perdu ? ' perdue' : '') + '">' +
       (c ? '« ' + esc(c.texte) + ' »' + (perdu ? '<div class="dec-perdue">Ce passage n\'est plus dans le texte de l\'évènement : à revoir.</div>' : '')
-         : '<span>Sélectionnez un passage dans le déclaratif, puis cliquez sur « Prendre la sélection ».</span>') +
+         : '<span>Vide : sélectionnez un passage à gauche, puis « Prendre la sélection ».</span>') +
       '</div>' +
       '<div class="dec-cit-actions">' +
-        '<button type="button" class="btn btn-secondary btn-sm" onclick="prendreSelectionDecoupe(\'' + role + '\',' + k + ')">⤵ Prendre la sélection</button>' +
+        '<button type="button" class="btn btn-secondary btn-sm dec-prendre"' + (selOk ? '' : ' disabled title="Sélectionnez d\'abord un passage dans le déclaratif, à gauche"') + ' onclick="prendreSelectionDecoupe(\'' + role + '\',' + k + ')">⤵ Prendre la sélection</button>' +
         (c ? '<button type="button" class="dec-vider" onclick="viderCaseDecoupe(\'' + role + '\',' + k + ')" title="Vider cette case">Vider</button>' : '') +
         (role === 'u' && b.unites.length > 1 ? '<button type="button" class="dec-vider" onclick="retirerUniteDecoupe(' + k + ')" title="Retirer ce CD">✕ Retirer ce CD</button>' : '') +
       '</div>';
@@ -11487,10 +11527,14 @@ function renderDecoupage() {
   el.innerHTML =
     '<h3 id="decoupe-titre">Découper l\'évènement ' + n + '</h3>' +
     '<p class="sim-modal-sub">' + esc([evt.date ? formatDate(evt.date) : '', evt.heure, evt.moment, evt.declarant].filter(Boolean).join(' · ')) + '</p>' +
+    '<ol class="dec-etapes">' +
+      '<li><b>Dites</b>, à droite, si les CD sont l\'un après l\'autre, en même temps, ou s\'il n\'y en a aucun.</li>' +
+      '<li><b>Sélectionnez</b> à la souris un passage du déclaratif, à gauche.</li>' +
+      '<li><b>Envoyez-le</b> dans une case, avec « Prendre la sélection ». Les CD se rangent d\'eux-mêmes dans l\'ordre du texte.</li>' +
+    '</ol>' +
     '<div class="dec-grille">' +
       '<div class="dec-col">' +
-        '<div class="dec-col-titre">Le déclaratif <span>— il n\'est jamais modifié</span></div>' +
-        '<div class="dec-aide">Sélectionnez à la souris le passage qui décrit un CD, puis « Prendre la sélection » dans la case voulue. Les CD se rangent d\'eux-mêmes dans l\'ordre du texte.</div>' +
+        '<div class="dec-col-titre">Le déclaratif <span>— lecture seule : sélectionnez-y les passages</span></div>' +
         '<div id="decoupe-selection" class="dec-selection"></div>' +
         declaratif +
       '</div>' +
@@ -11544,6 +11588,14 @@ document.addEventListener('selectionchange', lireSelectionDecoupe);
 function majSelectionDecoupe() {
   const el = document.getElementById('decoupe-selection');
   if (!el) return;
+  // Les boutons s'allument et les cases vides s'encadrent dès qu'un passage est sélectionné.
+  const ok = !!(decoupeSel && !decoupeSel.erreur);
+  const o = document.getElementById('decoupe-overlay');
+  if (o) o.classList.toggle('dec-pret', ok);
+  document.querySelectorAll('#decoupe-overlay .dec-prendre').forEach(bt => {
+    bt.disabled = !ok;
+    bt.title = ok ? '' : 'Sélectionnez d\'abord un passage dans le déclaratif, à gauche';
+  });
   el.innerHTML = !decoupeSel ? ''
     : decoupeSel.erreur ? '<span class="dec-sel-erreur">Sélectionnez dans un seul champ à la fois.</span>'
     : 'Passage sélectionné : <b>« ' + esc(decoupeSel.texte.length > 120 ? decoupeSel.texte.slice(0, 119) + '…' : decoupeSel.texte) + ' »</b>';
@@ -17498,7 +17550,7 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
-const ACTIVITE_CODE = {"jusqua":"2026-10-02","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":3080,"retrait":853,"depots":32}]};
+const ACTIVITE_CODE = {"jusqua":"2026-10-02","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":3134,"retrait":855,"depots":33}]};
 
 function svgActiviteCode() {
   const mois = ACTIVITE_CODE.mois || [];
@@ -17537,6 +17589,15 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-02',
+    version: 'v2026.10.02-4',
+    titre: "Découper : une fenêtre plus claire",
+    corps: `
+<p>« ✂ Découper » est plus clair. Le déclaratif, à gauche, se présente comme un document en <b>lecture seule</b> : plus de cadres qui ressemblaient à des champs à remplir. « Ce qui s'est passé » vient en premier ; le reste suit sous « Ailleurs dans le déclaratif », où l'on peut aussi citer un passage. Trois étapes numérotées disent quoi faire, et « Prendre la sélection » reste grisé tant que rien n'est sélectionné ; dès qu'un passage l'est, les boutons s'allument et les cases vides s'encadrent.</p>
+`
+  },
 
   {
     date: '2026-10-02',
