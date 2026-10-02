@@ -1674,7 +1674,7 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
 .m3-evt-tete{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:2px 0 3px;}
 .m3-evt-titre{font-size:13px;font-weight:700;color:var(--ink);}
 .m3-evt-nbcd{font-size:11px;font-weight:700;color:var(--vol-comportement-deep);background:var(--vol-comportement-pale);padding:1px 8px;border-radius:999px;}
-.m3-evt-resume{font-size:11px;color:var(--ink-soft);margin-left:auto;}
+.m3-evt-espace{margin-left:auto;}
 .m3-evt-source{font-size:11px;color:var(--ink-soft);font-style:italic;margin:0 0 6px 24px;}
 .m3-evt-items{margin-left:7px;padding-left:12px;border-left:2px solid var(--line-soft);}
 .m3-evt.replie > .m3-evt-items, .m3-evt.replie > .m3-evt-source{display:none;}
@@ -8086,7 +8086,7 @@ function evtsDecoupageCmp() {
 }
 
 function cmpPrendreDecoupage(slot, evtId) {
-  const evt = (state.m2.evenements || []).find(e => e.id === evtId);
+  const evt = (state.m2.evenements || []).find(e => String(e.id) === String(evtId));
   if (!evt) return;
   let D = null;
   if (slot === 'A' || slot === 'B') {
@@ -9745,6 +9745,18 @@ const _CONTROLES = [
     return _bancEgal('Chiffré | entrée discrète', 'true|true', [!!(d.donnees && d.iv && d.sel && d.iterations >= 100000), discret].join('|'));
   }},
 
+  {nom:'Découper s\'ouvre aussi pour un évènement à identifiant numérique (créé par le formulaire)', test: () => {
+    const evt = (state.m2.evenements || [])[0];
+    if (!evt || !document.getElementById('decoupe-overlay')) return _bancEgal('Sans évènement', true, true);
+    const avant = evt.id;
+    evt.id = 1790000000123;
+    ouvrirDecoupage(String(evt.id));
+    const ouvert = document.getElementById('decoupe-overlay').style.display === 'flex' && !!decoupeBrouillon;
+    fermerDecoupage();
+    evt.id = avant;
+    return _bancEgal('Fenêtre ouverte', true, ouvert);
+  }},
+
   {nom:'Les couleurs des catégories se distinguent deux à deux', test: () => {
     /* Ce qui fait confondre deux catégories, c'est la teinte : les deux violets
        d'avant n'étaient séparés que de 10°, les deux rouges de 13°. Entre deux
@@ -11159,8 +11171,10 @@ function migrerCharnieres() {
 /* Les évènements repliés dans la colonne de gauche d'Organiser, le temps de la page. */
 const evtsReplies = new Set();
 function basculerRepliEvt(evtId) {
+  evtId = String(evtId);
   if (evtsReplies.has(evtId)) evtsReplies.delete(evtId); else evtsReplies.add(evtId);
   majRepliEvt(evtId);
+  majBoutonRepliEvts();
 }
 function replierTousEvts(replier) {
   document.querySelectorAll('#m3-items-list .m3-evt').forEach(el => {
@@ -11168,6 +11182,20 @@ function replierTousEvts(replier) {
     if (replier) evtsReplies.add(id); else evtsReplies.delete(id);
     majRepliEvt(id);
   });
+  majBoutonRepliEvts();
+}
+/* Un seul bouton (Arthur, 02/10/2026) : « Tout replier » tant qu'un évènement est
+   déplié, « Tout déplier » quand tout est replié. */
+function basculerTousEvts() {
+  replierTousEvts(!!document.querySelector('#m3-items-list .m3-evt:not(.replie)'));
+}
+function majBoutonRepliEvts() {
+  const el = document.getElementById('m3-items-plier');
+  if (!el) return;
+  const evts = document.querySelectorAll('#m3-items-list .m3-evt');
+  if (evts.length < 2) { el.innerHTML = ''; return; }
+  const unDeplie = !!document.querySelector('#m3-items-list .m3-evt:not(.replie)');
+  el.innerHTML = '<button type="button" onclick="basculerTousEvts()">' + (unDeplie ? 'Tout replier' : 'Tout déplier') + '</button>';
 }
 function majRepliEvt(evtId) {
   const el = [...document.querySelectorAll('#m3-items-list .m3-evt')].find(x => x.dataset.evtId === evtId);
@@ -11184,9 +11212,7 @@ function blocEvtM3(sousId, sous, groupe, cats, etiquettes) {
   const evt = (state.m2.evenements || [])[groupe.evtIdx] || {};
   const n = groupe.evtIdx + 1;
   const st = structureCD(evt);
-  const replie = evtsReplies.has(evt.id);
-  const reels = groupe.items.filter(it => !it.vide);
-  const classes = reels.filter(it => catDunItem(sousId, it.id).length).length;
+  const replie = evtsReplies.has(String(evt.id));
   const src = [evt.date ? formatDate(evt.date) : '', evt.heure, evt.moment, evt.declarant].filter(Boolean).join(' · ');
   const nCD = st.cds.length;
   return `<div class="m3-evt${replie ? ' replie' : ''}" data-evt-id="${esc(evt.id)}">
@@ -11195,7 +11221,7 @@ function blocEvtM3(sousId, sous, groupe, cats, etiquettes) {
       <span class="m3-evt-titre">Évènement ${n}</span>
       ${st.mode === 'aucun' ? '<span class="m3-evt-nbcd m3-evt-aucun">aucun CD</span>' : ''}
       ${nCD > 1 ? `<span class="m3-evt-nbcd" title="${st.mode === 'sequence' ? 'Les CD se suivent : ce qui s\'est passé entre deux CD est la conséquence du premier et l\'antécédent du suivant.' : 'Plusieurs CD en même temps.'}">${nCD} CD ${st.mode === 'sequence' ? 'à la suite' : 'en même temps'}</span>` : ''}
-      <span class="m3-evt-resume">${reels.length ? classes + ' / ' + reels.length + ' classé' + (classes > 1 ? 's' : '') : 'non renseigné'}</span>
+      <span class="m3-evt-espace"></span>
       <button type="button" class="m3-item-detail" title="Revoir l'évènement complet" onclick="ouvrirDetailEvt(${groupe.evtIdx},'${sousId}',event)">détail</button>
       ${sousId === 'cp' ? `<button type="button" class="m3-evt-decouper no-print" title="Repérer plusieurs CD dans cet évènement, chacun par une citation exacte du déclaratif" onclick="ouvrirDecoupage('${esc(evt.id)}',event)">✂ ${st.decoupe ? 'Modifier le découpage' : 'Découper'}</button>` : ''}
     </div>
@@ -11315,7 +11341,9 @@ function ouvrirDecoupage(evtId, ev) {
   if (ev) ev.stopPropagation();
   fermerPopup();
   ensureM3();
-  const evt = (state.m2.evenements || []).find(e => e.id === evtId);
+  // Le bouton transmet l'identifiant en texte ; le formulaire le crée en nombre.
+  evtId = String(evtId);
+  const evt = (state.m2.evenements || []).find(e => String(e.id) === evtId);
   if (!evt) return;
   const D = (state.m3.decoupages || {})[evtId];
   if (D) {
@@ -11370,7 +11398,7 @@ function renderDecoupage() {
   if (!b || !el) return;
   alignerCharnieres();
   const evts = state.m2.evenements || [];
-  const idx = evts.findIndex(e => e.id === b.evtId);
+  const idx = evts.findIndex(e => String(e.id) === String(b.evtId));
   const evt = evts[idx];
   const n = idx + 1;
   const seq = b.mode === 'sequence';
@@ -11577,7 +11605,7 @@ function appliquerDecoupage(evt, D) {
 function enregistrerDecoupage() {
   const b = decoupeBrouillon;
   if (!b) return;
-  const evt = (state.m2.evenements || []).find(e => e.id === b.evtId);
+  const evt = (state.m2.evenements || []).find(e => String(e.id) === String(b.evtId));
   if (!evt) return;
   alignerCharnieres();
   if (b.mode === 'aucun') {
@@ -11605,7 +11633,7 @@ function enregistrerDecoupage() {
 
 function supprimerDecoupage() {
   const b = decoupeBrouillon;
-  const evt = b && (state.m2.evenements || []).find(e => e.id === b.evtId);
+  const evt = b && (state.m2.evenements || []).find(e => String(e.id) === String(b.evtId));
   if (!evt) return;
   if (!appliquerDecoupage(evt, null)) return;
   fermerDecoupage();
@@ -11695,11 +11723,7 @@ function renderM3Sous(sousId) {
     const etiquettes = etiquettesCD();
     listEl.innerHTML = groupes.map(gr => blocEvtM3(sousId, sous, gr, cats, etiquettes)).join('');
   }
-  const plierEvts = document.getElementById('m3-items-plier');
-  if (plierEvts) plierEvts.innerHTML = groupes.length > 1
-    ? '<button type="button" onclick="replierTousEvts(true)">Tout replier</button>' +
-      '<button type="button" onclick="replierTousEvts(false)">Tout déplier</button>'
-    : '';
+  majBoutonRepliEvts();
 
   // ── Colonne droite : catégories ─────────────────────────────────
   const sugEl = document.getElementById('m3-cats-suggestions');
@@ -17409,7 +17433,7 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
-const ACTIVITE_CODE = {"jusqua":"2026-10-01","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":2704,"retrait":802,"depots":28}]};
+const ACTIVITE_CODE = {"jusqua":"2026-10-01","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":2975,"retrait":819,"depots":30}]};
 
 function svgActiviteCode() {
   const mois = ACTIVITE_CODE.mois || [];
@@ -17448,6 +17472,18 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-02',
+    version: 'v2026.10.02',
+    titre: "Correctif : « Découper » sur les vrais dossiers ; un seul bouton pour replier",
+    corps: `
+<ul>
+<li><b>Correctif</b> : « ✂ Découper » ne réagissait pas sur les dossiers réels. Les évènements saisis dans le formulaire portent un identifiant en chiffres, que le bouton transmettait en texte : l'évènement n'était pas retrouvé. Seules les simulations marchaient, et c'est sur elles que portaient les vérifications. C'est corrigé, et un contrôle le vérifie désormais avec un identifiant en chiffres. Le même défaut empêchait un évènement replié de le rester quand la colonne se réaffichait.</li>
+<li><b>Organiser</b>, colonne de gauche : un seul bouton, « Tout replier » tant qu'un évènement est déplié, « Tout déplier » quand tout est replié. La mention « 1 / 2 classés » de chaque évènement disparaît.</li>
+</ul>
+`
+  },
 
   {
     date: '2026-10-01',
