@@ -9776,6 +9776,16 @@ const _CONTROLES = [
     return _bancEgal('Tout déplié | une repliée | tout replié | boutons', 'Tout replier|Tout replier|Tout déplier|1', [t1, t2, t3, n].join('|'));
   }},
 
+  {nom:'Découper : les CD se rangent dans l\'ordre du texte, et ce qui se passe entre deux suit', test: () => {
+    const evt = {id: 'banc_ordre', comportement: 'Crie fort. On lui dit stop. Tape la table. Puis se mord.'};
+    const c = (id, t) => ({id, champ: 'comportement', debut: evt.comportement.indexOf(t), texte: t});
+    const b = {mode: 'sequence', unites: [c('u3', 'se mord'), c('u1', 'Crie fort'), c('u2', 'Tape la table')],
+               charnieres: [c('k1', 'On lui dit stop'), null]};
+    trierDecoupage(b, evt);
+    return _bancEgal('Ordre des CD | place de « On lui dit stop »', 'u1,u2,u3|0',
+      b.unites.map(u => u.id).join(',') + '|' + b.charnieres.findIndex(x => x && x.id === 'k1'));
+  }},
+
   {nom:'Les couleurs des catégories se distinguent deux à deux', test: () => {
     /* Ce qui fait confondre deux catégories, c'est la teinte : les deux violets
        d'avant n'étaient séparés que de 10°, les deux rouges de 13°. Entre deux
@@ -11480,7 +11490,7 @@ function renderDecoupage() {
     '<div class="dec-grille">' +
       '<div class="dec-col">' +
         '<div class="dec-col-titre">Le déclaratif <span>— il n\'est jamais modifié</span></div>' +
-        '<div class="dec-aide">Sélectionnez à la souris le passage qui décrit un CD, puis « Prendre la sélection » dans la case voulue.</div>' +
+        '<div class="dec-aide">Sélectionnez à la souris le passage qui décrit un CD, puis « Prendre la sélection » dans la case voulue. Les CD se rangent d\'eux-mêmes dans l\'ordre du texte.</div>' +
         '<div id="decoupe-selection" class="dec-selection"></div>' +
         declaratif +
       '</div>' +
@@ -11539,6 +11549,36 @@ function majSelectionDecoupe() {
     : 'Passage sélectionné : <b>« ' + esc(decoupeSel.texte.length > 120 ? decoupeSel.texte.slice(0, 119) + '…' : decoupeSel.texte) + ' »</b>';
 }
 
+/* Place d'une citation dans le déclaratif : l'ordre des champs tel que la
+   fenêtre les montre (ce qui s'est passé, juste avant, interventions, après),
+   puis la position dans le champ. */
+function positionCitation(evt, c, ordre) {
+  const i = ordre.indexOf(c.champ);
+  const t = texteChamp(evt, c.champ);
+  const d = t.substr(c.debut || 0, c.texte.length) === c.texte ? (c.debut || 0) : t.indexOf(c.texte);
+  return (i < 0 ? 999 : i) * 1e7 + Math.max(0, d);
+}
+function trierDecoupage(b, evt) {
+  if (!b || !evt) return;
+  const ordre = champsCitables(evt).map(c => c.champ);
+  const pos = c => positionCitation(evt, c, ordre);
+  // Les CD remplis, dans l'ordre du texte ; les cases vides restent à la fin.
+  b.unites = b.unites.filter(Boolean).sort((x, y) => pos(x) - pos(y)).concat(b.unites.filter(u => !u));
+  if (b.mode !== 'sequence') return;
+  const n = Math.max(0, b.unites.length - 1);
+  const pleines = (b.charnieres || []).filter(Boolean);
+  const places = new Array(n).fill(null);
+  pleines.sort((x, y) => pos(x) - pos(y)).forEach(c => {
+    // Entre le dernier CD qui la précède dans le texte et le suivant.
+    const avant = b.unites.filter(u => u && pos(u) < pos(c)).length;
+    let k = Math.min(Math.max(avant - 1, 0), n - 1);
+    while (k < n && places[k]) k++;
+    if (k >= n) { k = places.indexOf(null); }
+    if (k >= 0) places[k] = c;
+  });
+  b.charnieres = places;
+}
+
 function prendreSelectionDecoupe(role, k) {
   const b = decoupeBrouillon;
   if (!b) return;
@@ -11557,6 +11597,8 @@ function prendreSelectionDecoupe(role, k) {
   decoupeSel = null;
   const s = window.getSelection();
   if (s) s.removeAllRanges();
+  alignerCharnieres();
+  trierDecoupage(b, (state.m2.evenements || []).find(e => String(e.id) === String(b.evtId)));
   renderDecoupage();
 }
 function viderCaseDecoupe(role, k) {
@@ -11634,6 +11676,7 @@ function enregistrerDecoupage() {
     showToast('Évènement ' + ((state.m2.evenements || []).indexOf(evt) + 1) + ' : aucun CD retenu.');
     return;
   }
+  trierDecoupage(b, evt);
   const garder = b.unites.map((u, k) => u ? k : -1).filter(k => k >= 0);
   if (!garder.length) {
     alert('Aucun CD n\'est rempli. Sélectionnez au moins un passage, ou annulez.');
@@ -17455,7 +17498,7 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
-const ACTIVITE_CODE = {"jusqua":"2026-10-02","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":3027,"retrait":835,"depots":31}]};
+const ACTIVITE_CODE = {"jusqua":"2026-10-02","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":3080,"retrait":853,"depots":32}]};
 
 function svgActiviteCode() {
   const mois = ACTIVITE_CODE.mois || [];
@@ -17494,6 +17537,15 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-02',
+    version: 'v2026.10.02-3',
+    titre: "Découper : les CD dans l'ordre du texte",
+    corps: `
+<p>« ✂ Découper » : les CD se rangent d'eux-mêmes dans l'ordre où leur passage apparaît dans le déclaratif. On peut citer un geste de la fin avant celui du début : CD 3.1 reste le premier dans le texte. Ce qui se passe entre deux CD suit, et se place entre les deux CD qui l'encadrent.</p>
+`
+  },
 
   {
     date: '2026-10-02',
