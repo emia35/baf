@@ -1834,7 +1834,7 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
   /* Couleur neutre : la couleur réelle vient de la catégorie, posée en ligne.
      Le jaune par défaut se confondait avec la couleur de l'antécédent. */
   background:var(--slate);
-  color:#fff;
+  color:var(--sur,#fff);
   font-size:11px;font-weight:700;
   border-radius:999px;
   padding:2px 9px;
@@ -1842,7 +1842,7 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
   margin-right:4px;
   cursor:pointer;
 }
-.m3-item-cat-badge:hover{background:var(--ocre-deep);}
+.m3-item-cat-badge:hover{filter:brightness(.92);}
 
 /* Les documents à imprimer. */
 .apropos-titre{
@@ -6377,7 +6377,7 @@ const ETAPES = [
         </div>
         <div class="field">
           <label for="f-date">Date de l'évènement</label>
-          <input type="date" id="f-date" value="${esc(d.date||'')}">
+          <input type="date" id="f-date" value="${esc(d.date||'')}" onchange="verifierCoherenceHeureMoment()">
         </div>
         <div class="field">
           <label for="f-heure">Heure approximative</label>
@@ -6901,9 +6901,33 @@ function creneauDuMoment(momentLabel) {
   return candidats[0];
 }
 
+/* Les horaires d'un créneau un jour donné : ceux de la journée type, ou ceux propres à ce
+   jour dans l'emploi du temps détaillé. Quand l'institution alterne deux semaines (A et B)
+   et qu'on ne sait pas laquelle, on accepte celles des deux : on signale, on ne bloque pas. */
+function jourDeLaDate(dateISO) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateISO || '');
+  if (!m) return '';
+  return ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'][new Date(+m[1], +m[2] - 1, +m[3]).getDay()];
+}
+function plagesDuCreneau(c, dateISO) {
+  const plages = [{debut: c.debut, fin: c.fin}];
+  const jour = jourDeLaDate(dateISO);
+  if (!jour || !c.id) return plages;
+  const semaines = [state.m1.semaineCreneaux];
+  if (state.m1.semaineBActive) semaines.push(state.m1.semaineCreneauxB);
+  const propres = [];
+  semaines.forEach(s => {
+    const x = s && (s[jour] || []).find(k => k && k.cle === c.id);
+    propres.push({debut: (x && x.debut) || c.debut, fin: (x && x.fin) || c.fin});
+  });
+  // Un jour qui a ses propres horaires remplace ceux de la journée type.
+  const plagesJour = propres.filter(p => p.debut && p.fin);
+  return plagesJour.length ? plagesJour : plages;
+}
+
 // Créneau de la journée type qui contient une heure donnée. Renvoie '' si
 // aucun ne la contient — on ne force alors aucune suggestion.
-function momentDeLHeure(heure) {
+function momentDeLHeure(heure, dateISO) {
   const enMinutes = (s) => {
     const m = (s||'').match(/(\d{1,2})[h:](\d{2})/);
     return m ? parseInt(m[1],10)*60 + parseInt(m[2],10) : null;
@@ -6912,10 +6936,13 @@ function momentDeLHeure(heure) {
   if (h === null) return '';
   const creneaux = (state.m1 && state.m1.journeeCreneaux) || [];
   for (const c of creneaux) {
-    const d = enMinutes(c.debut), f = enMinutes(c.fin);
-    if (d === null || f === null) continue;
-    // Un créneau de nuit enjambe minuit : la fin est « avant » le début.
-    const dedans = (d <= f) ? (h >= d && h <= f) : (h >= d || h <= f);
+    // Les horaires de la journée type, ou ceux propres à ce jour s'il en a.
+    const dedans = plagesDuCreneau(c, dateISO).some(p => {
+      const d = enMinutes(p.debut), f = enMinutes(p.fin);
+      if (d === null || f === null) return false;
+      // Un créneau de nuit enjambe minuit : la fin est « avant » le début.
+      return (d <= f) ? (h >= d && h <= f) : (h >= d || h <= f);
+    });
     if (dedans) return c.nom;
   }
   return '';
@@ -6933,14 +6960,23 @@ function verifierCoherenceHeureMoment() {
     const m = (s||'').match(/(\d{1,2})[h:](\d{2})/);
     return m ? parseInt(m[1],10)*60 + parseInt(m[2],10) : null;
   };
-  const h = enMinutes(heure), d = enMinutes(creneau.debut), f = enMinutes(creneau.fin);
-  if (h === null || d === null || f === null) { box.style.display = 'none'; return; }
+  const h = enMinutes(heure);
+  // Les horaires de la journée type, ou ceux propres au jour de l'évènement (emploi du temps détaillé).
+  const date = val('f-date');
+  const plages = creneau.id ? plagesDuCreneau(creneau, date) : [{debut: creneau.debut, fin: creneau.fin}];
+  const valides = plages.filter(p => enMinutes(p.debut) !== null && enMinutes(p.fin) !== null);
+  if (h === null || !valides.length) { box.style.display = 'none'; return; }
 
   // Un créneau de nuit enjambe minuit : la fin est "avant" le début.
-  const dedans = (d <= f) ? (h >= d && h <= f) : (h >= d || h <= f);
+  const dedans = valides.some(p => {
+    const d = enMinutes(p.debut), f = enMinutes(p.fin);
+    return (d <= f) ? (h >= d && h <= f) : (h >= d || h <= f);
+  });
   if (dedans) { box.style.display = 'none'; return; }
+  const horaires = [...new Set(valides.map(p => p.debut + '–' + p.fin))].join(' ou ');
+  const propres = creneau.id && (valides.length > 1 || valides[0].debut !== creneau.debut || valides[0].fin !== creneau.fin);
   box.style.display = '';
-  box.innerHTML = `⚠ Vous avez indiqué <b>${esc(heure.replace(':','h'))}</b>, mais le moment « ${esc(moment)} » correspond à <b>${esc(creneau.debut)}–${esc(creneau.fin)}</b> dans la journée type. Ce n'est pas bloquant — si l'évènement a bien eu lieu hors du créneau habituel, laissez tel quel.`;
+  box.innerHTML = `⚠ Vous avez indiqué <b>${esc(heure.replace(':','h'))}</b>, mais le moment « ${esc(moment)} » correspond à <b>${esc(horaires)}</b> ${propres ? 'ce jour-là, dans l\'emploi du temps détaillé' : 'dans la journée type'}. Ce n'est pas bloquant — si l'évènement a bien eu lieu hors du créneau habituel, laissez tel quel.`;
 }
 
 function checkVals(name) {
@@ -7060,7 +7096,7 @@ function ouvrirFormulaireEvenement(idx) {
     const maintenant = new Date();
     formDraft.date = maintenant.toISOString().slice(0,10);
     formDraft.heure = String(maintenant.getHours()).padStart(2,'0') + ':' + String(maintenant.getMinutes()).padStart(2,'0');
-    const suggere = momentDeLHeure(formDraft.heure);
+    const suggere = momentDeLHeure(formDraft.heure, formDraft.date);
     if (suggere) formDraft.moment = suggere;
   }
   currentEtapeIdx = 0;
@@ -9222,7 +9258,7 @@ function simuler(idx){
   // ── Catégorisation calculée ───────────────────────────────────────────
   // On relit les items comme le fait le module Organiser, et on range chacun
   // dans la catégorie d'où venait son texte. Aucun identifiant en dur.
-  const couleurs = ['#1F7A6C','#C2431F','#D69A1F','#46566B','#7B4EA0','#2563EB','#D97706','#059669'];
+  const couleurs = CAT_COLORS;
   ['cp','contexte','antecedents','consequences','interventions'].forEach(volet => {
     const parNom = {};
     let n = 0;
@@ -9917,6 +9953,30 @@ const _CONTROLES = [
       setMode('m1', 'rapide');
       return _bancEgal('Interrupteur actif | onglets actifs | grille entièrement figée', 'true|true|true', [consultation, onglets, toutFige].join('|'));
     } finally { state.declarant = sauve; appliquerModeDeclarantSurM1(); }
+  }},
+
+  {nom:'Les horaires propres au jour comptent pour l\'avertissement heure / moment', test: () => {
+    const sauve = JSON.parse(JSON.stringify(state.m1));
+    try {
+      state.m1.journeeCreneaux = [{nom: 'Petit déjeuner', debut: '10h00', fin: '10h30', id: 'cr_banc'}];
+      state.m1.jours = ['mercredi']; state.m1.semaineBActive = false;
+      // 2026-09-30 est un mercredi
+      const avantPropre = momentDeLHeure('09:15', '2026-09-30');
+      state.m1.semaineCreneaux = {mercredi: [{cle: 'cr_banc', activite: '', debut: '09h00', fin: '09h30'}]};
+      const apresPropre = momentDeLHeure('09:15', '2026-09-30');
+      const horsJour = momentDeLHeure('09:15', '2026-09-29');   // un mardi : horaires de la journée type
+      const dansType = momentDeLHeure('10:15', '2026-09-29');
+      const ancien = momentDeLHeure('10:15', '2026-09-30');     // le mercredi, 10h15 n'est plus le petit déjeuner
+      return _bancEgal('avant | jour propre | autre jour | type | ancien horaire ce jour-là', '|Petit déjeuner||Petit déjeuner|', [avantPropre, apresPropre, horsJour, dansType, ancien].join('|'));
+    } finally { Object.keys(state.m1).forEach(k => delete state.m1[k]); Object.assign(state.m1, sauve); }
+  }},
+
+  {nom:'Palette des catégories : texte lisible sur chaque couleur', test: () => {
+    const lum = (hex) => [1, 3, 5].map(i => parseInt(hex.substr(i, 2), 16) / 255)
+      .map(v => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)).reduce((a, v, i) => a + v * [0.2126, 0.7152, 0.0722][i], 0);
+    const rapport = (a, b) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+    const faibles = CAT_COLORS.filter(c => rapport(lum(c), lum(texteSurCouleur(c) === '#FFFFFF' ? '#FFFFFF' : '#2C2416')) < 4.5);
+    return _bancEgal('Couleurs dont le texte se lit mal (< 4,5)', '', faibles.join(','));
   }},
 
   {nom:'Les couleurs des catégories se distinguent deux à deux', test: () => {
@@ -11109,9 +11169,22 @@ const M3_SOUS = [
 // Palette des catégories : une couleur par famille de teintes (vert-bleu, brique,
 // or, olive, bleu, ardoise, violet, framboise), texte blanc lisible sur chacune.
 const CAT_COLORS = [
-  '#1F7A6C','#C2431F','#9A6A00','#4D7C0F',
-  '#2563EB','#46566B','#7B4EA0','#BE185D'
+  '#F25A36','#F59E0B','#84CC16','#10B981',
+  '#0EA5E9','#5B5FEF','#9333EA','#F0609F'
 ];
+
+/* Blanc ou foncé, selon ce qui se lit le mieux sur cette couleur : les teintes vives et
+   claires (jaune, citron, ciel…) ne portent pas de texte blanc. */
+function texteSurCouleur(hex) {
+  const m = /^#([0-9a-f]{6})$/i.exec(String(hex || '').trim());
+  if (!m) return '#FFFFFF';
+  const lum = [0, 2, 4].map(i => {
+    const v = parseInt(m[1].substr(i, 2), 16) / 255;
+    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  }).reduce((a, v, i) => a + v * [0.2126, 0.7152, 0.0722][i], 0);
+  const encre = 0.0166;   // #2C2416
+  return (1.05 / (lum + 0.05)) >= ((lum + 0.05) / (encre + 0.05)) ? '#FFFFFF' : '#2C2416';
+}
 
 function catColorFor(idx) {
   return CAT_COLORS[idx % CAT_COLORS.length];
@@ -11405,7 +11478,7 @@ function blocItemM3(sousId, sous, item, cats, etiquettes, st, n) {
     ? catIds.map(cid => {
         const cat = cats[cid];
         if (!cat) return '';
-        return `<span class="m3-item-cat-badge" style="background:${cat.color||'var(--ocre)'};" onclick="retirerDeUneCat('${sousId}','${item.id}','${cid}',event)">
+        return `<span class="m3-item-cat-badge" style="background:${cat.color||'var(--ocre)'};--sur:${texteSurCouleur(cat.color)};" onclick="retirerDeUneCat('${sousId}','${item.id}','${cid}',event)">
          ${esc(cheminCat(sousId, cid))} ×
        </span>`;
       }).join(' ')
@@ -17009,7 +17082,7 @@ function cmpChangerFiltre(filtre) { cmpFiltre = filtre; renderComparateur(); }
 
 function puceCatCmp(cats, catId) {
   const cat = cats[catId];
-  return '<span class="cmp-chip" style="background:' + esc((cat && cat.color) || '#3D4F6B') + ';">' +
+  return '<span class="cmp-chip" style="background:' + esc((cat && cat.color) || '#3D4F6B') + ';color:' + texteSurCouleur((cat && cat.color) || '#3D4F6B') + ';">' +
     esc(cheminCatDans(cats, catId)) + '</span>';
 }
 
@@ -17020,7 +17093,7 @@ function celluleSyntheseCmp(sousId, item, l) {
   const puces = l.s.map(id => {
     const cat = cats[id];
     const chemin = esc(cheminCatDans(cats, id));
-    return '<span class="cmp-chip" style="background:' + esc((cat && cat.color) || '#3D4F6B') + ';">' + chemin +
+    return '<span class="cmp-chip" style="background:' + esc((cat && cat.color) || '#3D4F6B') + ';color:' + texteSurCouleur((cat && cat.color) || '#3D4F6B') + ';">' + chemin +
       '<button type="button" class="cmp-chip-x" aria-label="Retirer de « ' + chemin + ' »" title="Retirer" ' +
         'onclick="cmpRetirer(\'' + sousId + '\', \'' + idItem + '\', \'' + esc(id) + '\')">×</button></span>';
   }).join('');
@@ -17768,7 +17841,7 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
-const ACTIVITE_CODE = {"jusqua":"2026-10-03","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":3427,"retrait":877,"depots":37}]};
+const ACTIVITE_CODE = {"jusqua":"2026-10-03","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":3470,"retrait":878,"depots":38}]};
 
 function svgActiviteCode() {
   const mois = ACTIVITE_CODE.mois || [];
@@ -17807,6 +17880,18 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-03',
+    version: 'v2026.10.03-3',
+    titre: "Des couleurs plus vives, et des horaires qui suivent le jour",
+    corps: `
+<ul>
+<li><b>Couleurs des catégories</b> : une palette plus vive et plus gaie — corail, ambre, citron vert, émeraude, bleu ciel, indigo, violet, rose —, toujours huit teintes bien distinctes. Le texte des puces passe en blanc ou en foncé selon la couleur, pour rester lisible sur les teintes claires. Les catégories déjà créées gardent leur couleur ; un clic sur la pastille permet de la changer.</li>
+<li><b>Avertissement « heure / moment »</b> : il tient compte des horaires propres au jour de l'évènement, saisis dans l'emploi du temps détaillé (semaines A et B comprises). Un mercredi où le petit-déjeuner a lieu à 9h ne déclenche plus d'alerte à tort. La suggestion du moment, à l'ouverture du formulaire, suit la même règle. Le message dit s'il s'appuie sur les horaires du jour ou sur ceux de la journée type.</li>
+</ul>
+`
+  },
 
   {
     date: '2026-10-03',
