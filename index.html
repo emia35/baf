@@ -1717,6 +1717,9 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
 .jdb blockquote{margin:6px 0 14px;padding:10px 16px;background:var(--paper-deep);border-radius:8px;font-style:italic;color:var(--ink);}
 .jdb-fil{background:var(--sauge-pale);border-radius:10px;padding:16px 20px;}
 .jdb .jdb-maj{font-size:12px;color:var(--ink-soft);text-align:right;}
+.etat-export{font-weight:600;white-space:nowrap;}
+.etat-export.ok{color:var(--sauge-deep);}
+.etat-export.alerte{color:var(--rose-deep);}
 .m3-puce-ref{font-weight:700;margin-right:2px;}
 .decoupe-fenetre{max-width:1040px;max-height:calc(100vh - 32px);overflow-y:auto;}
 .dec-grille{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:6px;}
@@ -4661,6 +4664,8 @@ function persist(){
   migrerIdentiteDossier();
   state.modifie = new Date().toISOString();
   DEPOT.ecrire(state);
+  // La mention « non exporté » suit le travail ; sans effet tant que la page n'est pas prête.
+  try { if (outilCourant !== 'idc') majBarreDossier(outilCourant, subbarSurAccueilOutil); } catch (e) { /* démarrage */ }
 }
 function loadPersisted(){
   const enregistre = DEPOT.lire();
@@ -4892,15 +4897,15 @@ function majBarreDossierInterne(outil, surAccueilOutil) {
   const prenom = (state.m1.prenom || '').trim();
   const detail = nb ? ` · <b>${nb}</b> évènement${nb>1?'s':''}` : '';
   if (state.provisoire) {
-    zone.innerHTML = `<span class="pastille-provisoire">Fichier socle provisoire</span> <b>${esc(prenom || 'sans prénom')}</b>${detail}`;
+    zone.innerHTML = `<span class="pastille-provisoire">Fichier socle provisoire</span> <b>${esc(prenom || 'sans prénom')}</b>${detail}${etatSauvegardeSocle()}`;
   } else if (state.codage && state.codage.actif) {
-    zone.innerHTML = `Primo codage — <b>${esc(prenom || 'sans prénom')}</b>${detail}`;
+    zone.innerHTML = `Primo codage — <b>${esc(prenom || 'sans prénom')}</b>${detail}${etatSauvegardeSocle()}`;
   } else if (state.origineDossier === 'simulation') {
     zone.innerHTML = `Simulation — <b>${esc(prenom || 'profil fictif')}</b>${detail}`;
   } else if (state.fichierDossier) {
-    zone.innerHTML = `Dossier : <b>${esc(state.fichierDossier)}</b>${detail}`;
+    zone.innerHTML = `Dossier : <b>${esc(state.fichierDossier)}</b>${detail}${etatSauvegardeSocle()}`;
   } else if (prenom || nb) {
-    zone.innerHTML = `<b>${esc(prenom || 'Dossier sans prénom')}</b>${detail} · non enregistré`;
+    zone.innerHTML = `<b>${esc(prenom || 'Dossier sans prénom')}</b>${detail}${etatSauvegardeSocle() || ' · non exporté'}`;
   } else {
     zone.innerHTML = 'Aucun fichier chargé — travail local';
   }
@@ -8303,6 +8308,7 @@ function refreshAccueilBadges(){
 
 function exporterJSON(){
   const fichier = Object.assign({}, state, {baf: enveloppeBAF('dossier')});
+  delete fichier.derniereSauvegarde;
   const blob = new Blob([JSON.stringify(fichier, null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -8313,6 +8319,8 @@ function exporterJSON(){
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+  // Le contenu est maintenant dans un fichier : la barre le dit, et la fermeture ne gronde plus.
+  if (state.origineDossier !== 'simulation') { marquerSocleSauvegarde(); persist(); majBarreDossier(outilCourant, subbarSurAccueilOutil); }
   showToast('Fichier exporté.');
 }
 
@@ -8600,7 +8608,9 @@ function importerJSON(event, versOutil2){
 }
 
 function confirmReset(){
-  if(confirm('Effacer toutes les données saisies dans cet outil ? Cette action est irréversible (pensez à exporter avant si besoin).')){
+  const nonExporte = socleNonSauvegarde();
+  if(confirm((nonExporte ? '⚠ Ce travail n\'a PAS été exporté depuis ses dernières modifications : il sera perdu.\n\nPour le garder : Annuler, puis « Exporter » dans la barre du dossier.\n\n' : '') +
+      'Effacer toutes les données saisies dans cet outil ? Cette action est irréversible' + (nonExporte ? '.' : ' (le dernier export, lui, n\'est pas touché).'))){
     replaceState({
       version:1,
       m1:{prenom:'',age:'',diag:'',lieux:[],statut:'',lieuAnalyse:'',jours:[],heures:'',journeeCreneaux:[],semaineCreneaux:{},libre:''},
@@ -9856,6 +9866,31 @@ const _CONTROLES = [
     if (sauveD) state.m3.decoupages = sauveD; else delete state.m3.decoupages;
     return _bancEgal('Bulle visible | boutons (2 CD, entre, nouveau) | passage rangé | bulle cachée ensuite',
       'true|4|' + evt.comportement.slice(0, 6).trim() + '|true', [visible, nb, rempli, cache].join('|'));
+  }},
+
+  {nom:'Fichier socle : « non exporté » tant que le contenu n\'est pas dans un fichier, simulation exceptée', test: () => {
+    const sauve = JSON.parse(JSON.stringify(state));
+    const vraiPersist = persist; persist = () => {};
+    let r = [];
+    try {
+      replaceState({version: 1, m1: {prenom: 'Essai'}, m2: {evenements: [{id: 'z1', comportement: 'x'}]}, m3: {}, m4: {}});
+      state.origineDossier = null;
+      r.push(socleNonSauvegarde());                       // jamais exporté
+      marquerSocleSauvegarde();
+      r.push(socleNonSauvegarde());                       // juste exporté
+      state.m2.evenements.push({id: 'z2', comportement: 'y'});
+      r.push(socleNonSauvegarde());                       // modifié depuis
+      r.push(/non exporté/.test(etatSauvegardeSocle()));
+      marquerSocleSauvegarde();
+      state.modifie = 'autre date';
+      r.push(socleNonSauvegarde());                       // la date seule ne compte pas
+      state.origineDossier = 'simulation'; delete state.derniereSauvegarde;
+      r.push(socleNonSauvegarde());                       // la simulation n'alerte jamais
+      replaceState({version: 1, m1: {}, m2: {evenements: []}, m3: {}, m4: {}});
+      r.push(socleNonSauvegarde());                       // un dossier vide non plus
+    } finally { persist = vraiPersist; replaceState(sauve); }
+    return _bancEgal('jamais exporté | juste exporté | modifié | mention | date seule | simulation | vide',
+      'true|false|true|true|false|false|false', r.join('|'));
   }},
 
   {nom:'Les couleurs des catégories se distinguent deux à deux', test: () => {
@@ -16027,6 +16062,55 @@ function perteSiOuverture(metaFichier) {
   return null;
 }
 
+/* ── Fichier socle : le travail est-il exporté ? ─────────────────────
+   On compare le contenu d'aujourd'hui à celui du dernier export (ou de la
+   dernière ouverture d'un fichier). Les dates de modification n'y comptent pas :
+   seulement le préambule, les évènements, le codage et l'interprétation. */
+function empreinteSocle() {
+  try { if (!state.m3) state.m3 = {}; if (!state.m4) state.m4 = {}; ensureM3(); ensureM4(); } catch (e) { /* au démarrage */ }
+  const contientDuTexte = (x, cle) => {
+    if (typeof x === 'string') return x.trim() !== '' && !/^(id|editId)$/i.test(cle || '');
+    if (x === true) return true;
+    if (Array.isArray(x)) return x.some(v => contientDuTexte(v, cle));
+    if (x && typeof x === 'object') return Object.keys(x).some(k => contientDuTexte(x[k], k));
+    return false;
+  };
+  const m2 = Object.assign({}, state.m2 || {});
+  m2.brouillons = (m2.brouillons || []).filter(b => contientDuTexte(b && b.draft)).map(b => b.draft);
+  const sansAffichage = (m) => { const c = Object.assign({}, m || {}); delete c.sous; delete c.courbeJour; return c; };
+  const t = JSON.stringify([state.m1, m2, sansAffichage(state.m3), sansAffichage(state.m4), state.contributions || {}, state.comparaison || null, state.provisoire ? 1 : 0]);
+  let h = 5381;
+  for (let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0;
+  return t.length + ':' + h;
+}
+function socleAvecTravail() {
+  const cats = Object.values((state.m3 && state.m3.categories) || {}).some(c => Object.keys(c || {}).length);
+  return !!(((state.m1 && state.m1.prenom) || '').trim() || ((state.m2 && state.m2.evenements) || []).length || cats);
+}
+function socleNonSauvegarde() {
+  if (modeDeclarantActif()) return declarantNonSauvegarde();
+  if (state.origineDossier === 'simulation') return false;
+  if (!socleAvecTravail()) return false;
+  const d = state.derniereSauvegarde;
+  return !d || d.empreinte !== empreinteSocle();
+}
+/* À appeler quand le contenu vient d'être écrit dans un fichier, ou lu depuis un fichier. */
+function marquerSocleSauvegarde(date) {
+  state.derniereSauvegarde = {empreinte: empreinteSocle(), le: date || new Date().toISOString()};
+}
+function etatSauvegardeSocle() {
+  if (!socleNonSauvegarde()) {
+    const d = state.derniereSauvegarde;
+    return (d && d.le && socleAvecTravail() && state.origineDossier !== 'simulation')
+      ? ' · <span class="etat-export ok">exporté le ' + esc(dateLisible(d.le)) + '</span>' : '';
+  }
+  return ' · <span class="etat-export alerte">⚠ non exporté</span>';
+}
+// Fermer ou recharger la page avec du travail non exporté : le navigateur demande confirmation.
+window.addEventListener('beforeunload', (e) => {
+  try { if (socleNonSauvegarde()) { e.preventDefault(); e.returnValue = ''; } } catch (x) { /* au démarrage, avant que tout soit prêt */ }
+});
+
 /* Ce qui compte pour savoir s'il reste du travail non sauvegardé : ce que le
    déclarant a écrit, pas le moment où il a ouvert une page. */
 function empreinteDeclarant() {
@@ -16632,7 +16716,7 @@ function ouvrirKitCodage(lu) {
   const env = lu.enveloppe || {};
   const n = ((state.m2 && state.m2.evenements) || []).length;
   if ((n || ((state.m1 && state.m1.prenom) || '').trim()) &&
-      !confirm("Un dossier est ouvert dans ce navigateur. Ouvrir ce codage vierge le remplacera : il ne sera perdu que s'il n'a pas été exporté.\n\nContinuer ?")) return;
+      !confirm("Un dossier est ouvert dans ce navigateur. Ouvrir ce codage vierge le remplacera" + (socleNonSauvegarde() ? " : ⚠ il n'a PAS été exporté depuis ses dernières modifications, il sera perdu.\n\nContinuer ?" : " : il a été exporté, vous le retrouverez dans son fichier.\n\nContinuer ?"))) return;
   replaceState({m1: kit.m1 || {}, m2: kit.m2 || {evenements: []}, contributions: kit.contributions || {}, m3: kit.m3 || {}, m4: kit.m4 || {}});
   // Un kit d'avant la passe 77 portait encore la grille : on repart d'une page blanche quoi qu'il arrive.
   const vierge = codageVierge();
@@ -16647,6 +16731,8 @@ function ouvrirKitCodage(lu) {
   loadM1FromState();
   refreshM2List();
   refreshAccueilBadges();
+  marquerSocleSauvegarde();
+  persist();
   route('m3');
   showToast('Primo codage ouvert. Catégorisez à partir du seul déclaratif.');
 }
@@ -17281,7 +17367,8 @@ function aiguillerImport(lus, versOutil2) {
   if (lu.type === 'kit') { ouvrirFichierDeclarant(lu); return; }
   if (lu.type === 'codage-kit') { ouvrirKitCodage(lu); return; }
   if (socleOuvert() && !confirm('Importer ce fichier socle remplacera celui qui est ouvert dans ce navigateur. ' +
-      'Le travail en cours sera perdu s\'il n\'a pas été exporté.\n\nContinuer ?')) return;
+      (socleNonSauvegarde() ? '⚠ Le travail en cours n\'a PAS été exporté depuis ses dernières modifications : il sera perdu.' : 'Le travail en cours a été exporté : vous le retrouverez dans son fichier.') +
+      '\n\nContinuer ?')) return;
   chargerFichierSocle(lu, nom, versOutil2);
 }
 
@@ -17295,6 +17382,8 @@ function chargerFichierSocle(lu, nom, versOutil2) {
   refreshM2List();
   refreshAccueilBadges();
   refreshSynthese();
+  marquerSocleSauvegarde();
+  persist();
   showToast('Fichier socle importé.');
   if (versOutil2) { chargerDossierOuvertDansOutil2(); return; }
   route('baf-accueil');
@@ -17646,7 +17735,7 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
-const ACTIVITE_CODE = {"jusqua":"2026-10-02","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":3205,"retrait":865,"depots":34}]};
+const ACTIVITE_CODE = {"jusqua":"2026-10-02","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":3314,"retrait":869,"depots":36}]};
 
 function svgActiviteCode() {
   const mois = ACTIVITE_CODE.mois || [];
@@ -17685,6 +17774,22 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-03',
+    version: 'v2026.10.03',
+    titre: "Ne plus perdre un fichier socle : alerte avant de fermer, état exporté dans la barre",
+    corps: `
+<p><b>Ne plus perdre un fichier socle.</b> Jusqu'ici, seul le mode déclarant signalait un travail non sauvegardé : un préambule rempli puis fermé sans exporter pouvait disparaître sans un mot. Désormais :</p>
+<ul>
+<li>le navigateur <b>demande confirmation</b> quand on ferme ou recharge la page avec un travail non exporté (fichier socle, primo codage, socle provisoire) ;</li>
+<li>la barre du dossier dit <b>« ⚠ non exporté »</b> ou <b>« exporté le … »</b>, et se met à jour à chaque modification ;</li>
+<li>les confirmations d'effacement et de remplacement disent si le travail est exporté ou non, au lieu d'un avertissement général ;</li>
+<li>la simulation et un dossier vide ne déclenchent jamais d'alerte.</li>
+</ul>
+<p>Le navigateur impose son propre texte pour la fermeture de page ; la barre du dossier, elle, dit précisément où on en est.</p>
+`
+  },
 
   {
     date: '2026-10-02',
