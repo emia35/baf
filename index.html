@@ -1360,6 +1360,18 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
   width:80px;overflow:hidden;text-overflow:ellipsis;
 }
 .semaine-grid td.col-horaire span{overflow:hidden;text-overflow:ellipsis;display:block;white-space:nowrap;}
+.semaine-grid td{position:relative;}
+.semaine-grid .case-retirer{
+  position:absolute;top:1px;right:2px;z-index:1;width:15px;height:15px;line-height:13px;padding:0;
+  font:inherit;font-size:12px;color:var(--ink-soft);background:none;border:none;border-radius:50%;cursor:pointer;opacity:.28;
+}
+.semaine-grid td:hover .case-retirer, .semaine-grid .case-retirer:focus-visible{opacity:1;}
+.semaine-grid .case-retirer:hover{color:var(--rose-deep);background:var(--paper-deep);}
+.semaine-grid td:has(.case-retirer) input[type=text]{padding-right:16px;}
+.semaine-grid td.case-absente{background:var(--paper-deep);text-align:center;}
+.semaine-grid .case-absente-texte{display:block;font-size:10.5px;font-style:italic;color:var(--ink-soft);}
+.semaine-grid .case-retablir{font:inherit;font-size:10px;font-weight:700;color:var(--sauge-deep);background:none;border:none;cursor:pointer;padding:1px 3px;}
+.semaine-grid .case-retablir:hover{text-decoration:underline;}
 .semaine-grid td input[type=text]{
   width:100%;border:none;background:transparent;
   color:var(--ink);font-size:11.5px;padding:2px 3px;
@@ -5265,7 +5277,12 @@ function renderGrilleSemaine() {
       const heures = ouverte
         ? `<span class="case-heures-edit">${makeHeureSelect(debut, `updateHeureJour('${j.id}','${c.id}','debut',this.value)`)}${makeHeureSelect(fin, `updateHeureJour('${j.id}','${c.id}','fin',this.value)`)}<button type="button" class="case-heures-ok" onclick="ouvrirHeuresJour('${j.id}','${c.id}')" title="Fermer">✓</button></span>`
         : `<button type="button" class="case-heures${propre ? ' propre' : ''}" onclick="ouvrirHeuresJour('${j.id}','${c.id}')" title="${propre ? 'Horaires propres à ce jour — cliquer pour les modifier' : 'Cliquer pour modifier les horaires de ce jour seulement'}">${esc(debut)}–${esc(fin)}</button>`;
-      return `<td><input type="text" value="${esc(x.activite || '')}"
+      // Pas de créneau ce jour-là : la case se grise, un bouton la rétablit.
+      if (x.supprime) {
+        return `<td class="case-absente"><span class="case-absente-texte">Pas de créneau ce jour</span>
+          <button type="button" class="case-retablir" onclick="retablirCreneauJour('${j.id}','${c.id}')" title="Remettre ce créneau ce jour-là">↺ Rétablir</button></td>`;
+      }
+      return `<td><button type="button" class="case-retirer" onclick="retirerCreneauJour('${j.id}','${c.id}')" title="Pas de créneau ce jour-là (les autres jours ne changent pas)" aria-label="Pas de créneau ce jour-là">×</button><input type="text" value="${esc(x.activite || '')}"
         placeholder="${esc(c.nom||'')}"
         oninput="updateSemaine('${j.id}','${c.id}',this.value)">${heures}</td>`;
     }).join('');
@@ -5331,6 +5348,25 @@ function updateSemaine(jourId, cle, val) {
   persist();
 }
 
+/* Pas de créneau ce jour-là : ni l'horaire, ni le texte ne comptent ; ce qui était écrit est gardé. */
+function retirerCreneauJour(jourId, cle) {
+  ensureSemaineCreneaux();
+  const x = caseSemaine(semaineCreneauxObj(), jourId, cle);
+  if (!x) return;
+  x.supprime = true;
+  if (celluleHeuresOuverte === jourId + '|' + cle) celluleHeuresOuverte = null;
+  persist();
+  renderGrilleSemaine();
+}
+function retablirCreneauJour(jourId, cle) {
+  ensureSemaineCreneaux();
+  const x = caseSemaine(semaineCreneauxObj(), jourId, cle);
+  if (!x) return;
+  delete x.supprime;
+  persist();
+  renderGrilleSemaine();
+}
+
 let celluleHeuresOuverte = null;
 function ouvrirHeuresJour(jourId, cle) {
   celluleHeuresOuverte = (celluleHeuresOuverte === jourId + '|' + cle) ? null : jourId + '|' + cle;
@@ -5365,7 +5401,7 @@ function dupliquerJourneeType() {
   let n = 0;
   joursActifs().forEach(j => creneauxReels().forEach(c => {
     const x = caseSemaine(semaine, j.id, c.id);
-    if (x && !(x.activite || '').trim() && c.nom) { x.activite = c.nom; n++; }
+    if (x && !x.supprime && !(x.activite || '').trim() && c.nom) { x.activite = c.nom; n++; }
   }));
   renderGrilleSemaine();
   persist();
@@ -6916,10 +6952,15 @@ function plagesDuCreneau(c, dateISO) {
   const semaines = [state.m1.semaineCreneaux];
   if (state.m1.semaineBActive) semaines.push(state.m1.semaineCreneauxB);
   const propres = [];
+  let absentes = 0;
   semaines.forEach(s => {
     const x = s && (s[jour] || []).find(k => k && k.cle === c.id);
+    // « Pas de créneau ce jour-là » : cette semaine-là, le créneau n'existe pas.
+    if (x && x.supprime) { absentes++; return; }
     propres.push({debut: (x && x.debut) || c.debut, fin: (x && x.fin) || c.fin});
   });
+  // Absent toutes les semaines possibles : aucune plage (le créneau n'a pas lieu ce jour-là).
+  if (absentes === semaines.length) return [];
   // Un jour qui a ses propres horaires remplace ceux de la journée type.
   const plagesJour = propres.filter(p => p.debut && p.fin);
   return plagesJour.length ? plagesJour : plages;
@@ -6965,6 +7006,11 @@ function verifierCoherenceHeureMoment() {
   const date = val('f-date');
   const plages = creneau.id ? plagesDuCreneau(creneau, date) : [{debut: creneau.debut, fin: creneau.fin}];
   const valides = plages.filter(p => enMinutes(p.debut) !== null && enMinutes(p.fin) !== null);
+  if (creneau.id && plages.length === 0 && h !== null) {
+    box.style.display = '';
+    box.innerHTML = `⚠ Le moment « ${esc(moment)} » est marqué « pas de créneau » ce jour-là dans l'emploi du temps détaillé. Ce n'est pas bloquant — si l'évènement a bien eu lieu à ce moment, laissez tel quel.`;
+    return;
+  }
   if (h === null || !valides.length) { box.style.display = 'none'; return; }
 
   // Un créneau de nuit enjambe minuit : la fin est "avant" le début.
@@ -9977,6 +10023,26 @@ const _CONTROLES = [
     const rapport = (a, b) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
     const faibles = CAT_COLORS.filter(c => rapport(lum(c), lum(texteSurCouleur(c) === '#FFFFFF' ? '#FFFFFF' : '#2C2416')) < 4.5);
     return _bancEgal('Couleurs dont le texte se lit mal (< 4,5)', '', faibles.join(','));
+  }},
+
+  {nom:'Pas de créneau ce jour-là : le créneau disparaît ce jour seulement, et se rétablit', test: () => {
+    const sauve = JSON.parse(JSON.stringify(state.m1));
+    try {
+      state.m1.journeeCreneaux = [{nom: 'Activité', debut: '14h00', fin: '16h00', id: 'cr_aprem'}, {nom: 'Repas', debut: '12h00', fin: '13h00', id: 'cr_repas'}];
+      state.m1.jours = ['mardi', 'mercredi']; state.m1.semaineBActive = false; state.m1.semaineCreneaux = {};
+      ensureSemaineCreneaux();
+      state.m1.semaineCreneaux.mercredi.find(x => x.cle === 'cr_aprem').activite = 'Piscine';
+      retirerCreneauJour('mercredi', 'cr_aprem');
+      const mercredi = momentDeLHeure('15:00', '2026-09-30');      // mercredi : pas de créneau l'après-midi
+      const mardi = momentDeLHeure('15:00', '2026-09-29');         // mardi : il existe
+      const plages = plagesDuCreneau(state.m1.journeeCreneaux[0], '2026-09-30').length;
+      dupliquerJourneeType();                                       // ne remplit pas un jour sans créneau
+      const x = caseSemaine(state.m1.semaineCreneaux, 'mercredi', 'cr_aprem');
+      const gardee = x.supprime === true && x.activite === 'Piscine';
+      retablirCreneauJour('mercredi', 'cr_aprem');
+      const retabli = momentDeLHeure('15:00', '2026-09-30');
+      return _bancEgal('mercredi | mardi | plages | texte gardé | rétabli', '|Activité|0|true|Activité', [mercredi, mardi, plages, gardee, retabli].join('|'));
+    } finally { Object.keys(state.m1).forEach(k => delete state.m1[k]); Object.assign(state.m1, sauve); renderGrilleSemaine(); }
   }},
 
   {nom:'Les couleurs des catégories se distinguent deux à deux', test: () => {
@@ -17841,7 +17907,7 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
-const ACTIVITE_CODE = {"jusqua":"2026-10-03","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":3470,"retrait":878,"depots":38}]};
+const ACTIVITE_CODE = {"jusqua":"2026-10-03","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":3575,"retrait":898,"depots":39}]};
 
 function svgActiviteCode() {
   const mois = ACTIVITE_CODE.mois || [];
@@ -17880,6 +17946,15 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-03',
+    version: 'v2026.10.03-4',
+    titre: "Emploi du temps détaillé : pas de créneau ce jour-là",
+    corps: `
+<p><b>Emploi du temps détaillé</b> : un petit <b>×</b> en haut à droite de chaque case dit « pas de créneau ce jour-là » (par exemple pas d'activité l'après-midi le mercredi). La case se grise, l'horaire et le texte disparaissent pour ce jour seulement, les autres jours ne bougent pas. Un clic sur « ↺ Rétablir » remet le créneau, avec ce qui y était écrit. Un créneau absent un jour n'est plus proposé comme moment ce jour-là, et « Compléter depuis la journée type » ne le remplit pas.</p>
+`
+  },
 
   {
     date: '2026-10-03',
