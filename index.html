@@ -1593,6 +1593,11 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
 }
 .m3-tabs::-webkit-scrollbar, .m4-tabs::-webkit-scrollbar{display:none;}
 .m3-tab, .m4-tab{flex-shrink:0;}
+/* La barre des volets reste en vue quand on fait défiler (Arthur, 08/10/2026) — sur ordinateur ; sur téléphone,
+   trois barres collées prendraient la moitié de l'écran. Sa hauteur (--onglets-h) décale la colonne des catégories. */
+@media (min-width:721px){
+  .m3-tabs{position:sticky;top:calc(var(--header-h,60px) + var(--subbar-h,0px));z-index:90;background:var(--paper);}
+}
 .m3-tab{
   display:inline-flex;flex-direction:column;align-items:center;gap:7px;
   background:var(--paper);border:1.5px solid var(--line);border-radius:14px;
@@ -1750,12 +1755,19 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
   background:none;border:none;border-left:3px solid var(--line);border-radius:0;padding:2px 0 2px 12px;
   user-select:text;cursor:text;
 }
-.dec-texte::selection, .dec-texte *::selection{background:var(--vol-comportement-pale);}
+.dec-texte::selection, .dec-texte *::selection{background:#FFD866;color:var(--ink);}
 .dec-champ-principal .dec-texte{font-size:14.5px;border-left-color:var(--vol-comportement);}
 .dec-champ-second .dec-texte{font-size:12.5px;}
 .dec-champ-second .dec-champ-titre{font-size:10.5px;}
 .dec-ailleurs-titre{font-size:12px;font-weight:700;color:var(--ink);margin:16px 0 2px;padding-top:10px;border-top:1px solid var(--line-soft);}
 .dec-ailleurs-aide{font-size:11.5px;color:var(--ink-soft);margin-bottom:8px;}
+.dec-ailleurs-choix{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+.dec-ailleurs-bt{
+  font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;border-radius:999px;padding:3px 11px;
+  background:var(--card);border:1px solid var(--line);color:var(--ink);
+}
+.dec-ailleurs-bt:hover, .dec-ailleurs-bt.on{border-color:var(--vol-comportement);color:var(--vol-comportement-deep);}
+.dec-ailleurs-groupe.ferme{display:none;}
 .dec-etapes{margin:2px 0 14px 18px;padding:0;font-size:12.5px;color:var(--ink);}
 .dec-etapes li{margin-bottom:2px;}
 .decoupe-fenetre{position:relative;}
@@ -1764,6 +1776,7 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
   background:var(--card);border:1px solid var(--vol-comportement);border-radius:10px;
   box-shadow:0 6px 20px rgba(44,36,22,.18);padding:7px 9px;
 }
+.dec-bulle[hidden]{display:none;}
 .dec-bulle-lib{font-size:11.5px;color:var(--ink-soft);margin-right:2px;}
 .dec-bulle-bt{
   font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;border-radius:999px;padding:3px 10px;
@@ -1774,9 +1787,9 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
 .dec-prendre:disabled{opacity:.45;cursor:not-allowed;}
 #decoupe-overlay.dec-pret .dec-prendre{background:var(--vol-comportement-pale);border-color:var(--vol-comportement);color:var(--vol-comportement-deep);}
 #decoupe-overlay.dec-pret .dec-cit.vide{outline:2px dashed var(--vol-comportement);outline-offset:3px;border-radius:4px;}
-.dec-texte mark{border-radius:3px;padding:0 1px;color:inherit;}
-.dec-texte mark.dec-m-cd{background:var(--vol-comportement-pale);box-shadow:inset 0 -2px 0 var(--vol-comportement);}
-.dec-texte mark.dec-m-entre{background:var(--vol-intervention-pale);box-shadow:inset 0 -2px 0 var(--vol-intervention);}
+.dec-texte mark{border-radius:0;padding:0;background:none;color:inherit;}
+.dec-texte mark.dec-m-cd{background:none;border-bottom:2px solid var(--vol-comportement);}
+.dec-texte mark.dec-m-entre{background:none;border-bottom:2px dashed var(--vol-intervention);}
 .dec-texte mark::before{
   content:attr(data-et);font-size:9.5px;font-weight:700;vertical-align:super;margin-right:2px;
   color:var(--vol-comportement-deep);
@@ -1787,7 +1800,17 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
 .dec-case{border:1.5px solid var(--line);border-radius:8px;padding:9px 11px;margin-bottom:8px;background:var(--paper);}
 .dec-case-cd{border-color:var(--vol-comportement);}
 .dec-case-entre{border-style:dashed;border-color:var(--vol-intervention);margin-left:18px;}
-.dec-case-titre{font-size:12px;font-weight:700;color:var(--ink);margin-bottom:5px;}
+.dec-case-titre{font-size:12px;font-weight:700;color:var(--ink);margin-bottom:5px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.dec-poignee{cursor:grab;color:var(--ink-soft);font-size:15px;line-height:1;user-select:none;}
+.dec-deplacer{margin-left:auto;display:inline-flex;gap:2px;}
+.dec-deplacer button{background:none;border:1px solid var(--line);border-radius:5px;font-size:9px;line-height:1;padding:3px 5px;color:var(--ink-soft);cursor:pointer;}
+.dec-deplacer button:hover:not(:disabled){border-color:var(--vol-comportement);color:var(--vol-comportement-deep);}
+.dec-deplacer button:disabled{opacity:.3;cursor:default;}
+.dec-case.glisse{opacity:.45;}
+.dec-case.depot{outline:2px dashed var(--vol-comportement);outline-offset:3px;}
+.dec-case-sous{margin-left:14px;border-style:dashed;}
+.dec-ordre{font-size:11.5px;color:var(--ink-soft);margin-bottom:8px;}
+.dec-aide-coupe{font-size:11.5px;color:var(--vol-comportement-deep);background:var(--vol-comportement-pale);border-radius:6px;padding:5px 8px;margin-top:6px;}
 .dec-case-aide{font-weight:400;color:var(--ink-soft);}
 .dec-cit{font-size:13px;line-height:1.45;color:var(--ink);margin-bottom:6px;}
 .dec-cit.vide{color:var(--ink-soft);font-style:italic;font-size:12px;}
@@ -2123,7 +2146,7 @@ details.voir-plus{margin-top:4px;}
    les éléments à gauche (Émilie, 01/10/2026), sans barre de défilement à elle
    (Arthur, 01/10/2026) : son point d'accroche est calculé par ajusterColonneCats(). */
 @media (min-width:721px){
-  .m3-col-cats{position:sticky;top:calc(var(--header-h,60px) + var(--subbar-h,0px) + 12px);}
+  .m3-col-cats{position:sticky;top:calc(var(--header-h,60px) + var(--subbar-h,0px) + var(--onglets-h,0px) + 12px);}
 }
 .m3-cat-name{
   flex:1;font-size:13.5px;font-weight:700;color:var(--ink);
@@ -4739,6 +4762,12 @@ function lireFichierBAF(objet, typesAcceptes) {
   return {ok:true, type, enveloppe:env, dossier, schema: env ? (env.schema || 1) : 1};
 }
 
+/* Organiser s'ouvre sur Comportements : le volet où l'on s'était arrêté la fois d'avant ne revient plus tout seul
+   (Arthur, 08/10/2026). Cliquer sur « Organiser » quand on y est déjà ne change pas de volet. */
+function choisirVoletArrivee(etaitSurM3) {
+  if (!etaitSurM3 && state.m3) state.m3.sous = 'cp';
+}
+
 function route(name, fromHistory){
   // Si on quitte le formulaire d\'évènement sans valider, conserver la
   // saisie en cours comme brouillon (rien n\'est perdu). Sauf si on le quitte
@@ -4754,6 +4783,8 @@ function route(name, fromHistory){
      n'ont aucun sens : elles renvoient à l'accueil. */
   if (modeDeclarantActif() && VUES_RESERVEES[name]) { renderReserve(name); name = 'reserve'; }
   else if (!modeDeclarantActif() && name === 'reserve') name = 'declarant';
+  const vueM3 = document.getElementById('view-m3');
+  const etaitSurM3 = !!(vueM3 && vueM3.classList.contains('show'));
   document.querySelectorAll('section.view').forEach(s=>s.classList.remove('show'));
   const target = document.getElementById('view-'+name);
   if(target) target.classList.add('show');
@@ -4818,7 +4849,7 @@ function route(name, fromHistory){
   window.scrollTo({top:0, behavior:'instant'});
   refreshAccueilBadges();
   if(name==='synthese') { refreshSynthese(); if(detailsVisible) renderCharts(); }
-  if(name==='m3') renderM3();
+  if(name==='m3') { choisirVoletArrivee(etaitSurM3); renderM3(); }
   if(name==='m4') renderM4();
   if(name==='idc-main') { setNavActive('cotation'); renderMain(); }
   if(name==='idc-accueil') { try { majEntreeDossierOuvert(); } catch(e) {} }
@@ -8264,8 +8295,9 @@ function resumeDecoupage(D, evt, n) {
   }
   const seq = D.mode !== 'simultane' && D.unites.length > 1;
   let html = '<div class="cmp-dec-titre">' + D.unites.length + ' CD ' + (D.unites.length < 2 ? '' : seq ? 'à la suite' : 'en même temps') + '</div>';
+  const nums = numerosCD(D.unites);
   D.unites.forEach((u, k) => {
-    html += '<div class="cmp-dec-ligne"><b>CD ' + n + '.' + (k + 1) + '</b> « ' + court(u.texte) + ' »</div>';
+    html += '<div class="cmp-dec-ligne"><b>CD ' + n + '.' + nums[k] + '</b> « ' + court(u.texte) + ' »</div>';
     const c = seq ? (D.charnieres || [])[k] : null;
     if (c && k < D.unites.length - 1) html += '<div class="cmp-dec-ligne cmp-dec-entre">entre : « ' + court(c.texte) + ' »</div>';
   });
@@ -10031,11 +10063,11 @@ const _CONTROLES = [
       rempli = (decoupeBrouillon.unites[0] || {}).texte || '';
       s.removeAllRanges();
     }
-    const cache = document.getElementById('decoupe-bulle').hidden;
+    const cache = document.getElementById('decoupe-bulle').hidden && getComputedStyle(document.getElementById('decoupe-bulle')).display === 'none';
     fermerDecoupage();
     if (sauveD) state.m3.decoupages = sauveD; else delete state.m3.decoupages;
     return _bancEgal('Bulle visible | boutons (2 CD, entre, nouveau) | passage rangé | bulle cachée ensuite',
-      'true|4|' + evt.comportement.slice(0, 6).trim() + '|true', [visible, nb, rempli, cache].join('|'));
+      'true|' + (structureCD(evt, {}).cds.length > 1 ? 3 : 4) + '|' + evt.comportement.slice(0, 6).trim() + '|true', [visible, nb, rempli, cache].join('|'));
   }},
 
   {nom:'Fichier socle : « non exporté » tant que le contenu n\'est pas dans un fichier, simulation exceptée', test: () => {
@@ -10179,6 +10211,132 @@ const _CONTROLES = [
         [propose, ancien, vide, rangee.list.join('|') + ' / ' + rangee.resolve('Matin calme')].join(' # '));
     } finally { Object.keys(state.m1).forEach(k => delete state.m1[k]); Object.assign(state.m1, sauve); renderGrilleSemaine(); }
   }},
+  {nom:'Découper : un CD découpé donne n.k.1, n.k.2 ; les autres CD gardent leur numéro et leur classement', test: () => {
+    const sauveEvts = state.m2.evenements, sauveD = state.m3.decoupages ? JSON.parse(JSON.stringify(state.m3.decoupages)) : null;
+    const sauveCats = JSON.stringify(state.m3.categories);
+    const vraiPersist = persist; persist = () => {};
+    try {
+      const texte = 'Il crie. Il tape. Il pleure.';
+      const evt = {id: 'bancdec1', date: '2026-01-01', heure: '10:00', comportement: texte, antecedents: [], interventions: []};
+      state.m2.evenements = [evt];
+      ensureM3();
+      state.m3.decoupages = {bancdec1: {mode: 'sequence', unites: [
+        {id: 'a', champ: 'comportement', debut: 0, texte: 'Il crie. Il tape.'},
+        {id: 'b', champ: 'comportement', debut: 18, texte: 'Il pleure.'}], charnieres: [null]}};
+      state.m3.categories.cp = {catb: {nom: 'Pleurs', color: '#10B981', items: ['ebancdec1_ub']}};
+      ouvrirDecoupage('bancdec1');
+      // CD 1.1 (« Il crie. Il tape. ») : on en sélectionne une partie
+      decoupeSel = {champ: 'comportement', debut: 0, texte: 'Il crie.'};
+      const ctx1 = (contexteSelectionDecoupe() || {}).type;
+      decouperUnite(0);
+      const gid = decoupeBrouillon.groupes[0].id;
+      decoupeSel = {champ: 'comportement', debut: 9, texte: 'Il tape.'};
+      const ctx2 = (contexteSelectionDecoupe() || {}).type;
+      ajouterSousCD(gid);
+      const numeros = numerosCD(decoupeBrouillon.unites).join(',');
+      enregistrerDecoupage();
+      const etiq = etiquettesCD();
+      const D = state.m3.decoupages.bancdec1;
+      const garde = state.m3.categories.cp.catb.items.includes('ebancdec1_ub') && D.unites[2].id === 'b';
+      // Rétablir CD 1.1 entier
+      ouvrirDecoupage('bancdec1');
+      retablirCDEntier(decoupeBrouillon.groupes[0].id);
+      const retabli = numerosCD(decoupeBrouillon.unites).join(',') + '|' + decoupeBrouillon.unites[0].texte;
+      fermerDecoupage();
+      return _bancEgal('contexte 1 | contexte 2 | numéros | étiquettes | CD 1.2 garde son id et son classement | rétabli',
+        'unite|groupe|1.1,1.2,2|CD 1.1.1,CD 1.1.2,CD 1.2|true|1,2|Il crie. Il tape.',
+        [ctx1, ctx2, numeros, Object.values(etiq).join(','), garde, retabli.split('|')[0], retabli.split('|')[1]].join('|'));
+    } finally {
+      persist = vraiPersist; state.m2.evenements = sauveEvts; if (sauveD) state.m3.decoupages = sauveD; else delete state.m3.decoupages; state.m3.categories = JSON.parse(sauveCats);
+      try { renderM3(); } catch (e) { /* vue masquée */ }
+    }
+  }},
+
+  {nom:'Découper : une carte déplacée garde sa place, et « Remettre dans l\'ordre du texte » la rend', test: () => {
+    const sauveEvts = state.m2.evenements, sauveD = state.m3.decoupages ? JSON.parse(JSON.stringify(state.m3.decoupages)) : null;
+    const vraiPersist = persist; persist = () => {};
+    try {
+      const evt = {id: 'bancdec2', date: '2026-01-01', comportement: 'Il crie. Il tape. Il pleure.', antecedents: [], interventions: []};
+      state.m2.evenements = [evt];
+      ensureM3();
+      state.m3.decoupages = {bancdec2: {mode: 'sequence', unites: [
+        {id: 'a', champ: 'comportement', debut: 0, texte: 'Il crie.'},
+        {id: 'b', champ: 'comportement', debut: 9, texte: 'Il tape.'},
+        {id: 'c', champ: 'comportement', debut: 18, texte: 'Il pleure.'}], charnieres: [null, null]}};
+      ouvrirDecoupage('bancdec2');
+      deplacerCD(2, 0);
+      const apres = decoupeBrouillon.unites.map(u => u.id).join('') + (decoupeBrouillon.ordreManuel ? '*' : '');
+      trierDecoupage(decoupeBrouillon, evt);
+      const garde = decoupeBrouillon.unites.map(u => u.id).join('');
+      enregistrerDecoupage();
+      const enregistre = state.m3.decoupages.bancdec2.unites.map(u => u.id).join('') + (state.m3.decoupages.bancdec2.ordreManuel ? '*' : '');
+      const elements = elementsEvt('cp', evt).map(e => e.id).join(',');
+      ouvrirDecoupage('bancdec2');
+      remettreOrdreTexte();
+      const remis = decoupeBrouillon.unites.map(u => u.id).join('') + (decoupeBrouillon.ordreManuel ? '*' : '');
+      fermerDecoupage();
+      return _bancEgal('déplacée | gardée après tri | enregistrée | volet Organiser | remise dans l\'ordre du texte',
+        'cab*|cab|cab*|ebancdec2_uc,ebancdec2_ua,ebancdec2_ub|abc',
+        [apres, garde, enregistre, elements, remis].join('|'));
+    } finally {
+      persist = vraiPersist; state.m2.evenements = sauveEvts; if (sauveD) state.m3.decoupages = sauveD; else delete state.m3.decoupages;
+      try { renderM3(); } catch (e) { /* vue masquée */ }
+    }
+  }},
+
+  {nom:'Découper : la bulle n\'apparaît qu\'avec une sélection, le déclaratif n\'est pas surligné, « Ailleurs » se déplie à la demande', test: () => {
+    const sauveEvts = state.m2.evenements, sauveD = state.m3.decoupages ? JSON.parse(JSON.stringify(state.m3.decoupages)) : null;
+    const vraiPersist = persist; persist = () => {};
+    try {
+      const evt = {id: 'bancdec3', date: '2026-01-01', comportement: 'Il crie. Il tape.', antecedents: [{id: 'x', texte: 'Il attendait.'}],
+        interventions: [{id: 'i', texte: 'On lui dit stop.', effet: 'aucun effet visible'}], finPersonne: 'Il se calme.'};
+      state.m2.evenements = [evt];
+      ensureM3();
+      state.m3.decoupages = {bancdec3: {mode: 'sequence', unites: [{id: 'a', champ: 'comportement', debut: 0, texte: 'Il crie. Il tape.'}], charnieres: []}};
+      ouvrirDecoupage('bancdec3');
+      const o = document.getElementById('decoupe-overlay');
+      const affiche = (e) => !!e && getComputedStyle(e).display !== 'none';
+      const bulle = document.getElementById('decoupe-bulle');
+      const bulleAuDepart = affiche(bulle);
+      const marque = o.querySelector('mark.dec-m-cd');
+      const fond = marque ? getComputedStyle(marque).backgroundColor : 'aucune marque';
+      const groupes = [...o.querySelectorAll('.dec-ailleurs-groupe')];
+      const fermes = groupes.length === 3 && groupes.every(g => !affiche(g));
+      const boutons = [...o.querySelectorAll('.dec-ailleurs-bt')].map(b => b.dataset.g).join(',');
+      const message = /juste avant, l'intervention ou l'après/.test((o.querySelector('.dec-ailleurs-aide') || {}).textContent || '');
+      basculerAilleurs('avant');
+      const ouvertAvant = affiche(o.querySelector('.dec-ailleurs-groupe[data-g="avant"]')) && !affiche(o.querySelector('.dec-ailleurs-groupe[data-g="interv"]'));
+      basculerAilleurs('avant');
+      const refermee = !affiche(o.querySelector('.dec-ailleurs-groupe[data-g="avant"]'));
+      fermerDecoupage();
+      return _bancEgal('bulle au départ | fond du passage pris | « Ailleurs » replié | boutons | message | ouvre | referme',
+        'false|rgba(0, 0, 0, 0)|true|avant,interv,apres|true|true|true',
+        [bulleAuDepart, fond, fermes, boutons, message, ouvertAvant, refermee].join('|'));
+    } finally {
+      persist = vraiPersist; state.m2.evenements = sauveEvts; if (sauveD) state.m3.decoupages = sauveD; else delete state.m3.decoupages;
+      try { renderM3(); } catch (e) { /* vue masquée */ }
+    }
+  }},
+
+  {nom:'Organiser : la barre des volets reste fixe quand on fait défiler (ordinateur)', test: () => {
+    const t = document.getElementById('m3-tabs');
+    if (!t || window.innerWidth < 721) return _bancEgal('Sans barre ou écran étroit', true, true);
+    return _bancEgal('Position de la barre des volets', 'sticky', getComputedStyle(t).position);
+  }},
+  {nom:'Organiser : on arrive sur Comportements, et la bulle du compteur dit « classé sur déclarés »', test: () => {
+    const sauve = state.m3.sous;
+    try {
+      state.m3.sous = 'consequences'; choisirVoletArrivee(false);
+      const arrivee = state.m3.sous;
+      state.m3.sous = 'consequences'; choisirVoletArrivee(true);
+      const surPlace = state.m3.sous;
+      const titres = [titreCompteVolet('cp', 0, 8), titreCompteVolet('cp', 1, 1), titreCompteVolet('consequences', 2, 5), titreCompteVolet('consequences', 1, 1), titreCompteVolet('contexte', 3, 4)].join(' / ');
+      return _bancEgal('arrivée | clic sur place | bulles',
+        'cp|consequences|0 comportement classé sur 8 déclarés / 1 comportement classé sur 1 déclaré / 2 conséquences classées sur 5 déclarées / 1 conséquence classée sur 1 déclarée / 3 éléments de contexte classés sur 4 déclarés',
+        [arrivee, surPlace, titres].join('|'));
+    } finally { state.m3.sous = sauve; }
+  }},
+
   {nom:'Les couleurs des catégories se distinguent deux à deux', test: () => {
     /* Ce qui fait confondre deux catégories, c'est la teinte : les deux violets
        d'avant n'étaient séparés que de 10°, les deux rouges de 13°. Entre deux
@@ -11294,7 +11452,7 @@ const M3_SOUS = [
   {
     id: 'cp',
     label: 'Comportements', icon: '🎥', couleur: 'comportement',
-    help: 'Les comportements-défis repérés dans chaque évènement, numérotés CD 3.1, CD 3.2… (3 pour le troisième évènement dans l\'ordre chronologique). Par défaut, un évènement en donne un : tout son « Ce qui s\'est passé ». S\'il en contient plusieurs, « ✂ Découper » permet de les repérer, chacun par une citation exacte du déclaratif, qui n\'est jamais modifié. Regroupez ce qui vous semble appartenir à la même famille — sans vous imposer une nomenclature.',
+    help: 'Les comportements-défis repérés dans chaque évènement, numérotés CD 3.1, CD 3.2… (3 pour le troisième évènement dans l\'ordre chronologique). Par défaut, un évènement en donne un : tout son « Ce qui s\'est passé ». S\'il en contient plusieurs, « ✂ Découper » permet de les repérer, chacun par une citation exacte du déclaratif, qui n\'est jamais modifié. Un CD que l\'on découpe à son tour devient CD 3.1.1, CD 3.1.2… : les autres gardent leur numéro. Regroupez ce qui vous semble appartenir à la même famille — sans vous imposer une nomenclature.',
     placeholder: 'ex : Hétéro-agressivité, Auto-agressivité, Refus verbal, Agitation…',
     extract: (evt) => {
       const parts = [];
@@ -11479,7 +11637,7 @@ function structureCD(evt, decoupages) {
   const source = decoupages !== undefined ? decoupages : ((state.m3 && state.m3.decoupages) || {});
   const D = ((source || {})[evt && evt.id]) || null;
   // L'analyste a jugé que la scène ne contient aucun CD : le déclaratif reste, rien n'est compté.
-  if (D && D.mode === 'aucun') return {decoupe: true, mode: 'aucun', cds: [], charnieres: []};
+  if (D && D.mode === 'aucun') return {decoupe: true, mode: 'aucun', cds: [], charnieres: [], numeros: []};
   if (D && (D.unites || []).length) {
     const cds = D.unites.map(u => ({id: 'e' + evt.id + '_u' + u.id, texte: String(u.texte || '').trim()}));
     const seq = D.mode === 'sequence' && cds.length > 1;
@@ -11493,7 +11651,7 @@ function structureCD(evt, decoupages) {
         depuisIntervention: /^interventions\.[^.]+\.texte$/.test(c.champ || '')
       };
     }) : [];
-    return {decoupe: true, mode: seq ? 'sequence' : (cds.length > 1 ? 'simultane' : 'un'), cds, charnieres};
+    return {decoupe: true, mode: seq ? 'sequence' : (cds.length > 1 ? 'simultane' : 'un'), cds, charnieres, numeros: numerosCD(D.unites)};
   }
   const sous = M3_SOUS.find(s => s.id === 'cp');
   const ivPost = (evt.interventions || []).filter(iv => effetNeedsCdPost(iv.effet) && iv.cdPostIntervention && iv.cdPostIntervention.trim());
@@ -11510,7 +11668,7 @@ function structureCD(evt, decoupages) {
     const cle = cd.iv ? cleObjDecoupe(cd.iv, (evt.interventions || []).indexOf(cd.iv)) : '';
     return t ? {cle: 'p' + cle, texte: t, intervention: true, depuisIntervention: true, champ: 'interventions.' + cle + '.texte'} : null;
   });
-  return {decoupe: false, mode: cds.length > 1 ? 'sequence' : 'un', cds: cds.map(c => ({id: c.id, texte: c.texte, post: c.post})), charnieres};
+  return {decoupe: false, mode: cds.length > 1 ? 'sequence' : 'un', cds: cds.map(c => ({id: c.id, texte: c.texte, post: c.post})), charnieres, numeros: cds.map((_, k) => String(k + 1))};
 }
 
 /* Les éléments d'un évènement dans un volet : ceux de son déclaratif, puis ceux
@@ -11574,7 +11732,8 @@ function etiquettesCD() {
   const lab = {};
   (state.m2.evenements || []).forEach((evt, idx) => {
     if (!evt || !evt.id) return;
-    structureCD(evt).cds.forEach((cd, k) => { lab[cd.id] = 'CD ' + (idx + 1) + '.' + (k + 1); });
+    const st = structureCD(evt);
+    st.cds.forEach((cd, k) => { lab[cd.id] = 'CD ' + (idx + 1) + '.' + st.numeros[k]; });
   });
   return lab;
 }
@@ -11683,11 +11842,11 @@ function blocItemM3(sousId, sous, item, cats, etiquettes, st, n) {
        </span>`;
       }).join(' ')
     : `<span style="font-size:11.5px;color:var(--ink-soft);font-style:italic;">Non catégorisé — cliquez pour assigner</span>`;
-  const cd = k => 'CD ' + n + '.' + (k + 1);
+  const cd = k => 'CD ' + n + '.' + ((st.numeros || [])[k] || (k + 1));
   const dernier = st.cds.length - 1;
   let lien = '';
   if (sousId === 'cp' && etiquettes[item.id]) {
-    lien = `<span class="m3-item-cd" title="Évènement ${n}, CD n° ${item.relie + 1}${item.suite ? ', venu à la suite du précédent' : ''}.">${etiquettes[item.id]}</span>`;
+    lien = `<span class="m3-item-cd" title="Évènement ${n}, ${etiquettes[item.id]}${item.suite ? ', venu à la suite du précédent' : ''}.">${etiquettes[item.id]}</span>`;
   } else if (item.tag === 'charniere') {
     lien = `<span class="m3-item-lien" title="Ce qui s'est passé entre deux CD de l'évènement ${n}.">` +
       (sousId === 'antecedents' ? 'avant ' + cd(item.relie) : sousId === 'consequences' ? 'après ' + cd(item.relie) : 'entre ' + cd(item.relie) + ' et ' + cd(item.relie + 1)) + '</span>';
@@ -11720,6 +11879,23 @@ function blocItemM3(sousId, sous, item, cats, etiquettes, st, n) {
     charnieres: [{id, champ, debut, texte, intervention} | null]}  (séquence)
    Le champ est un chemin dans l'évènement : 'comportement',
    'resumes.comportement', 'interventions.<id>.texte'… */
+
+/* Les CD découpés (Arthur, 08/10/2026) : un CD que l'on découpe en plusieurs devient CD n.k.1, n.k.2…, et les
+   autres CD gardent leur numéro. Un passage cité peut porter `groupe` : l'identifiant du CD dont il est une partie ;
+   `groupes` garde, dans le découpage, le passage du CD d'origine — pour continuer à le découper et pour le rétablir.
+   Le numéro suit l'ordre de la liste : « k » pour un CD seul, « k.j » pour le j-ième passage du CD découpé k.
+   (n, le rang de l'évènement, s'ajoute devant : CD n.k ou CD n.k.j.) */
+function numerosCD(unites) {
+  let haut = 0;
+  const rang = {}, compte = {};
+  return (unites || []).map(u => {
+    if (u && u.groupe) {
+      if (rang[u.groupe] === undefined) { rang[u.groupe] = ++haut; compte[u.groupe] = 0; }
+      return rang[u.groupe] + '.' + (++compte[u.groupe]);
+    }
+    return String(++haut);
+  });
+}
 
 const cleObjDecoupe = (o, i) => (o && o.id) ? o.id : '#' + i;
 function texteChamp(evt, champ) {
@@ -11771,6 +11947,34 @@ function decoupageAJour(evt) {
 let decoupeBrouillon = null;   // {evtId, mode, unites, charnieres}
 let decoupeSel = null;         // {champ, debut, texte} : la dernière sélection dans le déclaratif
 const nouvelIdDecoupe = () => Math.random().toString(36).slice(2, 8);
+let decoupeAide = null;                // le CD dont on vient de demander le découpage : l'aide s'affiche sur sa carte
+let decoupeOuverts = new Set();        // les parties du déclaratif dépliées sous « Ailleurs dans le déclaratif »
+let decoupeGlisse = null;              // la carte que l'on déplace à la souris
+
+/* « Ailleurs dans le déclaratif » : trois parties, dépliées à la demande (Arthur, 08/10/2026). */
+function groupeChampDec(champ) {
+  champ = String(champ || '');
+  if (champ === 'comportement' || champ === 'resumes.comportement' || champ === 'gradation') return null;
+  if (/^antecedents\./.test(champ) || champ === 'etatAvant' || champ === 'resumes.antecedent') return 'avant';
+  if (/^interventions\./.test(champ) || champ === 'resumes.intervention') return 'interv';
+  return 'apres';
+}
+// Une partie qui contient déjà un passage pris reste dépliée : on ne cache pas ce qui est codé.
+function ouvertsInitiaux(b) {
+  const s = new Set();
+  ((b && b.unites) || []).concat((b && b.charnieres) || []).forEach(c => { const g = c && groupeChampDec(c.champ); if (g) s.add(g); });
+  return s;
+}
+function basculerAilleurs(g) {
+  if (decoupeOuverts.has(g)) decoupeOuverts.delete(g); else decoupeOuverts.add(g);
+  const ouvert = decoupeOuverts.has(g);
+  document.querySelectorAll('#decoupe-overlay .dec-ailleurs-groupe[data-g="' + g + '"]').forEach(e => e.classList.toggle('ferme', !ouvert));
+  document.querySelectorAll('#decoupe-overlay .dec-ailleurs-bt[data-g="' + g + '"]').forEach(bt => {
+    bt.classList.toggle('on', ouvert);
+    bt.setAttribute('aria-expanded', String(ouvert));
+    bt.textContent = (ouvert ? '▾ ' : '▸ ') + bt.dataset.lib;
+  });
+}
 
 function ouvrirDecoupage(evtId, ev) {
   if (ev) ev.stopPropagation();
@@ -11807,6 +12011,8 @@ function ouvrirDecoupage(evtId, ev) {
   }
   decoupeBrouillon.evtId = evtId;
   decoupeSel = null;
+  decoupeAide = null;
+  decoupeOuverts = ouvertsInitiaux(decoupeBrouillon);
   renderDecoupage();
   const o = document.getElementById('decoupe-overlay');
   if (o) o.style.display = 'flex';
@@ -11818,6 +12024,7 @@ function fermerDecoupage() {
   cacherBulleDecoupe();
   decoupeBrouillon = null;
   decoupeSel = null;
+  decoupeAide = null;
 }
 
 // La charnière k se place entre l'unité k et l'unité k + 1 : on garde les deux listes alignées.
@@ -11837,12 +12044,16 @@ function renderDecoupage() {
   const idx = evts.findIndex(e => String(e.id) === String(b.evtId));
   const evt = evts[idx];
   const n = idx + 1;
+  // Un CD découpé dont il ne reste aucune partie redevient un CD entier.
+  if (normaliserGroupes(b)) { trierDecoupage(b, evt); alignerCharnieres(); }
+  const nums = numerosCD(b.unites);
+  const remplis = b.unites.filter(Boolean).length;
   const seq = b.mode === 'sequence';
   const aucun = b.mode === 'aucun';
 
-  // Les passages déjà pris, surlignés dans le déclaratif.
+  // Les passages déjà pris sont soulignés dans le déclaratif — pas surlignés : un fond coloré ressemble à une sélection.
   const marques = {};
-  b.unites.forEach((u, k) => { if (u) (marques[u.champ] = marques[u.champ] || []).push({c: u, cls: 'dec-m-cd', et: n + '.' + (k + 1)}); });
+  b.unites.forEach((u, k) => { if (u) (marques[u.champ] = marques[u.champ] || []).push({c: u, cls: 'dec-m-cd', et: n + '.' + nums[k]}); });
   if (seq) b.charnieres.forEach((c, k) => { if (c) (marques[c.champ] = marques[c.champ] || []).push({c, cls: 'dec-m-entre', et: 'entre'}); });
   const surligner = (champ, texte) => {
     const ms = (marques[champ] || []).map(m => {
@@ -11858,22 +12069,35 @@ function renderDecoupage() {
     return html + esc(texte.slice(pos));
   };
   const champs = champsCitables(evt);
-  // « Ce qui s'est passé » d'abord : c'est là qu'on repère les CD. Le reste se cite aussi.
-  const PRINCIPAUX = ['comportement', 'resumes.comportement', 'gradation'];
+  // « Ce qui s'est passé » d'abord : c'est là qu'on repère les CD. Le reste se cite aussi, mais reste replié tant qu'on ne le demande pas.
   const blocChamp = (c, cls) =>
     '<div class="dec-champ ' + cls + '"><div class="dec-champ-titre">' + esc(c.titre) + '</div>' +
     '<div class="dec-texte" data-champ="' + esc(c.champ) + '">' + surligner(c.champ, c.texte) + '</div></div>';
-  const autres = champs.filter(c => PRINCIPAUX.indexOf(c.champ) === -1);
-  const declaratif = champs.filter(c => PRINCIPAUX.indexOf(c.champ) !== -1).map(c => blocChamp(c, 'dec-champ-principal')).join('') +
+  const autres = champs.filter(c => groupeChampDec(c.champ) !== null);
+  const PARTIES = [['avant', 'le juste avant', 'Le juste avant'], ['interv', 'l\'intervention', 'L\'intervention'], ['apres', 'l\'après', 'L\'après']]
+    .filter(p => autres.some(c => groupeChampDec(c.champ) === p[0]));
+  const liste = PARTIES.map(p => p[1]);
+  const phrase = liste.length > 1 ? liste.slice(0, -1).join(', ') + ' ou ' + liste[liste.length - 1] : (liste[0] || '');
+  const declaratif = champs.filter(c => groupeChampDec(c.champ) === null).map(c => blocChamp(c, 'dec-champ-principal')).join('') +
     (autres.length
-      ? '<div class="dec-ailleurs-titre">Ailleurs dans le déclaratif</div>' +
-        '<div class="dec-ailleurs-aide">On peut aussi y sélectionner un passage — notamment ce qui s\'est passé entre deux CD.</div>' +
-        autres.map(c => blocChamp(c, 'dec-champ-second')).join('')
+      ? '<div class="dec-ailleurs">' +
+        '<div class="dec-ailleurs-titre">Ailleurs dans le déclaratif</div>' +
+        '<div class="dec-ailleurs-aide">Un CD peut aussi se cacher ailleurs que dans « Ce qui s\'est passé ». Voulez-vous voir ' + phrase +
+          ' pour y repérer éventuellement un CD, ou ce qui s\'est passé entre deux CD ?</div>' +
+        '<div class="dec-ailleurs-choix">' + PARTIES.map(p => {
+          const ouvert = decoupeOuverts.has(p[0]);
+          return '<button type="button" class="dec-ailleurs-bt' + (ouvert ? ' on' : '') + '" data-g="' + p[0] + '" data-lib="' + esc(p[2]) + '" aria-expanded="' + ouvert + '" onclick="basculerAilleurs(\'' + p[0] + '\')">' +
+            (ouvert ? '▾ ' : '▸ ') + esc(p[2]) + '</button>';
+        }).join('') + '</div>' +
+        PARTIES.map(p => '<div class="dec-ailleurs-groupe' + (decoupeOuverts.has(p[0]) ? '' : ' ferme') + '" data-g="' + p[0] + '">' +
+          autres.filter(c => groupeChampDec(c.champ) === p[0]).map(c => blocChamp(c, 'dec-champ-second')).join('') + '</div>').join('') +
+        '</div>'
       : '');
   const selOk = !!(decoupeSel && !decoupeSel.erreur);
 
   const citation = (c, role, k) => {
     const perdu = c && !citationTrouvee(evt, c);
+    const r = String(nums[k] || '').split('.')[0];
     return '<div class="dec-cit' + (c ? '' : ' vide') + (perdu ? ' perdue' : '') + '">' +
       (c ? '« ' + esc(c.texte) + ' »' + (perdu ? '<div class="dec-perdue">Ce passage n\'est plus dans le texte de l\'évènement : à revoir.</div>' : '')
          : '<span>Vide : sélectionnez un passage à gauche, puis « Prendre la sélection ».</span>') +
@@ -11881,15 +12105,30 @@ function renderDecoupage() {
       '<div class="dec-cit-actions">' +
         '<button type="button" class="btn btn-secondary btn-sm dec-prendre"' + (selOk ? '' : ' disabled title="Sélectionnez d\'abord un passage dans le déclaratif, à gauche"') + ' onclick="prendreSelectionDecoupe(\'' + role + '\',' + k + ')">⤵ Prendre la sélection</button>' +
         (c ? '<button type="button" class="dec-vider" onclick="viderCaseDecoupe(\'' + role + '\',' + k + ')" title="Vider cette case">Vider</button>' : '') +
+        (role === 'u' && c && !c.groupe ? '<button type="button" class="dec-vider" onclick="aiderDecouperCD(' + k + ')" title="Repérer plusieurs CD dans ce passage — les autres CD gardent leur numéro">✂ Découper ce CD</button>' : '') +
+        (role === 'u' && c && c.groupe ? '<button type="button" class="dec-vider" onclick="retablirCDEntier(\'' + c.groupe + '\')" title="Remettre le CD d\'origine, en un seul passage">↩ Rétablir CD ' + n + '.' + r + ' entier</button>' : '') +
         (role === 'u' && b.unites.length > 1 ? '<button type="button" class="dec-vider" onclick="retirerUniteDecoupe(' + k + ')" title="Retirer ce CD">✕ Retirer ce CD</button>' : '') +
-      '</div>';
+      '</div>' +
+      (role === 'u' && c && decoupeAide === c.id
+        ? '<div class="dec-aide-coupe">Sélectionnez, à gauche, la première partie de ce passage : elle deviendra CD ' + n + '.' + r + '.1. Puis la suivante, CD ' + n + '.' + r + '.2…</div>' : '');
   };
   let cases = '';
   b.unites.forEach((u, k) => {
-    cases += '<div class="dec-case dec-case-cd"><div class="dec-case-titre">CD ' + n + '.' + (k + 1) + '</div>' + citation(u, 'u', k) + '</div>';
+    const num = nums[k] || String(k + 1);
+    const sous = !!(u && u.groupe);
+    const deplacer = (u && remplis > 1)
+      ? '<span class="dec-deplacer">' +
+        '<button type="button" title="Monter ce CD" aria-label="Monter ce CD" onclick="deplacerCD(' + k + ',' + (k - 1) + ')"' + (k === 0 ? ' disabled' : '') + '>▲</button>' +
+        '<button type="button" title="Descendre ce CD" aria-label="Descendre ce CD" onclick="deplacerCD(' + k + ',' + (k + 1) + ')"' + (k >= remplis - 1 ? ' disabled' : '') + '>▼</button></span>' : '';
+    const glisse = (u && remplis > 1)
+      ? ' draggable="true" ondragstart="glisserCD(event,' + k + ')" ondragover="survolCD(event,' + k + ')" ondragleave="quitterCD(event)" ondrop="deposerCD(event,' + k + ')" ondragend="finGlisserCD()"' : '';
+    cases += '<div class="dec-case dec-case-cd' + (sous ? ' dec-case-sous' : '') + '"' + glisse + '>' +
+      '<div class="dec-case-titre">' + (glisse ? '<span class="dec-poignee" title="Glisser pour changer l\'ordre" aria-hidden="true">⠿</span>' : '') +
+        'CD ' + n + '.' + num + (sous ? ' <span class="dec-case-aide">— partie de CD ' + n + '.' + num.split('.')[0] + '</span>' : '') + deplacer + '</div>' +
+      citation(u, 'u', k) + '</div>';
     if (seq && k < b.unites.length - 1) {
       const c = b.charnieres[k];
-      cases += '<div class="dec-case dec-case-entre"><div class="dec-case-titre">Entre CD ' + n + '.' + (k + 1) + ' et CD ' + n + '.' + (k + 2) +
+      cases += '<div class="dec-case dec-case-entre"><div class="dec-case-titre">Entre CD ' + n + '.' + num + ' et CD ' + n + '.' + (nums[k + 1] || (k + 2)) +
         ' <span class="dec-case-aide">facultatif — conséquence du premier, antécédent du suivant</span></div>' +
         citation(c, 'c', k) +
         (c ? '<label class="dec-iv"><input type="checkbox"' + (c.intervention !== false ? ' checked' : '') +
@@ -11899,6 +12138,10 @@ function renderDecoupage() {
         '</div>';
     }
   });
+  const aideOrdre = (!aucun && remplis > 1)
+    ? '<div class="dec-ordre">' + (b.ordreManuel
+        ? 'Ordre choisi à la main. <button type="button" class="dec-vider" onclick="remettreOrdreTexte()">Remettre dans l\'ordre du texte</button>'
+        : 'Les CD se rangent dans l\'ordre du texte. Pour changer l\'ordre, glissez une carte par sa poignée ⠿ (ou utilisez ▲ ▼).') + '</div>' : '';
 
   const dejaDecoupe = !!((state.m3.decoupages || {})[b.evtId]);
   el.innerHTML =
@@ -11907,7 +12150,7 @@ function renderDecoupage() {
     '<ol class="dec-etapes">' +
       '<li><b>Dites</b>, à droite, si les CD sont l\'un après l\'autre, en même temps, ou s\'il n\'y en a aucun.</li>' +
       '<li><b>Sélectionnez</b> à la souris un passage du déclaratif, à gauche.</li>' +
-      '<li><b>Rangez-le</b> d\'un clic dans la bulle qui apparaît sous la sélection (ou avec « Prendre la sélection », à droite). Les CD se rangent d\'eux-mêmes dans l\'ordre du texte.</li>' +
+      '<li><b>Rangez-le</b> d\'un clic dans la bulle qui apparaît sous la sélection (ou avec « Prendre la sélection », à droite). Pour découper un CD déjà pris, sélectionnez-en une partie : ses morceaux s\'appelleront CD ' + n + '.1.1, ' + n + '.1.2…, les autres CD gardent leur numéro.</li>' +
     '</ol>' +
     '<div class="dec-grille">' +
       '<div class="dec-col">' +
@@ -11924,7 +12167,7 @@ function renderDecoupage() {
         '</div>' +
         (aucun
           ? '<p class="dec-aucun">Le déclaratif reste tel quel et consultable. Cet évènement ne compte dans aucune séquence ; ses autres volets restent classables.</p>'
-          : cases + '<button type="button" class="btn btn-secondary btn-sm dec-ajout" onclick="ajouterUniteDecoupe()">+ Ajouter un CD</button>') +
+          : aideOrdre + cases + '<button type="button" class="btn btn-secondary btn-sm dec-ajout" onclick="ajouterUniteDecoupe()">+ Ajouter un CD</button>') +
       '</div>' +
     '</div>' +
     '<div class="dec-pied">' +
@@ -11970,20 +12213,40 @@ function majBulleDecoupe(range) {
   if (!bulle || !b || b.mode === 'aucun' || !decoupeSel || decoupeSel.erreur) { cacherBulleDecoupe(); return; }
   const evts = state.m2.evenements || [];
   const n = evts.findIndex(e => String(e.id) === String(b.evtId)) + 1;
+  const nums = numerosCD(b.unites);
   const seq = b.mode === 'sequence';
   const bouton = (lib, action, titre, plein) =>
     '<button type="button" class="dec-bulle-bt' + (plein ? ' plein' : '') + '" title="' + esc(titre) + '" onclick="' + action + '">' + lib + '</button>';
-  let html = '<span class="dec-bulle-lib">Ranger ce passage :</span>';
-  b.unites.forEach((u, k) => {
-    html += bouton('→ CD ' + n + '.' + (k + 1), 'bullePrendre(\'u\',' + k + ')',
-      u ? 'Remplacer le passage de CD ' + n + '.' + (k + 1) : 'Mettre ce passage dans CD ' + n + '.' + (k + 1), !!u);
-    if (seq && k < b.unites.length - 1) {
-      const c = b.charnieres[k];
-      html += bouton('→ entre ' + n + '.' + (k + 1) + ' et ' + n + '.' + (k + 2), 'bullePrendre(\'c\',' + k + ')',
-        'Ce qui s\'est passé entre les deux CD' + (c ? ' (remplace le passage actuel)' : ''), !!c);
-    }
-  });
-  html += bouton('+ nouveau CD', 'bulleNouveauCD()', 'Ajouter un CD avec ce passage', false);
+  const ctx = contexteSelectionDecoupe();
+  let html;
+  if (ctx && ctx.type === 'unite') {
+    // La sélection est une partie d'un CD déjà pris : on propose de le découper.
+    const num = n + '.' + nums[ctx.k];
+    html = '<span class="dec-bulle-lib">Ce passage est dans CD ' + num + ' :</span>' +
+      bouton('✂ Découper CD ' + num, 'bulleDecouper(' + ctx.k + ')', 'Ce passage devient CD ' + num + '.1 ; les autres CD gardent leur numéro', true) +
+      bouton('→ Remplacer CD ' + num, 'bullePrendre(\'u\',' + ctx.k + ')', 'CD ' + num + ' ne citera plus que ce passage') +
+      bouton('+ Autre CD, à part', 'bulleNouveauCD()', 'Ajouter un CD avec ce passage, sans toucher à CD ' + num);
+  } else if (ctx && ctx.type === 'groupe') {
+    // La sélection est dans le passage d'un CD déjà découpé : une partie de plus, ou une partie remplacée.
+    const parties = b.unites.map((u, i) => ({u, i})).filter(x => x.u && x.u.groupe === ctx.g.id);
+    const r = String(nums[parties[0].i]).split('.')[0];
+    html = '<span class="dec-bulle-lib">Ce passage est dans CD ' + n + '.' + r + ' (découpé) :</span>' +
+      bouton('+ CD ' + n + '.' + r + '.' + (parties.length + 1), 'bulleSousCD(\'' + ctx.g.id + '\')', 'Une partie de plus dans CD ' + n + '.' + r, true) +
+      parties.map(x => bouton('→ Remplacer ' + n + '.' + nums[x.i], 'bullePrendre(\'u\',' + x.i + ')', 'Remplacer le passage de CD ' + n + '.' + nums[x.i])).join('') +
+      bouton('+ Autre CD, à part', 'bulleNouveauCD()', 'Ajouter un CD avec ce passage, sans toucher à CD ' + n + '.' + r);
+  } else {
+    html = '<span class="dec-bulle-lib">Ranger ce passage :</span>';
+    b.unites.forEach((u, k) => {
+      html += bouton('→ CD ' + n + '.' + nums[k], 'bullePrendre(\'u\',' + k + ')',
+        u ? 'Remplacer le passage de CD ' + n + '.' + nums[k] : 'Mettre ce passage dans CD ' + n + '.' + nums[k], !!u);
+      if (seq && k < b.unites.length - 1) {
+        const c = b.charnieres[k];
+        html += bouton('→ entre ' + n + '.' + nums[k] + ' et ' + n + '.' + (nums[k + 1] || (k + 2)), 'bullePrendre(\'c\',' + k + ')',
+          'Ce qui s\'est passé entre les deux CD' + (c ? ' (remplace le passage actuel)' : ''), !!c);
+      }
+    });
+    html += bouton('+ nouveau CD', 'bulleNouveauCD()', 'Ajouter un CD avec ce passage', false);
+  }
   bulle.innerHTML = html;
   bulle.hidden = false;
   const fenetre = bulle.parentElement;
@@ -12042,6 +12305,13 @@ function positionCitation(evt, c, ordre) {
 }
 function trierDecoupage(b, evt) {
   if (!b || !evt) return;
+  normaliserGroupes(b);
+  // Ordre choisi à la main (cartes glissées) : on ne le défait pas ; seules les cases vides vont à la fin.
+  if (b.ordreManuel) {
+    b.unites = b.unites.filter(Boolean).concat(b.unites.filter(u => !u));
+    alignerCharnieres();
+    return;
+  }
   const ordre = champsCitables(evt).map(c => c.champ);
   const pos = c => positionCitation(evt, c, ordre);
   // Les CD remplis, dans l'ordre du texte ; les cases vides restent à la fin.
@@ -12070,6 +12340,7 @@ function prendreSelectionDecoupe(role, k) {
   }
   const ancien = (role === 'u' ? b.unites : b.charnieres)[k];
   const c = {id: (ancien && ancien.id) || nouvelIdDecoupe(), champ: decoupeSel.champ, debut: decoupeSel.debut, texte: decoupeSel.texte};
+  if (role === 'u' && ancien && ancien.groupe) c.groupe = ancien.groupe;
   if (role === 'u') b.unites[k] = c;
   else {
     // Par défaut, ce qui se passe entre deux CD est une intervention de l'entourage ; on peut décocher.
@@ -12083,6 +12354,170 @@ function prendreSelectionDecoupe(role, k) {
   trierDecoupage(b, (state.m2.evenements || []).find(e => String(e.id) === String(b.evtId)));
   renderDecoupage();
 }
+/* Un CD découpé dont il ne reste aucune partie (parties vidées ou retirées) redevient un CD entier, à la fin
+   des CD remplis ; un renvoi vers un CD d'origine qui n'existe plus est effacé. Renvoie vrai si quelque chose a changé. */
+function normaliserGroupes(b) {
+  if (!b) return false;
+  let change = false;
+  const gs = b.groupes || [];
+  const vivants = new Set((b.unites || []).filter(u => u && u.groupe).map(u => u.groupe));
+  const gardes = [];
+  gs.forEach(g => {
+    if (vivants.has(g.id)) { gardes.push(g); return; }
+    const i = b.unites.findIndex(u => !u);
+    const u = {id: g.id, champ: g.champ, debut: g.debut, texte: g.texte};
+    if (i < 0) b.unites.push(u); else b.unites.splice(i, 0, u);
+    change = true;
+  });
+  if (gardes.length !== gs.length) { b.groupes = gardes; change = true; }
+  b.unites.forEach(u => { if (u && u.groupe && !gardes.some(g => g.id === u.groupe)) { delete u.groupe; change = true; } });
+  return change;
+}
+
+/* Où se trouve un passage cité dans le texte de son champ. */
+function bornesCitation(evt, c) {
+  if (!c || !c.texte) return null;
+  const t = texteChamp(evt, c.champ);
+  const d = t.substr(c.debut || 0, c.texte.length) === c.texte ? (c.debut || 0) : t.indexOf(c.texte);
+  return d < 0 ? null : {d, f: d + c.texte.length};
+}
+/* La sélection est-elle une partie d'un CD déjà pris ({type: 'unite', k}), ou du passage d'un CD déjà découpé
+   ({type: 'groupe', g}) ? Un passage identique à celui d'un CD n'en est pas une partie : il le remplace. */
+function contexteSelectionDecoupe() {
+  const b = decoupeBrouillon, s = decoupeSel;
+  if (!b || !s || s.erreur) return null;
+  const evt = (state.m2.evenements || []).find(e => String(e.id) === String(b.evtId));
+  if (!evt) return null;
+  const sd = s.debut, sf = s.debut + s.texte.length;
+  const dedans = c => {
+    if (!c || c.champ !== s.champ) return false;
+    const bo = bornesCitation(evt, c);
+    return !!bo && bo.d <= sd && sf <= bo.f && !(bo.d === sd && bo.f === sf);
+  };
+  const g = (b.groupes || []).find(dedans);
+  if (g) return {type: 'groupe', g};
+  const k = b.unites.findIndex(u => u && !u.groupe && dedans(u));
+  return k >= 0 ? {type: 'unite', k} : null;
+}
+
+// Fin d'une prise de passage : la sélection s'efface, les CD se rangent, la fenêtre se redessine.
+function terminerPriseDecoupe() {
+  const b = decoupeBrouillon;
+  decoupeSel = null;
+  const sl = window.getSelection();
+  if (sl) sl.removeAllRanges();
+  alignerCharnieres();
+  trierDecoupage(b, (state.m2.evenements || []).find(e => String(e.id) === String(b.evtId)));
+  renderDecoupage();
+}
+/* Découper CD n.k : le passage sélectionné devient CD n.k.1 ; le passage d'origine est gardé (groupes) pour
+   y prendre les parties suivantes ; les autres CD ne changent pas de numéro. */
+function decouperUnite(k) {
+  const b = decoupeBrouillon, s = decoupeSel;
+  if (!b || !s || s.erreur || !b.unites[k]) return;
+  const u = b.unites[k];
+  if (!b.groupes) b.groupes = [];
+  const g = {id: nouvelIdDecoupe(), champ: u.champ, debut: u.debut, texte: u.texte};
+  b.groupes.push(g);
+  b.unites[k] = {id: nouvelIdDecoupe(), champ: s.champ, debut: s.debut, texte: s.texte, groupe: g.id};
+  decoupeAide = null;
+  terminerPriseDecoupe();
+}
+function bulleDecouper(k) {
+  cacherBulleDecoupe();
+  decouperUnite(k);
+}
+// Une partie de plus dans un CD déjà découpé : elle se range juste après la dernière.
+function ajouterSousCD(gid) {
+  const b = decoupeBrouillon, s = decoupeSel;
+  if (!b || !s || s.erreur) return;
+  let derniere = -1;
+  b.unites.forEach((u, i) => { if (u && u.groupe === gid) derniere = i; });
+  if (derniere < 0) return;
+  b.unites.splice(derniere + 1, 0, {id: nouvelIdDecoupe(), champ: s.champ, debut: s.debut, texte: s.texte, groupe: gid});
+  terminerPriseDecoupe();
+}
+function bulleSousCD(gid) {
+  cacherBulleDecoupe();
+  ajouterSousCD(gid);
+}
+// « ✂ Découper ce CD » sur la carte : dit comment faire.
+function aiderDecouperCD(k) {
+  const u = decoupeBrouillon && decoupeBrouillon.unites[k];
+  if (!u) return;
+  decoupeAide = decoupeAide === u.id ? null : u.id;
+  renderDecoupage();
+}
+// Remet le CD d'origine, en un seul passage, à la place de ses parties.
+function retablirCDEntier(gid) {
+  const b = decoupeBrouillon;
+  const g = b && (b.groupes || []).find(x => x.id === gid);
+  if (!g) return;
+  let premiere = -1;
+  for (let i = b.unites.length - 1; i >= 0; i--) {
+    if (b.unites[i] && b.unites[i].groupe === gid) {
+      premiere = i;
+      b.unites.splice(i, 1);
+      b.charnieres.splice(Math.min(i, b.charnieres.length - 1), 1);
+    }
+  }
+  b.groupes = b.groupes.filter(x => x.id !== gid);
+  b.unites.splice(Math.max(premiere, 0), 0, {id: g.id, champ: g.champ, debut: g.debut, texte: g.texte});
+  terminerPriseDecoupe();
+}
+
+/* Ordre des CD à la main (Arthur, 08/10/2026) : ils se rangent d'eux-mêmes dans l'ordre du texte, mais le
+   déclarant ne raconte pas toujours dans l'ordre où les choses se sont passées. Une carte glissée (ou ▲ ▼) prend
+   la place de celle où on la lâche ; l'ordre choisi est gardé (ordreManuel) tant qu'on ne le remet pas dans l'ordre
+   du texte. Les passages « entre deux CD » restent à leur place. */
+function deplacerCD(de, vers) {
+  const b = decoupeBrouillon;
+  if (!b) return;
+  const n = b.unites.filter(Boolean).length;
+  if (de < 0 || de >= n || vers < 0 || vers >= n || de === vers) return;
+  const u = b.unites.splice(de, 1)[0];
+  b.unites.splice(vers, 0, u);
+  b.ordreManuel = true;
+  alignerCharnieres();
+  renderDecoupage();
+  if (b.mode === 'sequence' && b.charnieres.some(Boolean)) showToast('Les passages « entre deux CD » sont restés à leur place : vérifiez-les.');
+}
+function remettreOrdreTexte() {
+  const b = decoupeBrouillon;
+  if (!b) return;
+  b.ordreManuel = false;
+  trierDecoupage(b, (state.m2.evenements || []).find(e => String(e.id) === String(b.evtId)));
+  renderDecoupage();
+}
+function glisserCD(ev, k) {
+  decoupeGlisse = k;
+  if (ev.dataTransfer) {
+    ev.dataTransfer.effectAllowed = 'move';
+    try { ev.dataTransfer.setData('text/plain', 'CD ' + (k + 1)); } catch (e) { /* certains navigateurs */ }
+  }
+  if (ev.currentTarget) ev.currentTarget.classList.add('glisse');
+}
+function survolCD(ev, k) {
+  if (decoupeGlisse === null || decoupeGlisse === k) return;
+  ev.preventDefault();
+  if (ev.dataTransfer) ev.dataTransfer.dropEffect = 'move';
+  if (ev.currentTarget) ev.currentTarget.classList.add('depot');
+}
+function quitterCD(ev) {
+  const c = ev.currentTarget;
+  if (c && !(ev.relatedTarget && c.contains(ev.relatedTarget))) c.classList.remove('depot');
+}
+function finGlisserCD() {
+  decoupeGlisse = null;
+  document.querySelectorAll('#decoupe-overlay .glisse, #decoupe-overlay .depot').forEach(e => e.classList.remove('glisse', 'depot'));
+}
+function deposerCD(ev, k) {
+  ev.preventDefault();
+  const de = decoupeGlisse;
+  finGlisserCD();
+  if (de !== null && de !== k) deplacerCD(de, k);
+}
+
 function viderCaseDecoupe(role, k) {
   (role === 'u' ? decoupeBrouillon.unites : decoupeBrouillon.charnieres)[k] = null;
   renderDecoupage();
@@ -12169,6 +12604,9 @@ function enregistrerDecoupage() {
   const charnieres = b.mode === 'sequence'
     ? garder.slice(0, -1).map((k, j) => garder[j + 1] === k + 1 ? b.charnieres[k] : null) : [];
   const D = {mode: b.mode === 'simultane' ? 'simultane' : 'sequence', unites, charnieres};
+  const groupes = (b.groupes || []).filter(g => unites.some(u => u.groupe === g.id));
+  if (groupes.length) D.groupes = groupes;
+  if (b.ordreManuel) D.ordreManuel = true;
   if (!appliquerDecoupage(evt, D)) return;
   fermerDecoupage();
   renderM3();
@@ -12227,6 +12665,7 @@ function renderM3() {
   renderM3Tabs();
   renderM3Sous(state.m3.sous);
   renderDoubleCodage();
+  ajusterColonneCats();
 }
 
 function changerSous(sousId) {
@@ -12655,18 +13094,27 @@ function fermerPaletteCat() {
 /* Plus haute que l'écran, la colonne s'accroche par le bas (top négatif) : elle
    défile avec la page jusqu'à montrer sa fin, puis s'arrête. Recalculée dès que sa
    hauteur change (catégorie ajoutée, élément rangé) ou que la fenêtre change. */
+/* Hauteur de la barre des volets quand elle est fixe : la colonne des catégories s'accroche dessous. */
+function syncOngletsHeight() {
+  const t = document.getElementById('m3-tabs');
+  const h = (t && window.innerWidth >= 721 && t.offsetParent !== null) ? t.offsetHeight : 0;
+  document.documentElement.style.setProperty('--onglets-h', h + 'px');
+}
 function ajusterColonneCats() {
+  syncOngletsHeight();
   const col = document.querySelector('.m3-col-cats');
   if (!col) return;
   if (window.innerWidth < 721) { col.style.top = ''; return; }
   const racine = getComputedStyle(document.documentElement);
-  const haut = (parseFloat(racine.getPropertyValue('--header-h')) || 60) + (parseFloat(racine.getPropertyValue('--subbar-h')) || 0) + 12;
+  const haut = (parseFloat(racine.getPropertyValue('--header-h')) || 60) + (parseFloat(racine.getPropertyValue('--subbar-h')) || 0) + (parseFloat(racine.getPropertyValue('--onglets-h')) || 0) + 12;
   const dispo = window.innerHeight - haut - 12;
   col.style.top = (col.offsetHeight <= dispo ? haut : window.innerHeight - col.offsetHeight - 12) + 'px';
 }
 if (typeof ResizeObserver === 'function') {
   const colCats = document.querySelector('.m3-col-cats');
   if (colCats) new ResizeObserver(ajusterColonneCats).observe(colCats);
+  const ongletsM3 = document.getElementById('m3-tabs');
+  if (ongletsM3) new ResizeObserver(ajusterColonneCats).observe(ongletsM3);
 }
 window.addEventListener('resize', ajusterColonneCats);
 
@@ -12727,6 +13175,21 @@ function supprimerCat(sousId, catId) {
   renderM3Tabs();
 }
 
+/* « 0/8 » se lisait « 8 comportements saisis » : la bulle dit ce que c'est — 0 classé sur 8 déclarés (Arthur, 08/10/2026). */
+const NOMS_COMPTE_VOLET = {
+  cp: {un: 'comportement', plusieurs: 'comportements', f: false},
+  contexte: {un: 'élément de contexte', plusieurs: 'éléments de contexte', f: false},
+  antecedents: {un: 'antécédent', plusieurs: 'antécédents', f: false},
+  consequences: {un: 'conséquence', plusieurs: 'conséquences', f: true},
+  interventions: {un: 'intervention', plusieurs: 'interventions', f: true}
+};
+function titreCompteVolet(sousId, classes, declares) {
+  const nom = NOMS_COMPTE_VOLET[sousId] || {un: 'élément', plusieurs: 'éléments', f: false};
+  const e = nom.f ? 'e' : '';
+  const accord = (n, mot) => mot + (n > 1 ? 's' : '');
+  return classes + ' ' + (classes > 1 ? nom.plusieurs : nom.un) + ' ' + accord(classes, 'classé' + e) + ' sur ' + declares + ' ' + accord(declares, 'déclaré' + e);
+}
+
 function renderM3Tabs() {
   ensureM3();
   const evts = state.m2.evenements || [];
@@ -12743,7 +13206,7 @@ function renderM3Tabs() {
     const nAssignes = items.filter(it => catDunItem(s.id, it.id).length > 0).length;
     const isOn = state.m3.sous === s.id;
     return `<button class="m3-tab${isOn ? ' on' : ''}" data-volet="${esc(s.couleur || '')}" onclick="changerSous('${s.id}')" title="${esc(LEGENDE_VOLETS[s.couleur] || '')}">
-      <span class="m3-tab-ligne">${s.icon} ${s.label} <span class="m3-tab-count">${nAssignes}/${items.length}</span></span>
+      <span class="m3-tab-ligne">${s.icon} ${s.label} <span class="m3-tab-count" title="${esc(titreCompteVolet(s.id, nAssignes, items.length))}">${nAssignes}/${items.length}</span></span>
       <span class="m3-tab-bulle" aria-hidden="true"></span>
     </button>`;
   }).join('');
@@ -18042,7 +18505,7 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
-const ACTIVITE_CODE = {"jusqua":"2026-10-03","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":3653,"retrait":901,"depots":40}]};
+const ACTIVITE_CODE = {"jusqua":"2026-10-05","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":3820,"retrait":915,"depots":41}]};
 
 function svgActiviteCode() {
   const mois = ACTIVITE_CODE.mois || [];
@@ -18081,6 +18544,24 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-08',
+    version: 'v2026.10.08',
+    titre: "Découper : plus clair, CD numérotés n.k.1, ordre à la souris ; barre des volets fixe",
+    corps: `
+<p><b>Découper — plus clair</b> (Arthur, en plein codage vierge, et Émilie). Quatre corrections :</p>
+<ul>
+<li><b>La bulle « Ranger ce passage »</b> restait affichée en permanence : elle n'apparaît plus que lorsqu'un texte est sélectionné.</li>
+<li><b>Le déclaratif n'est plus surligné en bleu</b> comme s'il était sélectionné : les passages déjà pris sont soulignés (avec leur numéro), et la sélection en cours est en jaune, bien visible.</li>
+<li><b>« Ailleurs dans le déclaratif »</b> est replié, avec un petit message : voulez-vous voir le juste avant, l'intervention ou l'après, pour y repérer éventuellement un CD ? Chaque partie se déplie d'un clic ; une partie qui contient déjà un passage pris reste dépliée.</li>
+<li><b>Découper un CD</b> : on sélectionne une partie d'un CD déjà pris, la bulle propose « ✂ Découper CD 1.1 », et ses morceaux s'appellent CD 1.1.1, CD 1.1.2… Les autres CD gardent leur numéro (et leur classement). Un bouton « ↩ Rétablir CD 1.1 entier » remet le passage d'origine. Avant, la partie sélectionnée devenait un CD de plus (1.2) à côté du CD entier, et les suivants glissaient d'un cran.</li>
+</ul>
+<p><b>Ordre des CD à la main</b> : les CD se rangent toujours d'eux-mêmes dans l'ordre du texte, mais on peut maintenant glisser une carte avec la souris (poignée ⠿, ou boutons ▲ ▼) pour la remettre dans le bon ordre, quand le déclarant ne raconte pas dans l'ordre des faits. L'ordre choisi est gardé, aussi dans la colonne de gauche d'Organiser ; « Remettre dans l'ordre du texte » le rend. Les passages « entre deux CD » restent à leur place : la fenêtre le signale pour qu'on les vérifie.</p>
+<p><b>Organiser</b> : la barre des volets (Comportements, Contexte…) reste en haut de l'écran quand on fait défiler, sur ordinateur. La colonne des catégories s'accroche juste en dessous.</p>
+<p><b>Arrivée dans Organiser</b> : on arrive toujours sur le volet Comportements, au lieu du volet où l'on s'était arrêté la fois d'avant (Conséquences, par exemple). Et le compteur « 0/8 » des volets porte une bulle : « 0 comportement classé sur 8 déclarés » — il se lisait comme 8 comportements saisis.</p>
+`
+  },
 
   {
     date: '2026-10-05',
@@ -19085,10 +19566,10 @@ const LEXIQUE_BAF = {
   "antécédent": "Ce qui s'est passé juste avant le comportement, dans les secondes ou minutes précédentes. Il y en a souvent plusieurs. Le déclarant peut signaler celui qui lui semble avoir déclenché — c'est un avis, pas un verdict.",
   "conséquence": "Ce qui change pour la personne après le comportement : ce qu'elle obtient, ce qu'elle évite. C'est souvent là que la fonction du comportement se lit. À ne pas confondre avec l'intervention, qui est ce que l'entourage a fait.",
   "intervention": "Ce que l'entourage a fait en réponse au comportement, et avec quel effet sur la tension. Une intervention peut apaiser, ne rien changer, ou produire à son tour un nouveau comportement-défi.",
-  "découpage": "Dans Organiser, le geste par lequel l'analyste repère plusieurs CD dans un même évènement — en même temps, ou l'un après l'autre. Chaque CD est une citation exacte du déclaratif, qui n'est jamais réécrit. C'est aussi là qu'on peut juger qu'une scène ne contient que des comportements, et aucun CD : rien n'y est alors compté. Le découpage fait partie du codage : chaque codeur fait le sien, et la synthèse retient l'un des deux.",
+  "découpage": "Dans Organiser, le geste par lequel l'analyste repère plusieurs CD dans un même évènement — en même temps, ou l'un après l'autre. Chaque CD est une citation exacte du déclaratif, qui n'est jamais réécrit. C'est aussi là qu'on peut juger qu'une scène ne contient que des comportements, et aucun CD : rien n'y est alors compté. Un CD déjà pris peut être découpé à son tour (CD 3.1.1, CD 3.1.2…), et les CD se glissent à la souris pour les remettre dans l'ordre des faits. Le découpage fait partie du codage : chaque codeur fait le sien, et la synthèse retient l'un des deux.",
   "CD à la suite": "Un comportement-défi qui en suit un autre dans le même évènement : des cris, puis l'éducatrice demande de se calmer, puis des coups contre le mur. Ce qui s'est passé entre les deux est la conséquence du premier CD et l'antécédent du suivant.",
   "séquence": "Une suite antécédent → CD → conséquence. Un évènement en compte une ; quand ses CD se suivent, une par CD : ce qui s'est passé entre deux CD est la conséquence de l'un et l'antécédent du suivant. Les croisements d'Interpréter se comptent par séquence.",
-  "crise": "Les comportements-défis repérés dans un même évènement. Ils sont numérotés CD 3.1, CD 3.2… : 3 pour le troisième évènement dans l'ordre chronologique, puis le rang du CD dans l'évènement.",
+  "crise": "Les comportements-défis repérés dans un même évènement. Ils sont numérotés CD 3.1, CD 3.2… : 3 pour le troisième évènement dans l'ordre chronologique, puis le rang du CD dans l'évènement. Un CD que l'on découpe en plusieurs devient CD 3.1.1, CD 3.1.2… et les autres gardent leur numéro.",
   "pattern": "Une séquence qui semble se répéter, composée à partir des catégories créées dans Organiser. Ce n'est pas une certitude : c'est une hypothèse de lecture, à discuter.",
   "gradation": "La façon dont la tension monte chez la personne : un signe discret d'abord, puis ça s'intensifie. Repérer la gradation permet d'intervenir avant le pic.",
   "indice de confiance": "Dans la synthèse, un indicateur de la robustesse du recueil — volume, pluralité des regards, durée, complétude, part d'observation directe. À ne pas confondre avec l'ICAF, qui évalue l'analyse fonctionnelle entière.",
