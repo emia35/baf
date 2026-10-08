@@ -10118,6 +10118,60 @@ const _CONTROLES = [
     return _bancEgal('Grisés sans sélection | champs de saisie | allumés avec', 'true|0|true', [grises, saisie, allumes].join('|'));
   }},
 
+  {nom:'Découper : la bulle ne s\'ouvre qu\'une fois la sélection terminée, pas pendant', test: () => {
+    const evt = (state.m2.evenements || []).find(e => e.comportement && e.comportement.length > 12);
+    if (!evt || !document.getElementById('decoupe-overlay')) return _bancEgal('Sans évènement', true, true);
+    const sauveD = state.m3.decoupages ? JSON.parse(JSON.stringify(state.m3.decoupages)) : null;
+    ensureM3(); if (state.m3.decoupages) delete state.m3.decoupages[evt.id];
+    ouvrirDecoupage(String(evt.id));
+    const s = getSelection();
+    let obtenu = 'sans texte';
+    try {
+      const bloc = document.querySelector('#decoupe-overlay .dec-texte[data-champ="comportement"]');
+      const noeud = bloc ? document.createTreeWalker(bloc, NodeFilter.SHOW_TEXT).nextNode() : null;
+      if (noeud && noeud.nodeType === 3) {
+        const bulle = document.getElementById('decoupe-bulle');
+        const ouverte = () => getComputedStyle(bulle).display !== 'none';
+        const r = document.createRange(); r.setStart(noeud, 0); r.setEnd(noeud, 6);
+        derniereSelectionLue = null;
+        // 1. Le bouton est enfoncé dans le texte : on sélectionne, rien ne s'ouvre
+        bloc.dispatchEvent(new MouseEvent('mousedown', {bubbles: true}));
+        s.removeAllRanges(); s.addRange(r);
+        const d1 = surChangementSelection();
+        const pendant = ouverte();
+        // 2. Il est relâché : la bulle s'ouvre
+        document.dispatchEvent(new MouseEvent('mouseup', {bubbles: true}));
+        const apres = ouverte();
+        // 3. Le bouton n'est plus enfoncé mais le relâchement s'est perdu (hors de la fenêtre) : on ne reste pas bloqué
+        bloc.dispatchEvent(new MouseEvent('mousedown', {bubbles: true}));
+        const bloque = selectionEnCours, effacee = !ouverte();
+        document.dispatchEvent(new MouseEvent('mousemove', {buttons: 0}));
+        const libere = !selectionEnCours;
+        // 4. Au clavier ou au doigt, rien n'est enfoncé : la bulle attend que la sélection se stabilise
+        cacherBulleDecoupe(); derniereSelectionLue = null;
+        s.removeAllRanges(); s.addRange(r);
+        const d4 = surChangementSelection();
+        const tot = ouverte();
+        clearTimeout(minuteurSelection);
+        lireSelectionsDecoupe();
+        const tard = ouverte();
+        // 5. Une sélection déjà lue ne reconstruit pas la bulle sous le pointeur ; une sélection qui disparaît l'efface
+        bulle.querySelector('.dec-bulle-bt').dataset.test = '1';
+        lireSelectionsDecoupe();
+        const intacte = (bulle.querySelector('.dec-bulle-bt') || {dataset: {}}).dataset.test === '1';
+        s.removeAllRanges();
+        const d5 = surChangementSelection();
+        const fin = !ouverte();
+        obtenu = [d1, pendant, apres, bloque, effacee, libere, d4, tot, tard, intacte, d5, fin].join('|');
+      }
+    } finally {
+      clearTimeout(minuteurSelection); selectionEnCours = false; derniereSelectionLue = null;
+      s.removeAllRanges(); fermerDecoupage();
+      if (sauveD) state.m3.decoupages = sauveD; else delete state.m3.decoupages;
+    }
+    return _bancEgal('pendant : attend | bulle fermée | relâchement : ouverte | clic suivant : bloqué, bulle effacée | souris sans bouton : libéré | clavier : planifié | pas encore ouverte | stable : ouverte | relue sans changement : intacte | disparue : vide | bulle effacée',
+      obtenu === 'sans texte' ? 'sans texte' : 'attend|false|true|true|true|true|planifie|false|true|true|vide|true', obtenu);
+  }},
   {nom:'Découper : la bulle de sélection range le passage d\'un clic', test: () => {
     const evt = (state.m2.evenements || []).find(e => e.comportement && e.comportement.length > 12);
     if (!evt || !document.getElementById('decoupe-overlay')) return _bancEgal('Sans évènement', true, true);
@@ -12896,7 +12950,7 @@ function renderDecoupage() {
   majSelectionDecoupe();
 }
 
-/* La sélection est relevée à chaque changement : un clic sur un bouton peut
+/* La sélection est relevée dès qu'elle est terminée (voir surChangementSelection) : un clic sur un bouton peut
    l'effacer avant que le bouton ne la lise. */
 function lireSelectionDecoupe() {
   const o = document.getElementById('decoupe-overlay');
@@ -12992,7 +13046,6 @@ function bulleNouveauCD() {
   cacherBulleDecoupe();
   prendreSelectionDecoupe('u', k);
 }
-document.addEventListener('selectionchange', lireSelectionDecoupe);
 
 function majSelectionDecoupe() {
   const el = document.getElementById('decoupe-selection');
@@ -13426,7 +13479,7 @@ function cacherBulleVolet() {
   const bulle = document.getElementById('decoupe-volet-bulle');
   if (bulle) bulle.hidden = true;
 }
-/* La sélection est relevée à chaque changement, comme pour les CD ; la bulle se place sous le passage. */
+/* La sélection est relevée dès qu'elle est terminée, comme pour les CD ; la bulle se place sous le passage. */
 function lireSelectionDecoupeVolet() {
   const o = document.getElementById('decoupe-volet-overlay');
   if (!o || o.style.display === 'none' || !decoupeVolet) return;
@@ -13488,7 +13541,56 @@ function majBulleVolet(range) {
   bulle.style.left = gauche + 'px';
   bulle.style.top = (rs.bottom - rf.top + fenetre.scrollTop + 8) + 'px';
 }
-document.addEventListener('selectionchange', lireSelectionDecoupeVolet);
+/* La bulle ne s'ouvre qu'une fois la sélection terminée (Arthur, 08/10/2026). « selectionchange » se déclenche à chaque
+   mouvement de la souris pendant qu'on sélectionne : la bulle s'ouvrait dès le premier pixel, sous le pointeur, et gênait le
+   geste. Tant que le bouton de la souris est enfoncé dans le texte, on n'y touche pas ; au relâchement, on lit la sélection.
+   Au clavier (Maj + flèches) ou au doigt (poignées), aucun bouton n'est enfoncé : on attend que la sélection se stabilise un
+   instant. Une sélection qui disparaît efface la bulle tout de suite. */
+let selectionEnCours = false;
+let minuteurSelection = null;
+let derniereSelectionLue = null;
+const DELAI_SELECTION_STABLE = 350;
+function signatureSelection() {
+  const s = window.getSelection();
+  return s && s.rangeCount && !s.isCollapsed ? {a: s.anchorNode, ao: s.anchorOffset, f: s.focusNode, fo: s.focusOffset} : null;
+}
+/* Relit la sélection dans les deux fenêtres de découpage. Sans ordre, une sélection déjà lue ne rouvre pas la bulle : elle a
+   pu être écartée, et la reconstruire sous le pointeur ferait manquer un clic. */
+function lireSelectionsDecoupe(ordre) {
+  const sg = signatureSelection(), m = derniereSelectionLue;
+  const identique = !!(sg && m && sg.a === m.a && sg.ao === m.ao && sg.f === m.f && sg.fo === m.fo);
+  derniereSelectionLue = sg;
+  if (identique && !ordre) return;
+  lireSelectionDecoupe();
+  lireSelectionDecoupeVolet();
+}
+function surChangementSelection() {
+  clearTimeout(minuteurSelection);
+  if (selectionEnCours) return 'attend';
+  if (!signatureSelection()) { lireSelectionsDecoupe(true); return 'vide'; }
+  minuteurSelection = setTimeout(lireSelectionsDecoupe, DELAI_SELECTION_STABLE);
+  return 'planifie';
+}
+function finSelectionSouris() {
+  if (!selectionEnCours) return;
+  selectionEnCours = false;
+  clearTimeout(minuteurSelection);
+  lireSelectionsDecoupe(true);   // la sélection est définitive : on la lit sans attendre
+}
+document.addEventListener('selectionchange', surChangementSelection);
+document.addEventListener('mousedown', ev => {
+  const t = ev.target;
+  // Un clic dans le texte commence une sélection : la bulle d'avant s'efface, la suivante attend le relâchement.
+  if (t && t.closest && t.closest('#decoupe-overlay .dec-texte, #decoupe-volet-overlay .dec-texte')) {
+    selectionEnCours = true;
+    clearTimeout(minuteurSelection);
+    cacherBulleDecoupe(); cacherBulleVolet();
+  }
+});
+document.addEventListener('mouseup', finSelectionSouris);
+// Un relâchement hors de la fenêtre du navigateur ne se voit pas : on ne reste pas bloqué.
+document.addEventListener('mousemove', ev => { if (selectionEnCours && ev.buttons === 0) finSelectionSouris(); });
+window.addEventListener('blur', () => { selectionEnCours = false; });
 function finPriseVolet() {
   decoupeVolet.sel = null;
   cacherBulleVolet();
@@ -19885,7 +19987,7 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
-const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":5856,"retrait":1106,"depots":49}]};
+const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":6037,"retrait":1147,"depots":50}]};
 
 function svgActiviteCode() {
   const mois = ACTIVITE_CODE.mois || [];
@@ -19924,6 +20026,20 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-08',
+    version: 'v2026.10.08-10',
+    titre: "Découpage : la bulle s'ouvre quand la sélection est terminée",
+    corps: `
+<p><b>Découpage : la bulle attend la fin de la sélection</b> (Arthur) :</p>
+<ul>
+<li>Avant, la petite bulle « Ranger ce passage » s'ouvrait dès le premier mouvement de la souris et se plaçait sous le pointeur, ce qui gênait la sélection. Maintenant, <b>tant que le bouton de la souris est enfoncé dans le texte, elle ne s'ouvre pas</b> ; elle apparaît quand on relâche. Un nouveau clic dans le texte l'efface aussitôt.</li>
+<li>Au clavier (Maj + flèches) ou au doigt (poignées de sélection), aucun bouton n'est enfoncé : la bulle s'ouvre quand la sélection ne bouge plus pendant un court instant (un tiers de seconde).</li>
+<li>Même comportement dans la fenêtre de découpage des CD et dans celle des contextes, antécédents, conséquences et interventions. Seules des sélections simulées ont été éprouvées par les tests : à essayer à la vraie souris, et au doigt sur tablette.</li>
+</ul>
+`
+  },
 
   {
     date: '2026-10-08',
