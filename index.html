@@ -13043,6 +13043,17 @@ const _CONTROLES = [
         [nonRange, range, formulaire, partiel, resume].join(' | '));
     } finally { persist = vraiPersist; window.confirm = vraiConfirm; state.m2.evenements = sauveEvts; state.m3 = JSON.parse(sauveM3); }
   }},
+  {nom:'Les textes d\'aide parlent d\'Analyser : plus d\'« Organiser », ni de « ✂ Découper », ni de découpage par codeur', test: () => {
+    const sources = {
+      'mode d\'emploi pour tous': corpsModeEmploiGeneral(),
+      'FAQ': JSON.stringify(REPERES),
+      'lexique': JSON.stringify(LEXIQUE_BAF)
+    };
+    const interdit = /Organiser|Recueillir, Organiser|✂|découpages des épisodes|découpe dans sa copie|chaque codeur découpe|trois étapes — Recueillir/;
+    const reste = Object.keys(sources).filter(k => interdit.test(sources[k])).map(k => k + ' : ' + (interdit.exec(sources[k]) || [''])[0]);
+    const analyser = /Analyser/.test(sources['mode d\'emploi pour tous']) && /Analyser/.test(sources.FAQ) && LEXIQUE_BAF['analyser'] !== undefined && LEXIQUE_CLASSE['analyser'] === 'outil' && LEXIQUE_CLASSE['phase'] === 'outil';
+    return _bancEgal('aucun vieux terme dans le mode d\'emploi, la FAQ, le lexique | « Analyser » présent, avec « analyser » et « phase » au lexique', '[] | true', JSON.stringify(reste) + ' | ' + analyser);
+  }},
   {nom:'Les couleurs des catégories se distinguent deux à deux', test: () => {
     /* Ce qui fait confondre deux catégories, c'est la teinte : les deux violets
        d'avant n'étaient séparés que de 10°, les deux rouges de 13°. Entre deux
@@ -19449,7 +19460,7 @@ function corpsModeEmploiGeneral() {
     docxP([
       {t: 'Qui fait quoi. ', gras: true, couleur: bleu, taille: 20},
       {t: 'Les déclarants', gras: true, taille: 20}, {t: " décrivent ce qu'ils observent, dans chaque lieu de vie de la personne. ", taille: 20},
-      {t: 'Les analystes', gras: true, taille: 20}, {t: ' — le binôme : le référent de la démarche et le clinicien qui la supervise — organisent et interprètent les données, puis ', taille: 20},
+      {t: 'Les analystes', gras: true, taille: 20}, {t: ' — le binôme : le référent de la démarche et le clinicien qui la supervise — analysent les données (ils les rangent, les catégorisent, les interprètent), puis ', taille: 20},
       {t: "écrivent l'analyse fonctionnelle.", gras: true, taille: 20},
       {t: ' Facultatif : ', italique: true, taille: 20}, {t: "des cotateurs peuvent ensuite évaluer cette analyse avec l'ICAF.", taille: 20}
     ], {fond: DOCX_C.papierFonce, traitGauche: bleu, apres: 60, align: 'both'}) +
@@ -19461,10 +19472,10 @@ function corpsModeEmploiGeneral() {
     pf('Pendant le recueil, ', "chaque personne a son propre fichier : à plusieurs (deux parents, une équipe), chacun ouvre le même fichier reçu sur son propre appareil. Chacun sauvegarde son fichier à chaque fois qu'il écrit. En établissement, il le range dans le dossier partagé, repart toujours du dernier fichier, et efface la BAF avant de partir. À la fin, il vous envoie son dernier fichier.") +
     pf('Recevoir : ', "ajouter les fichiers déclarants à votre fichier socle (Recueillir → Ajouter un ou des épisodes → À partir d'un fichier déclarant), puis relancer sur les journées sans information.") +
 
-    etape('2. Organiser et interpréter', 'le binôme · dans la BAF : Organiser, Interpréter') +
-    pf('Primo codage, séparément : ', "le référent et le clinicien catégorisent chacun de leur côté, dans un codage vierge, à partir du seul déclaratif, sans aucune catégorie de départ ; chacun y repère aussi les CD de chaque épisode (« ✂ Découper »).") +
-    pf('Synthèse, à deux : ', "sur un seul poste, dans le fichier socle : le comparateur affiche les deux primo codages côte à côte, on arbitre d'abord les découpages des épisodes, puis les catégories, y compris les signes qui entrent dans le vase de tension. « Terminer la synthèse » efface les primo codages : seule la synthèse reste.") +
-    pf('Interpréter ', 'se fait directement en synthèse, à deux.') +
+    etape('2. Analyser les données', 'le binôme · dans la BAF : Analyser') +
+    pf('Découper, puis primo codage : ', "le référent découpe d'abord les épisodes en citant le déclaratif (Analyser → Découper) ; puis le référent et le clinicien catégorisent chacun de leur côté, dans un codage vierge, à partir du seul déclaratif, sans catégorie de départ.") +
+    pf('Synthèse, à deux : ', "sur un seul poste, dans le fichier socle : le comparateur affiche les deux primo codages côte à côte, on arbitre les catégories, y compris les signes qui entrent dans le vase de tension. « Terminer la synthèse » efface les primo codages : seule la synthèse reste.") +
+    pf('Interpréter ', 'se fait ensuite dans le fichier socle, à deux.') +
 
     etape('3. Formuler les hypothèses fonctionnelles', "le binôme et l'équipe · hors de la BAF") +
     pf('Rassembler les pièces du puzzle : ', "ce que la BAF a fait apparaître, les observations, les évaluations, les entretiens. Solliciter l'équipe au besoin.") +
@@ -19487,7 +19498,7 @@ function corpsModeEmploiGeneral() {
     '@@SOMMAIRE@@' +
 
     docxIntertitre("La BAF, c'est deux outils", DOCX_C.papierFonce, bleu, niv(1, "La BAF, c'est deux outils", true)) +
-    puce('Le RDAF, Recueil de Données pour une Analyse Fonctionnelle (outil 1), ', 'recueille et prépare les données, en trois étapes : Recueillir, Organiser, Interpréter.') +
+    puce('Le RDAF, Recueil de Données pour une Analyse Fonctionnelle (outil 1), ', 'recueille et prépare les données : un Préambule, puis Recueillir, Analyser (le déclaratif brut, Découper, Catégoriser, Interpréter) et une Synthèse.') +
     puce("L'ICAF, Indice de Confiance pour une Analyse Fonctionnelle (outil 2, facultatif), ", "évalue la qualité d'une analyse fonctionnelle une fois terminée. C'est un travail long, à réserver aux équipes qui peuvent y consacrer du temps.") +
     encadre([{t: "Ce qui se passe entre les deux, l'analyse fonctionnelle elle-même, c'est le travail du binôme et de l'équipe.", gras: true}], DOCX_C.papierFonce, bleu) +
     docxP('', {apres: 40}) +
@@ -19506,8 +19517,8 @@ function corpsModeEmploiGeneral() {
       ],
       [
         {contenu: [docxP("Les analystes", {gras: true, taille: 18})]},
-        {contenu: [docxP("Le binôme : le référent de la démarche, et le clinicien qui la supervise. Ils organisent et interprètent les données, puis peuvent solliciter l'équipe pour affiner leur réflexion, jusqu'à produire le document d'analyse fonctionnelle.", {taille: 18})]},
-        {contenu: [docxP("Organiser, Interpréter — puis hors de l'outil", {taille: 18})]}
+        {contenu: [docxP("Le binôme : le référent de la démarche, et le clinicien qui la supervise. Ils analysent les données (ils les rangent, les catégorisent, les interprètent), puis peuvent solliciter l'équipe pour affiner leur réflexion, jusqu'à produire le document d'analyse fonctionnelle.", {taille: 18})]},
+        {contenu: [docxP("Analyser — puis hors de l'outil", {taille: 18})]}
       ],
       [
         {contenu: [docxP('Le ou les cotateurs (facultatif)', {gras: true, taille: 18})]},
@@ -19518,7 +19529,7 @@ function corpsModeEmploiGeneral() {
 
     docxIntertitre("Une analyse fonctionnelle, c'est trois étapes", DOCX_C.papierFonce, bleu, niv(1, "Une analyse fonctionnelle, c'est trois étapes", true)) +
     puce('Recueillir ', 'des données qualitatives sur les comportements-défis ciblés, dans tous les lieux de vie de la personne. (avec le RDAF)') +
-    puce('Organiser et interpréter ', 'ces données, en binôme. (avec le RDAF)') +
+    puce('Analyser ', 'ces données — les ranger, les catégoriser, les interpréter —, en binôme. (avec le RDAF)') +
     puce('Formuler les hypothèses fonctionnelles, ', "avec le regard clinique du binôme et de l'équipe. (sans la BAF)") +
     docxP([{t: 'Facultatif : ', gras: true, italique: true}, {t: "évaluer ensuite la qualité de l'analyse avec l'ICAF (outil 2)."}], {retrait: 240, apres: 80, align: 'both'}) +
 
@@ -19565,22 +19576,31 @@ function corpsModeEmploiGeneral() {
     puce('Regardez les périodes observées. ', "L'outil repère les journées sans information : allez demander ce qui s'est passé plutôt que de deviner. Une journée sans comportement-défi est une donnée, pas un vide.") +
 
     /* ── 2 ── */
-    partie('2.', 'Organiser et interpréter', "C'est là que commence le travail du binôme — et il ne se fait pas seul.") +
+    partie('2.', 'Analyser', "C'est là que commence le travail du binôme — et il ne se fait pas seul.") +
     encadre([
       {t: 'On ne retouche jamais le déclaratif. ', gras: true},
       {t: "Ce que les déclarants ont écrit reste tel quel. Tout ce que le binôme produit ici se lit par-dessus, sans jamais modifier la source."}
     ], DOCX_C.papierFonce, bleu) +
 
-    sousPartie('Organiser : le double codage') +
-    dansBaf('Organiser → « Double codage » : « Exporter un codage vierge » (un par codeur), puis « Comparer les deux primo codages » ; « Effacer le codage » pour repartir d\'une page blanche') +
-    texte("Organiser, c'est regrouper en catégories ce qui se ressemble, volet par volet : contexte, antécédent, comportement, conséquence, intervention. Avant de classer les comportements, on repère les CD de chaque épisode : le déclarant décrit une scène, c'est l'analyste qui y repère un ou plusieurs comportements-défis, en même temps ou l'un après l'autre. « ✂ Découper » les cite tels quels : le déclaratif n'est jamais réécrit, et ce qui s'est passé entre deux CD devient la conséquence du premier et l'antécédent du suivant. Or catégoriser, c'est déjà mesurer : c'est ce geste qui transforme un texte en une donnée qui sera comptée. Le référent et le clinicien organisent donc d'abord chacun de leur côté, pour permettre la richesse d'un double codage.") +
-    puce('Primo codage, chacun de son côté, à partir du seul déclaratif et sans aucune catégorie de départ : ', "le référent exporte un codage vierge, le fichier socle sans aucun codage (tous les épisodes, aucune catégorie, rien dans Interpréter). Chacun ouvre son codage vierge, découpe les épisodes qui contiennent plusieurs CD, réalise son codage et l'enregistre de son côté avec « Exporter ». Le fichier socle, lui, reste vierge côté Organiser. Si le référent a déjà catégorisé dans le fichier socle, cette catégorisation peut devenir son codage : « Exporter ma catégorisation en primo codage » (fenêtre « Double codage »), ou « Prendre la catégorisation de ce fichier socle » dans le comparateur, qui la prend comme codage A ou B et laisse le fichier socle vierge pour la synthèse.") +
-    puce('Synthèse, à deux : ', "en réunion, sur un seul poste. Le référent ouvre le fichier socle, puis « Comparer les deux primo codages », et importe les deux primo codages. Les découpages des épisodes s'arbitrent d'abord (celui de A ou celui de B) ; ensuite, chaque élément se lit sur une ligne : le codage A, le codage B, et la synthèse que vous arbitrez — prendre A, prendre B, ou une autre catégorie. Les signes qui entrent dans le vase de tension s'arbitrent aussi en synthèse. « Terminer la synthèse » efface les deux primo codages du fichier socle : la synthèse devient le seul codage. Supprimez aussi leurs fichiers.") +
+    sousPartie('Analyser : ranger, catégoriser, interpréter') +
+    dansBaf('Analyser — quatre panneaux qui glissent comme un carrousel : Déclaratif brut · Découper · Catégoriser · Interpréter') +
+    texte("Le déclarant raconte une scène comme il peut, souvent un peu partout ; c'est l'analyste qui y repère le ou les comportements-défis et qui range le reste. Analyser se fait un épisode à la fois, sur quatre panneaux, et on voit toujours l'étape d'avant pour faire la suivante.") +
+    puce('Le déclaratif brut, ', "en lecture seule : ce que le déclarant a écrit, tel quel. On n'y touche jamais.") +
+    puce('Découper : ', "on sélectionne un passage du déclaratif, et une petite bulle propose où le ranger dans la séquence de l'épisode — le contexte, puis une ou plusieurs phases (un antécédent, un CD, une intervention), puis la conséquence. Chaque passage est une citation exacte : un même passage peut être rangé à deux endroits (l'intervention d'une phase est souvent l'antécédent de la suivante), et ce qui n'entre nulle part se met dans « Non retenu ». Une barre dit quelle part du texte est rangée. La BAF propose un premier rangement à partir des cases du formulaire : corrigez-le librement. Sur chaque intervention, notez ce qu'elle a fait à la tension : elle l'a fait monter, n'a rien changé, ou l'a fait redescendre.") +
+    puce('Catégoriser : ', "on regroupe ce qui se ressemble, volet par volet — comportement, contexte, antécédent, conséquence, intervention —, en créant librement ses catégories. Catégoriser, c'est déjà mesurer : c'est ce geste qui transforme un texte en une donnée qui sera comptée.") +
+    puce('Interpréter : ', "chercher ce qui se répète, voir plus bas.") +
+    texte("Chaque panneau a sa case libre, « Une question, quelque chose à creuser ? » : elle sert à se poser des questions et à noter ce qu'il faudra creuser. Ces notes font partie du fichier socle ; elles ne partent pas dans un codage vierge, puisque ce sont celles de chacun.") +
+
+    sousPartie('Le double codage : catégoriser séparément, puis arbitrer') +
+    dansBaf('Analyser → Catégoriser → « Double codage » : « Exporter un codage vierge » (un par codeur), puis « Comparer les deux primo codages » ; « Effacer le codage » pour repartir d\'une page blanche') +
+    texte("Le référent et le clinicien catégorisent d'abord chacun de leur côté, pour permettre la richesse d'un double codage. Le découpage, lui, se fait une seule fois, par le référent, avant : ainsi les deux catégorisent exactement les mêmes éléments.") +
+    puce('Primo codage, chacun de son côté, à partir du seul déclaratif et sans aucune catégorie de départ : ', "le référent découpe les épisodes (Analyser → Découper), puis exporte un codage vierge : le fichier socle avec les épisodes et leur découpage, sans aucune catégorie et sans rien dans Interpréter. Chacun ouvre son codage vierge — le découpage s'y lit, mais ne se modifie pas —, catégorise, et enregistre son codage de son côté avec « Exporter ». Le fichier socle, lui, reste vierge côté Catégoriser. Si le référent a déjà catégorisé dans le fichier socle, cette catégorisation peut devenir son codage : « Exporter ma catégorisation en primo codage » (fenêtre « Double codage »), ou « Prendre la catégorisation de ce fichier socle » dans le comparateur, qui la prend comme codage A ou B et laisse le fichier socle vierge pour la synthèse.") +
+    puce('Synthèse, à deux : ', "en réunion, sur un seul poste. Le référent ouvre le fichier socle, puis « Comparer les deux primo codages », et importe les deux primo codages. Chaque élément se lit sur une ligne : le codage A, le codage B, et la synthèse que vous arbitrez — prendre A, prendre B, ou une autre catégorie. Les signes qui entrent dans le vase de tension s'arbitrent aussi en synthèse. « Terminer la synthèse » efface les deux primo codages du fichier socle : la synthèse devient le seul codage. Supprimez aussi leurs fichiers.") +
     aEviter("Catégoriser en pensant déjà à la fonction. On regroupe ce qui se ressemble ; l'hypothèse vient après, et pas avant.") +
 
     sousPartie('Interpréter : chercher ce qui se répète, en binôme') +
-    dansBaf('Interpréter les données') +
-    texte("Interpréter se fait directement en synthèse, à deux, dans le fichier socle. Les séquences qui reviennent, les moments et les lieux où le comportement apparaît — et ceux où il n'apparaît pas —, la façon dont la tension monte chez la personne. La BAF compte et signale ; elle ne conclut pas. Un pourcentage calculé sur quelques épisodes est une piste, pas une tendance, et l'outil le dit à chaque fois.") +
+    dansBaf('Analyser → Interpréter') +
+    texte("Interpréter est le dernier panneau d'Analyser : il se fait ensuite dans le fichier socle, à deux. Les séquences qui reviennent, les moments et les lieux où le comportement apparaît — et ceux où il n'apparaît pas —, la façon dont la tension monte chez la personne, ce qui l'a fait monter ou redescendre. La BAF compte et signale ; elle ne conclut pas. Un pourcentage calculé sur quelques épisodes est une piste, pas une tendance, et l'outil le dit à chaque fois.") +
     puce('Proposer un vase de tension. ', "Le choix des signes qui y entrent se tranche lors de la synthèse. À partir des signes précurseurs que les déclarants ont décrits, le binôme écrit à quoi ressemble chaque palier chez cette personne. Ce vase est un résultat de l'analyse, à rendre aux équipes. Une fois figé, il remplace les descriptions génériques pour les recueils suivants — jamais en cours de recueil : on ne déplace pas l'unité de mesure pendant qu'on mesure.") +
 
     /* ── 3 ── */
@@ -22325,7 +22345,7 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
-const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":9094,"retrait":1843,"depots":60}]};
+const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":9469,"retrait":1892,"depots":61}]};
 
 function svgActiviteCode() {
   const mois = ACTIVITE_CODE.mois || [];
@@ -22364,6 +22384,22 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-08',
+    version: 'v2026.10.08-21',
+    titre: "Les textes d'aide parlent d'Analyser : mode d'emploi, FAQ, lexique",
+    corps: `
+<p><b>Les textes d'aide parlent d'Analyser</b> (Arthur et Émilie — fin de la refonte, première partie) :</p>
+<ul>
+<li><b>Le mode d'emploi « Pour tous »</b> (la fiche d'une page et la notice, à télécharger dans Ressources) décrit maintenant l'étape <b>Analyser</b> à la place d'« Organiser et interpréter » : les quatre panneaux (déclaratif brut, Découper, Catégoriser, Interpréter), la séquence d'un épisode, les notes libres, l'effet des interventions ; le double codage, où <b>le référent découpe une seule fois</b> et où les deux codeurs catégorisent les mêmes éléments ; Interpréter, dernier panneau d'Analyser.</li>
+<li><b>La FAQ</b> suit : « Qui fait quoi », « Comment commencer », « Comment travailler à plusieurs », le double codage, Interpréter, « On ne retouche jamais le déclaratif ». La rubrique « Organiser et interpréter » devient « Analyser ».</li>
+<li><b>Le lexique</b> : <i>RDAF</i> (quatre modules : Préambule, Recueillir, Analyser, Synthèse), <i>épisode</i>, <i>séquence</i>, <i>CD à la suite</i>, <i>crise</i> (la numérotation CD 3.1.2), <i>pattern</i>, <i>analyste</i>, <i>double codage</i>, <i>codage vierge</i> sont à jour ; deux mots entrent : <i>analyser</i> et <i>phase</i>.</li>
+<li><b>Un contrôle de banc</b> garde la propriété : plus un seul « Organiser », « ✂ Découper » ou « découpage par codeur » dans le mode d'emploi, la FAQ et le lexique.</li>
+<li><b>Pas encore fait</b> : le mode d'emploi de l'EMIA (réservé, chiffré) et la présentation de l'équipe, qui parlent encore d'« Organiser » ; ils suivent dans la passe d'après.</li>
+</ul>
+`
+  },
 
   {
     date: '2026-10-08',
@@ -23646,17 +23682,17 @@ const REPERES = [
     titre: "Questions sur l'outil",
     questions: [
       {groupe: "Pour se lancer", q: "Est-ce que la BAF pense à ma place ?",
-       r: `<p>Non. Elle ne pose aucun diagnostic et ne formule aucune hypothèse. Elle vous aide à structurer la démarche <b>avant</b> l'analyse — le recueil, l'organisation et la lecture des données (outil 1) — et, si vous le souhaitez, à en évaluer la qualité <b>après</b> (outil 2, facultatif).</p>
+       r: `<p>Non. Elle ne pose aucun diagnostic et ne formule aucune hypothèse. Elle vous aide à structurer la démarche <b>avant</b> l'analyse — le recueil et l'analyse des données (outil 1) — et, si vous le souhaitez, à en évaluer la qualité <b>après</b> (outil 2, facultatif).</p>
            <p>Ce qui se passe entre les deux — formuler des hypothèses, décider quoi proposer — reste votre travail. Tout ce que l'outil fait apparaître, catégories, régularités, pourcentages, est un matériau de discussion, jamais une conclusion.</p>`},
       {q: "Qui fait quoi dans la BAF ?",
-       r: `<p>La BAF réunit deux outils : le <b>RDAF</b> (outil 1), qui recueille et prépare les données en trois étapes — Recueillir, Organiser, Interpréter —, et l'<b>ICAF</b> (outil 2, facultatif), qui évalue la qualité d'une analyse fonctionnelle terminée.</p>
-           <p><b>Le déclarant</b> remplit le recueil : il décrit ce qu'il observe là où il accompagne la personne. <b>L'analyste</b> organise et interprète les données, puis fait l'analyse fonctionnelle — dans la démarche proposée, c'est le binôme formé par le référent et le clinicien. <b>Le cotateur</b>, si l'équipe choisit d'évaluer son analyse, remplit l'ICAF.</p>`},
+       r: `<p>La BAF réunit deux outils : le <b>RDAF</b> (outil 1), qui recueille et prépare les données — un Préambule, Recueillir, Analyser, une Synthèse —, et l'<b>ICAF</b> (outil 2, facultatif), qui évalue la qualité d'une analyse fonctionnelle terminée.</p>
+           <p><b>Le déclarant</b> remplit le recueil : il décrit ce qu'il observe là où il accompagne la personne. <b>L'analyste</b> analyse les données (il les range, les catégorise, les interprète), puis fait l'analyse fonctionnelle — dans la démarche proposée, c'est le binôme formé par le référent et le clinicien. <b>Le cotateur</b>, si l'équipe choisit d'évaluer son analyse, remplit l'ICAF.</p>`},
       {q: "Comment commencer une analyse fonctionnelle avec la BAF ?",
        r: `<p>Dans cet ordre :</p>
            <p><b>1. Préparer en binôme</b> — le référent de la démarche et le clinicien qui la supervise : un à trois comportements-défis, la piste somatique vérifiée, les dates du recueil, au moins un déclarant par lieu de vie, un prénom d'emprunt.</p>
            <p><b>2. Remplir le préambule</b> dans la BAF, puis appeler chaque déclarant pour le vérifier et lui présenter la démarche.</p>
            <p><b>3. Transmettre le fichier déclarant</b> à tous les déclarants, par mail (Recueillir → Transmettre un fichier déclarant).</p>
-           <p><b>4. Recevoir</b> les fichiers qu'ils renvoient (Recueillir → Ajouter un ou des épisodes → À partir d'un fichier déclarant), <b>puis organiser et interpréter</b> les données, en binôme.</p>
+           <p><b>4. Recevoir</b> les fichiers qu'ils renvoient (Recueillir → Ajouter un ou des épisodes → À partir d'un fichier déclarant), <b>puis analyser</b> les données, en binôme.</p>
            <p><b>5. Formuler les hypothèses fonctionnelles</b> — là, on est hors de l'outil.</p>
            <p class="repere-renvoi">Mode d'emploi : la fiche process, en une page, puis la notice — à télécharger dans Ressources.</p>`},
       {q: "Comment préparer la démarche avant d'ouvrir la BAF ?",
@@ -23685,7 +23721,7 @@ const REPERES = [
            <p class="repere-renvoi">Mode d'emploi, § 1.3 — c'est ce que dit le courriel.</p>`},
       {q: "Comment travailler à plusieurs sur la même analyse ?",
        r: `<p><b>Pour recueillir</b>, le référent envoie à chaque déclarant un <i>fichier déclarant</i> vierge, le même pour tous : le préambule, sans aucun épisode ni travail d'analyse. Chaque déclarant l'ouvre sur son propre appareil, depuis la page déclarant de la BAF — une personne, un fichier —, décrit ce qu'il observe et sauvegarde son fichier au fur et à mesure ; à la fin, il envoie le dernier. Le référent l'ajoute à son <i>fichier socle</i> : chaque épisode garde sa provenance, et les envois successifs ne se dupliquent pas. Ceux qui ne peuvent pas utiliser l'outil numérique remplissent une grille ABC papier, disponible dans Ressources.</p>
-           <p><b>Pour organiser</b>, référent et clinicien font d'abord un primo codage chacun de leur côté, chacun dans son <i>codage vierge</i>, à partir du seul déclaratif : chacun y repère les CD de chaque épisode, puis les catégorise. Ils se réunissent ensuite et arbitrent ensemble, découpages compris, dans le fichier socle, la catégorisation de synthèse, qui devient le seul codage. Interpréter se fait directement en synthèse.</p>
+           <p><b>Pour analyser</b>, le référent découpe d'abord les épisodes, une fois pour tous (Analyser → Découper). Référent et clinicien font ensuite un primo codage chacun de leur côté, chacun dans son <i>codage vierge</i>, à partir du seul déclaratif : ils catégorisent les mêmes éléments. Ils se réunissent et arbitrent ensemble, dans le fichier socle, la catégorisation de synthèse, qui devient le seul codage. Interpréter se fait ensuite dans le fichier socle.</p>
            <p>Le fichier socle, lui, ne circule pas : il reste chez le référent. Ce qui part vers l'extérieur, c'est le document d'analyse fonctionnelle.</p>`},
       {q: "Pourquoi déclarer les journées où il ne se passe rien ?",
        r: `<p>Parce qu'une journée sans comportement-défi est une donnée, pas un vide. Sans elle, l'outil ne peut pas distinguer « il ne s'est rien passé » de « personne n'a rempli » : la fréquence qu'il affiche mesure alors les signalements, pas les comportements.</p>
@@ -23700,18 +23736,18 @@ const REPERES = [
            <p>Le référent la saisit ensuite dans la BAF <b>telle qu'elle a été écrite</b> : la grille reprend colonne pour colonne le mode rapide, la recopie ne demande aucune décision. Recopiez les mots tels quels, sans les réinterpréter.</p>
            <p>Remplie dans Word plutôt qu'à la main, elle s'importe d'un coup : « Ajouter un ou des épisodes » → « Importer une grille ABC Word (.docx) ». La BAF montre ce qu'elle a lu avant d'ajouter quoi que ce soit. (Elle ne lit pas les PDF.)</p>
            <p class="repere-renvoi">Mode d'emploi, § 1.1 et § 1.4.</p>`},
-      {groupe: "Organiser et interpréter", q: "Comment organiser les données ? Qu'est-ce que le double codage ?",
-       r: `<p>Organiser, c'est regrouper en catégories ce qui se ressemble, volet par volet : contexte, antécédent, comportement, conséquence, intervention. Or <b>catégoriser, c'est déjà mesurer</b> : c'est ce geste qui transforme un texte en une donnée qui sera comptée. Le référent et le clinicien organisent donc d'abord <b>chacun de leur côté</b>, à partir du seul déclaratif et sans catégorie de départ : c'est le <b>primo codage</b>, fait dans un codage vierge que le référent exporte du fichier socle — après avoir découpé les épisodes, une fois pour tous : les deux codeurs catégorisent les mêmes éléments. Une catégorisation déjà faite dans le fichier socle peut devenir l'un des deux codages : « Exporter ma catégorisation en primo codage », ou, dans le comparateur, « Prendre la catégorisation de ce fichier socle ».</p>
+      {groupe: "Analyser", q: "Qu'est-ce que le double codage ?",
+       r: `<p>Catégoriser, c'est regrouper ce qui se ressemble, volet par volet : contexte, antécédent, comportement, conséquence, intervention. Or <b>catégoriser, c'est déjà mesurer</b> : c'est ce geste qui transforme un texte en une donnée qui sera comptée. Le référent et le clinicien catégorisent donc d'abord <b>chacun de leur côté</b>, à partir du seul déclaratif et sans catégorie de départ : c'est le <b>primo codage</b>, fait dans un codage vierge que le référent exporte du fichier socle — après avoir découpé les épisodes, une fois pour tous : les deux codeurs catégorisent les mêmes éléments. Une catégorisation déjà faite dans le fichier socle peut devenir l'un des deux codages : « Exporter ma catégorisation en primo codage », ou, dans le comparateur, « Prendre la catégorisation de ce fichier socle ».</p>
            <p>Ils se réunissent ensuite, sur un seul poste, et ouvrent « Comparer les deux primo codages » : chaque élément se lit sur une ligne — le codage A, le codage B, la synthèse. « Terminer la synthèse » efface les deux primo codages : la synthèse devient le seul codage.</p>
            <p><b>À éviter :</b> catégoriser en pensant déjà à la fonction. On regroupe ce qui se ressemble ; l'hypothèse vient après.</p>
-           <p class="repere-renvoi">Mode d'emploi, partie 2 — Organiser : le double codage.</p>`},
+           <p class="repere-renvoi">Mode d'emploi, partie 2 — Le double codage.</p>`},
       {q: "Comment ranger ce que le déclarant a écrit ?",
        r: `<p>Le déclarant raconte comme il peut, souvent un peu partout. Dans Analyser, <b>Découper</b> range son texte dans la séquence de l'épisode : le <b>contexte</b>, puis une ou plusieurs <b>phases</b> (un antécédent, un CD, une intervention), puis la <b>conséquence</b>. À gauche, le déclaratif brut, qu'on ne touche jamais ; on y sélectionne un passage, et une petite bulle propose où le ranger.</p>
            <p>Chaque passage est une <b>citation exacte</b> : le déclaratif n'est jamais réécrit. Un même passage peut être rangé à deux endroits (l'intervention d'une phase est souvent l'antécédent de la suivante), et ce qui n'entre nulle part se met dans « Non retenu » : la barre d'avancement dit quelle part du texte est rangée. La BAF propose un premier rangement à partir des cases du formulaire ; on le corrige librement.</p>
            <p>Sur chaque <b>intervention</b> rangée, un petit choix dit ce qu'elle a fait à la tension : <i>fait monter</i>, <i>ne change rien</i> ou <i>fait redescendre</i>. Si le déclarant l'a indiqué dans le formulaire, c'est repris (« d'après le déclarant ») et on le confirme ou on le corrige. La BAF ne retient que ce sens : il alimente les statistiques d'Interpréter et les exemples du vase.</p>
-           <p class="repere-renvoi">Mode d'emploi, partie 2 — Organiser : le double codage (à jour avec la fin de la refonte).</p>`},
+           <p class="repere-renvoi">Mode d'emploi, partie 2 — Analyser : ranger, catégoriser, interpréter.</p>`},
       {q: "Que fait l'étape « Interpréter » ?",
-       r: `<p>Elle se fait directement en synthèse, à deux, dans le fichier socle. Elle cherche ce qui se répète : les séquences qui reviennent, les moments et les lieux où le comportement apparaît — et ceux où il n'apparaît pas —, la façon dont la tension monte chez la personne.</p>
+       r: `<p>C'est le dernier panneau d'Analyser : elle se fait ensuite dans le fichier socle, à deux. Elle cherche ce qui se répète : les séquences qui reviennent, les moments et les lieux où le comportement apparaît — et ceux où il n'apparaît pas —, la façon dont la tension monte chez la personne.</p>
            <p><b>La BAF compte et signale ; elle ne conclut pas.</b> Un pourcentage calculé sur quelques épisodes est une piste, pas une tendance, et l'outil le dit à chaque fois.</p>
            <p>Le binôme y propose aussi un <b>vase de tension</b> propre à la personne, à partir des signes précurseurs que les déclarants ont décrits. Une fois figé, il remplace les descriptions génériques pour les recueils suivants — jamais en cours de recueil : on ne déplace pas l'unité de mesure pendant qu'on mesure.</p>
            <p class="repere-renvoi">Mode d'emploi, partie 2 — Interpréter : chercher ce qui se répète, en binôme.</p>`},
@@ -23734,7 +23770,7 @@ const REPERES = [
        r: `<p>Pas de nom de famille, pas de ville, pas de structure nommée, ni aucun élément permettant d'identifier la personne ou son entourage. Un prénom seul suffit — fictif si besoin.</p>`},
       {q: "Est-ce qu'on retouche ce que les déclarants ont écrit ?",
        r: `<p>Jamais. Le déclaratif est la donnée de base : c'est le discours d'un professionnel ou d'une famille, avec son point de vue et ses biais propres, et il doit garder ce caractère.</p>
-           <p>Le travail de l'analyste ne commence qu'à l'étape <b>Organiser</b>. Tout ce qui y est produit — CD repérés dans un épisode, catégories, regroupements — se lit par-dessus et n'est jamais réécrit dans l'épisode : un CD est une citation exacte de ce que le déclarant a écrit. On peut donc toujours revenir au matériau d'origine.</p>`},
+           <p>Le travail de l'analyste ne commence qu'avec <b>Analyser</b>. Tout ce qui y est produit — passages rangés dans la séquence d'un épisode, CD, catégories, regroupements — se lit par-dessus et n'est jamais réécrit dans l'épisode : un CD est une citation exacte de ce que le déclarant a écrit. On peut donc toujours revenir au matériau d'origine.</p>`},
     ]
   },
 ];
@@ -23752,31 +23788,33 @@ const REPERES = [
    et un contrôle de banc vérifie qu'aucun mot n'y échappe. */
 
 const LEXIQUE_BAF = {
-  "épisode": "Le déclaratif : une scène décrite, comme une caméra l'aurait filmée, par une personne qui l'a observée. Le déclarant ne désigne pas de comportement-défi : c'est l'analyste qui, dans Organiser, repère dans l'épisode un ou plusieurs CD. C'est l'unité de base du recueil.",
+  "épisode": "Le déclaratif : une scène décrite, comme une caméra l'aurait filmée, par une personne qui l'a observée. Le déclarant ne désigne pas de comportement-défi : c'est l'analyste qui, dans Analyser, repère dans l'épisode un ou plusieurs CD. C'est l'unité de base du recueil.",
   "volet": "Les différentes faces d'un même épisode : contexte, antécédent, comportement, conséquence, intervention. On parle de volet plutôt que d'étape, parce qu'ils ne se suivent pas toujours dans cet ordre.",
   "antécédent": "Ce qui s'est passé juste avant le comportement, dans les secondes ou minutes précédentes. Il y en a souvent plusieurs. Le déclarant peut signaler celui qui lui semble avoir déclenché — c'est un avis, pas un verdict.",
   "conséquence": "Ce qui change pour la personne après le comportement : ce qu'elle obtient, ce qu'elle évite. C'est souvent là que la fonction du comportement se lit. À ne pas confondre avec l'intervention, qui est ce que l'entourage a fait.",
   "intervention": "Ce que l'entourage a fait en réponse au comportement, et avec quel effet sur la tension. Une intervention peut apaiser, ne rien changer, ou produire à son tour un nouveau comportement-défi.",
   "découpage": "Dans Analyser, le geste par lequel l'analyste range ce que dit le déclaratif dans la séquence de l'épisode : contexte, phase 1 (antécédent, CD, intervention), phases suivantes, conséquence. Chaque passage est une citation exacte du déclaratif, qui n'est jamais réécrit ; un même passage peut être rangé à deux endroits, et ce qui n'entre nulle part se met de côté (« non retenu »), pour que tout le texte soit traité. Un passage rangé porte son nom : CD 3.1.2 est le deuxième CD de la première phase du troisième épisode. La BAF propose un premier rangement à partir des cases du formulaire ; l'analyste le corrige librement. Sur chaque intervention rangée, l'analyste note aussi ce qu'elle a fait à la tension (elle la fait monter, ne change rien, ou la fait redescendre). Le découpage fait partie du codage.",
-  "CD à la suite": "Un comportement-défi qui en suit un autre dans le même épisode : des cris, puis l'éducatrice demande de se calmer, puis des coups contre le mur. Ce qui s'est passé entre les deux est la conséquence du premier CD et l'antécédent du suivant.",
-  "séquence": "Une suite antécédent → CD → conséquence. Un épisode en compte une ; quand ses CD se suivent, une par CD : ce qui s'est passé entre deux CD est la conséquence de l'un et l'antécédent du suivant. Les croisements d'Interpréter se comptent par séquence.",
-  "crise": "Les comportements-défis repérés dans un même épisode. Ils sont numérotés CD 3.1, CD 3.2… : 3 pour le troisième épisode dans l'ordre chronologique, puis le rang du CD dans l'épisode. Un CD que l'on découpe en plusieurs devient CD 3.1.1, CD 3.1.2… et les autres gardent leur numéro.",
-  "pattern": "Une séquence qui semble se répéter, composée à partir des catégories créées dans Organiser. Ce n'est pas une certitude : c'est une hypothèse de lecture, à discuter.",
+  "CD à la suite": "Un comportement-défi qui en suit un autre dans le même épisode : il ouvre une nouvelle phase. Des cris, puis l'éducatrice demande de se calmer, puis des coups contre le mur : la demande est l'intervention de la phase 1 et l'antécédent de la phase 2.",
+  "séquence": "La séquence d'un épisode, telle que l'analyste l'a rangée dans Découper : le contexte, une ou plusieurs phases, la conséquence. Chaque phase est une suite antécédent → CD → intervention ; ce que fait l'entourage dans une phase est souvent l'antécédent de la suivante. Les croisements d'Interpréter se comptent phase par phase.",
+  "crise": "Les comportements-défis repérés dans un même épisode. Chacun porte son nom : CD 3.1.2 est le deuxième CD de la première phase du troisième épisode (3 : le rang de l'épisode dans l'ordre chronologique, puis la phase, puis le rang du CD dans la phase).",
+  "pattern": "Une séquence qui semble se répéter, composée à partir des catégories créées dans Catégoriser. Ce n'est pas une certitude : c'est une hypothèse de lecture, à discuter.",
   "gradation": "La façon dont la tension monte chez la personne : un signe discret d'abord, puis ça s'intensifie. Repérer la gradation permet d'intervenir avant le pic.",
   "indice de confiance": "Dans la synthèse, un indicateur de la robustesse du recueil — volume, pluralité des regards, durée, complétude de la séquence (antécédent, comportement-défi, conséquence — lue sur le rangement de l'analyste quand l'épisode est rangé), niveau de détail (un formulaire détaillé pèse plus qu'un résumé rapide ou qu'un récit libre rangé), part d'observation directe. À ne pas confondre avec l'ICAF, qui évalue l'analyse fonctionnelle entière.",
   "BAF": "Boussole pour une Analyse Fonctionnelle. L'enveloppe : elle réunit le RDAF (outil 1) et l'ICAF (outil 2).",
-  "RDAF": "L'outil 1, le recueil de données. Il se déroule en trois étapes — Recueillir, Organiser, Interpréter. Il prépare l'analyse fonctionnelle, il ne la produit pas.",
+  "RDAF": "L'outil 1, le recueil de données. Il se déroule en quatre modules — Préambule, Recueillir, Analyser (déclaratif brut, Découper, Catégoriser, Interpréter) et Synthèse. Il prépare l'analyse fonctionnelle, il ne la produit pas.",
+  "analyser": "Le troisième module du RDAF, celui du travail de l'analyste. Il se fait un épisode à la fois, sur quatre panneaux qui glissent comme un carrousel : Déclaratif brut, Découper, Catégoriser, Interpréter. On y voit toujours l'étape d'avant pour faire la suivante.",
+  "phase": "Dans la séquence d'un épisode, une suite antécédent → CD → intervention. Un épisode a une ou plusieurs phases : un CD qui en suit un autre, après une intervention, ouvre la phase suivante.",
   "ICAF": "L'outil 2, l'indice de confiance. Il évalue la qualité méthodologique d'une analyse fonctionnelle terminée — pas la personne, pas les déclarants.",
   "préambule": "Ce que l'équipe sait déjà de la personne avant toute observation : lieux de vie, journée type, piste somatique, vase de tension connu. C'est le point de départ commun à tous les déclarants.",
-  "analyste": "Celui ou celle qui organise et interprète les données, puis fait l'analyse fonctionnelle. Dans la démarche proposée, c'est le binôme formé par le référent et le clinicien.",
+  "analyste": "Celui ou celle qui analyse les données (les range, les catégorise, les interprète), puis fait l'analyse fonctionnelle. Dans la démarche proposée, c'est le binôme formé par le référent et le clinicien.",
   "référent": "Le professionnel qui porte la démarche : il la prépare, lance le recueil, reçoit les fichiers déclarants et fait l'analyse avec le clinicien qui la supervise.",
   "cotateur": "Celui ou celle qui remplit l'ICAF sur une analyse fonctionnelle terminée. Coter à plusieurs, séparément, est plus instructif que la note elle-même.",
   "fichier socle": "Le fichier du référent : le préambule, tous les épisodes reçus, et tout le travail d'analyse. C'est lui qu'on exporte et qu'on range dans le dossier partagé de l'équipe ; il ne circule pas au-dehors.",
   "fichier déclarant": "Le fichier propre à chaque déclarant. Le référent en transmet un vierge, le même pour tous : le préambule, sans aucun épisode ni travail d'analyse. Chacun l'ouvre depuis la page déclarant de la BAF, y décrit ses épisodes et ses périodes observées, le sauvegarde à chaque séance, repart toujours du dernier, et envoie le dernier. Le référent l'ajoute à son fichier socle, chaque épisode gardant sa provenance. Une personne, un fichier : à deux sur le même fichier, on se marche dessus.",
   "période observée": "Une journée ou une plage de jours déclarée comme observée, avec ou sans comportement-défi. Sans elle, l'outil ne peut pas distinguer « il ne s'est rien passé » de « personne n'a rempli ».",
   "vase de tension": "L'image qu'emploie la BAF pour la tension qui s'accumule chez la personne, en cinq paliers. Le déclarant pose un palier et note les signes de tension qu'il a remarqués ; l'équipe en tire l'échelle décrite propre à la personne.",
-  "double codage": "La catégorisation faite d'abord séparément par deux personnes — le référent et le clinicien, par exemple —, chacune dans son codage vierge et à partir du seul déclaratif, puis saisie à deux, en synthèse, dans le fichier socle. La synthèse devient le seul codage.",
-  "codage vierge": "Le fichier socle sans aucun codage, pour le primo codage : le préambule et les épisodes, aucune catégorie, rien dans Interpréter. Un par codeur.",
+  "double codage": "La catégorisation faite d'abord séparément par deux personnes — le référent et le clinicien, par exemple —, chacune dans son codage vierge et à partir du seul déclaratif, puis saisie à deux, en synthèse, dans le fichier socle. La synthèse devient le seul codage. Le découpage des épisodes se fait une seule fois, par le référent, avant : les deux catégorisent les mêmes éléments.",
+  "codage vierge": "Le fichier socle sans aucun codage, pour le primo codage : le préambule et les épisodes avec leur découpage (celui du référent), aucune catégorie, rien dans Interpréter. Un par codeur.",
 };
 
 const LEXIQUE_AF = {
@@ -23802,7 +23840,7 @@ const LEXIQUE_CLASSE = {
   "BAF": "outil", "RDAF": "outil", "ICAF": "outil", "préambule": "outil",
   "analyste": "outil", "référent": "outil", "cotateur": "outil",
   "fichier socle": "outil", "fichier déclarant": "outil", "période observée": "outil",
-  "vase de tension": "outil", "double codage": "outil", "codage vierge": "outil",
+  "vase de tension": "outil", "double codage": "outil", "codage vierge": "outil", "analyser": "outil", "phase": "outil",
 };
 
 function tousLesTermes() {
