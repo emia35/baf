@@ -3124,6 +3124,40 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
 .repere-groupe{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--slate);margin:22px 0 2px;}
 .repere-groupe:first-of-type{margin-top:4px;}
 .repere-renvoi{font-size:12.5px;color:var(--ink-soft);font-style:italic;}
+/* ── Analyser : un carrousel à quatre panneaux (Arthur et Émilie, 08/10/2026) ── */
+.analyse-etapes{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;margin:4px 0 16px;}
+.analyse-etape{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border:1.5px solid var(--line);background:var(--card);border-radius:999px;font:inherit;font-size:13.5px;color:var(--ink-soft);cursor:pointer;}
+.analyse-etape:hover{border-color:var(--slate);color:var(--ink);}
+.analyse-etape.on{background:var(--slate);border-color:var(--slate);color:#fff;font-weight:600;}
+.analyse-etape-num{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--paper-deep);color:var(--ink);font-size:11.5px;font-weight:700;}
+.analyse-etape.on .analyse-etape-num{background:#fff;color:var(--slate);}
+.analyse-etape-bulle{font-size:11.5px;font-weight:500;padding:1px 8px;border-radius:999px;background:var(--paper-deep);color:var(--ink-soft);}
+.analyse-etape.on .analyse-etape-bulle{background:rgba(255,255,255,.22);color:#fff;}
+.analyse-etape-lien{color:var(--ink-soft);}
+/* La scène coupe ce qui déborde sur les côtés sans devenir un conteneur de défilement : la page défile, et les éléments collants des panneaux continuent de coller. */
+.analyse-scene{overflow-x:clip;position:relative;}
+.analyse-piste{--pos:0;display:flex;align-items:flex-start;gap:28px;position:relative;left:calc(var(--pos) * (-84% - 28px) + 8%);transition:left .45s cubic-bezier(.4,.1,.2,1);}
+.analyse-panneau{flex:0 0 84%;min-width:0;transition:opacity .35s ease, filter .35s ease;}
+.analyse-panneau:not(.actif){opacity:.18;filter:blur(2.5px);max-height:60vh;overflow:hidden;cursor:pointer;user-select:none;}
+.analyse-panneau.voisin:not(.actif){opacity:.42;}
+.analyse-panneau:not(.actif):hover{opacity:.62;}
+.analyse-titre{display:flex;align-items:center;gap:8px;margin:0 0 10px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--slate);}
+.analyse-titre .analyse-num{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--slate);color:#fff;font-size:11.5px;letter-spacing:0;}
+.analyse-episode-tete{display:flex;align-items:center;gap:10px;margin:0 0 12px;flex-wrap:wrap;}
+.analyse-fleche{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line);background:var(--card);font-size:18px;line-height:1;color:var(--slate);cursor:pointer;}
+.analyse-fleche:disabled{opacity:.35;cursor:default;}
+.analyse-episode-titre{font-size:16px;font-weight:700;}
+.analyse-episode-quand{margin-left:8px;font-size:13px;font-weight:400;color:var(--ink-soft);}
+.analyse-episode-aller{max-width:200px;font-size:13px;}
+.analyse-episode-bulle{margin-left:auto;padding:2px 10px;border-radius:999px;background:var(--paper-deep);font-size:12px;color:var(--ink-soft);}
+.analyse-note{margin:0 0 14px;font-size:13px;color:var(--ink-soft);}
+.analyse-champ{margin:0 0 12px;padding:10px 14px;background:var(--card);border:1px solid var(--line);border-radius:10px;}
+.analyse-champ-titre{margin-bottom:4px;font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);}
+.analyse-champ-texte{white-space:pre-wrap;line-height:1.6;}
+.analyse-actions{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0;}
+.analyse-bas{margin-top:28px;}
+@media (max-width:760px){.analyse-panneau{flex-basis:100%;}.analyse-piste{left:calc(var(--pos) * (-100% - 28px));}.analyse-panneau:not(.actif){display:none;}}
+@media (prefers-reduced-motion:reduce){.analyse-piste,.analyse-panneau{transition:none;}}
 
 /* ── GLOSSAIRE TOOLTIP ── */
 .gw{position:relative;display:inline;cursor:help;border-bottom:1px dotted var(--sauge-deep);color:var(--slate);font-weight:600;}
@@ -3158,8 +3192,7 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
       <span id="baf-nav-group" style="display:none;">
         <button data-go="m1" class="nav-btn">Préambule</button>
         <button data-go="m2" class="nav-btn">Recueillir</button>
-        <button data-go="m3" class="nav-btn">Organiser</button>
-        <button data-go="m4" class="nav-btn">Interpréter</button>
+        <button data-go="analyser" class="nav-btn">Analyser</button>
         <button data-go="synthese" class="nav-btn">Synthèse</button>
       </span>
       <span id="idc-nav-group" style="display:none;">
@@ -3490,19 +3523,12 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
           <span class="desc">Décrire les épisodes, le plus factuellement possible.</span>
           <span class="badge-count" id="count-m2" style="display:none;"></span>
         </button>
-        <button class="mod-btn m2" onclick="route('m3')">
+        <button class="mod-btn m2" onclick="route('analyser')">
           <span class="num">Module 2 · Temps de comprendre</span>
-          <span class="titre">Organiser</span>
+          <span class="titre">Analyser</span>
           <span class="temps">les données</span>
-          <span class="desc">Catégoriser CD, antécédents, déclencheurs, conséquences.</span>
+          <span class="desc">Lire chaque épisode, le ranger dans sa séquence, le catégoriser, puis chercher ce qui revient.</span>
           <span class="badge-count" id="count-m3" style="display:none;"></span>
-        </button>
-        <button class="mod-btn m2" onclick="route('m4')">
-          <span class="num">Module 3 · Moment de conclure</span>
-          <span class="titre">Interpréter</span>
-          <span class="temps">les données</span>
-          <span class="desc">Proposer des patterns, observer la gradation.</span>
-          <span class="badge-count" id="count-m4" style="display:none;"></span>
         </button>
       </div>
 
@@ -3834,7 +3860,7 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
 
     <div class="actions-row analyste-seul">
       <button class="btn btn-secondary" onclick="route('synthese')">Voir la synthèse</button>
-      <button class="btn btn-primary" onclick="route('m3')">Passer au module 2 — Organiser →</button>
+      <button class="btn btn-primary" onclick="route('m3')">Passer au module 2 — Analyser →</button>
     </div>
   </section>
 
@@ -3859,12 +3885,28 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
     <div class="actions-row" id="form-nav" style="margin-top:22px;"></div>
   </section>
 
-  <section id="view-m3" class="view">
+
+  <section id="view-analyser" class="view">
     <div class="mod-header">
       <span class="temps-tag tag-m2">Module 2 · Temps de comprendre</span>
-      <h2>Organiser les données</h2>
-      <div class="sub">Pas de catégories imposées : vous créez les vôtres, pour faire apparaître des regroupements sans rien figer.</div>
+      <h2>Analyser</h2>
+      <div class="sub">Lire chaque épisode tel que le déclarant l'a écrit, le ranger dans sa séquence, le catégoriser, puis chercher ce qui revient. On a toujours besoin de voir l'étape d'avant pour faire la suivante : les panneaux glissent, et leurs voisins restent en vue.</div>
     </div>
+    <div class="analyse-etapes no-print" id="analyse-etapes" role="tablist" aria-label="Les quatre étapes d'Analyser"></div>
+    <div class="analyse-scene" id="analyse-scene">
+      <div class="analyse-piste" id="analyse-piste">
+        <section class="analyse-panneau" id="pan-declaratif" data-pos="0" onclick="clicPanneauAnalyse(0)" aria-label="Déclaratif brut">
+          <div class="analyse-titre"><span class="analyse-num">1</span>Déclaratif brut</div>
+          <div class="analyse-corps"><div id="declaratif-brut"></div></div>
+        </section>
+        <section class="analyse-panneau" id="pan-decouper" data-pos="1" onclick="clicPanneauAnalyse(1)" aria-label="Découper">
+          <div class="analyse-titre"><span class="analyse-num">2</span>Découper</div>
+          <div class="analyse-corps"><div id="decouper-panneau"></div></div>
+        </section>
+        <section class="analyse-panneau" id="pan-categoriser" data-pos="2" onclick="clicPanneauAnalyse(2)" aria-label="Catégoriser">
+          <div class="analyse-titre"><span class="analyse-num">3</span>Catégoriser</div>
+          <div class="analyse-corps">
+            <div id="view-m3" class="analyse-contenu">
 
     <div id="m3-rapide-content">
     <!-- Onglets des 5 sous-modules -->
@@ -3916,36 +3958,13 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
 
     </div><!-- fin rapide-content -->
 
-    <div class="actions-row" style="margin-top:28px;">
-      <button class="btn btn-secondary" onclick="route('m2')">← Module 1</button>
-      <button class="btn btn-primary" onclick="route('m4')">Passer au module 3 — Interpréter →</button>
-    </div>
-  </section>
-
-  <section id="view-comparer" class="view">
-    <div class="mod-header">
-      <span class="temps-tag tag-m2">Module 2 · Temps de comprendre</span>
-      <h2>Comparer les deux primo codages</h2>
-      <div class="sub">Chaque codeur a fait son primo codage de son côté. Ici, à deux, vous lisez les deux codages élément par élément et vous arbitrez la synthèse, qui s'écrit dans Organiser.</div>
-    </div>
-
-    <div class="card cmp-petit-ecran">
-      <p>Le comparateur s'utilise sur un ordinateur ou une tablette : trois colonnes de texte ne tiennent pas sur un téléphone.</p>
-    </div>
-    <div class="cmp-ordi" id="cmp-zone"></div>
-    <input type="file" id="cmp-fichier" accept=".json" style="display:none;" onchange="importerCopieCodage(event)">
-
-    <div class="actions-row" style="margin-top:28px;">
-      <button class="btn btn-secondary" onclick="route('m3')">← Organiser</button>
-    </div>
-  </section>
-
-  <section id="view-m4" class="view">
-    <div class="mod-header">
-      <span class="temps-tag tag-m2">Module 3 · Moment de conclure</span>
-      <h2>Interpréter les données</h2>
-      <div class="sub">À partir de ce que vous avez organisé, vous pouvez maintenant proposer des patterns — pas pour conclure définitivement, mais pour <b>donner à voir ce que vous, vous repérez</b>. Ce matériau sera discuté avec un clinicien.</div>
-    </div>
+            </div>
+          </div>
+        </section>
+        <section class="analyse-panneau" id="pan-interpreter" data-pos="3" onclick="clicPanneauAnalyse(3)" aria-label="Interpréter">
+          <div class="analyse-titre"><span class="analyse-num">4</span>Interpréter</div>
+          <div class="analyse-corps">
+            <div id="view-m4" class="analyse-contenu">
 
     <div class="card codage-seul declarant-visibilite">
       <b>Primo codage.</b> Interpréter se fait à deux, directement en synthèse, dans le fichier socle : rien à remplir ici.
@@ -4091,11 +4110,32 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
 
     </div><!-- fin rapide-content -->
 
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+    <div class="actions-row analyse-bas no-print" id="analyse-bas"></div>
+  </section>
+
+  <section id="view-comparer" class="view">
+    <div class="mod-header">
+      <span class="temps-tag tag-m2">Module 2 · Temps de comprendre</span>
+      <h2>Comparer les deux primo codages</h2>
+      <div class="sub">Chaque codeur a fait son primo codage de son côté. Ici, à deux, vous lisez les deux codages élément par élément et vous arbitrez la synthèse, qui s'écrit dans Catégoriser (Analyser).</div>
+    </div>
+
+    <div class="card cmp-petit-ecran">
+      <p>Le comparateur s'utilise sur un ordinateur ou une tablette : trois colonnes de texte ne tiennent pas sur un téléphone.</p>
+    </div>
+    <div class="cmp-ordi" id="cmp-zone"></div>
+    <input type="file" id="cmp-fichier" accept=".json" style="display:none;" onchange="importerCopieCodage(event)">
+
     <div class="actions-row" style="margin-top:28px;">
-      <button class="btn btn-secondary" onclick="route('m3')">← Module 2</button>
-      <button class="btn btn-primary" onclick="route('synthese')">Voir la synthèse →</button>
+      <button class="btn btn-secondary" onclick="route('m3')">← Analyser</button>
     </div>
   </section>
+
 
   <section id="view-synthese" class="view">
     <div class="print-header" aria-hidden="true">
@@ -4187,7 +4227,7 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
 <div id="export-modal-overlay" class="sim-modal-overlay" style="display:none;" onclick="fermerExportModal(event)">
   <div class="sim-modal" role="dialog" aria-modal="true" aria-label="Choisir les sections à exporter">
     <h3>📄 Exporter les données</h3>
-    <p class="sim-modal-sub">Choisissez ce qui doit figurer dans le document Word. Les onglets d'Organiser et d'Interpréter sont tous repris, pas seulement celui affiché à l'écran.</p>
+    <p class="sim-modal-sub">Choisissez ce qui doit figurer dans le document Word. Les onglets de Catégoriser et d'Interpréter sont tous repris, pas seulement celui affiché à l'écran.</p>
     <div style="text-align:left;margin:16px 0;display:flex;flex-direction:column;gap:10px;">
       <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;cursor:pointer;"><input type="checkbox" id="exp-m1" checked> Préambule</label>
       <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;cursor:pointer;"><input type="checkbox" id="exp-m2" checked> Recueil des épisodes</label>
@@ -4845,6 +4885,167 @@ function choisirVoletArrivee(etaitSurM3) {
   if (!etaitSurM3 && state.m3) state.m3.sous = 'cp';
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   ANALYSER : UN CARROUSEL À QUATRE PANNEAUX (Arthur et Émilie, 08/10/2026)
+   ══════════════════════════════════════════════════════════════════════
+   Le RDAF n'a plus que quatre modules : Préambule, Recueillir, Analyser, Synthèse. Analyser enchaîne quatre panneaux —
+   Déclaratif brut, Découper, Catégoriser, Interpréter — et on a toujours besoin de voir l'étape d'avant pour faire la
+   suivante : le panneau ouvert est au centre, ses voisins restent en vue, flous, sur les côtés, et un clic dessus y mène.
+   Organiser et Interpréter n'existent plus comme pages : « m3 » ouvre le panneau Catégoriser, « m4 » le panneau
+   Interpréter, et les anciennes adresses (#organiser, #interpreter) y mènent. Leur contenu est inchangé.
+   L'épisode affiché est le même dans Déclaratif brut et Découper (flèches, liste). */
+function analyseEtat() { return analyseEtat.e || (analyseEtat.e = {pos: 0, episode: 0}); }
+function analyseEtapes() {
+  return [{id: 'declaratif', libelle: 'Déclaratif brut'}, {id: 'decouper', libelle: 'Découper'},
+          {id: 'categoriser', libelle: 'Catégoriser'}, {id: 'interpreter', libelle: 'Interpréter'}];
+}
+function analyseEpisodes() { return (state.m2 && state.m2.evenements) || []; }
+function analyseEpisodeCourant() {
+  const n = analyseEpisodes().length, e = analyseEtat();
+  if (e.episode >= n) e.episode = n - 1;
+  if (e.episode < 0) e.episode = 0;
+  return n ? analyseEpisodes()[e.episode] : null;
+}
+// Un épisode est « découpé » quand l'analyste y a repéré des CD ou des passages (contexte, antécédents, conséquences, interventions).
+function episodeDecoupe(evt) {
+  const m3 = (state && state.m3) || {};
+  if (evt && (m3.decoupages || {})[evt.id]) return true;
+  return Object.keys(m3.decoupagesVolets || {}).some(v => {
+    const d = (m3.decoupagesVolets[v] || {})[evt && evt.id];
+    return !!(d && (d.unites || []).length);
+  });
+}
+function nbEpisodesDecoupes() { return analyseEpisodes().filter(episodeDecoupe).length; }
+function analyseVisible() { const v = document.getElementById('view-analyser'); return !!(v && v.classList.contains('show')); }
+
+function renderAnalyseEtapes() {
+  const el = document.getElementById('analyse-etapes');
+  if (!el) return;
+  const e = analyseEtat(), n = analyseEpisodes().length;
+  const cat = computeM3Categorisation(), pct4 = computeM4Pct();
+  const bulles = [
+    n ? n + ' épisode' + (n > 1 ? 's' : '') : '',
+    n ? nbEpisodesDecoupes() + '/' + n + ' découpé' + (nbEpisodesDecoupes() > 1 ? 's' : '') : '',
+    cat.total > 0 ? cat.pct + ' % classé' : '',
+    pct4 > 0 ? pct4 + ' % rempli' : ''
+  ];
+  el.innerHTML = analyseEtapes().map((et, i) =>
+    '<button type="button" class="analyse-etape' + (i === e.pos ? ' on' : '') + '" role="tab" aria-selected="' + (i === e.pos) + '" onclick="allerAnalyse(' + i + ')">' +
+      '<span class="analyse-etape-num">' + (i + 1) + '</span><span class="analyse-etape-nom">' + esc(et.libelle) + '</span>' +
+      (bulles[i] ? '<span class="analyse-etape-bulle">' + esc(bulles[i]) + '</span>' : '') +
+    '</button>').join('<span class="analyse-etape-lien" aria-hidden="true">›</span>');
+}
+
+function renderAnalyseBas() {
+  const el = document.getElementById('analyse-bas');
+  if (!el) return;
+  const e = analyseEtat(), et = analyseEtapes();
+  el.innerHTML = (e.pos === 0
+      ? '<button type="button" class="btn btn-secondary" onclick="route(\'m2\')">← Recueillir</button>'
+      : '<button type="button" class="btn btn-secondary" onclick="allerAnalyse(' + (e.pos - 1) + ')">← ' + esc(et[e.pos - 1].libelle) + '</button>') +
+    (e.pos === 3
+      ? '<button type="button" class="btn btn-primary" onclick="route(\'synthese\')">Voir la synthèse →</button>'
+      : '<button type="button" class="btn btn-primary" onclick="allerAnalyse(' + (e.pos + 1) + ')">' + esc(et[e.pos + 1].libelle) + ' →</button>');
+}
+
+/* Le panneau ouvert, et ceux qu'on voit sur les côtés. */
+function allerAnalyse(pos, options) {
+  const e = analyseEtat();
+  pos = Math.max(0, Math.min(3, parseInt(pos, 10) || 0));
+  e.pos = pos;
+  const piste = document.getElementById('analyse-piste');
+  if (piste) piste.style.setProperty('--pos', pos);
+  document.querySelectorAll('#analyse-piste > .analyse-panneau').forEach(p => {
+    const rang = +p.dataset.pos, actif = rang === pos;
+    p.classList.toggle('actif', actif);
+    p.classList.toggle('voisin', Math.abs(rang - pos) === 1);
+    p.setAttribute('aria-hidden', actif ? 'false' : 'true');
+    const corps = p.querySelector('.analyse-corps');
+    if (corps) { if (actif) corps.removeAttribute('inert'); else corps.setAttribute('inert', ''); }
+  });
+  // Les deux premiers panneaux se lisent ensemble : on les garde à jour tous les deux.
+  if (pos <= 2) { renderDeclaratifBrut(); renderDecouper(); }
+  if (pos === 2) renderM3();
+  if (pos === 3) renderM4();
+  renderAnalyseEtapes();
+  renderAnalyseBas();
+  if (!(options && options.sansDefilement)) window.scrollTo({top: 0, behavior: 'instant'});
+}
+function clicPanneauAnalyse(pos) { if (analyseEtat().pos !== pos) allerAnalyse(pos); }
+
+/* Remet à jour ce qui se lit sans changer de panneau (appelé après un découpage, une catégorisation…). */
+function majPanneauxAnalyse() {
+  if (!document.getElementById('analyse-etapes')) return;
+  try { renderDeclaratifBrut(); renderDecouper(); renderAnalyseEtapes(); } catch (er) { /* pas encore posé */ }
+}
+
+function changerEpisodeAnalyse(delta, rang) {
+  const e = analyseEtat(), n = analyseEpisodes().length;
+  if (!n) return;
+  e.episode = rang !== undefined ? parseInt(rang, 10) || 0 : e.episode + delta;
+  e.episode = Math.max(0, Math.min(n - 1, e.episode));
+  renderDeclaratifBrut();
+  renderDecouper();
+  renderAnalyseEtapes();
+}
+
+/* « Épisode 3 / 29 », les flèches, la liste, et la bulle « découpés / total ». */
+function enteteEpisodeAnalyse(evt) {
+  const e = analyseEtat(), eps = analyseEpisodes(), n = eps.length;
+  const quand = [evt.date ? formatDate(evt.date) : '', evt.heure || '', evt.moment || '', evt.declarant || ''].filter(Boolean).join(' · ');
+  const options = eps.map((x, i) => '<option value="' + i + '"' + (i === e.episode ? ' selected' : '') + '>Épisode ' + (i + 1) +
+    (x.date ? ' · ' + esc(formatDate(x.date)) : '') + (x.heure ? ' ' + esc(x.heure) : '') + '</option>').join('');
+  return '<div class="analyse-episode-tete">' +
+    '<button type="button" class="analyse-fleche" aria-label="Épisode précédent" title="Épisode précédent" onclick="changerEpisodeAnalyse(-1)"' + (e.episode <= 0 ? ' disabled' : '') + '>‹</button>' +
+    '<div class="analyse-episode-titre">Épisode ' + (e.episode + 1) + ' / ' + n + (quand ? '<span class="analyse-episode-quand">' + esc(quand) + '</span>' : '') + '</div>' +
+    '<button type="button" class="analyse-fleche" aria-label="Épisode suivant" title="Épisode suivant" onclick="changerEpisodeAnalyse(1)"' + (e.episode >= n - 1 ? ' disabled' : '') + '>›</button>' +
+    '<select class="analyse-episode-aller" aria-label="Aller à un épisode" onchange="changerEpisodeAnalyse(0, this.value)">' + options + '</select>' +
+    '<span class="analyse-episode-bulle" title="Épisodes où l\'analyste a repéré des CD ou des passages">' + nbEpisodesDecoupes() + '/' + n + ' découpé' + (nbEpisodesDecoupes() > 1 ? 's' : '') + '</span>' +
+  '</div>';
+}
+function analyseSansEpisode() {
+  return '<div class="construction"><span class="ico">📋</span><h3>Aucun épisode à analyser</h3>' +
+    '<p>Remplissez d\'abord le module 1 (Recueillir) pour avoir des épisodes à lire ici.</p>' +
+    '<button type="button" class="btn btn-primary btn-sm" onclick="route(\'m2\')">Aller au module 1 — Recueillir</button></div>';
+}
+
+/* Panneau 1 : le déclaratif brut d'un épisode, en lecture seule — on n'y touche jamais. */
+function renderDeclaratifBrut() {
+  const el = document.getElementById('declaratif-brut');
+  if (!el) return;
+  const evt = analyseEpisodeCourant();
+  if (!evt) { el.innerHTML = analyseSansEpisode(); return; }
+  const champs = champsContexte(evt).concat(champsCitables(evt));
+  if (evt.entourage && String(evt.entourage).trim()) champs.push({champ: 'entourage', titre: 'Pour l\'entourage', texte: String(evt.entourage)});
+  el.innerHTML = enteteEpisodeAnalyse(evt) +
+    '<p class="analyse-note">Le déclaratif brut : on n\'y touche jamais. Il se lit ici tel que le déclarant l\'a écrit.</p>' +
+    (champs.length
+      ? champs.map(c => '<div class="analyse-champ"><div class="analyse-champ-titre">' + esc(c.titre) + '</div><div class="analyse-champ-texte">' + esc(c.texte) + '</div></div>').join('')
+      : '<p class="analyse-note">Cet épisode ne contient encore aucun texte.</p>');
+}
+
+/* Panneau 2 : découper. Le rangement du déclaratif dans la séquence de l'épisode (contexte · phases · conséquence) arrive
+   à l'étape suivante de la refonte ; en attendant, les découpages actuels y sont accessibles. */
+function renderDecouper() {
+  const el = document.getElementById('decouper-panneau');
+  if (!el) return;
+  const evt = analyseEpisodeCourant();
+  if (!evt) { el.innerHTML = analyseSansEpisode(); return; }
+  const id = esc(String(evt.id));
+  const st = structureCD(evt);
+  const dec = nom => { const d = ((state.m3 || {}).decoupagesVolets || {})[nom]; return !!(d && d[evt.id] && (d[evt.id].unites || []).length); };
+  const volets = [['contexte', 'le contexte'], ['antecedents', 'les antécédents'], ['consequences', 'les conséquences'], ['interventions', 'les interventions']];
+  el.innerHTML = enteteEpisodeAnalyse(evt) +
+    '<p class="analyse-note"><b>Ici, on rangera ce que le déclarant a écrit dans la séquence de l\'épisode</b> : contexte, phase 1 (antécédent, CD, intervention), phases suivantes, conséquence. ' +
+    'Cette étape est en cours de refonte. En attendant, vous pouvez repérer les CD et les passages de cet épisode avec les outils actuels.</p>' +
+    '<div class="analyse-champ"><div class="analyse-champ-titre">Les CD de l\'épisode</div>' +
+      '<div class="analyse-champ-texte">' + (st.decoupe ? st.cds.length + ' CD repéré' + (st.cds.length > 1 ? 's' : '') + ' par l\'analyste.' : 'Aucun découpage : le déclaratif tel qu\'il a été écrit.') + '</div>' +
+      '<div class="analyse-actions"><button type="button" class="btn btn-secondary btn-sm" onclick="ouvrirDecoupage(\'' + id + '\')">✂ Découper les CD</button></div></div>' +
+    '<div class="analyse-champ"><div class="analyse-champ-titre">Les autres volets</div>' +
+      '<div class="analyse-actions">' + volets.map(([v, lib]) =>
+        '<button type="button" class="btn btn-secondary btn-sm" onclick="ouvrirDecoupageVolet(\'' + v + '\', \'' + id + '\')">✂ ' + esc(lib) + (dec(v) ? ' ✓' : '') + '</button>').join('') + '</div></div>';
+}
+
 function route(name, fromHistory){
   // Si on quitte le formulaire d\'épisode sans valider, conserver la
   // saisie en cours comme brouillon (rien n\'est perdu). Sauf si on le quitte
@@ -4855,13 +5056,17 @@ function route(name, fromHistory){
     try { Object.assign(formDraft, collecterEtape(ETAPES[currentEtapeIdx])); saveBrouillon(); } catch(e) {}
   }
   fermetureVolontaire = false;
+  /* Organiser et Interpréter sont des panneaux d'Analyser : leurs anciennes adresses y mènent. */
+  let posAnalyse = null;
+  if (name === 'm3') { posAnalyse = 2; name = 'analyser'; }
+  else if (name === 'm4') { posAnalyse = 3; name = 'analyser'; }
+  else if (name === 'analyser') posAnalyse = analyseEtat().pos;
   /* Un déclarant ne se fait pas refouler : la vue s'ouvre et dit ce qu'elle
      fait, et qui s'en charge. Et hors mode déclarant, ses deux pages à lui
      n'ont aucun sens : elles renvoient à l'accueil. */
   if (modeDeclarantActif() && VUES_RESERVEES[name]) { renderReserve(name); name = 'reserve'; }
   else if (!modeDeclarantActif() && name === 'reserve') name = 'declarant';
-  const vueM3 = document.getElementById('view-m3');
-  const etaitSurM3 = !!(vueM3 && vueM3.classList.contains('show'));
+  const etaitSurM3 = analyseVisible() && analyseEtat().pos === 2;
   document.querySelectorAll('section.view').forEach(s=>s.classList.remove('show'));
   const target = document.getElementById('view-'+name);
   if(target) target.classList.add('show');
@@ -4872,7 +5077,7 @@ function route(name, fromHistory){
   /* Sans fichier ouvert, la page déclarant n'appartient à aucun outil : pas de
      menu, rien d'autre qu'un bouton pour ouvrir son fichier. */
   const entreeParticiper = name === 'declarant' && !modeDeclarantActif();
-  const isBaf = ['baf-accueil','m1','m2','m2-form','m3','comparer','m4','synthese','declarant','reserve'].includes(name) && !entreeParticiper;
+  const isBaf = ['baf-accueil','m1','m2','m2-form','analyser','comparer','synthese','declarant','reserve'].includes(name) && !entreeParticiper;
   const isIdc = ['idc-accueil','idc-main'].includes(name);
   const isGlobal = ['accueil','reperes','ressources','apropos','notes','parcours'].includes(name);
   const bafNavGroup = document.getElementById('baf-nav-group');
@@ -4887,9 +5092,9 @@ function route(name, fromHistory){
   if(name === 'parcours') renderParcours();
   if(name === 'comparer') {
     renderComparateur();
-    // Pas de bouton à elle dans le menu : la page appartient à Organiser.
-    const btnOrganiser = document.querySelector('.nav-btn[data-go="m3"]');
-    if (btnOrganiser) btnOrganiser.classList.add('on');
+    // Pas de bouton à elle dans le menu : la page appartient à Analyser.
+    const btnAnalyser = document.querySelector('.nav-btn[data-go="analyser"]');
+    if (btnAnalyser) btnAnalyser.classList.add('on');
   }
   if(name === 'reperes') renderReferences();
   poserSituer(name);
@@ -4901,7 +5106,7 @@ function route(name, fromHistory){
   document.body.classList.toggle('mode-codage', !!(state.codage && state.codage.actif));
 
   // Barre fixe sous le header : flèche retour + export, propre à chaque outil
-  const dansOutil1 = ['baf-accueil','m1','m2','m2-form','m3','comparer','m4','synthese'].includes(name);
+  const dansOutil1 = ['baf-accueil','m1','m2','m2-form','analyser','comparer','synthese'].includes(name);
   const dansOutil2 = ['idc-accueil','idc-main'].includes(name);
   const surAccueilOutil = (name === 'baf-accueil' || name === 'idc-accueil');
   const subbar = document.getElementById('tool-subbar');
@@ -4926,8 +5131,7 @@ function route(name, fromHistory){
   window.scrollTo({top:0, behavior:'instant'});
   refreshAccueilBadges();
   if(name==='synthese') { refreshSynthese(); if(detailsVisible) renderCharts(); }
-  if(name==='m3') { choisirVoletArrivee(etaitSurM3); renderM3(); }
-  if(name==='m4') renderM4();
+  if(name==='analyser') { if (posAnalyse === 2) choisirVoletArrivee(etaitSurM3); allerAnalyse(posAnalyse, {sansDefilement: true}); }
   if(name==='idc-main') { setNavActive('cotation'); renderMain(); }
   if(name==='idc-accueil') { try { majEntreeDossierOuvert(); } catch(e) {} }
   setTimeout(autoGrowAllTextareas, 30);
@@ -5105,6 +5309,7 @@ const ADRESSES_VUES = {
   'm1':           'preambule',
   'm2':           'recueillir',
   'm2-form':      'nouvel-evenement',
+  'analyser':     'analyser',
   'm3':           'organiser',
   'comparer':     'comparer-les-codages',
   'm4':           'interpreter',
@@ -7881,7 +8086,7 @@ function refreshSynthese(){
     }).filter(Boolean);
 
     if (nonVides.length === 0) {
-      synthM3El.innerHTML = '<span style="color:var(--ink-soft);font-style:italic;">Le module 2 (Organiser) n\u2019a pas encore été rempli.</span>';
+      synthM3El.innerHTML = '<span style="color:var(--ink-soft);font-style:italic;">L\u2019étape Catégoriser (module 2) n\u2019a pas encore été remplie.</span>';
     } else {
       synthM3El.innerHTML = M3_SOUS.map(s => histogrammeVolet(s)).filter(Boolean).join('');
     }
@@ -7898,9 +8103,9 @@ function refreshSynthese(){
     const saisi = patterns.length > 0 || grads.length > 0 || vaseSaisiDansInterpreter();
     const blocVase = blocVaseSynthese();
     if (!saisi && !blocVase) {
-      synthM4El.innerHTML = '<span style="color:var(--ink-soft);font-style:italic;">Le module 3 (Interpréter) n’a pas encore été rempli.</span>';
+      synthM4El.innerHTML = '<span style="color:var(--ink-soft);font-style:italic;">L’étape Interpréter (module 2) n’a pas encore été remplie.</span>';
     } else {
-      let html = saisi ? '' : '<div style="color:var(--ink-soft);font-style:italic;margin-bottom:12px;">Le module 3 (Interpréter) n’a pas encore été rempli.</div>';
+      let html = saisi ? '' : '<div style="color:var(--ink-soft);font-style:italic;margin-bottom:12px;">L’étape Interpréter (module 2) n’a pas encore été remplie.</div>';
       if (patterns.length > 0) {
         ensureM3();
         const cats3 = state.m3.categories;
@@ -8135,13 +8340,13 @@ function computeIndice() {
     },
     {
       id: 'categorisation',
-      label: 'Taux de catégorisation (module 2 — Organiser)',
+      label: 'Taux de catégorisation (module 2 — Analyser)',
       valeur: Math.round(tauxCateg * 100),
       score: tauxCateg >= 0.6 ? 1 : tauxCateg >= 0.3 ? 0.5 : 0,
       affichage: Math.round(tauxCateg * 100) + '% des items catégorisés',
       conseils: {
-        0: 'Très peu d\'items catégorisés. Sans le module Organiser, les corrélations ne peuvent pas être calculées et la synthèse reste superficielle.',
-        0.5: '30-59% des items catégorisés. Encouragez l\'équipe à utiliser davantage le module Organiser.',
+        0: 'Très peu d\'items catégorisés. Sans l\'étape Catégoriser, les corrélations ne peuvent pas être calculées et la synthèse reste superficielle.',
+        0.5: '30-59% des items catégorisés. Encouragez l\'équipe à utiliser davantage l\'étape Catégoriser.',
         1: null
       }
     },
@@ -8613,7 +8818,7 @@ function exporterJSON(){
 const SECTIONS_EXPORT = [
   {cle:'m1',       label:'Préambule', vue:'view-m1'},
   {cle:'m2',       label:'Recueil des épisodes',               vue:'view-m2'},
-  {cle:'m3',       label:'Organisation des données',             vue:'view-m3'},
+  {cle:'m3',       label:'Catégorisation des données',             vue:'view-m3'},
   {cle:'m4',       label:'Interprétation',                       vue:'view-m4'},
   {cle:'synthese', label:'Synthèse',                             vue:'view-synthese'},
 ];
@@ -10557,7 +10762,7 @@ const _CONTROLES = [
       v.push(statutEvtM3('cp', [{id: 'zc', vide: true}]).statut);         // rien à classer
     } finally { Object.keys(cats).forEach(k => { delete cats[k]; }); Object.assign(cats, JSON.parse(sauveCats)); }
     // Dans la colonne : la classe de chaque épisode suit son badge, et replié, chaque en-tête tient sur une ligne.
-    const vue = document.getElementById('view-m3');
+    const vue = document.getElementById('view-analyser');
     let coherent = true, uneLigne = true, nb = 0;
     if (vue && (state.m2.evenements || []).length && window.innerWidth >= 721) {
       const etait = vue.classList.contains('show');
@@ -10955,6 +11160,54 @@ const _CONTROLES = [
       persist = vraiPersist; state.m2.evenements = sauveEvts; state.m3 = JSON.parse(sauveM3);
       if (sauveComp) state.comparaison = sauveComp; else delete state.comparaison;
     }
+  }},
+  {nom:'Analyser : un carrousel à quatre panneaux, les anciennes adresses d\'Organiser et d\'Interpréter y mènent', test: () => {
+    const vue = document.getElementById('view-analyser');
+    if (!vue) return _bancEgal('Vue Analyser présente', true, false);
+    const sauvePos = analyseEtat().pos, sauveEp = analyseEtat().episode;
+    try {
+      route('m3');
+      const apresM3 = [analyseEtat().pos, vue.classList.contains('show'), document.querySelector('.analyse-panneau.actif').id].join(',');
+      route('m4');
+      const apresM4 = [analyseEtat().pos, document.querySelector('.analyse-panneau.actif').id].join(',');
+      allerAnalyse(1, {sansDefilement: true});
+      const panneaux = [...document.querySelectorAll('#analyse-piste > .analyse-panneau')];
+      const voisins = panneaux.filter(p => p.classList.contains('voisin')).map(p => p.dataset.pos).join('');
+      const inertes = panneaux.filter(p => p.querySelector('.analyse-corps').hasAttribute('inert')).length;
+      const pastilles = document.querySelectorAll('#analyse-etapes .analyse-etape').length;
+      const enCours = document.querySelector('#analyse-etapes .analyse-etape.on .analyse-etape-nom').textContent;
+      const adresses = [vueDepuisAdresse('#organiser'), vueDepuisAdresse('#interpreter'), vueDepuisAdresse('#analyser'), adresseDeVue('analyser')].join(',');
+      const nav = [...document.querySelectorAll('#baf-nav-group .nav-btn')].map(b => b.textContent.trim()).join(',');
+      const enveloppes = !!document.getElementById('view-m3') && !!document.getElementById('view-m4') && !document.querySelector('section#view-m3, section#view-m4');
+      return _bancEgal('Organiser → Catégoriser (rang 2) | Interpréter → rang 3 | panneau 1 : voisins 0 et 2, 3 panneaux inertes | 4 pastilles, la bonne allumée | adresses | menu à quatre modules | contenus gardés dans les panneaux',
+        '2,true,pan-categoriser|3,pan-interpreter|02,3|4,Découper|m3,m4,analyser,analyser|Préambule,Recueillir,Analyser,Synthèse|true',
+        [apresM3, apresM4, voisins + ',' + inertes, pastilles + ',' + enCours, adresses, nav, enveloppes].join('|'));
+    } finally {
+      analyseEtat().pos = sauvePos; analyseEtat().episode = sauveEp;
+      route('accueil');
+    }
+  }},
+  {nom:'Analyser : le déclaratif brut se lit un épisode à la fois, avec ses flèches', test: () => {
+    const evts = state.m2.evenements || [];
+    if (!evts.length) return _bancEgal('Sans épisode : message', true, true);
+    const sauveEp = analyseEtat().episode;
+    try {
+      analyseEtat().episode = 0;
+      renderDeclaratifBrut();
+      const el = document.getElementById('declaratif-brut');
+      const titre0 = el.querySelector('.analyse-episode-titre').firstChild.textContent.trim();
+      const avantDesactivee = el.querySelector('[aria-label="Épisode précédent"]').disabled;
+      const texte = [...el.querySelectorAll('.analyse-champ-texte')].map(x => x.textContent).join(' ');
+      const dit = evts[0].comportement ? texte.indexOf(evts[0].comportement.trim().slice(0, 20)) !== -1 : true;
+      changerEpisodeAnalyse(1);
+      const titre1 = document.querySelector('#declaratif-brut .analyse-episode-titre').firstChild.textContent.trim();
+      const memeDansDecouper = document.querySelector('#decouper-panneau .analyse-episode-titre').firstChild.textContent.trim() === titre1;
+      changerEpisodeAnalyse(0, 999);
+      const dernier = analyseEtat().episode === evts.length - 1;
+      return _bancEgal('épisode 1 | flèche précédente grisée | texte du déclarant affiché | épisode 2 après la flèche (même épisode dans Découper) | l\'index se borne au dernier',
+        'Épisode 1 / ' + evts.length + '|true|true|' + (evts.length > 1 ? 'Épisode 2 / ' + evts.length : 'Épisode 1 / ' + evts.length) + '|true|true',
+        [titre0, avantDesactivee, dit, titre1, memeDansDecouper, dernier].join('|'));
+    } finally { analyseEtat().episode = sauveEp; majPanneauxAnalyse(); }
   }},
   {nom:'Les couleurs des catégories se distinguent deux à deux', test: () => {
     /* Ce qui fait confondre deux catégories, c'est la teinte : les deux violets
@@ -13944,6 +14197,7 @@ function computeM3Categorisation() {
 // Rendu du module M3 (appelé depuis route() quand on va sur 'm3')
 function renderM3() {
   ensureM3();
+  majPanneauxAnalyse();
   const evts = state.m2.evenements || [];
   const noData = document.getElementById('m3-no-data');
   const workspace = document.getElementById('m3-workspace');
@@ -14956,7 +15210,7 @@ function blocSuggestionsPatterns() {
   if (!phrases.length && !contexte.length) {
     let manque;
     if (stats.total < 5) manque = 'Il faut au moins cinq épisodes pour que des régularités aient un sens.';
-    else if (stats.categorises < 5) manque = 'Trop peu d\'épisodes sont catégorisés dans Organiser : c\'est la catégorisation qui rend les régularités calculables.';
+    else if (stats.categorises < 5) manque = 'Trop peu d\'épisodes sont catégorisés dans Catégoriser : c\'est la catégorisation qui rend les régularités calculables.';
     else manque = 'Aucun lien ne se détache pour l\'instant : rien qui revienne au moins ' + SUGG_MIN_OCCURRENCES + ' fois et nettement plus souvent qu\'à l\'ordinaire. Continuez le recueil, ou affinez la catégorisation.';
     return '<div class="suggestions-patterns">' + entete +
       '<div class="sp-avert">' + manque + '</div></div>';
@@ -15033,7 +15287,7 @@ function remplirTermesExploration() {
   if (!termes.length) {
     EXPLORER_SELECTS.forEach(id => {
       const el = document.getElementById(id);
-      if (el) el.innerHTML = '<option value="">— catégorisez d\'abord des éléments dans Organiser —</option>';
+      if (el) el.innerHTML = '<option value="">— catégorisez d\'abord des éléments dans Catégoriser —</option>';
     });
     document.getElementById('explorer-resultat').innerHTML = '';
     return;
@@ -15238,7 +15492,7 @@ function renderPatterns() {
   const noCats = catsA.length === 0 && catsB.length === 0 && catsC.length === 0;
 
   if (noCats && patterns.length === 0) {
-    el.innerHTML = `<div class="event-empty">Complétez d'abord le module 2 (Organiser) pour créer des catégories — les patterns se construisent à partir de vos catégories.</div>`;
+    el.innerHTML = `<div class="event-empty">Complétez d'abord l'étape Catégoriser (module 2) pour créer des catégories — les patterns se construisent à partir de vos catégories.</div>`;
     return;
   }
 
@@ -15601,7 +15855,7 @@ function blocStatsGradation() {
   const entete = '<h5>Ce que les données disent de la montée</h5>';
   if (!parties.length) {
     return '<div class="suggestions-patterns sg-bloc">' + entete +
-      '<div class="sp-avert">Rien à compter pour l\'instant. Ces lectures demandent des comportements et des interventions catégorisés dans Organiser, ' +
+      '<div class="sp-avert">Rien à compter pour l\'instant. Ces lectures demandent des comportements et des interventions catégorisés dans Catégoriser, ' +
       'l\'effet des interventions noté, et le vase coté dans les épisodes.</div></div>';
   }
   return '<div class="suggestions-patterns sg-bloc">' + entete +
@@ -17923,22 +18177,17 @@ const SITUER = {
   m2: {
     ici: "Des épisodes décrits un par un, tels qu'ils se sont passés.",
     vient: "De vous, et des fichiers déclarants que d'autres personnes vous renvoient.",
-    repart: "Vers Organiser : chaque phrase écrite ici y devient un élément à catégoriser."
+    repart: "Vers Analyser : chaque épisode écrit ici s'y lit tel quel, puis s'y range et s'y catégorise."
   },
-  m3: {
-    ici: "On repère les CD de chaque épisode, puis on regroupe ce qui se ressemble, volet par volet.",
-    vient: "Des textes écrits dans Recueillir. Rien n'est ressaisi : tout est repris tel quel.",
-    repart: "Vers Interpréter et la Synthèse, qui comptent ce que vous avez regroupé."
-  },
-  m4: {
-    ici: "Les hypothèses, les séquences qui reviennent, les paliers du vase de tension.",
-    vient: "De vos catégories, et des notes écrites par les déclarants à chaque mesure de tension.",
-    repart: "Vers la Synthèse, puis vers l'analyse fonctionnelle que vous écrirez à partir d'elle."
+  analyser: {
+    ici: "On lit chaque épisode tel que le déclarant l'a écrit, on le range dans sa séquence, on catégorise ce qui a été rangé, puis on cherche ce qui revient.",
+    vient: "Des textes écrits dans Recueillir. Rien n'est ressaisi : le déclaratif brut reste intact, tout se lit par-dessus.",
+    repart: "Vers la Synthèse, qui compte ce que vous avez regroupé, puis vers l'analyse fonctionnelle que vous écrirez à partir d'elle."
   },
   comparer: {
     ici: "Les deux primo codages côte à côte, élément par élément, et la synthèse que vous arbitrez.",
     vient: "Des deux primo codages, faits chacun de son côté à partir du seul déclaratif.",
-    repart: "Vers Organiser : la synthèse devient le seul codage, celui qu'Interpréter exploite."
+    repart: "Vers Analyser : la synthèse devient le seul codage, celui qu'Interpréter exploite."
   },
   synthese: {
     ici: "Ce que l'ensemble des épisodes donne à voir, en chiffres et en graphiques.",
@@ -18015,9 +18264,8 @@ function fermerSituerClavier(ev) {
 
 const SITUER_ENCHAINEMENT = [
   {de: 'Préambule → Recueillir :', quoi: "les moments de la journée type (et chaque texte écrit dans l'emploi du temps détaillé) et les lieux, qui deviennent les cases où chaque épisode se range."},
-  {de: 'Recueillir → Organiser :', quoi: "chaque réponse écrite devient un élément à catégoriser, texte pour texte."},
-  {de: 'Organiser → Interpréter :', quoi: "les catégories deviennent les termes des séquences et des croisements."},
-  {de: 'Interpréter → Synthèse :', quoi: "les patterns et les paliers du vase rejoignent les chiffres du recueil."},
+  {de: 'Recueillir → Analyser :', quoi: "chaque épisode écrit est lu tel quel, puis rangé dans sa séquence et catégorisé, texte pour texte."},
+  {de: 'Analyser → Synthèse :', quoi: "les catégories, les patterns et les paliers du vase rejoignent les chiffres du recueil."},
   {de: 'Synthèse → Analyse fonctionnelle :', quoi: "une fois le recueil entièrement fait, le binôme écrit les hypothèses de fonction à partir de la synthèse."},
   {de: 'Analyse fonctionnelle → Indice de confiance :', quoi: "facultatif — l'ICAF cote l'analyse produite sur dix critères, dont la complétude du matériau et le niveau de détail du recueil. L'analyse, sa cotation et ce qu'elle fait aller chercher : c'est l'AF évaluée."}
 ];
@@ -18035,8 +18283,7 @@ function renderParcours() {
   const etapes = [
     {x: 40,  nom: 'Préambule',   sous: "ce qu'on sait déjà"},
     {x: 196, nom: 'Recueillir',  sous: 'les épisodes'},
-    {x: 352, nom: 'Organiser',   sous: 'les catégories'},
-    {x: 508, nom: 'Interpréter', sous: 'ce qui revient'},
+    {x: 352, l: 292, nom: 'Analyser', sous: 'découper · catégoriser · interpréter'},
     {x: 664, nom: 'Synthèse',    sous: 'la vue d\'ensemble'}
   ];
   const L = 136, H = 58, Y = 64;
@@ -18044,10 +18291,10 @@ function renderParcours() {
     '<text x="' + x + '" y="' + y + '" text-anchor="' + (ancre || 'middle') + '" font-size="' + taille + '"' +
       (gras ? ' font-weight="700"' : '') + ' fill="' + couleur + '">' + esc(t) + '</text>';
   const boite = (e) =>
-    '<rect x="' + e.x + '" y="' + Y + '" width="' + L + '" height="' + H + '" rx="9" ' +
+    '<rect x="' + e.x + '" y="' + Y + '" width="' + (e.l || L) + '" height="' + H + '" rx="9" ' +
       'fill="var(--card)" stroke="var(--slate)" stroke-width="1.6"/>' +
-    texte(e.x + L / 2, Y + 24, e.nom, 14, 'var(--ink)', true) +
-    texte(e.x + L / 2, Y + 42, e.sous, 11.5, 'var(--ink-soft)');
+    texte(e.x + (e.l || L) / 2, Y + 24, e.nom, 14, 'var(--ink)', true) +
+    texte(e.x + (e.l || L) / 2, Y + 42, e.sous, 11.5, 'var(--ink-soft)');
   const fleche = (x1, x2, y, couleur) =>
     '<line x1="' + x1 + '" y1="' + y + '" x2="' + (x2 - 7) + '" y2="' + y + '" stroke="' + couleur + '" stroke-width="1.6"/>' +
     '<polygon points="' + x2 + ',' + y + ' ' + (x2 - 8) + ',' + (y - 4.5) + ' ' + (x2 - 8) + ',' + (y + 4.5) + '" fill="' + couleur + '"/>';
@@ -18064,7 +18311,7 @@ function renderParcours() {
     texte(34, 40, '1 · CONSTRUIRE UN DÉCLARATIF DE QUALITÉ', 13.5, 'var(--slate)', true, 'start') +
     texte(806, 40, 'le RDAF, dans la BAF', 11.5, 'var(--ink-soft)', false, 'end') +
     etapes.map(boite).join('') +
-    etapes.slice(0, -1).map((e, i) => fleche(e.x + L, etapes[i + 1].x, Y + H / 2, 'var(--slate)')).join('') +
+    etapes.slice(0, -1).map((e, i) => fleche(e.x + (e.l || L), etapes[i + 1].x, Y + H / 2, 'var(--slate)')).join('') +
     // La boucle des déclarants, sous Recueillir
     '<rect x="140" y="196" width="248" height="54" rx="9" fill="var(--sauge-pale)" stroke="var(--sauge-deep)" stroke-width="1.6"/>' +
     texte(264, 218, 'Familles, foyers, institutions', 13.5, 'var(--sauge-deep)', true) +
@@ -18105,7 +18352,7 @@ function renderParcours() {
     '</div>' +
     '<div class="ethique">' +
       '<b>Rien ne se ressaisit d\'une étape à l\'autre.</b> Ce que vous écrivez une fois dans Recueillir ' +
-      'traverse tout l\'outil sans être retouché : Organiser le range, Interpréter le compte, la Synthèse ' +
+      'traverse tout l\'outil sans être retouché : Analyser le range et le compte, la Synthèse ' +
       'le met en forme. Si vous avez l\'impression de retaper quelque chose, c\'est qu\'il y a une erreur — ' +
       'dites-le-nous.' +
     '</div>';
@@ -18140,15 +18387,10 @@ function renderParcours() {
 
 /* Ce qu'un déclarant ne fait pas — et ce qu'on lui répond quand il y va. */
 const VUES_RESERVEES = {
-  m3: {
-    titre: 'Organiser les données',
-    quoi: "Regrouper en catégories tout ce qui a été décrit — les comportements, ce qui les précède, ce qui les suit — pour faire apparaître ce qui se répète.",
-    qui: "C'est l'équipe de l'EMIA qui s'en charge, à partir de vos observations et de celles des autres personnes sollicitées."
-  },
-  m4: {
-    titre: 'Interpréter',
-    quoi: "Formuler des hypothèses sur ce que le comportement cherche à obtenir ou à éviter, et décrire à quoi ressemblent les paliers de tension de la personne.",
-    qui: "C'est un travail clinique, mené par l'équipe de l'EMIA une fois toutes les observations réunies."
+  analyser: {
+    titre: 'Analyser',
+    quoi: "Ranger ce que chaque épisode raconte dans sa séquence, le regrouper en catégories, puis formuler des hypothèses sur ce que le comportement cherche à obtenir ou à éviter.",
+    qui: "C'est un travail clinique, mené par l'équipe de l'EMIA à partir de vos observations et de celles des autres personnes sollicitées."
   },
   comparer: {
     titre: 'Comparer les deux primo codages',
@@ -19082,7 +19324,7 @@ function effacerCodage() {
   const m4 = state.m4 || {};
   const nbSeq = (m4.patterns || []).length + (m4.gradations || []).length;
   if (!confirm("Effacer tout le codage de ce dossier ?\n\n" +
-      "· Organiser : " + nbCats + " catégorie" + (nbCats > 1 ? 's' : '') + " et les éléments qui y sont rangés\n" +
+      "· Catégoriser : " + nbCats + " catégorie" + (nbCats > 1 ? 's' : '') + " et les éléments qui y sont rangés\n" +
       "· Interpréter : " + nbSeq + " séquence" + (nbSeq > 1 ? 's' : '') + ", les signes du vase de tension et ses paliers\n\n" +
       "Le préambule, les épisodes et les fichiers déclarants reçus sont conservés. " +
       "Exportez d'abord si vous voulez garder une trace de ce codage.\n\nEffacer ?")) return;
@@ -19093,11 +19335,11 @@ function effacerCodage() {
   renderM3();
   refreshAccueilBadges();
   refreshSynthese();
-  showToast('Codage effacé : Organiser et Interpréter repartent d\'une page blanche.');
+  showToast('Codage effacé : Catégoriser et Interpréter repartent d\'une page blanche.');
 }
 
 function supprimerAnciensCodages() {
-  if (!confirm("Supprimer les codages reçus avec l'ancienne méthode de comparaison ?\n\nLa catégorisation affichée dans Organiser n'est pas touchée.")) return;
+  if (!confirm("Supprimer les codages reçus avec l'ancienne méthode de comparaison ?\n\nLa catégorisation affichée dans Catégoriser n'est pas touchée.")) return;
   delete state.m3.codages;
   delete state.m3.codageReferent;
   persist();
@@ -19146,8 +19388,8 @@ function prendreCategorisationDuSocle(slot, sansDemande) {
     const cats = state.m3.categories || {};
     const n = Object.keys(cats).reduce((a, v) => a + Object.keys(cats[v] || {}).length, 0);
     if (!confirm('Prendre la catégorisation de ce fichier socle comme codage ' + slot + ' ?\n\n' +
-        '· Ce que vous avez catégorisé dans Organiser (' + n + ' catégorie' + (n > 1 ? 's' : '') + ', et vos découpages) devient le codage ' + slot + ', gardé dans le comparateur.\n' +
-        '· Le fichier socle repart vierge côté Organiser : la synthèse s\'y écrira, ligne par ligne, en arbitrant A et B.\n' +
+        '· Ce que vous avez catégorisé dans Catégoriser (' + n + ' catégorie' + (n > 1 ? 's' : '') + ', et vos découpages) devient le codage ' + slot + ', gardé dans le comparateur.\n' +
+        '· Le fichier socle repart vierge côté Catégoriser : la synthèse s\'y écrira, ligne par ligne, en arbitrant A et B.\n' +
         '· Interpréter n\'est pas touché.\n\n' +
         'Conseil : exportez-la d\'abord en primo codage (fenêtre « Double codage ») si vous voulez en garder un fichier.\n\nContinuer ?')) return false;
   }
@@ -19534,7 +19776,7 @@ function terminerSynthese() {
     : restants === 1 ? 'Attention : 1 élément codé par A ou B n\'a encore aucune catégorie dans la synthèse.\n\n'
     : 'Attention : ' + restants + ' éléments codés par A ou B n\'ont encore aucune catégorie dans la synthèse.\n\n';
   if (!confirm('Terminer la synthèse ?\n\n' +
-      'Les deux primo codages sont effacés de ce fichier. La synthèse reste dans Organiser : c\'est désormais le seul codage.\n\n' +
+      'Les deux primo codages sont effacés de ce fichier. La synthèse reste dans Catégoriser : c\'est désormais le seul codage.\n\n' +
       alerte +
       'Supprimez aussi les fichiers des deux primo codages, là où ils sont rangés.\n\nTerminer ?')) return;
   delete state.comparaison;
@@ -19598,7 +19840,7 @@ function renderComparateur() {
         '<span class="cmp-slot-lettre">' + slot + '</span>' +
         '<button type="button" class="btn btn-secondary btn-sm" onclick="choisirCopieCodage(\'' + slot + '\')">📂 Importer le primo codage ' + slot + '</button>' +
       '</div>' +
-      (socleACategorisation() ? '<button type="button" class="cmp-lien" onclick="prendreCategorisationDuSocle(\'' + slot + '\')" title="Ce que vous avez catégorisé dans ce fichier socle devient le codage ' + slot + ' ; le fichier socle repart vierge côté Organiser">Prendre la catégorisation de ce fichier socle</button>' : '') +
+      (socleACategorisation() ? '<button type="button" class="cmp-lien" onclick="prendreCategorisationDuSocle(\'' + slot + '\')" title="Ce que vous avez catégorisé dans ce fichier socle devient le codage ' + slot + ' ; le fichier socle repart vierge côté Catégoriser">Prendre la catégorisation de ce fichier socle</button>' : '') +
       '</th>';
     }
     return '<th class="cmp-th cmp-th-copie"><div class="cmp-slot">' +
@@ -19698,7 +19940,7 @@ function renderComparateur() {
         '<th class="cmp-th cmp-th-el">Élément décrit</th>' +
         enteteCopie('A') + enteteCopie('B') +
         '<th class="cmp-th cmp-th-synth"><div class="cmp-slot"><span class="cmp-slot-lettre cmp-lettre-s">✓</span>Synthèse</div>' +
-          '<div class="cmp-fichier">Le fichier socle : ce qui est retenu s\'écrit dans Organiser</div></th>' +
+          '<div class="cmp-fichier">Le fichier socle : ce qui est retenu s\'écrit dans Catégoriser</div></th>' +
       '</tr></thead>' +
       '<tbody>' + corps + '</tbody>' +
     '</table></div>';
@@ -20156,7 +20398,7 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
-const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":6458,"retrait":1186,"depots":53}]};
+const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":6863,"retrait":1576,"depots":54}]};
 
 function svgActiviteCode() {
   const mois = ACTIVITE_CODE.mois || [];
@@ -20195,6 +20437,23 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-08',
+    version: 'v2026.10.08-14',
+    titre: "Analyser : quatre modules, un carrousel à quatre panneaux",
+    corps: `
+<p><b>Analyser : le RDAF passe à quatre modules</b> (Arthur et Émilie — première étape de la refonte) :</p>
+<ul>
+<li><b>Quatre modules</b> : Préambule · Recueillir · <b>Analyser</b> · Synthèse. « Organiser » et « Interpréter » ne sont plus des pages à part : ce sont des panneaux d'Analyser. Les anciennes adresses (#organiser, #interpreter) y mènent toujours.</li>
+<li><b>Un carrousel à quatre panneaux</b> : Déclaratif brut · Découper · Catégoriser · Interpréter. Le panneau ouvert est au centre ; ses voisins restent en vue, floutés, sur les côtés (un clic dessus y mène). Les quatre étapes sont en haut, chacune avec sa bulle d'avancement (nombre d'épisodes, « découpés / total », pourcentage classé, pourcentage rempli).</li>
+<li><b>Déclaratif brut</b> : un épisode à la fois, en lecture seule, avec des flèches et une liste pour passer à l'épisode précédent ou suivant (« Épisode 3 / 29 »). On n'y touche jamais.</li>
+<li><b>Découper</b> : le panneau est posé, avec le même épisode que le déclaratif brut ; le rangement dans la séquence (contexte, phases, conséquence) n'est <b>pas encore là</b> — il arrive à l'étape suivante. En attendant, les découpages d'aujourd'hui (CD, contexte, antécédents, conséquences, interventions) s'y ouvrent d'un clic.</li>
+<li><b>Catégoriser et Interpréter</b> : ce que vous connaissez, inchangé, dans leurs panneaux. Rien n'est perdu dans vos fichiers.</li>
+<li><b>Pas encore à jour</b> : le mode d'emploi, les Repères (FAQ), le lexique, le document EMIA et la présentation parlent encore d'« Organiser » ; ils seront repris quand le découpage en séquence sera là. L'analyse se fait sur ordinateur : sur un petit écran, les panneaux passent l'un après l'autre sans voisins.</li>
+</ul>
+`
+  },
 
   {
     date: '2026-10-08',
