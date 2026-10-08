@@ -4684,6 +4684,7 @@ function replaceState(newObj){
   if (!state.m2) state.m2 = {evenements:[]};
   if (!Array.isArray(state.m2.evenements)) state.m2.evenements = [];
   if (!state.m3) state.m3 = {};
+  fixerDecoupageCodage();
   if (!state.m3.categories) state.m3.categories = {cp:{},antecedents:{},declencheurs:{},consequences:{},interventions:{}};
   ['cp','antecedents','declencheurs','consequences','interventions'].forEach(k => {
     if (!state.m3.categories[k]) state.m3.categories[k] = {};
@@ -5036,6 +5037,7 @@ function loadPersisted(){
   if (enregistre) state = Object.assign(state, enregistre);
   migrerIdentiteDossier();
   migrerIdsCategorisation();
+  fixerDecoupageCodage();
 }
 
 /* ── Le format d'échange ───────────────────────────────────────────────
@@ -5716,6 +5718,9 @@ function renderDecouper() {
         (seq.phases.length > 1 ? '<button type="button" title="Supprimer cette phase" aria-label="Supprimer la phase" onclick="event.stopPropagation(); supprimerPhaseSeq(' + i + ')">✕</button>' : '') +
       '</span></div>' +
       ['antecedents', 'cds', 'interventions'].map(s => slotSeq(evt, seq, 'p' + i + '.' + s, noms)).join(''), i === act)).join('');
+  // Un primo codage d'avant la refonte : pas de rangement de la référente, chacun découpe dans le sien.
+  const codageLibre = state.codage && state.codage.actif && !decoupageFige()
+    ? '<div class="seq-info"><b>Primo codage d\'avant la refonte :</b> ce fichier ne porte pas de rangement de la référente. Vous découpez dans le vôtre, comme avant ; le comparateur arbitrera les découpages.</div>' : '';
   const ecarte = (seq.ecarte || []).length;
   el.innerHTML =
     '<div class="seq-tete"><span class="seq-pct">' + cov.pct + ' % du texte rangé</span>' +
@@ -5723,7 +5728,7 @@ function renderDecouper() {
       '<button type="button" class="btn ' + (seq.termine ? 'btn-secondary' : 'btn-primary') + ' btn-sm" onclick="basculerTermineSeq()">' + (seq.termine ? '✓ Rangement terminé — rouvrir' : '✓ Rangement terminé') + '</button></div>' +
     (cov.restes.length && !seq.termine ? '<p class="analyse-note">Il reste du texte pas encore traité : ' + cov.restes.slice(0, 4).map(r => esc(r.titre)).join(', ') + (cov.restes.length > 4 ? '…' : '') +
         ' — <a href="#" onclick="allerAuResteSeq(); return false;">le voir</a>.</p>' : '') +
-    info +
+    codageLibre + info +
     carte('contexte', 'contexte', '', slotSeq(evt, seq, 'contexte', noms)) +
     phases +
     '<button type="button" class="btn btn-secondary btn-sm seq-ajouter-phase" onclick="ajouterPhaseSeq()">＋ Ajouter une phase</button>' +
@@ -5891,7 +5896,16 @@ window.addEventListener('scroll', () => { const b = document.getElementById('seq
 
 /* ── Le rappel de l'étape d'avant ── */
 const SLOT_VERS_VOLET = {contexte: 'contexte', antecedents: 'antecedents', cds: 'cp', interventions: 'interventions', consequence: 'consequences'};
-function decoupageFige() { return !!(state.codage && state.codage.actif); }
+/* Le découpage d'un primo codage est celui de la référente : on le lit, on ne le modifie pas, pour que tout le monde catégorise
+   les mêmes éléments. Mais seulement quand le codage vierge porte son rangement (drapeau decoupageReferente, posé à l'ouverture).
+   Un primo codage d'avant la refonte n'en porte pas : chacun découpe alors dans le sien, comme avant, et le comparateur
+   arbitre les découpages. Sans cela, rien ne se sélectionnerait et le panneau resterait vide. */
+function decoupageFige() { return !!(state.codage && state.codage.actif && state.codage.decoupageReferente); }
+// Un primo codage ouvert avant ce drapeau : il est figé s'il porte déjà un rangement, libre sinon. Appelé au chargement d'un dossier.
+function fixerDecoupageCodage() {
+  const c = state.codage;
+  if (c && c.actif && c.decoupageReferente === undefined) c.decoupageReferente = Object.keys((state.m3 && state.m3.sequences) || {}).length > 0;
+}
 // À côté de Catégoriser : la séquence de l'épisode, en lecture seule ; cliquer un passage mène à l'élément correspondant.
 function renderDecouperRecap(el, evt) {
   const eps = analyseEpisodes(), e = analyseEtat(), n = e.episode + 1;
@@ -12896,7 +12910,7 @@ const _CONTROLES = [
       const reste = !!state.m3.sequences.dc1 && !!state.m3.decoupages.dc1 && sequenceActive(evt) !== null;
       const copieA = !!state.comparaison.A.categories.cp && Object.keys(state.m3.categories.cp).length === 0;
       // En primo codage : le déclaratif ne se sélectionne plus, Découper se lit
-      state.codage = {actif: true};
+      state.codage = {actif: true, decoupageReferente: true};
       vue.classList.add('show'); oublierTravailSeq(); analyseEtat().episode = 0;
       allerAnalyse(0, {sansDefilement: true});
       const figee = !document.querySelector('#declaratif-brut .brut-texte') && /découpage est celui de la référente/.test(document.getElementById('decouper-panneau').textContent) &&
@@ -13053,6 +13067,43 @@ const _CONTROLES = [
     const reste = Object.keys(sources).filter(k => interdit.test(sources[k])).map(k => k + ' : ' + (interdit.exec(sources[k]) || [''])[0]);
     const analyser = /Analyser/.test(sources['mode d\'emploi pour tous']) && /Analyser/.test(sources.FAQ) && LEXIQUE_BAF['analyser'] !== undefined && LEXIQUE_CLASSE['analyser'] === 'outil' && LEXIQUE_CLASSE['phase'] === 'outil';
     return _bancEgal('aucun vieux terme dans le mode d\'emploi, la FAQ, le lexique | « Analyser » présent, avec « analyser » et « phase » au lexique', '[] | true', JSON.stringify(reste) + ' | ' + analyser);
+  }},
+  {nom:'Primo codage d\'avant la refonte : le découpage reste libre ; avec le rangement de la référente, il est figé', test: () => {
+    const sauveEvts = state.m2.evenements, sauveM3 = JSON.stringify(state.m3), sauveCodage = state.codage, vraiPersist = persist, vraiConfirm = window.confirm;
+    const sauveEp = analyseEtat().episode, sauvePos = analyseEtat().pos;
+    const vue = document.getElementById('view-analyser'), etaitMontree = vue.classList.contains('show');
+    persist = () => {}; window.confirm = () => true;
+    try {
+      const evt = {id: 'cl1', date: '2026-03-02', heure: '09:10', comportement: 'Il crie. Puis il tape.', obtenu: 'Du temps.'};
+      state.m2.evenements = [evt]; ensureM3(); state.m3.decoupages = {}; state.m3.decoupagesVolets = {}; state.m3.sequences = {};
+      // Un primo codage ouvert avant le drapeau, sans aucun rangement : libre
+      state.codage = {actif: true};
+      fixerDecoupageCodage();
+      const sansRangement = state.codage.decoupageReferente + ',' + decoupageFige();
+      vue.classList.add('show'); oublierTravailSeq(); analyseEtat().episode = 0;
+      allerAnalyse(0, {sansDefilement: true});
+      const libre = !!document.querySelector('#declaratif-brut .brut-texte') && !!document.querySelector('#decouper-panneau .seq-ici') &&
+        /d'avant la refonte/.test(document.getElementById('decouper-panneau').textContent);
+      // Le même codage, qui porte un rangement de la référente : figé
+      state.m3.sequences.cl1 = sequenceVide();
+      state.codage = {actif: true};
+      fixerDecoupageCodage();
+      const avecRangement = state.codage.decoupageReferente + ',' + decoupageFige();
+      // Un drapeau déjà posé ne change plus
+      state.m3.sequences = {};
+      fixerDecoupageCodage();
+      const stable = state.codage.decoupageReferente;
+      // Hors primo codage : jamais figé
+      delete state.codage;
+      return _bancEgal('sans rangement : libre | panneaux utilisables et mot d\'explication | avec rangement : figé | drapeau stable | socle : libre',
+        'false,false | true | true,true | true | false', [sansRangement, libre, avecRangement, stable, decoupageFige()].join(' | '));
+    } finally {
+      persist = vraiPersist; window.confirm = vraiConfirm; state.m2.evenements = sauveEvts; state.m3 = JSON.parse(sauveM3);
+      if (sauveCodage) state.codage = sauveCodage; else delete state.codage;
+      analyseEtat().episode = sauveEp; analyseEtat().pos = sauvePos; oublierTravailSeq();
+      if (!etaitMontree) vue.classList.remove('show');
+      try { allerAnalyse(sauvePos, {sansDefilement: true}); } catch (er) { /* vue masquée */ }
+    }
   }},
   {nom:'Les couleurs des catégories se distinguent deux à deux', test: () => {
     /* Ce qui fait confondre deux catégories, c'est la teinte : les deux violets
@@ -21256,7 +21307,7 @@ function ouvrirKitCodage(lu) {
   state.schema = SCHEMA_DOSSIER;
   state.fichierDossier = null;
   state.origineDossier = 'codage';
-  state.codage = {actif: true, ouvert: new Date().toISOString()};
+  state.codage = {actif: true, ouvert: new Date().toISOString(), decoupageReferente: Object.keys(state.m3.sequences || {}).length > 0};
   persist();
   loadM1FromState();
   refreshM2List();
@@ -21313,7 +21364,7 @@ function construirePrimoCodageDepuisSocle() {
   migrerIdentiteDossier();
   const fichier = Object.assign(JSON.parse(JSON.stringify(state)), {baf: enveloppeBAF('dossier')});
   ['derniereSauvegarde', 'comparaison', 'provisoire', 'fichierDossier'].forEach(k => delete fichier[k]);
-  fichier.codage = {actif: true, ouvert: new Date().toISOString(), depuisSocle: true};
+  fichier.codage = {actif: true, ouvert: new Date().toISOString(), depuisSocle: true, decoupageReferente: Object.keys((fichier.m3 && fichier.m3.sequences) || {}).length > 0};
   return fichier;
 }
 function exporterCategorisationEnPrimoCodage() {
@@ -22345,7 +22396,7 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
-const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":9546,"retrait":1931,"depots":62}]};
+const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":9563,"retrait":1933,"depots":63}]};
 
 function svgActiviteCode() {
   const mois = ACTIVITE_CODE.mois || [];
@@ -22384,6 +22435,20 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-08',
+    version: 'v2026.10.08-23',
+    titre: "Correctif : Découper dans un primo codage d'avant la refonte",
+    corps: `
+<p><b>Correctif : « Découper » dans un primo codage d'avant la refonte</b> (Arthur et Émilie) :</p>
+<ul>
+<li><b>Le défaut.</b> Ouvrir un primo codage exporté <i>avant</i> la refonte (comme celui du 8 octobre) bloquait tout : le déclaratif ne se sélectionnait pas et le panneau « Découper » restait vide, parce que la BAF le prenait pour un découpage de la référente à ne pas toucher… alors que ce fichier n'en porte aucun.</li>
+<li><b>Le principe, précisé.</b> Le découpage n'est figé en primo codage que si le codage vierge <b>porte le rangement de la référente</b> (la BAF le note à l'ouverture, et à l'export d'un codage vierge). Un primo codage d'avant la refonte reste libre : chacun découpe dans le sien, comme avant, et le comparateur arbitre les découpages. Le panneau le dit en une phrase.</li>
+<li><b>Vérifié sur votre fichier</b> (comptes seulement : 29 épisodes, 15 anciens découpages) : il s'ouvre libre, et ses découpages sont repris dans Découper.</li>
+</ul>
+`
+  },
 
   {
     date: '2026-10-08',
