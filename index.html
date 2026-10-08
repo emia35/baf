@@ -1726,6 +1726,10 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
 .m3-retenir:hover{background:var(--vol-contexte-pale);}
 .m3-cat-lien{flex-shrink:0;color:var(--vol-contexte-deep);font-weight:700;cursor:help;}
 .m3-cat-name[readonly]{cursor:default;}
+.m3-item.item-couvert{opacity:.6;}
+.m3-item.item-couvert .m3-item-text{color:var(--ink-soft);}
+.m3-couvert{display:inline-block;font-size:11.5px;color:var(--ink-soft);font-style:italic;}
+select.m3-retenir{max-width:230px;}
 .m3-assign-plustot{margin:0 0 8px;border-bottom:1px solid var(--line-soft);padding-bottom:6px;}
 .m3-assign-plustot summary{font-size:12px;font-weight:700;color:var(--vol-contexte-deep);cursor:pointer;margin-bottom:4px;}
 .dec-texte mark.dec-m-ctx{background:none;border-bottom:2px solid var(--vol-contexte-deep);}
@@ -10715,6 +10719,46 @@ const _CONTROLES = [
       try { renderM3(); } catch (e) { /* vue masquée */ }
     }
   }},
+  {nom:'Contexte : la suggestion de la BAF ne fait pas doublon avec ce que le pro a écrit', test: () => {
+    const sauveEvts = state.m2.evenements, sauveCp = JSON.stringify(state.m3.categories.cp), sauveCx = JSON.stringify(state.m3.categories.contexte);
+    const vraiPersist = persist; persist = () => {};
+    try {
+      const e = (id, heure, extra) => Object.assign({id, date: '2026-02-02', heure, comportement: 'x', antecedents: [], interventions: []}, extra || {});
+      state.m2.evenements = [e('dd1', '09:10'), e('dd2', '14:30', {avantLoin: 'Hétéro-agressif dès le matin.'})];
+      ensureM3();
+      const cp = state.m3.categories.cp, cx = state.m3.categories.contexte;
+      Object.keys(cp).forEach(k => delete cp[k]); Object.keys(cx).forEach(k => delete cx[k]);
+      cp.cc1 = {nom: 'Hétéro-agressivité', color: '#10B981', items: ['edd1_0']};
+      const evt2 = state.m2.evenements[1];
+      const sugg = () => elementsEvt('contexte', evt2).find(x => x.tag === 'plus-tot');
+      const avantCouvert = !sugg().couvert;
+      renderM3Sous('contexte');
+      const ligneAvant = (document.querySelector('.m3-item[data-item-id="' + sugg().id + '"]') || {}).textContent || '';
+      const libelle = /suggéré à partir des données déjà remplies/.test(ligneAvant) && /C'est ce que dit/.test(ligneAvant);
+      // « C'est ce que dit » : le texte du pro prend la place de la suggestion
+      confirmerPlusTot(sugg().id, 'cc1', 'edd2_0');
+      const lie = catLieeDe('cc1');
+      const items1 = cx[lie].items.join(',');
+      const couvert1 = sugg().couvert === 'edd2_0';
+      const puces1 = document.querySelectorAll('#mcat-' + lie + ' .m3-cat-item-chip').length;
+      const classeCouvert = document.querySelector('.m3-item[data-item-id="' + sugg().id + '"]').classList.contains('item-couvert');
+      // Dans l'autre sens : la suggestion retenue d'abord, puis le texte du pro rangé à son tour
+      cx[lie].items = [];
+      retenirPlusTot(sugg().id, 'cc1');
+      const avant2 = !sugg().couvert;
+      assignerPlusTot('edd2_0', 'cc1');
+      const couvert2 = !!sugg().couvert;
+      const puces2 = document.querySelectorAll('#mcat-' + lie + ' .m3-cat-item-chip').length;
+      const comptes = statsContexte(state.m2.evenements, state.m3.categories).nX['Précédé de Hétéro-agressivité'];
+      return _bancEgal('libellé et choix | rien de couvert au départ | un seul rangement | couvert | une seule pastille | grisé | sens inverse : pas couvert puis couvert | une seule pastille | évènement compté une fois',
+        'true|true|edd2_0|true|1|true|true|true|1|1', [libelle, avantCouvert, items1, couvert1, puces1, classeCouvert, avant2, couvert2, puces2, comptes].join('|'));
+    } finally {
+      persist = vraiPersist; state.m2.evenements = sauveEvts;
+      const cp = state.m3.categories.cp; Object.keys(cp).forEach(k => delete cp[k]); Object.assign(cp, JSON.parse(sauveCp));
+      const cx = state.m3.categories.contexte; Object.keys(cx).forEach(k => delete cx[k]); Object.assign(cx, JSON.parse(sauveCx));
+      try { renderM3(); } catch (er) { /* vue masquée */ }
+    }
+  }},
   {nom:'Les couleurs des catégories se distinguent deux à deux', test: () => {
     /* Ce qui fait confondre deux catégories, c'est la teinte : les deux violets
        d'avant n'étaient séparés que de 10°, les deux rouges de 13°. Entre deux
@@ -12126,13 +12170,40 @@ function cdPlusTotLeMemeJour(evt) {
 function elementsPlusTot(evt) {
   return cdPlusTotLeMemeJour(evt).map(s => ({
     id: 'e' + evt.id + '_p' + s.cat, tag: 'plus-tot', vide: true, suggestion: s.cat,
-    texte: 'CD « ' + cheminCat('cp', s.cat) + ' » — ' + s.evts.map(x => 'évènement ' + x.n + (x.heure ? ' (' + x.heure.replace(':', 'h') + ')' : '')).join(', ')
+    texte: 'Plus tôt dans la journée : CD « ' + cheminCat('cp', s.cat) + ' » — ' + s.evts.map(x => 'évènement ' + x.n + (x.heure ? ' (' + x.heure.replace(':', 'h') + ')' : '')).join(', ')
   }));
 }
 // Le contexte d'un évènement : ce qu'on y a repéré, plus ce que la BAF propose.
 function elementsEvt(sousId, evt) {
   const base = elementsEvtBase(sousId, evt);
-  return sousId === 'contexte' && evt && evt.id ? base.concat(elementsPlusTot(evt)) : base;
+  if (sousId !== 'contexte' || !evt || !evt.id) return base;
+  const plus = elementsPlusTot(evt);
+  // Une proposition est « couverte » quand un élément du contexte est déjà rangé dans la même catégorie liée :
+  // la même information ne se range pas deux fois (elle ne s'affiche plus comme à faire, ni dans la catégorie).
+  const cats = ((state.m3 || {}).categories || {}).contexte || {};
+  plus.forEach(p => {
+    const lie = catLieeDe(p.suggestion);
+    const ranges = lie && cats[lie] ? (cats[lie].items || []) : [];
+    const couvrant = base.find(el => ranges.indexOf(el.id) !== -1);
+    if (couvrant) { p.couvert = couvrant.id; p.couvertPar = couvrant.texte; }
+  });
+  return base.concat(plus);
+}
+
+/* « C'est ce que dit … » : la suggestion confirme ce que le pro a écrit. On range le TEXTE DU PRO dans « Précédé de X »
+   et la suggestion s'efface de la catégorie : une seule entrée, pas de doublon (Arthur, 08/10/2026). */
+function confirmerPlusTot(itemId, cpCatId, declareId, ev) {
+  if (ev) ev.stopPropagation();
+  if (!declareId) return;
+  const id = assurerCatLiee(cpCatId);
+  if (!id) return;
+  const cat = state.m3.categories.contexte[id];
+  const items = (cat.items || []).filter(x => x !== itemId);
+  if (items.indexOf(declareId) === -1) items.push(declareId);
+  cat.items = items;
+  persist();
+  renderM3Sous('contexte');
+  renderM3Tabs();
 }
 
 function nomCatLiee(cpCatId) { return 'Précédé de ' + cheminCat('cp', cpCatId); }
@@ -12378,7 +12449,7 @@ function blocItemM3(sousId, sous, item, cats, etiquettes, st, n) {
   if (sousId === 'cp' && etiquettes[item.id]) {
     lien = `<span class="m3-item-cd" title="Évènement ${n}, ${etiquettes[item.id]}${item.suite ? ', venu à la suite du précédent' : ''}.">${etiquettes[item.id]}</span>`;
   } else if (item.tag === 'plus-tot') {
-    lien = '<span class="m3-item-cd" style="background:var(--vol-contexte-deep);" title="Proposé par la BAF : un CD déjà catégorisé dans un évènement plus tôt le même jour. À retenir si vous le jugez utile : il ne compte pas dans les « n/m ».">plus tôt dans la journée</span>';
+    lien = '<span class="m3-item-cd" style="background:var(--vol-contexte-deep);" title="Proposé par la BAF : un CD déjà catégorisé dans un évènement plus tôt le même jour. À retenir si vous le jugez utile : il ne compte pas dans les « n/m ».">suggéré à partir des données déjà remplies</span>';
   } else if (item.tag === 'decoupe-volet' && etiquettes[item.id]) {
     lien = '<span class="m3-item-cd" style="background:var(--vol-' + (sous.couleur || 'contexte') + '-deep);" title="Passage repéré dans le déclaratif de l\'évènement ' + n + '.">' + etiquettes[item.id] + '</span>';
   } else if (item.tag === 'charniere') {
@@ -12388,9 +12459,23 @@ function blocItemM3(sousId, sous, item, cats, etiquettes, st, n) {
     lien = `<span class="m3-item-lien">${sousId === 'antecedents' ? 'avant ' + cd(0) : 'après ' + cd(dernier)}</span>`;
   }
   const dejaRetenu = item.tag === 'plus-tot' && catIds.some(cid => cats[cid] && cats[cid].ref && cats[cid].ref.cat === item.suggestion);
-  const boutonRetenir = item.tag === 'plus-tot' && !dejaRetenu
-    ? '<button type="button" class="m3-retenir no-print" title="Ranger dans « Précédé de ' + esc(cheminCat('cp', item.suggestion)) + ' » : une catégorie de contexte liée à ce comportement est créée au besoin" onclick="retenirPlusTot(\'' + item.id + '\',\'' + item.suggestion + '\',event)">＋ Retenir comme contexte</button>' : '';
-  return `<div class="m3-item${catIds.length>0?' categorise':''}${item.vide?' item-vide':''}" data-volet="${sous.couleur || ''}" data-item-id="${esc(item.id)}" onclick="ouvrirAssign('${sousId}','${item.id}',event)">
+  let boutonRetenir = '';
+  if (item.tag === 'plus-tot' && item.couvert) {
+    boutonRetenir = '<span class="m3-couvert">↔ Déjà rangé via « ' + esc((t => t.length > 70 ? t.slice(0, 69) + '…' : t)(item.couvertPar.replace(/^\(contexte\)\s*/, ''))) + ' » : inutile de le ranger aussi.</span>';
+  } else if (item.tag === 'plus-tot') {
+    const evtP = (state.m2.evenements || [])[n - 1];
+    const declares = evtP ? elementsEvt('contexte', evtP).filter(e => e.tag !== 'plus-tot' && !e.vide) : [];
+    const court = t => { t = t.replace(/^\(contexte\)\s*/, ''); return esc(t.length > 45 ? t.slice(0, 44) + '…' : t); };
+    const nomCp = esc(cheminCat('cp', item.suggestion));
+    boutonRetenir = dejaRetenu ? '' : '<button type="button" class="m3-retenir no-print" title="Ajouter ce CD au contexte de cet évènement : une catégorie de contexte liée « Précédé de ' + nomCp + ' » est créée au besoin" onclick="retenirPlusTot(\'' + item.id + '\',\'' + item.suggestion + '\',event)">＋ Retenir comme contexte</button>';
+    if (declares.length === 1) {
+      boutonRetenir += '<button type="button" class="m3-retenir no-print" title="Le pro l\'a déjà écrit. On range son texte dans « Précédé de ' + nomCp + ' » et cette suggestion se grise : elle ne fait pas doublon." onclick="confirmerPlusTot(\'' + item.id + '\',\'' + item.suggestion + '\',\'' + declares[0].id + '\',event)">↔ C\'est ce que dit « ' + court(declares[0].texte) + ' »</button>';
+    } else if (declares.length > 1) {
+      boutonRetenir += '<select class="m3-retenir no-print" title="Le pro l\'a déjà écrit : choisissez où. On range son texte dans « Précédé de ' + nomCp + ' » et cette suggestion se grise." onclick="event.stopPropagation()" onchange="confirmerPlusTot(\'' + item.id + '\',\'' + item.suggestion + '\',this.value,event)"><option value="">↔ C\'est ce que dit…</option>' +
+        declares.map(e => '<option value="' + esc(e.id) + '">' + court(e.texte) + '</option>').join('') + '</select>';
+    }
+  }
+  return `<div class="m3-item${catIds.length>0?' categorise':''}${item.vide?' item-vide':''}${item.couvert ? ' item-couvert' : ''}" data-volet="${sous.couleur || ''}" data-item-id="${esc(item.id)}" onclick="ouvrirAssign('${sousId}','${item.id}',event)">
     <div style="flex:1">
       ${lien}
       ${item.tag==='post-intervention' ? `<span class="m3-item-tag-post" title="Le déclarant l'a décrit dans « Et ensuite ? », après une intervention.">après une intervention</span>` : ''}
@@ -12400,7 +12485,7 @@ function blocItemM3(sousId, sous, item, cats, etiquettes, st, n) {
       ${item.tag==='resume' ? `<span class="m3-item-tag-post" style="background:var(--slate);" title="Répondu en mode rapide : une seule case pour toute l'étape. Le détail n'a pas été déroulé.">résumé rapide</span>` : ''}
       ${item.vide && item.tag !== 'plus-tot' ? `<span class="m3-item-tag-post" style="background:var(--line);color:var(--ink-soft);" title="Ce volet n'a pas été rempli par le déclarant">non renseigné</span>` : ''}
       <div class="m3-item-text">${esc(item.texte)}</div>
-      <div style="margin-top:5px;">${catBadge}${boutonRetenir}</div>
+      <div style="margin-top:5px;">${item.couvert ? '' : catBadge}${boutonRetenir}</div>
     </div>
   </div>`;
 }
@@ -13674,7 +13759,7 @@ function renderM3Sous(sousId) {
     const blocCat = (catId, idx, estEnfant) => {
       const cat = cats[catId];
       if (!cat) return '';
-      const catItems = (cat.items || []).map(itemId => items.find(it => it.id === itemId)).filter(Boolean);
+      const catItems = (cat.items || []).map(itemId => items.find(it => it.id === itemId)).filter(Boolean).filter(it => !(it.tag === 'plus-tot' && it.couvert));
       const color = cat.color || catColorFor(idx);
       const enfants = estEnfant ? [] : catsEnfants(sousId, catId);
       const nEnfants = enfants.length;
@@ -19622,7 +19707,7 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
-const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":5379,"retrait":1002,"depots":46}]};
+const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":5667,"retrait":1086,"depots":47}]};
 
 function svgActiviteCode() {
   const mois = ACTIVITE_CODE.mois || [];
@@ -19661,6 +19746,20 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-08',
+    version: 'v2026.10.08-7',
+    titre: "Contexte : la suggestion dit d'où elle vient et ne fait plus doublon",
+    corps: `
+<p><b>Contexte : la suggestion dit d'où elle vient, et ne fait plus doublon</b> (Arthur, en catégorisant) :</p>
+<ul>
+<li>Une suggestion porte maintenant la mention <b>« suggéré à partir des données déjà remplies »</b>, avec le CD et l'évènement d'où elle vient : « Plus tôt dans la journée : CD « Hétéro-agressivité » — évènement 2 (09h01) ».</li>
+<li><b>Deux boutons.</b> « ＋ Retenir comme contexte » ajoute ce CD au contexte de l'évènement (il n'était écrit nulle part). <b>« ↔ C'est ce que dit « … » »</b> s'utilise quand le pro l'a déjà écrit (« hétéro-agressif dès le matin ») : le texte du pro est rangé dans « Précédé de … » et la suggestion se retire de la catégorie.</li>
+<li><b>Plus de doublon.</b> Dès qu'un élément du contexte est rangé dans « Précédé de X », la suggestion correspondante se <b>grise</b> (« Déjà rangé via … ») et n'apparaît plus dans la catégorie. Cela marche dans les deux sens : suggestion retenue d'abord puis texte du pro rangé ensuite, ou l'inverse. Avant, la catégorie affichait deux éléments pour la même information (les statistiques ne comptaient déjà l'évènement qu'une fois).</li>
+</ul>
+`
+  },
 
   {
     date: '2026-10-08',
