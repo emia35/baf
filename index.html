@@ -1729,6 +1729,8 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
 .m3-item.item-couvert{opacity:.6;}
 .m3-item.item-couvert .m3-item-text{color:var(--ink-soft);}
 .m3-couvert{display:inline-block;font-size:11.5px;color:var(--ink-soft);font-style:italic;}
+.m3-item.item-jumeau{opacity:.55;cursor:default;}
+.m3-item.item-jumeau .m3-item-text{color:var(--ink-soft);}
 select.m3-retenir{max-width:230px;}
 .m3-assign-plustot{margin:0 0 8px;border-bottom:1px solid var(--line-soft);padding-bottom:6px;}
 .m3-assign-plustot summary{font-size:12px;font-weight:700;color:var(--vol-contexte-deep);cursor:pointer;margin-bottom:4px;}
@@ -8285,7 +8287,7 @@ function unitesABC() {
     const ant = elementsEvt('antecedents', evt), cons = elementsEvt('consequences', evt);
     const dernier = st.cds.length - 1;
     st.cds.forEach((cd, k) => {
-      const A = ant.filter(e => k === 0 ? e.tag !== 'charniere' : (e.tag === 'charniere' && e.relie === k)).map(e => e.id);
+      const A = ant.filter(e => k === 0 ? e.tag !== 'charniere' && !e.jumeau : (e.tag === 'charniere' && e.relie === k)).map(e => e.id);
       const C = cons.filter(e => k === dernier ? e.tag !== 'charniere' : (e.tag === 'charniere' && e.relie === k)).map(e => e.id);
       unites.push({evt, cd: k, A: noms('antecedents', A), B: noms('cp', [cd.id]), C: noms('consequences', C)});
     });
@@ -10759,6 +10761,38 @@ const _CONTROLES = [
       try { renderM3(); } catch (er) { /* vue masquée */ }
     }
   }},
+  {nom:'Antécédents : un texte écrit deux fois se classe une seule fois et garde le « présumé déclencheur »', test: () => {
+    const sauveEvts = state.m2.evenements, sauveAn = JSON.stringify(state.m3.categories.antecedents);
+    const vraiPersist = persist; persist = () => {};
+    try {
+      const a = (id, texte, presume) => ({id, texte, declencheurPresume: !!presume});
+      state.m2.evenements = [{id: 'jm1', date: '2026-02-02', heure: '09:10', comportement: 'x', interventions: [],
+        antecedents: [a('a1', 'On lui a demandé de ranger.'), a('a2', 'Il attendait.'), a('a3', 'on lui a demandé  de ranger. ', true)]}];
+      ensureM3();
+      const an = state.m3.categories.antecedents;
+      Object.keys(an).forEach(k => delete an[k]);
+      an.cj1 = {nom: 'Après une demande', color: '#10B981', items: ['ejm1_0', 'ejm1_2']};
+      const evt = state.m2.evenements[0];
+      const els = elementsEvt('antecedents', evt);
+      const forme = [els.length, els[0].tag, els[0].jumeau || '-', els[1].jumeau || '-', els[2].jumeau, !!els[2].vide].join(',');
+      const st = statutEvtM3('antecedents', els);
+      renderM3Sous('antecedents');
+      const jum = document.querySelector('.m3-item[data-item-id="ejm1_2"]');
+      const grise = !!jum && jum.classList.contains('item-jumeau') && !jum.hasAttribute('onclick');
+      const puces = document.querySelectorAll('#mcat-cj1 .m3-cat-item-chip').length;
+      const compteur = (document.getElementById('m3-items-count') || {}).textContent || '';
+      const badges = [...document.querySelectorAll('.m3-item .m3-item-tag-post')].filter(b => b.textContent.trim() === 'présumé déclencheur').length;
+      const deux = elementsEvt('antecedents', {id: 'jm9', comportement: 'x', interventions: [], antecedents: [a('b1', 'Un'), a('b2', 'Deux')]});
+      const sansDouble = deux.length + ',' + statutEvtM3('antecedents', deux).n;
+      return _bancEgal('trois éléments, le 1er hérite du badge, le 3e est son jumeau | 2 à classer, 1 classé | jumeau grisé et inerte | une puce | 2 éléments, rien de « non renseigné » | un seul badge | deux textes différents restent deux',
+        '3,presume-declencheur,-,-,ejm1_0,true|2,1,cours|true|1|true|1|2,2',
+        [forme, st.n + ',' + st.c + ',' + st.statut, grise, puces, /^2 éléments/.test(compteur.trim()) && !/non renseign/.test(compteur), badges, sansDouble].join('|'));
+    } finally {
+      persist = vraiPersist; state.m2.evenements = sauveEvts;
+      const an = state.m3.categories.antecedents; Object.keys(an).forEach(k => delete an[k]); Object.assign(an, JSON.parse(sauveAn));
+      try { renderM3(); } catch (er) { /* vue masquée */ }
+    }
+  }},
   {nom:'Les couleurs des catégories se distinguent deux à deux', test: () => {
     /* Ce qui fait confondre deux catégories, c'est la teinte : les deux violets
        d'avant n'étaient séparés que de 10°, les deux rouges de 13°. Entre deux
@@ -11904,7 +11938,7 @@ const M3_SOUS = [
   {
     id: 'antecedents',
     label: 'Antécédents', icon: '⏮', couleur: 'antecedent',
-    help: 'Ce qui s\'est passé juste avant le comportement, dans les secondes ou les minutes. Le badge « présumé déclencheur » signale ce que le déclarant a coché — c\'est son avis, vous restez libre d\'en juger autrement. Quand les CD d\'un évènement se suivent, ce qui s\'est passé entre deux CD apparaît aussi ici, comme antécédent du suivant (badge « avant CD 3.2 »). Le contexte, lui, a son propre volet. « ✂ Découper » permet d\'y repérer plusieurs éléments, chacun par une citation exacte du déclaratif.',
+    help: 'Ce qui s\'est passé juste avant le comportement, dans les secondes ou les minutes. Le badge « présumé déclencheur » signale ce que le déclarant a coché — c\'est son avis, vous restez libre d\'en juger autrement. Quand les CD d\'un évènement se suivent, ce qui s\'est passé entre deux CD apparaît aussi ici, comme antécédent du suivant (badge « avant CD 3.2 »). Un antécédent écrit deux fois à l\'identique ne se classe qu\'une fois (le second est grisé). Le contexte, lui, a son propre volet. « ✂ Découper » permet d\'y repérer plusieurs éléments, chacun par une citation exacte du déclaratif.',
     placeholder: 'ex : Transition, Fin d\'activité appréciée, Consigne, Attente…',
     extract: (evt) => {
       const parts = [];
@@ -12173,9 +12207,28 @@ function elementsPlusTot(evt) {
     texte: 'Plus tôt dans la journée : CD « ' + cheminCat('cp', s.cat) + ' » — ' + s.evts.map(x => 'évènement ' + x.n + (x.heure ? ' (' + x.heure.replace(':', 'h') + ')' : '')).join(', ')
   }));
 }
+/* Un antécédent écrit deux fois à l'identique (dans d'anciens dossiers, « Demande » et « Déclencheur » disaient la même
+   phrase : la migration en a fait deux antécédents) ne se classe qu'une fois. Le premier reste l'élément à classer et
+   garde le « présumé déclencheur » si l'une des deux copies l'avait ; l'autre, son jumeau, est grisé et ne compte nulle
+   part. Rien n'est effacé du déclaratif (Arthur, 08/10/2026). */
+function marquerJumeaux(els) {
+  const vus = {};
+  els.forEach(el => {
+    if (el.tag !== '' && el.tag !== 'presume-declencheur') return;
+    const cle = String(el.texte || '').toLowerCase().replace(/\s+/g, ' ').trim();
+    if (!cle) return;
+    const premier = vus[cle];
+    if (!premier) { vus[cle] = el; return; }
+    if (el.tag === 'presume-declencheur') premier.tag = 'presume-declencheur';
+    el.jumeau = premier.id;
+    el.vide = true;
+  });
+  return els;
+}
 // Le contexte d'un évènement : ce qu'on y a repéré, plus ce que la BAF propose.
 function elementsEvt(sousId, evt) {
   const base = elementsEvtBase(sousId, evt);
+  if (sousId === 'antecedents') marquerJumeaux(base);
   if (sousId !== 'contexte' || !evt || !evt.id) return base;
   const plus = elementsPlusTot(evt);
   // Une proposition est « couverte » quand un élément du contexte est déjà rangé dans la même catégorie liée :
@@ -12475,17 +12528,18 @@ function blocItemM3(sousId, sous, item, cats, etiquettes, st, n) {
         declares.map(e => '<option value="' + esc(e.id) + '">' + court(e.texte) + '</option>').join('') + '</select>';
     }
   }
-  return `<div class="m3-item${catIds.length>0?' categorise':''}${item.vide?' item-vide':''}${item.couvert ? ' item-couvert' : ''}" data-volet="${sous.couleur || ''}" data-item-id="${esc(item.id)}" onclick="ouvrirAssign('${sousId}','${item.id}',event)">
+  return `<div class="m3-item${catIds.length>0?' categorise':''}${item.vide?' item-vide':''}${item.couvert ? ' item-couvert' : ''}${item.jumeau ? ' item-jumeau' : ''}" data-volet="${sous.couleur || ''}" data-item-id="${esc(item.id)}"${item.jumeau ? '' : ` onclick="ouvrirAssign('${sousId}','${item.id}',event)"`}>
     <div style="flex:1">
       ${lien}
       ${item.tag==='post-intervention' ? `<span class="m3-item-tag-post" title="Le déclarant l'a décrit dans « Et ensuite ? », après une intervention.">après une intervention</span>` : ''}
-      ${item.tag==='presume-declencheur' || item.presume ? `<span class="m3-item-tag-post" style="background:var(--vol-antecedent-deep);" title="Le déclarant pense que c'est ce qui a déclenché — à vous d'en juger. Jaune ocre : couleur de l'antécédent.">présumé déclencheur</span>` : ''}
+      ${(item.tag==='presume-declencheur' || item.presume) && !item.jumeau ? `<span class="m3-item-tag-post" style="background:var(--vol-antecedent-deep);" title="Le déclarant pense que c'est ce qui a déclenché — à vous d'en juger. Jaune ocre : couleur de l'antécédent.">présumé déclencheur</span>` : ''}
       ${item.source ? `<span class="m3-item-tag-post" style="background:var(--vol-consequence-deep);" title="Où le déclarant l'a écrit">${esc(item.source)}</span>` : ''}
       ${item.effet ? `<span class="m3-item-tag-post" style="background:var(--vol-intervention-deep);" title="Effet sur la tension, tel que le déclarant l'a indiqué pour cette intervention">${esc(item.effet)}</span>` : ''}
       ${item.tag==='resume' ? `<span class="m3-item-tag-post" style="background:var(--slate);" title="Répondu en mode rapide : une seule case pour toute l'étape. Le détail n'a pas été déroulé.">résumé rapide</span>` : ''}
-      ${item.vide && item.tag !== 'plus-tot' ? `<span class="m3-item-tag-post" style="background:var(--line);color:var(--ink-soft);" title="Ce volet n'a pas été rempli par le déclarant">non renseigné</span>` : ''}
+      ${item.vide && item.tag !== 'plus-tot' && !item.jumeau ? `<span class="m3-item-tag-post" style="background:var(--line);color:var(--ink-soft);" title="Ce volet n'a pas été rempli par le déclarant">non renseigné</span>` : ''}
+      ${item.jumeau ? `<span class="m3-item-tag-post" style="background:var(--line);color:var(--ink-soft);" title="Le déclarant a écrit exactement la même chose deux fois. L'élément du dessus suffit : il porte le « présumé déclencheur » s'il a été coché sur l'une ou l'autre copie.">écrit deux fois</span>` : ''}
       <div class="m3-item-text">${esc(item.texte)}</div>
-      <div style="margin-top:5px;">${item.couvert ? '' : catBadge}${boutonRetenir}</div>
+      <div style="margin-top:5px;">${item.couvert || item.jumeau ? '' : catBadge}${item.jumeau ? '<span class="m3-couvert">↔ Même texte que l\'élément du dessus : à classer une seule fois.</span>' : ''}${boutonRetenir}</div>
     </div>
   </div>`;
 }
@@ -13719,8 +13773,9 @@ function renderM3Sous(sousId) {
   // Titre et help colonne gauche
   document.getElementById('m3-items-title').textContent = sous.icon + ' ' + sous.label + ' décrits';
   const nPropositions = items.filter(it => it.tag === 'plus-tot').length;
-  const nVides = items.filter(it => it.vide && it.tag !== 'plus-tot').length;
-  const nReels = items.length - nVides - nPropositions;
+  const nVides = items.filter(it => it.vide && it.tag !== 'plus-tot' && !it.jumeau).length;
+  const nJumeaux = items.filter(it => it.jumeau).length;
+  const nReels = items.length - nVides - nPropositions - nJumeaux;
   const parEvt = {};
   items.forEach(it => { (parEvt[it.evtIdx] = parEvt[it.evtIdx] || []).push(it); });
   const aFinir = Object.keys(parEvt).filter(k => ['rien', 'cours'].indexOf(statutEvtM3(sousId, parEvt[k]).statut) !== -1).length;
@@ -13759,7 +13814,7 @@ function renderM3Sous(sousId) {
     const blocCat = (catId, idx, estEnfant) => {
       const cat = cats[catId];
       if (!cat) return '';
-      const catItems = (cat.items || []).map(itemId => items.find(it => it.id === itemId)).filter(Boolean).filter(it => !(it.tag === 'plus-tot' && it.couvert));
+      const catItems = (cat.items || []).map(itemId => items.find(it => it.id === itemId)).filter(Boolean).filter(it => !(it.tag === 'plus-tot' && it.couvert) && !it.jumeau);
       const color = cat.color || catColorFor(idx);
       const enfants = estEnfant ? [] : catsEnfants(sousId, catId);
       const nEnfants = enfants.length;
@@ -18864,7 +18919,7 @@ function lignesComparateur(sousId) {
       return {item, l};
     })
     // Un volet non renseigné n'a rien à comparer, sauf si quelqu'un l'a quand même codé.
-    .filter(x => !x.item.vide || (x.l.a && x.l.a.length) || (x.l.b && x.l.b.length) || x.l.s.length);
+    .filter(x => !x.item.jumeau && (!x.item.vide || (x.l.a && x.l.a.length) || (x.l.b && x.l.b.length) || x.l.s.length));
 }
 
 /* N'écrit que dans state.comparaison, sans enregistrer : le banc l'éprouve
@@ -19707,7 +19762,7 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
-const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":5667,"retrait":1086,"depots":47}]};
+const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":5775,"retrait":1095,"depots":48}]};
 
 function svgActiviteCode() {
   const mois = ACTIVITE_CODE.mois || [];
@@ -19746,6 +19801,21 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-08',
+    version: 'v2026.10.08-8',
+    titre: "Antécédents : un texte écrit deux fois ne se classe plus deux fois",
+    corps: `
+<p><b>Antécédents : un texte écrit deux fois ne se classe plus deux fois</b> (Arthur, sur son dossier « Ryan ») :</p>
+<ul>
+<li><b>La cause.</b> Le « présumé déclencheur » ne s'ajoutait pas tout seul : dans cinq évènements de ce dossier (1, 2, 6, 9 et 11), l'antécédent existait en double, avec exactement la même phrase. Ces évènements viennent d'une ancienne version de la BAF où « Demande » et « Déclencheur » étaient deux champs distincts, et la phrase avait été écrite dans les deux ; la migration en avait fait deux antécédents, dont un coché « présumé déclencheur ».</li>
+<li><b>Ce que fait la BAF maintenant.</b> Deux antécédents d'un même évènement qui disent exactement la même chose (majuscules et espaces mis à part) ne font plus qu'un seul élément à classer : le premier, qui garde le badge « présumé déclencheur » si l'une des deux copies l'avait. L'autre est grisé (« écrit deux fois »), ne se clique pas, ne compte ni dans les « n/m », ni dans le taux de catégorisation, ni dans les catégories.</li>
+<li><b>Le déclaratif n'est pas touché</b> : rien n'est supprimé, les deux copies restent dans l'évènement et dans « détail ». Deux textes seulement ressemblants (une virgule de différence) restent deux éléments : à vous de juger.</li>
+<li>Les classements déjà faits sur les deux copies ne sont pas perdus mais ils se lisent désormais sur la première.</li>
+</ul>
+`
+  },
 
   {
     date: '2026-10-08',
