@@ -395,6 +395,60 @@ header.top{
 .detailler-bt{background:none;border:0;padding:4px 0;font:inherit;font-size:13px;font-weight:600;color:var(--slate);cursor:pointer;}
 .detailler-bt:hover{text-decoration:underline;}
 .tension-finale-note{margin:0 0 16px;padding:12px 16px;background:var(--paper-deep);border-radius:10px;font-size:13.5px;line-height:1.6;}
+/* ── Découper : ranger le déclaratif dans la séquence de l'épisode (Arthur et Émilie, 08/10/2026) ── */
+.analyse-piste.paire{left:2%;align-items:stretch;}
+.analyse-piste.paire .analyse-panneau{flex-basis:46%;}
+.analyse-piste.paire #pan-decouper .analyse-corps{position:sticky;top:calc(var(--header-h,56px) + var(--subbar-h,40px) + 10px);max-height:calc(100vh - var(--header-h,56px) - var(--subbar-h,40px) - 24px);overflow:auto;padding-right:4px;}
+.brut-legende{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin:0 0 12px;font-size:12px;color:var(--ink-soft);}
+.brut-legende .pastille{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:5px;}
+.brut-legende .p-sel{background:#FFE08A;border:1px solid #D9A400;}
+.brut-legende .p-range{background:var(--vol-comportement-pale);border:1px solid var(--vol-comportement);}
+.brut-legende .p-reste{background:#fff;border:1px dashed var(--ink-soft);}
+.brut-texte{white-space:pre-wrap;line-height:1.75;}
+.brut-texte::selection,.brut-texte *::selection{background:#FFE08A;color:var(--ink);}
+.seq-m{border-radius:3px;padding:1px 0;transition:background .2s;}
+.seq-m-contexte{background:var(--vol-contexte-pale);}
+.seq-m-antecedents{background:var(--vol-antecedent-pale);}
+.seq-m-cds{background:var(--vol-comportement-pale);}
+.seq-m-interventions{background:var(--vol-intervention-pale);}
+.seq-m-consequence{background:var(--vol-consequence-pale);}
+.seq-m-ecarte{background:repeating-linear-gradient(135deg,#ECE7DD,#ECE7DD 4px,#F5F1E8 4px,#F5F1E8 8px);}
+.seq-m-double{border-bottom:2px dotted var(--ink-soft);}
+.seq-m.flash{outline:2px solid #D9A400;background:#FFE08A;}
+.seq-tete{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 10px;}
+.seq-pct{font-size:13px;font-weight:700;}
+.seq-barre{flex:1 1 90px;height:8px;border-radius:999px;background:var(--paper-deep);overflow:hidden;min-width:70px;}
+.seq-barre>span{display:block;height:100%;background:var(--sauge-deep,#7A9A8C);}
+.seq-info{margin:0 0 12px;padding:10px 12px;background:var(--paper-deep);border-radius:10px;font-size:12.5px;line-height:1.55;color:var(--ink-soft);}
+.seq-info .btn{margin:6px 6px 0 0;}
+.seq-carte{margin:0 0 12px;padding:10px 12px;border:1px solid var(--line);border-left:5px solid var(--c,var(--slate));border-radius:10px;background:var(--card);}
+.seq-carte.actif{box-shadow:0 0 0 2px var(--c,var(--slate)) inset;}
+.seq-carte-tete{display:flex;align-items:center;gap:8px;margin:0 0 6px;flex-wrap:wrap;}
+.seq-carte-nom{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--c,var(--slate));}
+.seq-carte-aide{font-size:11.5px;color:var(--ink-soft);}
+.seq-ici{margin-left:auto;padding:3px 10px;border-radius:999px;border:1.5px solid var(--c,var(--slate));background:#fff;font:inherit;font-size:12px;font-weight:600;color:var(--c,var(--slate));cursor:pointer;}
+.seq-ici:disabled{opacity:.35;cursor:default;}
+.seq-ici:not(:disabled):hover{background:var(--c,var(--slate));color:#fff;}
+.seq-slot{margin:6px 0 0;padding:8px 10px;border-radius:8px;background:var(--bg-slot,var(--paper));}
+.seq-slot-nom{display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:700;color:var(--ink-soft);margin:0 0 4px;}
+.seq-vide{font-size:12px;color:var(--ink-soft);font-style:italic;}
+.seq-chip{display:flex;align-items:flex-start;gap:6px;margin:4px 0 0;padding:5px 7px;border-radius:7px;background:#fff;border:1px solid var(--line);font-size:13px;line-height:1.45;}
+.seq-chip-num{flex:none;padding:1px 6px;border-radius:5px;background:var(--c,var(--slate));color:#fff;font-size:10.5px;font-weight:700;white-space:nowrap;}
+.seq-chip-texte{flex:1;min-width:0;cursor:pointer;overflow-wrap:anywhere;}
+.seq-chip-menu{flex:none;width:34px;font-size:12px;padding:1px 0;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:pointer;}
+.seq-chip-x{flex:none;border:0;background:none;color:var(--ink-soft);font-size:14px;cursor:pointer;padding:0 3px;}
+.seq-chip-x:hover{color:var(--consequence-texte,#A8503A);}
+.seq-phase-outils{display:flex;gap:4px;margin-left:auto;}
+.seq-phase-outils button{border:1px solid var(--line);background:#fff;border-radius:6px;font-size:12px;padding:1px 7px;cursor:pointer;}
+.seq-ajouter-phase{width:100%;margin:0 0 12px;}
+.seq-ecarte-details>summary{cursor:pointer;font-size:12px;font-weight:700;color:var(--ink-soft);}
+.seq-bulle{position:fixed;z-index:60;display:flex;gap:5px;flex-wrap:wrap;align-items:center;max-width:min(560px,94vw);padding:7px 9px;border-radius:12px;background:var(--card);border:1px solid var(--line);box-shadow:0 6px 24px rgba(44,36,22,.22);}
+.seq-bulle[hidden]{display:none;}
+.seq-bulle .seq-bt{padding:4px 10px;border-radius:999px;border:1.5px solid var(--c,var(--slate));background:#fff;font:inherit;font-size:12.5px;font-weight:600;color:var(--c,var(--slate));cursor:pointer;}
+.seq-bulle .seq-bt:hover{background:var(--c,var(--slate));color:#fff;}
+.seq-bulle .seq-phase-sel{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--ink-soft);padding:0 4px;}
+.seq-bulle .seq-phase-sel button{border:1px solid var(--line);background:#fff;border-radius:6px;cursor:pointer;line-height:1;padding:2px 6px;}
+@media print{.seq-bulle{display:none;}}
 .trous-modal-liste{max-height:48vh;overflow:auto;}
 .cov-deja{margin-top:14px;font-size:13px;}
 .cov-deja summary{cursor:pointer;font-weight:600;color:var(--ink-soft);}
@@ -4993,6 +5047,8 @@ function analyseEpisodeCourant() {
 }
 // Un épisode est « découpé » quand l'analyste y a repéré des CD ou des passages (contexte, antécédents, conséquences, interventions).
 function episodeDecoupe(evt) {
+  const rangement = sequenceActive(evt);
+  if (rangement) return !!rangement.termine;
   const m3 = (state && state.m3) || {};
   if (evt && (m3.decoupages || {})[evt.id]) return true;
   return Object.keys(m3.decoupagesVolets || {}).some(v => {
@@ -5015,7 +5071,7 @@ function renderAnalyseEtapes() {
     pct4 > 0 ? pct4 + ' % rempli' : ''
   ];
   el.innerHTML = analyseEtapes().map((et, i) =>
-    '<button type="button" class="analyse-etape' + (i === e.pos ? ' on' : '') + '" role="tab" aria-selected="' + (i === e.pos) + '" onclick="allerAnalyse(' + i + ')">' +
+    '<button type="button" class="analyse-etape' + (i === e.pos || (e.pos === 0 && i === 1) ? ' on' : '') + '" role="tab" aria-selected="' + (i === e.pos || (e.pos === 0 && i === 1)) + '" onclick="allerAnalyse(' + i + ')">' +
       '<span class="analyse-etape-num">' + (i + 1) + '</span><span class="analyse-etape-nom">' + esc(et.libelle) + '</span>' +
       (bulles[i] ? '<span class="analyse-etape-bulle">' + esc(bulles[i]) + '</span>' : '') +
     '</button>').join('<span class="analyse-etape-lien" aria-hidden="true">›</span>');
@@ -5025,38 +5081,44 @@ function renderAnalyseBas() {
   const el = document.getElementById('analyse-bas');
   if (!el) return;
   const e = analyseEtat(), et = analyseEtapes();
+  const suivant = e.pos === 0 ? 2 : e.pos + 1;
   el.innerHTML = (e.pos === 0
       ? '<button type="button" class="btn btn-secondary" onclick="route(\'m2\')">← Recueillir</button>'
       : '<button type="button" class="btn btn-secondary" onclick="allerAnalyse(' + (e.pos - 1) + ')">← ' + esc(et[e.pos - 1].libelle) + '</button>') +
     (e.pos === 3
       ? '<button type="button" class="btn btn-primary" onclick="route(\'synthese\')">Voir la synthèse →</button>'
-      : '<button type="button" class="btn btn-primary" onclick="allerAnalyse(' + (e.pos + 1) + ')">' + esc(et[e.pos + 1].libelle) + ' →</button>');
+      : '<button type="button" class="btn btn-primary" onclick="allerAnalyse(' + suivant + ')">' + esc(et[suivant].libelle) + ' →</button>');
 }
-
-/* Le panneau ouvert, et ceux qu'on voit sur les côtés. */
+/* Le panneau ouvert, et ceux qu'on voit sur les côtés. Déclaratif brut et Découper se lisent ensemble : on les ouvre côte à
+   côte ; Catégoriser et Interpréter s'ouvrent un à un (ils auront leur paire avec le lot suivant). */
 function allerAnalyse(pos, options) {
   const e = analyseEtat();
   pos = Math.max(0, Math.min(3, parseInt(pos, 10) || 0));
+  if (pos === 1) pos = 0;
   e.pos = pos;
+  const paire = pos === 0;
+  const actifs = paire ? [0, 1] : [pos];
   const piste = document.getElementById('analyse-piste');
-  if (piste) piste.style.setProperty('--pos', pos);
+  if (piste) { piste.style.setProperty('--pos', paire ? 0 : pos); piste.classList.toggle('paire', paire); }
   document.querySelectorAll('#analyse-piste > .analyse-panneau').forEach(p => {
-    const rang = +p.dataset.pos, actif = rang === pos;
+    const rang = +p.dataset.pos, actif = actifs.indexOf(rang) !== -1;
     p.classList.toggle('actif', actif);
-    p.classList.toggle('voisin', Math.abs(rang - pos) === 1);
+    p.classList.toggle('voisin', !actif && actifs.some(a => Math.abs(rang - a) === 1));
     p.setAttribute('aria-hidden', actif ? 'false' : 'true');
     const corps = p.querySelector('.analyse-corps');
     if (corps) { if (actif) corps.removeAttribute('inert'); else corps.setAttribute('inert', ''); }
   });
-  // Les deux premiers panneaux se lisent ensemble : on les garde à jour tous les deux.
-  if (pos <= 2) { renderDeclaratifBrut(); renderDecouper(); }
+  if (pos === 0) { renderDeclaratifBrut(); renderDecouper(); }
   if (pos === 2) renderM3();
   if (pos === 3) renderM4();
   renderAnalyseEtapes();
   renderAnalyseBas();
   if (!(options && options.sansDefilement)) window.scrollTo({top: 0, behavior: 'instant'});
 }
-function clicPanneauAnalyse(pos) { if (analyseEtat().pos !== pos) allerAnalyse(pos); }
+function clicPanneauAnalyse(pos) {
+  const p = document.querySelector('#analyse-piste > .analyse-panneau[data-pos="' + pos + '"]');
+  if (p && !p.classList.contains('actif')) allerAnalyse(pos);
+}
 
 /* Remet à jour ce qui se lit sans changer de panneau (appelé après un découpage, une catégorisation…). */
 function majPanneauxAnalyse() {
@@ -5069,6 +5131,7 @@ function changerEpisodeAnalyse(delta, rang) {
   if (!n) return;
   e.episode = rang !== undefined ? parseInt(rang, 10) || 0 : e.episode + delta;
   e.episode = Math.max(0, Math.min(n - 1, e.episode));
+  e.phase = 0; selSeq = null; cacherBulleSeq();
   renderDeclaratifBrut();
   renderDecouper();
   renderAnalyseEtapes();
@@ -5094,43 +5157,582 @@ function analyseSansEpisode() {
     '<button type="button" class="btn btn-primary btn-sm" onclick="route(\'m2\')">Aller au module 1 — Recueillir</button></div>';
 }
 
-/* Panneau 1 : le déclaratif brut d'un épisode, en lecture seule — on n'y touche jamais. */
+/* ══════════════════════════════════════════════════════════════════════
+   DÉCOUPER : RANGER LE DÉCLARATIF DANS LA SÉQUENCE DE L'ÉPISODE (Arthur et Émilie, 08/10/2026)
+   ══════════════════════════════════════════════════════════════════════
+   Le déclarant raconte comme il peut, un peu partout. Découper n'est plus « repérer les CD » : c'est ranger tout ce que
+   dit le déclaratif dans la séquence d'un épisode — Contexte · Phase 1 (antécédent, CD, intervention) · Phase 2… ·
+   Conséquence — par citations exactes, sans jamais réécrire le déclaratif. Un même passage peut aller à deux endroits
+   (l'intervention de la phase 1 est souvent l'antécédent de la phase 2) ; ce qui n'entre nulle part se range dans
+   « Non retenu », pour que tout le texte soit traité.
+
+   state.m3.sequences[épisode] = {v, origine, termine, empreinte, contexte: [cit], phases: [{id, antecedents, cds,
+   interventions}], consequence: [cit], ecarte: [cit]} où cit = {id, champ, debut, texte} (comme un passage de découpage).
+   Chaque rangement est PROJETÉ dans les structures que Catégoriser et Interpréter lisent déjà (decoupages et
+   decoupagesVolets) : les catégories, les croisements et le comparateur continuent de fonctionner. L'empreinte de cette
+   projection dit si quelqu'un d'autre (le comparateur) l'a modifiée depuis : on repart alors de ce qui est enregistré. */
+const SLOTS_SEQ = {
+  contexte:      {nom: 'Contexte',     vol: 'contexte',      aide: 'ce qui précède de loin'},
+  antecedents:   {nom: 'Antécédent',   vol: 'antecedent',    aide: 'juste avant ; plusieurs si c\'est en même temps'},
+  cds:           {nom: 'CD',           vol: 'comportement',  aide: 'le comportement-défi ; plusieurs si c\'est en même temps'},
+  interventions: {nom: 'Intervention', vol: 'intervention',  aide: 'ce que l\'entourage a fait'},
+  consequence:   {nom: 'Conséquence',  vol: 'consequence',   aide: 'ce que ça a changé pour la personne'},
+  ecarte:        {nom: 'Non retenu',   vol: null,            aide: 'ce qui n\'entre pas dans la séquence'}
+};
+const VOLETS_SEQUENCE = {contexte: 'contexte', antecedents: 'antecedents', consequence: 'consequences', interventions: 'interventions'};
+function sequenceVide() { return {v: 1, origine: '', termine: false, contexte: [], phases: [nouvellePhase()], consequence: [], ecarte: []}; }
+function nouvellePhase() { return {id: nouvelIdDecoupe(), antecedents: [], cds: [], interventions: []}; }
+function sequenceEnregistree(evtId) { return (((state.m3 || {}).sequences) || {})[evtId] || null; }
+function clone(x) { return x === undefined ? undefined : JSON.parse(JSON.stringify(x)); }
+function seqEstVide(seq) {
+  return !seq || (!seq.contexte.length && !seq.consequence.length && !(seq.ecarte || []).length &&
+    seq.phases.every(p => !p.antecedents.length && !p.cds.length && !p.interventions.length));
+}
+function listeDeCle(seq, cle) {
+  const m = /^p(\d+)\.(antecedents|cds|interventions)$/.exec(cle);
+  if (m) { const p = seq.phases[+m[1]]; return p ? p[m[2]] : null; }
+  return ['contexte', 'consequence', 'ecarte'].indexOf(cle) !== -1 ? seq[cle] : null;
+}
+function clesSlots(seq) {
+  const cles = [['contexte', 'Contexte']];
+  seq.phases.forEach((p, i) => ['antecedents', 'cds', 'interventions'].forEach(s =>
+    cles.push(['p' + i + '.' + s, 'Phase ' + (i + 1) + ' · ' + SLOTS_SEQ[s].nom])));
+  cles.push(['consequence', 'Conséquence'], ['ecarte', 'Non retenu']);
+  return cles;
+}
+function placementsSeq(seq) {
+  const out = [];
+  seq.contexte.forEach(c => out.push({cle: 'contexte', slot: 'contexte', phase: null, cit: c}));
+  seq.phases.forEach((p, i) => ['antecedents', 'cds', 'interventions'].forEach(s => p[s].forEach(c => out.push({cle: 'p' + i + '.' + s, slot: s, phase: i, cit: c}))));
+  seq.consequence.forEach(c => out.push({cle: 'consequence', slot: 'consequence', phase: null, cit: c}));
+  (seq.ecarte || []).forEach(c => out.push({cle: 'ecarte', slot: 'ecarte', phase: null, cit: c}));
+  return out;
+}
+// Les noms d'un passage rangé : « Contexte 3.1 », « Antécédent 3.1.2 », « CD 3.2.1 »… (3 = le rang de l'épisode).
+function etiquettesDeCits(seq, n) {
+  const lab = {};
+  seq.contexte.forEach((c, k) => { lab[c.id] = 'Contexte ' + n + '.' + (k + 1); });
+  seq.phases.forEach((p, i) => ['antecedents', 'cds', 'interventions'].forEach(s =>
+    p[s].forEach((c, k) => { lab[c.id] = SLOTS_SEQ[s].nom + ' ' + n + '.' + (i + 1) + '.' + (k + 1); })));
+  seq.consequence.forEach((c, k) => { lab[c.id] = 'Conséquence ' + n + '.' + (k + 1); });
+  (seq.ecarte || []).forEach(c => { lab[c.id] = 'Non retenu'; });
+  return lab;
+}
+function idElementDeCit(evt, slot, cit) { return 'e' + evt.id + (slot === 'cds' ? '_u' : '_x') + cit.id; }
+function etiquettesSequence() {
+  const lab = {};
+  (state.m2.evenements || []).forEach((evt, idx) => {
+    const sq = evt && evt.id ? sequenceActive(evt) : null;
+    if (!sq) return;
+    const noms = etiquettesDeCits(sq, idx + 1);
+    placementsSeq(sq).forEach(p => { if (p.slot !== 'ecarte') lab[idElementDeCit(evt, p.slot, p.cit)] = noms[p.cit.id]; });
+  });
+  return lab;
+}
+
+// Le déclaratif d'un épisode, dans l'ordre où on le lit (de ce qui précède à ce qui suit), avec ce que l'analyste peut citer.
+function champsBrut(evt) {
+  const liste = [];
+  const ajoute = (champ, titre, texte, fixe) => { if (texte && String(texte).trim()) liste.push({champ, titre, texte: String(texte), fixe: !!fixe}); };
+  ajoute('quandQui', 'Quand · Qui (tel qu\'écrit dans la grille)', evt.quandQui, true);
+  ajoute('lieu', 'Où se passe l\'épisode', evt.lieu);
+  ajoute('presences', 'Qui était présent', evt.presences);
+  champsContexte(evt).forEach(c => ajoute(c.champ, c.titre, c.texte));
+  const rang = c => /^texteBrut$/.test(c) ? 0 : /^antecedents\./.test(c) ? 10 : c === 'etatAvant' ? 11 : c === 'resumes.antecedent' ? 12
+    : c === 'comportement' ? 20 : c === 'resumes.comportement' ? 21 : c === 'gradation' ? 22
+    : /^interventions\./.test(c) ? 30 : c === 'resumes.intervention' ? 32 : c === 'obtenu' ? 40 : c === 'evite' ? 41 : c === 'finPersonne' ? 42
+    : c === 'resumes.consequence' ? 43 : 50;
+  champsCitables(evt).map((c, i) => ({c, i})).sort((a, b) => (rang(a.c.champ) - rang(b.c.champ)) || (a.i - b.i)).forEach(x => ajoute(x.c.champ, x.c.titre, x.c.texte));
+  (evt.interventions || []).forEach((iv, i) => ajoute('interventions.' + cleObjDecoupe(iv, i) + '.precision', 'Précision sur l\'effet de l\'intervention', iv && iv.precision));
+  ajoute('interAutre', 'Autres observations sur la réponse de l\'entourage', evt.interAutre);
+  ajoute('commentaire', 'Commentaire libre du déclarant', evt.commentaire);
+  ajoute('entourage', 'Pour l\'entourage (case libre, non rangée)', evt.entourage, true);
+  return liste;
+}
+// Ce qu'il faut avoir traité : le déclaratif cité. Un résumé rapide ne compte que si le détail de son étape n'est pas rempli.
+function champsARanger(evt) {
+  const etape = {'resumes.contexte': 'contexte', 'resumes.antecedent': 'antecedent', 'resumes.comportement': 'comportement', 'resumes.intervention': 'intervention', 'resumes.consequence': 'consequence'};
+  return champsBrut(evt).filter(c => !c.fixe && !(etape[c.champ] && etapeDetailRemplie(evt, etape[c.champ])));
+}
+function citDeChamp(evt, champ) {
+  const brut = texteChamp(evt, champ), t = String(brut || '').trim();
+  return t ? {id: nouvelIdDecoupe(), champ, debut: brut.indexOf(t), texte: t} : null;
+}
+// La proposition de la BAF : ce que le déclarant a rangé lui-même dans les cases du formulaire. À corriger librement.
+function propositionSequence(evt) {
+  const seq = sequenceVide();
+  const ajoute = (liste, champ) => { const c = citDeChamp(evt, champ); if (c) liste.push(c); };
+  ['lieu', 'presences'].forEach(c => ajoute(seq.contexte, c));
+  champsContexte(evt).forEach(c => ajoute(seq.contexte, c.champ));
+  let p = seq.phases[0];
+  (evt.antecedents || []).forEach((a, i) => ajoute(p.antecedents, 'antecedents.' + cleObjDecoupe(a, i) + '.texte'));
+  ajoute(p.antecedents, 'etatAvant');
+  if (!etapeDetailRemplie(evt, 'antecedent')) ajoute(p.antecedents, 'resumes.antecedent');
+  if (evt.comportement && evt.comportement.trim()) ajoute(p.cds, 'comportement'); else ajoute(p.cds, 'resumes.comportement');
+  (evt.interventions || []).forEach((iv, i) => {
+    const cle = 'interventions.' + cleObjDecoupe(iv, i) + '.';
+    ajoute(p.interventions, cle + 'texte');
+    ajoute(p.interventions, cle + 'precision');
+    // Ce que le déclarant a raconté « ensuite » ouvre la phase suivante ; l'intervention qui l'a provoqué en est aussi l'antécédent.
+    if (effetNeedsCdPost(iv.effet) && iv.cdPostIntervention && iv.cdPostIntervention.trim()) {
+      const suite = nouvellePhase();
+      ajoute(suite.antecedents, cle + 'texte');
+      ajoute(suite.cds, cle + 'cdPostIntervention');
+      seq.phases.push(suite);
+      p = suite;
+    }
+  });
+  if (!etapeDetailRemplie(evt, 'intervention')) ajoute(seq.phases[0].interventions, 'resumes.intervention');
+  ajoute(seq.phases[0].interventions, 'interAutre');
+  ['obtenu', 'evite', 'finPersonne'].forEach(c => ajoute(seq.consequence, c));
+  if (!etapeDetailRemplie(evt, 'consequence')) ajoute(seq.consequence, 'resumes.consequence');
+  return seq;
+}
+// L'ancien découpage de l'épisode (CD, contexte, antécédents, conséquences, interventions) est repris tel quel, là où il existe.
+function sequenceDepuisAncien(evt, base) {
+  const m3 = state.m3 || {};
+  const D = (m3.decoupages || {})[evt.id];
+  const V = nom => ((((m3.decoupagesVolets || {})[nom]) || {})[evt.id] || {}).unites || [];
+  const copie = u => ({id: u.id || nouvelIdDecoupe(), champ: u.champ, debut: u.debut || 0, texte: u.texte});
+  const seq = base;
+  let repris = false;
+  if (V('contexte').length) { seq.contexte = V('contexte').map(copie); repris = true; }
+  if (V('antecedents').length) { seq.phases[0].antecedents = V('antecedents').map(copie); repris = true; }
+  if (V('interventions').length) { seq.phases[0].interventions = V('interventions').map(copie); repris = true; }
+  if (V('consequences').length) { seq.consequence = V('consequences').map(copie); repris = true; }
+  if (D && D.mode === 'aucun') { seq.phases.forEach(p => { p.cds = []; }); seq.termine = true; repris = true; }
+  else if (D && (D.unites || []).length) {
+    repris = true;
+    const ant = seq.phases[0].antecedents, iv = seq.phases[0].interventions;
+    // Les interventions que la proposition rangeait dans les phases suivantes : elles se retrouvent dans la dernière.
+    const ivSuite = [].concat.apply([], seq.phases.slice(1).map(p => p.interventions));
+    const ajouteSiAbsent = (liste, c) => { if (!liste.some(x => x.champ === c.champ && x.debut === c.debut && x.texte === c.texte)) liste.push(c); };
+    if (D.mode === 'sequence' && D.unites.length > 1) {
+      seq.phases = D.unites.map(u => { const p = nouvellePhase(); p.cds.push(copie(u)); return p; });
+      seq.phases[0].antecedents = ant; seq.phases[0].interventions = iv;
+      (D.charnieres || []).forEach((c, k) => {
+        if (!c || !c.texte || !seq.phases[k + 1]) return;
+        // Ce qui s'est passé entre deux CD : la conséquence du premier (ici, son intervention) et l'antécédent du suivant.
+        if (c.intervention !== false) ajouteSiAbsent(seq.phases[k].interventions, copie(c));
+        ajouteSiAbsent(seq.phases[k + 1].antecedents, copie(c));
+      });
+    } else {
+      seq.phases = [seq.phases[0]];
+      seq.phases[0].cds = D.unites.map(copie);
+    }
+    ivSuite.forEach(c => ajouteSiAbsent(seq.phases[seq.phases.length - 1].interventions, c));
+  }
+  return {seq, repris};
+}
+// Une empreinte de ce qui est projeté pour cet épisode : si elle change, c'est qu'un autre outil (le comparateur) y a touché.
+function empreinteStores(evt) {
+  const m3 = state.m3 || {}, id = evt.id;
+  const V = nom => (((m3.decoupagesVolets || {})[nom]) || {})[id] || null;
+  return JSON.stringify([(m3.decoupages || {})[id] || null, V('contexte'), V('antecedents'), V('consequences'), V('interventions')]);
+}
+function sequenceActive(evt) {
+  const s = evt && evt.id ? sequenceEnregistree(evt.id) : null;
+  return s && s.empreinte === empreinteStores(evt) ? s : null;
+}
+function sequenceDeTravail(evt) {
+  const enr = sequenceActive(evt);
+  if (enr) return {seq: clone(enr), propose: false, origine: enr.origine || 'saisie'};
+  const r = sequenceDepuisAncien(evt, propositionSequence(evt));
+  const origine = r.repris ? 'ancien' : (placementsSeq(r.seq).length ? 'formulaire' : 'vide');
+  return {seq: r.seq, propose: true, origine};
+}
+// Ce que lisent Catégoriser et Interpréter : mêmes structures qu'avant.
+function projeterSequence(evt, seq) {
+  ensureM3();
+  const id = evt.id;
+  if (!state.m3.decoupagesVolets) state.m3.decoupagesVolets = {};
+  if (!state.m3.decoupages) state.m3.decoupages = {};
+  const unites = l => l.map(c => ({id: c.id, champ: c.champ, debut: c.debut, texte: c.texte}));
+  const tous = k => [].concat.apply([], (seq ? seq.phases : []).map(p => p[k]));
+  const volet = (nom, liste) => {
+    const reg = state.m3.decoupagesVolets[nom] || (state.m3.decoupagesVolets[nom] = {});
+    if (liste.length) reg[id] = {unites: unites(liste)}; else delete reg[id];
+  };
+  volet('contexte', seq ? seq.contexte : []);
+  volet('antecedents', tous('antecedents'));
+  volet('consequences', seq ? seq.consequence : []);
+  volet('interventions', tous('interventions'));
+  const cds = tous('cds');
+  if (cds.length) state.m3.decoupages[id] = {mode: seq.phases.filter(p => p.cds.length).length > 1 ? 'sequence' : 'simultane', unites: unites(cds), charnieres: []};
+  else if (seq && seq.termine) state.m3.decoupages[id] = {mode: 'aucun', unites: [], charnieres: []};
+  else delete state.m3.decoupages[id];
+}
+function elementsParVolet(evt) {
+  const out = {};
+  M3_SOUS.forEach(v => { out[v.id] = elementsEvt(v.id, evt).filter(e => e.tag !== 'plus-tot' && !e.vide).map(e => ({id: e.id, texte: e.texte})); });
+  return out;
+}
+/* Les classements d'un élément qui change d'identifiant (le même texte, rangé autrement) le suivent ; ceux d'un élément qui
+   disparaît se perdent — l'analyste est prévenu avant. */
+// Les anciens éléments portaient un préfixe (« Obtenu : », « (contexte) »…) ou un suffixe (« → Diminution de la tension ») que le texte cité n'a pas.
+function nmElement(texte) {
+  let t = String(texte || '').replace(/^\(contexte\)\s*/, '').replace(/^(Obtenu|Évité|Fin|État avant)\s*:\s*/, '');
+  EFFET_INTERVENTION_OPTIONS.forEach(e => { const suffixe = ' → ' + e; if (t.endsWith(suffixe)) t = t.slice(0, -suffixe.length); });
+  return nmTexte(t);
+}
+function planClassements(avant, apres) {
+  const renommer = [], perdus = [];
+  M3_SOUS.forEach(v => {
+    const cats = (state.m3.categories || {})[v.id] || {};
+    const classes = new Set();
+    Object.values(cats).forEach(c => (c.items || []).forEach(i => classes.add(i)));
+    const nouveaux = apres[v.id] || [], presents = new Set(nouveaux.map(e => e.id)), avantIds = new Set((avant[v.id] || []).map(e => e.id)), pris = new Set();
+    (avant[v.id] || []).forEach(e => {
+      if (!classes.has(e.id) || presents.has(e.id)) return;
+      const cle = nmElement(e.texte);
+      const cible = nouveaux.find(n => !pris.has(n.id) && !avantIds.has(n.id) && nmElement(n.texte) === cle);
+      if (cible) { renommer.push({volet: v.id, de: e.id, vers: cible.id}); pris.add(cible.id); }
+      else perdus.push({volet: v.id, id: e.id});
+    });
+  });
+  return {renommer, perdus};
+}
+function instantaneStores(evt) {
+  const m3 = state.m3 || {}, id = evt.id;
+  return {D: clone((m3.decoupages || {})[id]), S: clone((m3.sequences || {})[id]),
+    V: Object.keys(VOLETS_SEQUENCE).reduce((o, k) => { o[VOLETS_SEQUENCE[k]] = clone((((m3.decoupagesVolets || {})[VOLETS_SEQUENCE[k]]) || {})[id]); return o; }, {})};
+}
+function restaurerStores(evt, s) {
+  const m3 = state.m3, id = evt.id;
+  const poser = (reg, v) => { if (v === undefined) delete reg[id]; else reg[id] = v; };
+  poser(m3.decoupages, s.D);
+  if (!m3.sequences) m3.sequences = {};
+  poser(m3.sequences, s.S);
+  Object.keys(s.V).forEach(nom => poser(m3.decoupagesVolets[nom] || (m3.decoupagesVolets[nom] = {}), s.V[nom]));
+}
+/* Enregistre le rangement d'un épisode et le projette. Renvoie false si l'analyste renonce (des classements se perdraient). */
+function appliquerSequence(evt, seq, options) {
+  ensureM3();
+  const id = evt.id, vide = seqEstVide(seq) && !seq.termine;
+  const avant = elementsParVolet(evt), snap = instantaneStores(evt);
+  projeterSequence(evt, vide ? null : seq);
+  const apres = elementsParVolet(evt), plan = planClassements(avant, apres);
+  if (plan.perdus.length && !(options && options.sansDemande)) {
+    const noms = [...new Set(plan.perdus.map(p => {
+      const cat = Object.values(state.m3.categories[p.volet] || {}).find(c => (c.items || []).includes(p.id));
+      return '« ' + ((cat && cat.nom) || 'sans nom') + ' »';
+    }))].slice(0, 6).join(', ');
+    if (!confirm(plan.perdus.length + ' classement' + (plan.perdus.length > 1 ? 's portaient' : ' portait') + ' sur des éléments qui disparaissent avec ce rangement (' + noms + '). ' +
+        (plan.perdus.length > 1 ? 'Ils seront retirés' : 'Il sera retiré') + ' : il faudra classer les nouveaux éléments.\n\nContinuer ?')) {
+      restaurerStores(evt, snap);
+      return false;
+    }
+  }
+  plan.renommer.forEach(r => Object.values(state.m3.categories[r.volet] || {}).forEach(c => { c.items = (c.items || []).map(i => i === r.de ? r.vers : i); }));
+  plan.perdus.forEach(p => Object.values(state.m3.categories[p.volet] || {}).forEach(c => { c.items = (c.items || []).filter(i => i !== p.id); }));
+  if (!state.m3.sequences) state.m3.sequences = {};
+  if (vide) delete state.m3.sequences[id];
+  else { const s = clone(seq); s.empreinte = empreinteStores(evt); state.m3.sequences[id] = s; }
+  persist();
+  return true;
+}
+// La part du déclaratif qui est rangée (lettres et chiffres comptés une fois, même si le passage est rangé à deux endroits).
+function couvertureSequence(evt, seq) {
+  const plages = {};
+  placementsSeq(seq).forEach(p => { const b = bornesCitation(evt, p.cit); if (b) (plages[p.cit.champ] = plages[p.cit.champ] || []).push(b); });
+  let total = 0, couvert = 0;
+  const restes = [];
+  champsARanger(evt).forEach(c => {
+    const rg = plages[c.champ] || [];
+    let reste = 0;
+    for (let i = 0; i < c.texte.length; i++) {
+      if (!/[\p{L}\p{N}]/u.test(c.texte[i])) continue;
+      total++;
+      if (rg.some(r => i >= r.d && i < r.f)) couvert++; else reste++;
+    }
+    if (reste) restes.push({champ: c.champ, titre: c.titre, n: reste});
+  });
+  return {total, couvert, pct: total ? Math.round(couvert / total * 100) : 100, restes};
+}
+function ordreChamps(evt) { const o = {}; champsBrut(evt).forEach((c, i) => { o[c.champ] = i; }); return o; }
+function trierSlot(evt, liste) {
+  const o = ordreChamps(evt);
+  liste.sort((a, b) => ((o[a.champ] === undefined ? 99 : o[a.champ]) - (o[b.champ] === undefined ? 99 : o[b.champ])) || ((a.debut || 0) - (b.debut || 0)));
+}
+
+/* ── Les deux panneaux ── */
+let seqTravail = null;   // {evtId, seq, propose, origine} : le rangement en cours de l'épisode ouvert
+let selSeq = null;       // {champ, debut, texte} : le passage sélectionné dans le déclaratif
+function travailSeq(evt) {
+  if (!seqTravail || seqTravail.evtId !== String(evt.id)) seqTravail = Object.assign({evtId: String(evt.id)}, sequenceDeTravail(evt));
+  return seqTravail;
+}
+function oublierTravailSeq() { seqTravail = null; selSeq = null; cacherBulleSeq(); }
+function phaseActive(seq) { return Math.max(0, Math.min(analyseEtat().phase || 0, seq.phases.length - 1)); }
+
+function modifierSeq(evt, fn) {
+  const t = travailSeq(evt), avant = clone(t.seq);
+  fn(t.seq);
+  if (appliquerSequence(evt, t.seq)) t.propose = false; else t.seq = avant;
+  majPanneauxAnalyse();
+  renderM3Silencieux();
+}
+// Catégoriser se redessine quand on y revient ; ici on ne touche qu'aux pastilles.
+function renderM3Silencieux() { try { renderAnalyseEtapes(); } catch (er) { /* pas encore posé */ } }
+
+function marquesChamp(evt, seq, champ) {
+  const noms = etiquettesDeCits(seq, analyseEtat().episode + 1);
+  return placementsSeq(seq).filter(p => p.cit.champ === champ).map(p => {
+    const b = bornesCitation(evt, p.cit);
+    return b ? {d: b.d, f: b.f, slot: p.slot, id: p.cit.id, nom: noms[p.cit.id] || ''} : null;
+  }).filter(Boolean);
+}
+function htmlTexteMarque(texte, marques) {
+  const bornes = new Set([0, texte.length]);
+  marques.forEach(m => { bornes.add(m.d); bornes.add(m.f); });
+  const pts = [...bornes].sort((a, b) => a - b);
+  let html = '';
+  for (let i = 0; i < pts.length - 1; i++) {
+    const a = pts[i], b = pts[i + 1];
+    if (a === b) continue;
+    const couv = marques.filter(m => m.d <= a && m.f >= b);
+    const morceau = esc(texte.slice(a, b));
+    if (!couv.length) { html += morceau; continue; }
+    const slots = [...new Set(couv.map(m => m.slot))];
+    html += '<mark class="seq-m seq-m-' + slots[0] + (slots.length > 1 ? ' seq-m-double' : '') + '" data-cit="' + esc(couv.map(m => m.id).join(' ')) + '" title="' + esc(couv.map(m => m.nom).join(' · ')) + '">' + morceau + '</mark>';
+  }
+  return html;
+}
+
+/* Panneau 1 : le déclaratif brut d'un épisode. On n'y touche jamais : on y sélectionne des passages, qui se rangent à droite. */
 function renderDeclaratifBrut() {
   const el = document.getElementById('declaratif-brut');
   if (!el) return;
   const evt = analyseEpisodeCourant();
   if (!evt) { el.innerHTML = analyseSansEpisode(); return; }
-  const champs = champsContexte(evt).concat(champsCitables(evt));
-  if (evt.entourage && String(evt.entourage).trim()) champs.push({champ: 'entourage', titre: 'Pour l\'entourage', texte: String(evt.entourage)});
-  if (evt.quandQui && String(evt.quandQui).trim()) champs.unshift({champ: 'quandQui', titre: 'Quand · Qui (tel qu\'écrit dans la grille)', texte: String(evt.quandQui)});
+  const seq = travailSeq(evt).seq;
+  const champs = champsBrut(evt);
   el.innerHTML = enteteEpisodeAnalyse(evt) +
-    '<p class="analyse-note">Le déclaratif brut : on n\'y touche jamais. Il se lit ici tel que le déclarant l\'a écrit.</p>' +
+    '<p class="analyse-note">Le déclaratif brut : on n\'y touche jamais. <b>Sélectionnez un passage</b> pour le ranger dans la séquence, à droite.</p>' +
+    '<div class="brut-legende"><span><i class="pastille p-sel"></i>sélection en cours</span><span><i class="pastille p-range"></i>déjà rangé</span><span><i class="pastille p-reste"></i>pas encore traité</span></div>' +
     (champs.length
-      ? champs.map(c => '<div class="analyse-champ"><div class="analyse-champ-titre">' + esc(c.titre) + '</div><div class="analyse-champ-texte">' + esc(c.texte) + '</div></div>').join('')
+      ? champs.map(c => '<div class="analyse-champ"><div class="analyse-champ-titre">' + esc(c.titre) + '</div>' +
+          (c.fixe ? '<div class="analyse-champ-texte">' + esc(c.texte) + '</div>'
+                  : '<div class="analyse-champ-texte brut-texte" data-champ="' + esc(c.champ) + '">' + htmlTexteMarque(c.texte, marquesChamp(evt, seq, c.champ)) + '</div>') + '</div>').join('')
       : '<p class="analyse-note">Cet épisode ne contient encore aucun texte.</p>');
 }
 
-/* Panneau 2 : découper. Le rangement du déclaratif dans la séquence de l'épisode (contexte · phases · conséquence) arrive
-   à l'étape suivante de la refonte ; en attendant, les découpages actuels y sont accessibles. */
+function chipSeq(evt, seq, cle, cit, noms) {
+  const slot = cle.indexOf('.') >= 0 ? cle.split('.')[1] : cle, c = SLOTS_SEQ[slot] || SLOTS_SEQ.ecarte;
+  const texte = String(cit.texte).replace(/\s+/g, ' ');
+  const options = clesSlots(seq).filter(x => x[0] !== cle).map(x => '<option value="%V:' + x[0] + '">' + esc(x[1]) + '</option>').join('');
+  return '<div class="seq-chip" data-cit="' + esc(cit.id) + '" style="--c:' + (c.vol ? 'var(--vol-' + c.vol + '-deep)' : 'var(--ink-soft)') + ';">' +
+    '<span class="seq-chip-num">' + esc(noms[cit.id] || '') + '</span>' +
+    '<span class="seq-chip-texte" title="Voir ce passage dans le déclaratif" onclick="montrerCitSeq(\'' + esc(cit.id) + '\')">« ' + esc(texte.length > 150 ? texte.slice(0, 149) + '…' : texte) + ' »</span>' +
+    '<select class="seq-chip-menu" aria-label="Déplacer ou copier ce passage" title="Déplacer, ou mettre aussi ailleurs" onchange="actionCitSeq(\'' + esc(cit.id) + '\', this.value); this.selectedIndex = 0;">' +
+      '<option value="">⋯</option>' +
+      '<optgroup label="Déplacer vers">' + options.split('%V:').join('mv:') + '</optgroup>' +
+      '<optgroup label="Mettre aussi dans">' + options.split('%V:').join('cp:') + '</optgroup></select>' +
+    '<button type="button" class="seq-chip-x" title="Retirer ce passage (le texte redevient « pas encore traité »)" aria-label="Retirer" onclick="retirerCitSeq(\'' + esc(cit.id) + '\')">✕</button></div>';
+}
+function slotSeq(evt, seq, cle, noms, titre) {
+  const slot = cle.indexOf('.') >= 0 ? cle.split('.')[1] : cle, c = SLOTS_SEQ[slot], liste = listeDeCle(seq, cle) || [];
+  const bouton = '<button type="button" class="seq-ici" data-ici="' + cle + '" onmousedown="event.preventDefault()" onclick="placerSelectionSeq(\'' + cle + '\')"' + (selSeq ? '' : ' disabled') + ' title="Ranger le passage sélectionné à gauche ici">＋ ici</button>';
+  return '<div class="seq-slot" style="--c:var(--vol-' + c.vol + '-deep);--bg-slot:var(--vol-' + c.vol + '-pale);">' +
+    '<div class="seq-slot-nom"><span>' + esc(titre || c.nom) + '</span><span class="seq-carte-aide">' + esc(c.aide) + '</span>' + bouton + '</div>' +
+    (liste.length ? liste.map(x => chipSeq(evt, seq, cle, x, noms)).join('') : '<div class="seq-vide">Rien pour l\'instant.</div>') + '</div>';
+}
+/* Panneau 2 : la séquence de l'épisode, qui se remplit des passages cités. */
 function renderDecouper() {
   const el = document.getElementById('decouper-panneau');
   if (!el) return;
   const evt = analyseEpisodeCourant();
   if (!evt) { el.innerHTML = analyseSansEpisode(); return; }
-  const id = esc(String(evt.id));
-  const st = structureCD(evt);
-  const dec = nom => { const d = ((state.m3 || {}).decoupagesVolets || {})[nom]; return !!(d && d[evt.id] && (d[evt.id].unites || []).length); };
-  const volets = [['contexte', 'le contexte'], ['antecedents', 'les antécédents'], ['consequences', 'les conséquences'], ['interventions', 'les interventions']];
-  el.innerHTML = enteteEpisodeAnalyse(evt) +
-    '<p class="analyse-note"><b>Ici, on rangera ce que le déclarant a écrit dans la séquence de l\'épisode</b> : contexte, phase 1 (antécédent, CD, intervention), phases suivantes, conséquence. ' +
-    'Cette étape est en cours de refonte. En attendant, vous pouvez repérer les CD et les passages de cet épisode avec les outils actuels.</p>' +
-    '<div class="analyse-champ"><div class="analyse-champ-titre">Les CD de l\'épisode</div>' +
-      '<div class="analyse-champ-texte">' + (st.decoupe ? st.cds.length + ' CD repéré' + (st.cds.length > 1 ? 's' : '') + ' par l\'analyste.' : 'Aucun découpage : le déclaratif tel qu\'il a été écrit.') + '</div>' +
-      '<div class="analyse-actions"><button type="button" class="btn btn-secondary btn-sm" onclick="ouvrirDecoupage(\'' + id + '\')">✂ Découper les CD</button></div></div>' +
-    '<div class="analyse-champ"><div class="analyse-champ-titre">Les autres volets</div>' +
-      '<div class="analyse-actions">' + volets.map(([v, lib]) =>
-        '<button type="button" class="btn btn-secondary btn-sm" onclick="ouvrirDecoupageVolet(\'' + v + '\', \'' + id + '\')">✂ ' + esc(lib) + (dec(v) ? ' ✓' : '') + '</button>').join('') + '</div></div>';
+  const t = travailSeq(evt), seq = t.seq, n = analyseEtat().episode + 1;
+  const noms = etiquettesDeCits(seq, n), cov = couvertureSequence(evt, seq), act = phaseActive(seq);
+  const carte = (cle, vol, titre, contenu, actif) =>
+    '<div class="seq-carte' + (actif ? ' actif' : '') + '" style="--c:var(--vol-' + vol + '-deep);">' + contenu + '</div>';
+  const info = t.propose
+    ? '<div class="seq-info">' + ({
+        formulaire: '<b>Proposition de la BAF</b>, à partir des cases du formulaire : corrigez-la librement — retirez, déplacez, ajoutez des passages. Rien n\'est enregistré avant votre première modification (ou « Rangement terminé »).',
+        ancien: '<b>Repris de l\'ancien découpage de cet épisode</b>, complété par ce que le déclarant a rangé dans le formulaire. Rien n\'est enregistré avant votre première modification (ou « Rangement terminé »).',
+        vide: '<b>Rien à proposer</b> : cet épisode n\'a pas de cases de formulaire. Sélectionnez des passages à gauche et rangez-les ici.'
+      })[t.origine] + '<br><button type="button" class="btn btn-ghost btn-sm" onclick="recommencerSeq()">Partir de zéro</button></div>'
+    : '';
+  const phases = seq.phases.map((p, i) =>
+    carte('p' + i, 'comportement', '', '<div class="seq-carte-tete" onclick="choisirPhaseSeq(' + i + ')"><span class="seq-carte-nom">Phase ' + (i + 1) + '</span>' +
+      (i === act ? '<span class="seq-carte-aide">phase active : la bulle y range</span>' : '<span class="seq-carte-aide"><a href="#" onclick="choisirPhaseSeq(' + i + '); return false;">en faire la phase active</a></span>') +
+      '<span class="seq-phase-outils">' +
+        (i > 0 ? '<button type="button" title="Monter cette phase" aria-label="Monter" onclick="event.stopPropagation(); deplacerPhaseSeq(' + i + ', -1)">↑</button>' : '') +
+        (i < seq.phases.length - 1 ? '<button type="button" title="Descendre cette phase" aria-label="Descendre" onclick="event.stopPropagation(); deplacerPhaseSeq(' + i + ', 1)">↓</button>' : '') +
+        (seq.phases.length > 1 ? '<button type="button" title="Supprimer cette phase" aria-label="Supprimer la phase" onclick="event.stopPropagation(); supprimerPhaseSeq(' + i + ')">✕</button>' : '') +
+      '</span></div>' +
+      ['antecedents', 'cds', 'interventions'].map(s => slotSeq(evt, seq, 'p' + i + '.' + s, noms)).join(''), i === act)).join('');
+  const ecarte = (seq.ecarte || []).length;
+  el.innerHTML =
+    '<div class="seq-tete"><span class="seq-pct">' + cov.pct + ' % du texte rangé</span>' +
+      '<span class="seq-barre" aria-hidden="true"><span style="width:' + cov.pct + '%"></span></span>' +
+      '<button type="button" class="btn ' + (seq.termine ? 'btn-secondary' : 'btn-primary') + ' btn-sm" onclick="basculerTermineSeq()">' + (seq.termine ? '✓ Rangement terminé — rouvrir' : '✓ Rangement terminé') + '</button></div>' +
+    (cov.restes.length && !seq.termine ? '<p class="analyse-note">Il reste du texte pas encore traité : ' + cov.restes.slice(0, 4).map(r => esc(r.titre)).join(', ') + (cov.restes.length > 4 ? '…' : '') +
+        ' — <a href="#" onclick="allerAuResteSeq(); return false;">le voir</a>.</p>' : '') +
+    info +
+    carte('contexte', 'contexte', '', slotSeq(evt, seq, 'contexte', noms)) +
+    phases +
+    '<button type="button" class="btn btn-secondary btn-sm seq-ajouter-phase" onclick="ajouterPhaseSeq()">＋ Ajouter une phase</button>' +
+    carte('consequence', 'consequence', '', slotSeq(evt, seq, 'consequence', noms)) +
+    '<details class="seq-ecarte-details"' + (ecarte ? ' open' : '') + '><summary>Non retenu (' + ecarte + ')</summary>' + slotSeq(evt, seq, 'ecarte', noms, 'Non retenu') + '</details>';
 }
+
+/* ── Les gestes ── */
+function trouverCitSeq(seq, id) { return placementsSeq(seq).find(p => p.cit.id === id) || null; }
+function placerSelectionSeq(cle) {
+  const evt = analyseEpisodeCourant(), s = selSeq;
+  if (!evt || !s) return;
+  modifierSeq(evt, seq => {
+    const liste = listeDeCle(seq, cle);
+    if (!liste) return;
+    const m = /^p(\d+)\./.exec(cle);
+    if (m) analyseEtat().phase = +m[1];
+    if (liste.some(c => c.champ === s.champ && c.debut === s.debut && c.texte === s.texte)) return;
+    liste.push({id: nouvelIdDecoupe(), champ: s.champ, debut: s.debut, texte: s.texte});
+    trierSlot(evt, liste);
+  });
+  selSeq = null; cacherBulleSeq();
+  const sl = window.getSelection(); if (sl) sl.removeAllRanges();
+  majBoutonsSeq();
+}
+function retirerCitSeq(id) {
+  const evt = analyseEpisodeCourant();
+  modifierSeq(evt, seq => { const p = trouverCitSeq(seq, id); if (p) { const l = listeDeCle(seq, p.cle); l.splice(l.indexOf(p.cit), 1); } });
+}
+function actionCitSeq(id, valeur) {
+  const m = /^(mv|cp):(.+)$/.exec(valeur || '');
+  if (!m) return;
+  const evt = analyseEpisodeCourant();
+  modifierSeq(evt, seq => {
+    const p = trouverCitSeq(seq, id), cible = listeDeCle(seq, m[2]);
+    if (!p || !cible) return;
+    if (cible.some(c => c.champ === p.cit.champ && c.debut === p.cit.debut && c.texte === p.cit.texte)) return;
+    const copieCit = Object.assign({}, p.cit, {id: m[1] === 'cp' ? nouvelIdDecoupe() : p.cit.id});
+    if (m[1] === 'mv') { const l = listeDeCle(seq, p.cle); l.splice(l.indexOf(p.cit), 1); }
+    cible.push(copieCit);
+    trierSlot(evt, cible);
+  });
+}
+function choisirPhaseSeq(i) { analyseEtat().phase = i; renderDecouper(); }
+function ajouterPhaseSeq() {
+  const evt = analyseEpisodeCourant();
+  modifierSeq(evt, seq => { seq.phases.push(nouvellePhase()); analyseEtat().phase = seq.phases.length - 1; });
+  // Une phase vide ne change rien à la projection : on la garde dans le rangement en cours seulement.
+  renderDecouper();
+}
+function supprimerPhaseSeq(i) {
+  const evt = analyseEpisodeCourant(), seq = travailSeq(evt).seq, p = seq.phases[i];
+  if (!p) return;
+  const n = p.antecedents.length + p.cds.length + p.interventions.length;
+  if (n && !confirm('Supprimer la phase ' + (i + 1) + ' ? Les ' + n + ' passage' + (n > 1 ? 's' : '') + ' qu\'elle contient ne seront plus rangés (le texte redevient « pas encore traité »).')) return;
+  modifierSeq(evt, s => { s.phases.splice(i, 1); });
+  analyseEtat().phase = Math.max(0, Math.min(analyseEtat().phase || 0, travailSeq(evt).seq.phases.length - 1));
+  renderDecouper();
+}
+function deplacerPhaseSeq(i, delta) {
+  const evt = analyseEpisodeCourant();
+  modifierSeq(evt, seq => { const j = i + delta; if (j < 0 || j >= seq.phases.length) return; const p = seq.phases.splice(i, 1)[0]; seq.phases.splice(j, 0, p); analyseEtat().phase = j; });
+}
+function basculerTermineSeq() {
+  const evt = analyseEpisodeCourant(), t = travailSeq(evt);
+  if (!t.seq.termine) {
+    const cov = couvertureSequence(evt, t.seq);
+    if (cov.restes.length && !confirm('Il reste du texte pas encore traité (' + cov.pct + ' % rangé). Marquer ce rangement comme terminé quand même ?\n\n(« Non retenu » sert à mettre de côté ce qui n\'entre pas dans la séquence.)')) return;
+  }
+  modifierSeq(evt, seq => { seq.termine = !seq.termine; });
+}
+// Repartir d'une page blanche : un rangement vide n'est pas enregistré, la proposition ne revient pas tant qu'on reste sur l'épisode.
+function recommencerSeq() {
+  const evt = analyseEpisodeCourant(), t = travailSeq(evt);
+  if (!t.propose && !confirm('Repartir de zéro efface le rangement de cet épisode. Continuer ?')) return;
+  modifierSeq(evt, seq => { const v = sequenceVide(); Object.keys(v).forEach(k => { seq[k] = v[k]; }); });
+  t.propose = false;
+  renderDecouper(); renderDeclaratifBrut();
+}
+function montrerCitSeq(id) {
+  const marques = [...document.querySelectorAll('#declaratif-brut .seq-m')].filter(m => (m.dataset.cit || '').split(' ').indexOf(id) !== -1);
+  if (!marques.length) return;
+  marques[0].scrollIntoView({block: 'center', behavior: 'smooth'});
+  marques.forEach(m => { m.classList.add('flash'); setTimeout(() => m.classList.remove('flash'), 1400); });
+}
+function allerAuResteSeq() {
+  const evt = analyseEpisodeCourant(); if (!evt) return;
+  const r = couvertureSequence(evt, travailSeq(evt).seq).restes[0];
+  const bloc = r && [...document.querySelectorAll('#declaratif-brut .brut-texte')].find(b => b.dataset.champ === r.champ);
+  if (bloc) { bloc.scrollIntoView({block: 'center', behavior: 'smooth'}); bloc.parentElement.classList.add('flash'); setTimeout(() => bloc.parentElement.classList.remove('flash'), 1400); }
+}
+function allerDecouper(evtId, ev) {
+  if (ev) ev.stopPropagation();
+  const i = (state.m2.evenements || []).findIndex(e => String(e.id) === String(evtId));
+  if (i >= 0) analyseEtat().episode = i;
+  allerAnalyse(0);
+}
+
+/* ── La sélection : la bulle s'ouvre quand elle est terminée, les boutons « ici » s'allument ── */
+function cacherBulleSeq() { const b = document.getElementById('seq-bulle'); if (b) b.hidden = true; }
+function majBoutonsSeq() { document.querySelectorAll('#decouper-panneau .seq-ici').forEach(b => { b.disabled = !selSeq; }); }
+function lireSelectionSeq() {
+  const sel = window.getSelection();
+  const vide = () => { selSeq = null; cacherBulleSeq(); majBoutonsSeq(); };
+  if (!analyseVisible() || !sel || !sel.rangeCount || sel.isCollapsed) { vide(); return; }
+  const r = sel.getRangeAt(0);
+  const noeud = r.commonAncestorContainer.nodeType === 1 ? r.commonAncestorContainer : r.commonAncestorContainer.parentElement;
+  const bloc = noeud && noeud.closest && noeud.closest('.brut-texte');
+  if (!bloc || !document.getElementById('declaratif-brut').contains(bloc)) { vide(); return; }
+  const avant = document.createRange();
+  avant.selectNodeContents(bloc);
+  avant.setEnd(r.startContainer, r.startOffset);
+  const brut = r.toString(), texte = brut.trim();
+  if (!texte) { vide(); return; }
+  selSeq = {champ: bloc.dataset.champ, debut: avant.toString().length + (brut.length - brut.trimStart().length), texte};
+  majBoutonsSeq();
+  montrerBulleSeq(r);
+}
+function montrerBulleSeq(range) {
+  const evt = analyseEpisodeCourant(); if (!evt) return;
+  const seq = travailSeq(evt).seq, act = phaseActive(seq);
+  let b = document.getElementById('seq-bulle');
+  if (!b) {
+    b = document.createElement('div');
+    b.id = 'seq-bulle'; b.className = 'seq-bulle no-print'; b.setAttribute('role', 'toolbar'); b.setAttribute('aria-label', 'Ranger ce passage');
+    b.addEventListener('mousedown', e => e.preventDefault());
+    document.body.appendChild(b);
+  }
+  const bt = (cle, lib, vol) => '<button type="button" class="seq-bt" style="--c:var(--vol-' + vol + '-deep);" onclick="placerSelectionSeq(\'' + cle + '\')">' + lib + '</button>';
+  const p = 'p' + act + '.';
+  b.innerHTML = bt('contexte', 'Contexte', 'contexte') +
+    '<span class="seq-phase-sel">Phase <button type="button" aria-label="Phase précédente" onclick="changerPhaseBulleSeq(-1)">‹</button><b>' + (act + 1) + '</b><button type="button" aria-label="Phase suivante" onclick="changerPhaseBulleSeq(1)">›</button></span>' +
+    bt(p + 'antecedents', 'Antécédent', 'antecedent') + bt(p + 'cds', 'CD', 'comportement') + bt(p + 'interventions', 'Intervention', 'intervention') +
+    bt('consequence', 'Conséquence', 'consequence') + bt('ecarte', 'Non retenu', 'contexte');
+  b.hidden = false;
+  const rect = range.getBoundingClientRect();
+  const larg = b.offsetWidth, haut = b.offsetHeight;
+  b.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - larg - 8)) + 'px';
+  let top = rect.bottom + 8;
+  if (top + haut > window.innerHeight - 8) top = Math.max(8, rect.top - haut - 8);
+  b.style.top = top + 'px';
+}
+function changerPhaseBulleSeq(delta) {
+  const evt = analyseEpisodeCourant(); if (!evt) return;
+  const seq = travailSeq(evt).seq;
+  analyseEtat().phase = Math.max(0, Math.min(seq.phases.length - 1, phaseActive(seq) + delta));
+  const sel = window.getSelection();
+  if (sel && sel.rangeCount) montrerBulleSeq(sel.getRangeAt(0));
+  renderDecouper();
+  majBoutonsSeq();
+}
+document.addEventListener('mouseup', ev => {
+  if (ev.target && ev.target.closest && ev.target.closest('#declaratif-brut')) setTimeout(lireSelectionSeq, 0);
+});
+document.addEventListener('keyup', ev => {
+  if ((ev.shiftKey || /^Arrow|^Home$|^End$/.test(ev.key)) && ev.target && ev.target.closest && ev.target.closest('#declaratif-brut')) lireSelectionSeq();
+});
+document.addEventListener('mousedown', ev => {
+  const b = document.getElementById('seq-bulle');
+  if (b && !b.hidden && !b.contains(ev.target) && !(ev.target.closest && ev.target.closest('#declaratif-brut'))) cacherBulleSeq();
+});
+window.addEventListener('scroll', () => { const b = document.getElementById('seq-bulle'); if (b && !b.hidden) b.hidden = true; }, {passive: true});
 
 function route(name, fromHistory){
   // Si on quitte le formulaire d\'épisode sans valider, conserver la
@@ -5217,7 +5819,7 @@ function route(name, fromHistory){
   window.scrollTo({top:0, behavior:'instant'});
   refreshAccueilBadges();
   if(name==='synthese') { refreshSynthese(); if(detailsVisible) renderCharts(); }
-  if(name==='analyser') { if (posAnalyse === 2) choisirVoletArrivee(etaitSurM3); allerAnalyse(posAnalyse, {sansDefilement: true}); }
+  if(name==='analyser') { oublierTravailSeq(); if (posAnalyse === 2) choisirVoletArrivee(etaitSurM3); allerAnalyse(posAnalyse, {sansDefilement: true}); }
   if(name==='idc-main') { setNavActive('cotation'); renderMain(); }
   if(name==='idc-accueil') { try { majEntreeDossierOuvert(); } catch(e) {} }
   setTimeout(autoGrowAllTextareas, 30);
@@ -8929,6 +9531,17 @@ function unitesABC() {
     if (!evt.id) evt.id = 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
     const st = structureCD(evt);
     if (st.mode === 'aucun') return;
+    // Un épisode rangé dans Découper : une séquence par phase qui a un CD (les antécédents de la phase, ses CD ; la conséquence ferme la dernière).
+    const rangement = sequenceActive(evt);
+    if (rangement && rangement.phases.some(p => p.cds.length)) {
+      const derniere = rangement.phases.map(p => p.cds.length > 0).lastIndexOf(true);
+      const el = (liste, pre) => liste.map(c => 'e' + evt.id + pre + c.id);
+      rangement.phases.forEach((p, k) => {
+        if (!p.cds.length) return;
+        unites.push({evt, cd: k, A: noms('antecedents', el(p.antecedents, '_x')), B: noms('cp', el(p.cds, '_u')), C: k === derniere ? noms('consequences', el(rangement.consequence, '_x')) : []});
+      });
+      return;
+    }
     if (st.mode !== 'sequence') {
       unites.push({evt, A: catsDeEvt('antecedents', evt.id), B: catsDeEvt('cp', evt.id), C: catsDeEvt('consequences', evt.id)});
       return;
@@ -11614,8 +12227,8 @@ const _CONTROLES = [
       const adresses = [vueDepuisAdresse('#organiser'), vueDepuisAdresse('#interpreter'), vueDepuisAdresse('#analyser'), adresseDeVue('analyser')].join(',');
       const nav = [...document.querySelectorAll('#baf-nav-group .nav-btn')].map(b => b.textContent.trim()).join(',');
       const enveloppes = !!document.getElementById('view-m3') && !!document.getElementById('view-m4') && !document.querySelector('section#view-m3, section#view-m4');
-      return _bancEgal('Organiser → Catégoriser (rang 2) | Interpréter → rang 3 | panneau 1 : voisins 0 et 2, 3 panneaux inertes | 4 pastilles, la bonne allumée | adresses | menu à quatre modules | contenus gardés dans les panneaux',
-        '2,true,pan-categoriser|3,pan-interpreter|02,3|4,Découper|m3,m4,analyser,analyser|Préambule,Recueillir,Analyser,Synthèse|true',
+      return _bancEgal('Organiser → Catégoriser (rang 2) | Interpréter → rang 3 | Déclaratif brut et Découper côte à côte : voisin 2, deux panneaux inertes | 4 pastilles, la première allumée | adresses | menu à quatre modules | contenus gardés dans les panneaux',
+        '2,true,pan-categoriser|3,pan-interpreter|2,2|4,Déclaratif brut|m3,m4,analyser,analyser|Préambule,Recueillir,Analyser,Synthèse|true',
         [apresM3, apresM4, voisins + ',' + inertes, pastilles + ',' + enCours, adresses, nav, enveloppes].join('|'));
     } finally {
       analyseEtat().pos = sauvePos; analyseEtat().episode = sauveEp;
@@ -11636,7 +12249,7 @@ const _CONTROLES = [
       const dit = evts[0].comportement ? texte.indexOf(evts[0].comportement.trim().slice(0, 20)) !== -1 : true;
       changerEpisodeAnalyse(1);
       const titre1 = document.querySelector('#declaratif-brut .analyse-episode-titre').firstChild.textContent.trim();
-      const memeDansDecouper = document.querySelector('#decouper-panneau .analyse-episode-titre').firstChild.textContent.trim() === titre1;
+      const memeDansDecouper = !!document.querySelector('#decouper-panneau .seq-tete');
       changerEpisodeAnalyse(0, 999);
       const dernier = analyseEtat().episode === evts.length - 1;
       return _bancEgal('épisode 1 | flèche précédente grisée | texte du déclarant affiché | épisode 2 après la flèche (même épisode dans Découper) | l\'index se borne au dernier',
@@ -11787,6 +12400,140 @@ const _CONTROLES = [
       'false|true|0121235/035|true|40,70,20|40,55,80|true',
       [entourageSeul, detailVrai, reprise, rapideParDefaut, [v.antecedent.v, v.pic.v, v.apres.v].join(','), [ancien.contexte.v, ancien.antecedent.v, ancien.pic.v].join(','),
        celluleVierge.grille && /avant\s+___\s+pendant\s+___\s+apr/.test(texteGrille)].join('|'));
+  }},
+  {nom:'Découper : la proposition range le formulaire dans la séquence (contexte, phases, conséquence) ; l\'ancien découpage est repris', test: () => {
+    const sauveEvts = state.m2.evenements, sauveM3 = JSON.stringify(state.m3);
+    try {
+      const evt = {id: 'sq1', date: '2026-03-02', heure: '09:10', lieu: 'Couloir', avantLoin: 'Nuit courte.', etatAvant: 'Il tournait en rond.',
+        antecedents: [{id: 'a1', texte: 'On lui a demandé de ranger.', declencheurPresume: true}],
+        comportement: 'Il a crié. Puis il a tapé le mur.',
+        interventions: [{id: 'i1', texte: 'Préavis de cinq minutes.', effet: 'Aucun effet visible', cdPostIntervention: 'Il a jeté une chaise.'}, {id: 'i2', texte: 'Mise en retrait.', effet: 'Diminution de la tension'}],
+        obtenu: 'Cinq minutes de plus.', evite: 'Le repas.', entourage: 'Sa sœur a eu peur.'};
+      state.m2.evenements = [evt]; ensureM3(); state.m3.decoupages = {}; state.m3.decoupagesVolets = {}; state.m3.sequences = {};
+      const p = propositionSequence(evt);
+      const txt = l => l.map(c => c.texte).join('+');
+      const forme = [txt(p.contexte), p.phases.length, txt(p.phases[0].antecedents), txt(p.phases[0].cds), txt(p.phases[0].interventions),
+        txt(p.phases[1].antecedents), txt(p.phases[1].cds), txt(p.phases[1].interventions), txt(p.consequence)].join(' | ');
+      const cov = couvertureSequence(evt, p).pct;
+      const etiq = etiquettesDeCits(p, 3);
+      const nomsCd = p.phases.map(ph => ph.cds.map(c => etiq[c.id]).join(',')).join(' ; ');
+      state.m3.decoupages.sq1 = {mode: 'sequence', unites: [{id: 'u1', champ: 'comportement', debut: 0, texte: 'Il a crié.'}, {id: 'u2', champ: 'comportement', debut: 11, texte: 'Puis il a tapé le mur.'}],
+        charnieres: [{id: 'c1', champ: 'interventions.i1.texte', debut: 0, texte: 'Préavis de cinq minutes.', intervention: true}]};
+      const r = sequenceDepuisAncien(evt, propositionSequence(evt));
+      const ancien = [r.repris, r.seq.phases.length, r.seq.phases.map(ph => txt(ph.cds)).join(' / '), txt(r.seq.phases[1].antecedents), txt(r.seq.phases[0].interventions), txt(r.seq.phases[1].interventions)].join(' | ');
+      return _bancEgal('proposition | tout est rangé | noms des CD | découpage repris, sans doublon',
+        'Couloir+Nuit courte. | 2 | On lui a demandé de ranger.+Il tournait en rond. | Il a crié. Puis il a tapé le mur. | Préavis de cinq minutes. | Préavis de cinq minutes. | Il a jeté une chaise. | Mise en retrait. | Cinq minutes de plus.+Le repas.' +
+        ' # 100 # CD 3.1.1 ; CD 3.2.1 # true | 2 | Il a crié. / Puis il a tapé le mur. | Préavis de cinq minutes. | Préavis de cinq minutes. | Mise en retrait.',
+        [forme, cov, nomsCd, ancien].join(' # '));
+    } finally { state.m2.evenements = sauveEvts; state.m3 = JSON.parse(sauveM3); }
+  }},
+  {nom:'Découper : le rangement s\'enregistre, se projette pour Catégoriser, garde les classements du même texte et prévient avant d\'en perdre', test: () => {
+    const sauveEvts = state.m2.evenements, sauveM3 = JSON.stringify(state.m3);
+    const vraiPersist = persist, vraiConfirm = window.confirm; let demandes = 0;
+    persist = () => {}; window.confirm = () => { demandes++; return false; };
+    try {
+      const evt = {id: 'sq2', date: '2026-03-02', heure: '09:10', avantLoin: 'Nuit courte.', antecedents: [{id: 'a1', texte: 'On lui a demandé de ranger.'}],
+        comportement: 'Il a crié.', interventions: [{id: 'i1', texte: 'Préavis.', effet: 'Diminution de la tension'}], obtenu: 'Du temps.'};
+      state.m2.evenements = [evt]; ensureM3(); state.m3.decoupages = {}; state.m3.decoupagesVolets = {}; state.m3.sequences = {};
+      const cats = state.m3.categories;
+      ['cp', 'contexte', 'antecedents', 'consequences', 'interventions'].forEach(v => { cats[v] = {}; });
+      // Des classements faits sur l'ancien format (identifiants de position)
+      cats.antecedents.k1 = {nom: 'Demande', color: '#10B981', items: elementsEvt('antecedents', evt).map(e => e.id)};
+      cats.cp.k2 = {nom: 'Cris', color: '#C2431F', items: elementsEvt('cp', evt).map(e => e.id)};
+      cats.consequences.k3 = {nom: 'Obtient', color: '#9A6A00', items: elementsEvt('consequences', evt).map(e => e.id)};
+      cats.interventions.k4 = {nom: 'Préavis', color: '#46566B', items: elementsEvt('interventions', evt).map(e => e.id)};
+      const seq = propositionSequence(evt);
+      const ok = appliquerSequence(evt, seq);
+      const ids = v => elementsEvt(v, evt).map(e => e.id).join(',');
+      const suivis = cats.antecedents.k1.items.join(',') === ids('antecedents') && cats.cp.k2.items.join(',') === ids('cp') && ids('cp') !== '' &&
+        cats.consequences.k3.items.join(',') === ids('consequences') && ids('consequences') !== '' && cats.interventions.k4.items.join(',') === ids('interventions') && ids('interventions') !== '';
+      const stocke = !!state.m3.sequences.sq2 && sequenceActive(evt) !== null;
+      const libelles = etiquettesCD()['e' + evt.id + '_u' + seq.phases[0].cds[0].id] + ' / ' + etiquettesVolets()['e' + evt.id + '_x' + seq.phases[0].antecedents[0].id];
+      // Retirer le CD classé et déclarer « terminé, aucun CD » : un classement se perdrait, on prévient (et ici on refuse)
+      const seq2 = clone(seq); seq2.phases[0].cds = []; seq2.termine = true;
+      const refuse = appliquerSequence(evt, seq2);
+      const intact = JSON.stringify(state.m3.sequences.sq2.phases[0].cds.map(c => c.texte)) + ',' + cats.cp.k2.items.length;
+      // Un rangement modifié ailleurs (le comparateur) n'est plus « actif » : on repart de ce qui est enregistré
+      state.m3.decoupages.sq2.unites[0].texte = 'Il a hurlé.';
+      const perime = sequenceActive(evt) === null && sequenceDeTravail(evt).origine === 'ancien';
+      return _bancEgal('enregistré | classements suivis (même texte) | stocké et actif | noms n.p.k | refus quand un classement se perdrait | rien n\'a changé | une question posée | rangement modifié ailleurs : on reprend l\'enregistré',
+        'true|true|true|CD 1.1.1 / Antécédent 1.1.1|false|["Il a crié."],1|1|true',
+        [ok, suivis, stocke, libelles, refuse, intact, demandes, perime].join('|'));
+    } finally { persist = vraiPersist; window.confirm = vraiConfirm; state.m2.evenements = sauveEvts; state.m3 = JSON.parse(sauveM3); }
+  }},
+  {nom:'Découper : double rangement sans double comptage, « Non retenu », une séquence d\'Interpréter par phase, rangement terminé sans CD', test: () => {
+    const sauveEvts = state.m2.evenements, sauveM3 = JSON.stringify(state.m3), vraiPersist = persist, vraiConfirm = window.confirm;
+    persist = () => {}; window.confirm = () => true;
+    try {
+      const evt = {id: 'sq3', date: '2026-03-02', heure: '09:10', comportement: 'Il crie. Elle intervient. Il tape.', obtenu: 'Du temps.', commentaire: 'RAS pour le reste.'};
+      state.m2.evenements = [evt]; ensureM3(); state.m3.decoupages = {}; state.m3.decoupagesVolets = {}; state.m3.sequences = {};
+      const cit = (champ, texte) => ({id: nouvelIdDecoupe(), champ, debut: texteChamp(evt, champ).indexOf(texte), texte});
+      const seq = sequenceVide();
+      seq.phases[0].cds.push(cit('comportement', 'Il crie.'));
+      seq.phases[0].interventions.push(cit('comportement', 'Elle intervient.'));
+      seq.phases.push(nouvellePhase());
+      seq.phases[1].antecedents.push(cit('comportement', 'Elle intervient.'));      // le même passage, rangé à deux endroits
+      seq.phases[1].cds.push(cit('comportement', 'Il tape.'));
+      seq.consequence.push(cit('obtenu', 'Du temps.'));
+      appliquerSequence(evt, seq, {sansDemande: true});
+      const cov = couvertureSequence(evt, seq);
+      const reste = cov.restes.map(r => r.champ).join(',');
+      seq.ecarte.push(cit('commentaire', 'RAS pour le reste.'));
+      const cov2 = couvertureSequence(evt, seq);
+      const el = v => elementsEvt(v, evt).map(e => e.texte).join(' / ');
+      const compte = [el('cp'), el('antecedents'), el('interventions'), el('consequences')].join(' | ');
+      const u = unitesABC().filter(x => x.evt.id === 'sq3');
+      const phases = u.length + ':' + u.map(x => x.cd).join(',');
+      const vide = sequenceVide(); vide.termine = true; vide.contexte.push(cit('comportement', 'Il tape.'));
+      appliquerSequence(evt, vide, {sansDemande: true});
+      const aucun = structureCD(evt).mode;
+      return _bancEgal('texte jamais rangé : le commentaire seul (70 % rangé) | éléments par volet (le passage double est deux éléments) | après « Non retenu » : 100 % | deux séquences, une par phase | terminé sans CD : aucun',
+        'commentaire # 70 # Il crie. / Il tape. | Elle intervient. | Elle intervient. | Du temps. # 100 # 2:0,1 # aucun',
+        [reste, cov.pct, compte, cov2.pct, phases, aucun].join(' # '));
+    } finally { persist = vraiPersist; window.confirm = vraiConfirm; state.m2.evenements = sauveEvts; state.m3 = JSON.parse(sauveM3); }
+  }},
+  {nom:'Découper : le déclaratif se sélectionne à gauche, la bulle et les boutons « ici » rangent à droite, deux panneaux côte à côte', test: () => {
+    const sauveEvts = state.m2.evenements, sauveM3 = JSON.stringify(state.m3), vraiPersist = persist, vraiConfirm = window.confirm;
+    const sauveEp = analyseEtat().episode, sauvePos = analyseEtat().pos;
+    const vue = document.getElementById('view-analyser'), etaitMontree = vue.classList.contains('show');
+    persist = () => {}; window.confirm = () => true;
+    try {
+      const evt = {id: 'sq4', date: '2026-03-02', heure: '09:10', comportement: 'Il a crié. Puis il a tapé le mur.', obtenu: 'Du temps.'};
+      state.m2.evenements = [evt]; ensureM3(); state.m3.decoupages = {}; state.m3.decoupagesVolets = {}; state.m3.sequences = {};
+      vue.classList.add('show');
+      analyseEtat().episode = 0; oublierTravailSeq();
+      allerAnalyse(1, {sansDefilement: true});
+      const paire = document.getElementById('analyse-piste').classList.contains('paire');
+      const actifs = [...document.querySelectorAll('#analyse-piste > .analyse-panneau.actif')].map(p => p.id).join(',');
+      const pastilles = document.querySelectorAll('#analyse-etapes .analyse-etape.on').length;
+      const proposition = !!document.querySelector('#decouper-panneau .seq-info');
+      const bloc = document.querySelector('#declaratif-brut .brut-texte[data-champ="comportement"]');
+      const noeud = document.createTreeWalker(bloc, NodeFilter.SHOW_TEXT).nextNode();
+      const debut = noeud.textContent.indexOf('Puis');
+      const r = document.createRange(); r.setStart(noeud, debut); r.setEnd(noeud, debut + 'Puis il a tapé le mur.'.length);
+      const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+      lireSelectionSeq();
+      const bulle = document.getElementById('seq-bulle');
+      const bulleVisible = !!bulle && !bulle.hidden && bulle.querySelectorAll('.seq-bt').length === 6;
+      const ici = [...document.querySelectorAll('#decouper-panneau .seq-ici')].every(b => !b.disabled);
+      placerSelectionSeq('p0.antecedents');
+      const chips = [...document.querySelectorAll('#decouper-panneau .seq-chip')].map(c => c.querySelector('.seq-chip-num').textContent + '=' + c.querySelector('.seq-chip-texte').textContent.replace(/[«»]/g, '').trim());
+      const rangeLa = chips.indexOf('Antécédent 1.1.1=Puis il a tapé le mur.') !== -1;
+      const marque = !!document.querySelector('#declaratif-brut mark.seq-m-antecedents');
+      const sauve = !!state.m3.sequences.sq4 && elementsEvt('antecedents', evt).length === 1;
+      const bulleCachee = bulle.hidden;
+      retirerCitSeq(travailSeq(evt).seq.phases[0].antecedents[0].id);
+      const retire = !document.querySelector('#declaratif-brut mark.seq-m-antecedents');
+      return _bancEgal('deux panneaux côte à côte | les deux étapes allumées | deux étapes allumées dans le menu | proposition annoncée | bulle à six boutons | boutons « ici » allumés | passage rangé et nommé | marque dans le texte | enregistré, un élément | bulle refermée | retiré : plus de marque',
+        'true|pan-declaratif,pan-decouper|2|true|true|true|true|true|true|true|true',
+        [paire, actifs, pastilles, proposition, bulleVisible, ici, rangeLa, marque, sauve, bulleCachee, retire].join('|'));
+    } finally {
+      persist = vraiPersist; window.confirm = vraiConfirm; state.m2.evenements = sauveEvts; state.m3 = JSON.parse(sauveM3);
+      analyseEtat().episode = sauveEp; analyseEtat().pos = sauvePos; oublierTravailSeq();
+      if (!etaitMontree) vue.classList.remove('show');
+      const sl = getSelection(); if (sl) sl.removeAllRanges();
+      try { allerAnalyse(sauvePos, {sansDefilement: true}); } catch (er) { /* vue masquée */ }
+    }
   }},
   {nom:'Les couleurs des catégories se distinguent deux à deux', test: () => {
     /* Ce qui fait confondre deux catégories, c'est la teinte : les deux violets
@@ -13359,7 +14106,7 @@ function etiquettesCD() {
     const st = structureCD(evt);
     st.cds.forEach((cd, k) => { lab[cd.id] = 'CD ' + (idx + 1) + '.' + st.numeros[k]; });
   });
-  return lab;
+  return Object.assign(lab, etiquettesSequence());
 }
 
 /* Les anciens « CD post-intervention » figuraient aussi, tels quels, parmi les
@@ -13445,11 +14192,8 @@ function blocEvtM3(sousId, sous, groupe, cats, etiquettes) {
   const av = statutEvtM3(sousId, groupe.items);
   const decoupable = estVoletDecoupable(sousId);
   const dvCtx = decoupable ? decoupageVolet(sousId, evt.id) : null;
-  const nomBtn = dvCtx ? 'Modifier le découpage' : 'Découper';
-  const boutonCtx = decoupable && (dvCtx || av.n > 0)
-    ? '<button type="button" class="m3-evt-decouper vol-' + sousId + ' no-print" title="Repérer plusieurs éléments dans ce volet, chacun par une citation exacte du déclaratif" aria-label="' + nomBtn + '" onclick="ouvrirDecoupageVolet(\'' + sousId + '\',\'' + esc(evt.id) + '\',event)">✂<span class="lib"> ' + nomBtn + '</span></button>' : '';
   const alerteCtx = dvCtx && !decoupageVoletAJour(sousId, evt)
-    ? '<div class="m3-evt-alerte">Le texte de cet épisode a changé depuis le découpage : un passage cité n\'y est plus. Ouvrez « Modifier le découpage ».</div>' : '';
+    ? '<div class="m3-evt-alerte">Le texte de cet épisode a changé depuis le découpage : un passage cité n\'y est plus. Revoyez le rangement dans Découper.</div>' : '';
   const pl = (k, mot) => k + ' ' + mot + (k > 1 ? 's' : '');
   const titreEtat = av.statut === 'fait' ? 'Tout est classé dans cet épisode : ' + pl(av.n, 'élément') + ' sur ' + av.n + '.'
     : av.statut === 'cours' ? av.c + ' élément' + (av.c > 1 ? 's classés' : ' classé') + ' sur ' + av.n + ' : il en reste ' + (av.n - av.c) + ' à classer.'
@@ -13464,11 +14208,10 @@ function blocEvtM3(sousId, sous, groupe, cats, etiquettes) {
       ${nCD > 1 ? `<span class="m3-evt-nbcd" title="${st.mode === 'sequence' ? 'Les CD se suivent : ce qui s\'est passé entre deux CD est la conséquence du premier et l\'antécédent du suivant.' : 'Plusieurs CD en même temps.'}">${nCD} CD ${st.mode === 'sequence' ? 'à la suite' : 'en même temps'}</span>` : ''}
       <span class="m3-evt-espace"></span>
       <button type="button" class="m3-item-detail" title="Revoir l'épisode complet" onclick="ouvrirDetailEvt(${groupe.evtIdx},'${sousId}',event)">détail</button>
-      ${sousId === 'cp' ? `<button type="button" class="m3-evt-decouper no-print" title="Repérer plusieurs CD dans cet épisode, chacun par une citation exacte du déclaratif" onclick="ouvrirDecoupage('${esc(evt.id)}',event)" aria-label="${st.decoupe ? 'Modifier le découpage' : 'Découper'}">✂<span class="lib"> ${st.decoupe ? 'Modifier le découpage' : 'Découper'}</span></button>` : ''}
-      ${boutonCtx}
+      <button type="button" class="m3-evt-decouper no-print" title="Ranger le déclaratif de cet épisode dans sa séquence (contexte, phases, conséquence)" aria-label="Découper" onclick="allerDecouper('${esc(evt.id)}',event)">→<span class="lib"> Découper</span></button>
     </div>
     ${alerteCtx}
-    ${st.decoupe && !decoupageAJour(evt) ? `<div class="m3-evt-alerte">Le texte de cet épisode a changé depuis le découpage : un passage cité n'y est plus. ${sousId === 'cp' ? 'Ouvrez « Modifier le découpage ».' : 'Voir le volet Comportements.'}</div>` : ''}
+    ${st.decoupe && !decoupageAJour(evt) ? `<div class="m3-evt-alerte">Le texte de cet épisode a changé depuis le découpage : un passage cité n'y est plus. ${sousId === 'cp' ? 'Revoyez le rangement dans Découper.' : 'Voir le volet Comportements.'}</div>` : ''}
     ${src ? `<div class="m3-evt-source">${esc(src)}</div>` : ''}
     <div class="m3-evt-items">${groupe.items.map(it => blocItemM3(sousId, sous, it, cats, etiquettes, st, n)).join('')}</div>
   </div>`;
@@ -14279,7 +15022,7 @@ function etiquettesVolets() {
       if (dv) (dv.unites || []).forEach((u, k) => { lab['e' + evt.id + '_x' + u.id] = nomElementVolet(v) + ' ' + (idx + 1) + '.' + (k + 1); });
     });
   });
-  return lab;
+  return Object.assign(lab, etiquettesSequence());
 }
 function decoupageVoletAJour(sousId, evt) {
   const dv = decoupageVolet(sousId, evt.id);
@@ -20983,7 +21726,7 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
-const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":7750,"retrait":1712,"depots":57}]};
+const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":7942,"retrait":1761,"depots":58}]};
 
 function svgActiviteCode() {
   const mois = ACTIVITE_CODE.mois || [];
@@ -21022,6 +21765,25 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-08',
+    version: 'v2026.10.08-18',
+    titre: "Découper : ranger le déclaratif dans la séquence de l'épisode",
+    corps: `
+<p><b>Découper : ranger le déclaratif dans la séquence de l'épisode</b> (Arthur et Émilie — le cœur de la refonte « Analyser ») :</p>
+<ul>
+<li><b>Deux panneaux côte à côte.</b> À gauche, le <b>déclaratif brut</b> d'un épisode, que l'on ne touche jamais ; à droite, <b>Découper</b>. Un épisode à la fois, avec les flèches et la liste. Les deux autres panneaux (Catégoriser, Interpréter) restent à leur place, comme avant ; ils passeront eux aussi par paires à l'étape suivante.</li>
+<li><b>La séquence.</b> Contexte · <b>Phase 1</b> (antécédent, CD, intervention) · Phase 2, 3… (autant que nécessaire) · Conséquence · et un coin « Non retenu » pour ce qui n'entre nulle part. Plusieurs antécédents, plusieurs CD, plusieurs interventions par phase. On range par <b>citations exactes</b> : le déclaratif n'est jamais réécrit.</li>
+<li><b>Ranger.</b> On sélectionne un passage à gauche ; <b>une petite bulle s'ouvre quand la sélection est terminée</b> (Contexte, Antécédent, CD, Intervention de la phase active, Conséquence, Non retenu — « ‹ › » change la phase active), ou on clique sur « ＋ ici » dans la carte voulue. Chaque passage rangé porte son nom : <b>CD 3.1.2</b> = épisode 3, phase 1, 2ᵉ CD (idem Antécédent, Intervention).</li>
+<li><b>Les trois teintes.</b> Le passage sélectionné est en jaune vif ; ce qui est déjà rangé prend la teinte de sa carte (bleu ardoise pour le contexte, ocre pour l'antécédent, vert pour le CD, prune pour l'intervention, rosé pour la conséquence) ; ce qui n'est pas encore traité reste sans teinte. En haut à droite : « 85 % du texte rangé », et « le voir » mène au premier texte non traité.</li>
+<li><b>Mains libres.</b> Un passage peut être <b>retiré</b>, <b>déplacé</b> ou <b>mis aussi ailleurs</b> (le menu « ⋯ ») — l'intervention de la phase 1 est souvent l'antécédent de la phase 2 : un même passage peut être rangé à deux endroits, sans être compté deux fois dans le pourcentage. Les phases se montent, se descendent, se suppriment ; cliquer sur un nom de passage le montre à gauche. « ✓ Rangement terminé » le dit à la barre d'avancement (« 3/29 découpés »).</li>
+<li><b>La BAF propose, vous corrigez.</b> À l'ouverture d'un épisode, la BAF range ce que le déclarant a lui-même placé dans les cases du formulaire (contexte, antécédents, comportement, interventions — ce qu'il a raconté « ensuite » ouvre la phase suivante —, conséquence). C'est une proposition : rien n'est enregistré avant votre première modification. Un épisode déjà découpé avec l'ancien outil est <b>repris tel quel</b> (CD en phases, contexte, antécédents, conséquences, interventions). Un texte brut n'a rien à proposer : on range à la main.</li>
+<li><b>Rien n'est perdu.</b> Chaque rangement est transmis à Catégoriser et à Interpréter dans le format que ces écrans lisent déjà : les catégories, les croisements, le comparateur continuent de fonctionner. Les classements déjà faits sur le même texte suivent ; si un rangement en ferait disparaître, la BAF le dit avant et vous laisse renoncer. Les anciens boutons « ✂ Découper » de Catégoriser mènent maintenant ici.</li>
+<li><b>Pas encore fait</b> : Catégoriser par paire avec Découper ; l'effet des interventions et les phases dans les statistiques d'Interpréter (chaque phase compte déjà comme une séquence) ; le double codage limité à la catégorisation ; la documentation. Le glisser-déposer n'existe pas : le menu « ⋯ » fait la même chose.</li>
+</ul>
+`
+  },
 
   {
     date: '2026-10-08',
@@ -22310,10 +23072,10 @@ const REPERES = [
            <p>Ils se réunissent ensuite, sur un seul poste, et ouvrent « Comparer les deux primo codages » : on arbitre d'abord les découpages des épisodes, puis chaque élément se lit sur une ligne — le codage A, le codage B, la synthèse. « Terminer la synthèse » efface les deux primo codages : la synthèse devient le seul codage.</p>
            <p><b>À éviter :</b> catégoriser en pensant déjà à la fonction. On regroupe ce qui se ressemble ; l'hypothèse vient après.</p>
            <p class="repere-renvoi">Mode d'emploi, partie 2 — Organiser : le double codage.</p>`},
-      {q: "Comment repérer plusieurs comportements-défis dans un même épisode ?",
-       r: `<p>Le déclarant décrit une scène, souvent d'un seul tenant ; c'est l'analyste qui y repère un ou plusieurs comportements-défis, en même temps ou l'un après l'autre. Dans Organiser, <b>« ✂ Découper »</b> s'en charge : on sélectionne le passage à la souris dans le texte du déclarant, et une petite bulle propose où le ranger.</p>
-           <p>Chaque CD est une <b>citation exacte</b> : le déclaratif n'est jamais réécrit. Ce qui s'est passé entre deux CD devient la conséquence du premier et l'antécédent du suivant. Le contexte, les antécédents, les conséquences et les interventions se découpent de la même façon.</p>
-           <p class="repere-renvoi">Mode d'emploi, partie 2 — Organiser : le double codage.</p>`},
+      {q: "Comment ranger ce que le déclarant a écrit ?",
+       r: `<p>Le déclarant raconte comme il peut, souvent un peu partout. Dans Analyser, <b>Découper</b> range son texte dans la séquence de l'épisode : le <b>contexte</b>, puis une ou plusieurs <b>phases</b> (un antécédent, un CD, une intervention), puis la <b>conséquence</b>. À gauche, le déclaratif brut, qu'on ne touche jamais ; on y sélectionne un passage, et une petite bulle propose où le ranger.</p>
+           <p>Chaque passage est une <b>citation exacte</b> : le déclaratif n'est jamais réécrit. Un même passage peut être rangé à deux endroits (l'intervention d'une phase est souvent l'antécédent de la suivante), et ce qui n'entre nulle part se met dans « Non retenu » : la barre d'avancement dit quelle part du texte est rangée. La BAF propose un premier rangement à partir des cases du formulaire ; on le corrige librement.</p>
+           <p class="repere-renvoi">Mode d'emploi, partie 2 — Organiser : le double codage (à jour avec la fin de la refonte).</p>`},
       {q: "Que fait l'étape « Interpréter » ?",
        r: `<p>Elle se fait directement en synthèse, à deux, dans le fichier socle. Elle cherche ce qui se répète : les séquences qui reviennent, les moments et les lieux où le comportement apparaît — et ceux où il n'apparaît pas —, la façon dont la tension monte chez la personne.</p>
            <p><b>La BAF compte et signale ; elle ne conclut pas.</b> Un pourcentage calculé sur quelques épisodes est une piste, pas une tendance, et l'outil le dit à chaque fois.</p>
@@ -22361,7 +23123,7 @@ const LEXIQUE_BAF = {
   "antécédent": "Ce qui s'est passé juste avant le comportement, dans les secondes ou minutes précédentes. Il y en a souvent plusieurs. Le déclarant peut signaler celui qui lui semble avoir déclenché — c'est un avis, pas un verdict.",
   "conséquence": "Ce qui change pour la personne après le comportement : ce qu'elle obtient, ce qu'elle évite. C'est souvent là que la fonction du comportement se lit. À ne pas confondre avec l'intervention, qui est ce que l'entourage a fait.",
   "intervention": "Ce que l'entourage a fait en réponse au comportement, et avec quel effet sur la tension. Une intervention peut apaiser, ne rien changer, ou produire à son tour un nouveau comportement-défi.",
-  "découpage": "Dans Organiser, le geste par lequel l'analyste repère plusieurs CD dans un même épisode — en même temps, ou l'un après l'autre. Chaque CD est une citation exacte du déclaratif, qui n'est jamais réécrit. C'est aussi là qu'on peut juger qu'une scène ne contient que des comportements, et aucun CD : rien n'y est alors compté. Un CD déjà pris peut être découpé à son tour (CD 3.1.1, CD 3.1.2…), et les CD se glissent à la souris pour les remettre dans l'ordre des faits. Le contexte, les antécédents, les conséquences et les interventions se découpent aussi, en passages cités à l'identique. Le découpage fait partie du codage : chaque codeur fait le sien, et la synthèse retient l'un des deux.",
+  "découpage": "Dans Analyser, le geste par lequel l'analyste range ce que dit le déclaratif dans la séquence de l'épisode : contexte, phase 1 (antécédent, CD, intervention), phases suivantes, conséquence. Chaque passage est une citation exacte du déclaratif, qui n'est jamais réécrit ; un même passage peut être rangé à deux endroits, et ce qui n'entre nulle part se met de côté (« non retenu »), pour que tout le texte soit traité. Un passage rangé porte son nom : CD 3.1.2 est le deuxième CD de la première phase du troisième épisode. La BAF propose un premier rangement à partir des cases du formulaire ; l'analyste le corrige librement. Le découpage fait partie du codage.",
   "CD à la suite": "Un comportement-défi qui en suit un autre dans le même épisode : des cris, puis l'éducatrice demande de se calmer, puis des coups contre le mur. Ce qui s'est passé entre les deux est la conséquence du premier CD et l'antécédent du suivant.",
   "séquence": "Une suite antécédent → CD → conséquence. Un épisode en compte une ; quand ses CD se suivent, une par CD : ce qui s'est passé entre deux CD est la conséquence de l'un et l'antécédent du suivant. Les croisements d'Interpréter se comptent par séquence.",
   "crise": "Les comportements-défis repérés dans un même épisode. Ils sont numérotés CD 3.1, CD 3.2… : 3 pour le troisième épisode dans l'ordre chronologique, puis le rang du CD dans l'épisode. Un CD que l'on découpe en plusieurs devient CD 3.1.1, CD 3.1.2… et les autres gardent leur numéro.",
