@@ -396,9 +396,53 @@ header.top{
 .detailler-bt:hover{text-decoration:underline;}
 .tension-finale-note{margin:0 0 16px;padding:12px 16px;background:var(--paper-deep);border-radius:10px;font-size:13.5px;line-height:1.6;}
 /* ── Découper : ranger le déclaratif dans la séquence de l'épisode (Arthur et Émilie, 08/10/2026) ── */
-.analyse-piste.paire{left:2%;align-items:stretch;}
-.analyse-piste.paire .analyse-panneau{flex-basis:46%;}
-.analyse-piste.paire #pan-decouper .analyse-corps{position:sticky;top:calc(var(--header-h,56px) + var(--subbar-h,40px) + 10px);max-height:calc(100vh - var(--header-h,56px) - var(--subbar-h,40px) - 24px);overflow:auto;padding-right:4px;}
+/* Trois positions, toujours deux panneaux nets : Déclaratif brut | Découper, puis Découper | Catégoriser, puis Catégoriser | Interpréter
+   (on a toujours besoin de voir l'étape d'avant pour faire la suivante) ; les autres restent flous sur les côtés. */
+.analyse-piste.m-0,.analyse-piste.m-1,.analyse-piste.m-2{align-items:stretch;}
+.analyse-piste.m-0{left:2%;}
+.analyse-piste.m-0 #pan-declaratif,.analyse-piste.m-0 #pan-decouper{flex-basis:46%;}
+.analyse-piste.m-0 #pan-categoriser,.analyse-piste.m-0 #pan-interpreter{flex-basis:30%;}
+.analyse-piste.m-1{left:calc(3% - 46% - 28px);}
+.analyse-piste.m-1 #pan-declaratif{flex-basis:46%;}
+.analyse-piste.m-1 #pan-decouper{flex-basis:27%;}
+.analyse-piste.m-1 #pan-categoriser{flex-basis:67%;}
+.analyse-piste.m-1 #pan-interpreter{flex-basis:30%;}
+.analyse-piste.m-2{left:calc(3% - 73% - 56px);}
+.analyse-piste.m-2 #pan-declaratif{flex-basis:46%;}
+.analyse-piste.m-2 #pan-decouper{flex-basis:27%;}
+.analyse-piste.m-2 #pan-categoriser{flex-basis:27%;}
+.analyse-piste.m-2 #pan-interpreter{flex-basis:67%;}
+.analyse-piste.m-0 #pan-decouper .analyse-corps,.analyse-piste.m-1 #pan-decouper .analyse-corps,.analyse-piste.m-2 #pan-categoriser .analyse-corps{position:sticky;top:calc(var(--header-h,56px) + var(--subbar-h,40px) + 10px);max-height:calc(100vh - var(--header-h,56px) - var(--subbar-h,40px) - 24px);overflow:auto;padding-right:4px;}
+@media (max-width:760px){
+  .analyse-piste.m-0,.analyse-piste.m-1,.analyse-piste.m-2{flex-direction:column;left:0;}
+  .analyse-piste .analyse-panneau{flex-basis:auto !important;}
+  .analyse-piste.m-0 #pan-decouper .analyse-corps,.analyse-piste.m-1 #pan-decouper .analyse-corps,.analyse-piste.m-2 #pan-categoriser .analyse-corps{position:static;max-height:none;}
+}
+/* Le rappel de l'étape d'avant : la séquence de l'épisode (à côté de Catégoriser), les catégories (à côté d'Interpréter) */
+.recap-tete{margin:0 0 10px;}
+.recap-tete .analyse-episode-titre{font-size:14px;}
+.recap-fige{margin:0 0 12px;padding:10px 12px;background:var(--paper-deep);border-radius:10px;font-size:12.5px;line-height:1.55;color:var(--ink-soft);}
+.seq-chip-lecture{cursor:pointer;align-items:center;}
+.seq-chip-lecture:hover{border-color:var(--slate);}
+.seq-chip-lecture.actif{box-shadow:0 0 0 2px #D9A400 inset;background:#FFF6D6;}
+.seq-chip-points{flex:none;display:inline-flex;gap:3px;}
+.seq-chip-points i{display:inline-block;width:10px;height:10px;border-radius:50%;border:1px solid rgba(0,0,0,.2);}
+.m3-item.flash-el{outline:3px solid #D9A400;background:#FFF6D6;transition:background .3s;}
+.recap-volet{margin:0 0 12px;padding:8px 10px;border-left:5px solid var(--c,var(--slate));border-radius:8px;background:var(--card);border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);}
+.recap-volet-titre{display:flex;align-items:center;gap:6px;margin:0 0 4px;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--c,var(--slate));cursor:pointer;}
+.recap-volet-titre .recap-n{margin-left:auto;font-weight:600;letter-spacing:0;text-transform:none;color:var(--ink-soft);}
+.recap-cat{display:flex;align-items:center;gap:6px;padding:2px 0;font-size:13px;}
+.recap-cat.enfant{padding-left:16px;font-size:12.5px;}
+.recap-cat i{flex:none;width:11px;height:11px;border-radius:50%;}
+.recap-cat .recap-n{margin-left:auto;color:var(--ink-soft);font-size:12px;}
+/* Notes d'analyse : une case libre par panneau (Arthur et Émilie, 08/10/2026) */
+.analyse-notes{margin:16px 0 0;padding:8px 12px;border:1px dashed var(--line);border-radius:10px;background:var(--paper);}
+.analyse-notes>summary{cursor:pointer;font-size:12.5px;font-weight:700;color:var(--ink-soft);}
+.analyse-notes-pastille{color:#D9A400;}
+.analyse-notes-champ{width:100%;min-height:90px;margin:8px 0 2px;font:inherit;font-size:13.5px;line-height:1.55;background:#fff;}
+/* Catégoriser a moins de largeur à côté de Découper : les volets se resserrent et passent à la ligne plutôt que d'être coupés. */
+#view-m3 .m3-tabs{flex-wrap:wrap;overflow:visible;justify-content:flex-start;gap:6px;}
+@media (min-width:721px){#view-m3 .m3-tab{padding:6px 11px;gap:5px;font-size:12.5px;}}
 .brut-legende{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin:0 0 12px;font-size:12px;color:var(--ink-soft);}
 .brut-legende .pastille{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:5px;}
 .brut-legende .p-sel{background:#FFE08A;border:1px solid #D9A400;}
@@ -3984,6 +4028,7 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
         <section class="analyse-panneau" id="pan-categoriser" data-pos="2" onclick="clicPanneauAnalyse(2)" aria-label="Catégoriser">
           <div class="analyse-titre"><span class="analyse-num">3</span>Catégoriser</div>
           <div class="analyse-corps">
+            <div id="categories-recap" hidden></div>
             <div id="view-m3" class="analyse-contenu">
 
     <div id="m3-rapide-content">
@@ -5071,7 +5116,7 @@ function renderAnalyseEtapes() {
     pct4 > 0 ? pct4 + ' % rempli' : ''
   ];
   el.innerHTML = analyseEtapes().map((et, i) =>
-    '<button type="button" class="analyse-etape' + (i === e.pos || (e.pos === 0 && i === 1) ? ' on' : '') + '" role="tab" aria-selected="' + (i === e.pos || (e.pos === 0 && i === 1)) + '" onclick="allerAnalyse(' + i + ')">' +
+    '<button type="button" class="analyse-etape' + (ACTIFS_ANALYSE[modeAnalyse()].indexOf(i) !== -1 ? ' on' : '') + '" role="tab" aria-selected="' + (ACTIFS_ANALYSE[modeAnalyse()].indexOf(i) !== -1) + '" onclick="allerAnalyse(' + i + ')">' +
       '<span class="analyse-etape-num">' + (i + 1) + '</span><span class="analyse-etape-nom">' + esc(et.libelle) + '</span>' +
       (bulles[i] ? '<span class="analyse-etape-bulle">' + esc(bulles[i]) + '</span>' : '') +
     '</button>').join('<span class="analyse-etape-lien" aria-hidden="true">›</span>');
@@ -5089,17 +5134,19 @@ function renderAnalyseBas() {
       ? '<button type="button" class="btn btn-primary" onclick="route(\'synthese\')">Voir la synthèse →</button>'
       : '<button type="button" class="btn btn-primary" onclick="allerAnalyse(' + suivant + ')">' + esc(et[suivant].libelle) + ' →</button>');
 }
-/* Le panneau ouvert, et ceux qu'on voit sur les côtés. Déclaratif brut et Découper se lisent ensemble : on les ouvre côte à
-   côte ; Catégoriser et Interpréter s'ouvrent un à un (ils auront leur paire avec le lot suivant). */
+/* Le panneau ouvert, et ceux qu'on voit sur les côtés. Trois positions, toujours deux panneaux nets :
+   0 = Déclaratif brut + Découper ; 2 = Découper + Catégoriser ; 3 = Catégoriser + Interpréter. Les étapes se nomment par leur
+   panneau principal (0 Déclaratif brut, 2 Catégoriser, 3 Interpréter) ; « Découper » (1) ouvre la position 0. */
+const ACTIFS_ANALYSE = [[0, 1], [1, 2], [2, 3]];
+function modeAnalyse() { const p = analyseEtat().pos; return p === 0 ? 0 : p === 2 ? 1 : 2; }
 function allerAnalyse(pos, options) {
   const e = analyseEtat();
   pos = Math.max(0, Math.min(3, parseInt(pos, 10) || 0));
   if (pos === 1) pos = 0;
   e.pos = pos;
-  const paire = pos === 0;
-  const actifs = paire ? [0, 1] : [pos];
+  const mode = modeAnalyse(), actifs = ACTIFS_ANALYSE[mode];
   const piste = document.getElementById('analyse-piste');
-  if (piste) { piste.style.setProperty('--pos', paire ? 0 : pos); piste.classList.toggle('paire', paire); }
+  if (piste) { piste.classList.remove('m-0', 'm-1', 'm-2'); piste.classList.add('m-' + mode); }
   document.querySelectorAll('#analyse-piste > .analyse-panneau').forEach(p => {
     const rang = +p.dataset.pos, actif = actifs.indexOf(rang) !== -1;
     p.classList.toggle('actif', actif);
@@ -5108,9 +5155,14 @@ function allerAnalyse(pos, options) {
     const corps = p.querySelector('.analyse-corps');
     if (corps) { if (actif) corps.removeAttribute('inert'); else corps.setAttribute('inert', ''); }
   });
-  if (pos === 0) { renderDeclaratifBrut(); renderDecouper(); }
-  if (pos === 2) renderM3();
-  if (pos === 3) renderM4();
+  // À côté d'Interpréter, Catégoriser n'est plus qu'un rappel : les catégories créées.
+  const recap = document.getElementById('categories-recap'), m3 = document.getElementById('view-m3');
+  if (recap) recap.hidden = mode !== 2;
+  if (m3) m3.hidden = mode === 2;
+  if (mode === 0) { renderDeclaratifBrut(); renderDecouper(); }
+  if (mode === 1) { renderDecouper(); renderM3(); }
+  if (mode === 2) { renderCategoriesRecap(); renderM4(); }
+  renderNotesPanneaux();
   renderAnalyseEtapes();
   renderAnalyseBas();
   if (!(options && options.sansDefilement)) window.scrollTo({top: 0, behavior: 'instant'});
@@ -5123,7 +5175,7 @@ function clicPanneauAnalyse(pos) {
 /* Remet à jour ce qui se lit sans changer de panneau (appelé après un découpage, une catégorisation…). */
 function majPanneauxAnalyse() {
   if (!document.getElementById('analyse-etapes')) return;
-  try { renderDeclaratifBrut(); renderDecouper(); renderAnalyseEtapes(); } catch (er) { /* pas encore posé */ }
+  try { renderDeclaratifBrut(); renderDecouper(); if (modeAnalyse() === 2) renderCategoriesRecap(); renderAnalyseEtapes(); } catch (er) { /* pas encore posé */ }
 }
 
 function changerEpisodeAnalyse(delta, rang) {
@@ -5508,13 +5560,14 @@ function renderDeclaratifBrut() {
   const seq = travailSeq(evt).seq;
   const champs = champsBrut(evt);
   el.innerHTML = enteteEpisodeAnalyse(evt) +
-    '<p class="analyse-note">Le déclaratif brut : on n\'y touche jamais. <b>Sélectionnez un passage</b> pour le ranger dans la séquence, à droite.</p>' +
+    '<p class="analyse-note">Le déclaratif brut : on n\'y touche jamais.' + (decoupageFige() ? ' Le découpage, à droite, est celui de la référente.' : ' <b>Sélectionnez un passage</b> pour le ranger dans la séquence, à droite.') + '</p>' +
     '<div class="brut-legende"><span><i class="pastille p-sel"></i>sélection en cours</span><span><i class="pastille p-range"></i>déjà rangé</span><span><i class="pastille p-reste"></i>pas encore traité</span></div>' +
     (champs.length
       ? champs.map(c => '<div class="analyse-champ"><div class="analyse-champ-titre">' + esc(c.titre) + '</div>' +
           (c.fixe ? '<div class="analyse-champ-texte">' + esc(c.texte) + '</div>'
-                  : '<div class="analyse-champ-texte brut-texte" data-champ="' + esc(c.champ) + '">' + htmlTexteMarque(c.texte, marquesChamp(evt, seq, c.champ)) + '</div>') + '</div>').join('')
-      : '<p class="analyse-note">Cet épisode ne contient encore aucun texte.</p>');
+                  : '<div class="analyse-champ-texte' + (decoupageFige() ? '' : ' brut-texte') + '"' + (decoupageFige() ? '' : ' data-champ="' + esc(c.champ) + '"') + '>' + htmlTexteMarque(c.texte, marquesChamp(evt, seq, c.champ)) + '</div>') + '</div>').join('')
+      : '<p class="analyse-note">Cet épisode ne contient encore aucun texte.</p>') +
+    blocNotesAnalyse('declaratif', evt.id, 'Notes sur cet épisode');
 }
 
 function chipSeq(evt, seq, cle, cit, noms) {
@@ -5543,6 +5596,8 @@ function renderDecouper() {
   if (!el) return;
   const evt = analyseEpisodeCourant();
   if (!evt) { el.innerHTML = analyseSansEpisode(); return; }
+  // À côté de Catégoriser, ou dans un primo codage (le découpage est celui de la référente) : la séquence se lit, sans se modifier.
+  if (analyseEtat().pos !== 0 || decoupageFige()) { renderDecouperRecap(el, evt); return; }
   const t = travailSeq(evt), seq = t.seq, n = analyseEtat().episode + 1;
   const noms = etiquettesDeCits(seq, n), cov = couvertureSequence(evt, seq), act = phaseActive(seq);
   const carte = (cle, vol, titre, contenu, actif) =>
@@ -5575,7 +5630,8 @@ function renderDecouper() {
     phases +
     '<button type="button" class="btn btn-secondary btn-sm seq-ajouter-phase" onclick="ajouterPhaseSeq()">＋ Ajouter une phase</button>' +
     carte('consequence', 'consequence', '', slotSeq(evt, seq, 'consequence', noms)) +
-    '<details class="seq-ecarte-details"' + (ecarte ? ' open' : '') + '><summary>Non retenu (' + ecarte + ')</summary>' + slotSeq(evt, seq, 'ecarte', noms, 'Non retenu') + '</details>';
+    '<details class="seq-ecarte-details"' + (ecarte ? ' open' : '') + '><summary>Non retenu (' + ecarte + ')</summary>' + slotSeq(evt, seq, 'ecarte', noms, 'Non retenu') + '</details>' +
+    blocNotesAnalyse('decouper', evt.id, 'Notes sur ce rangement');
 }
 
 /* ── Les gestes ── */
@@ -5733,6 +5789,113 @@ document.addEventListener('mousedown', ev => {
   if (b && !b.hidden && !b.contains(ev.target) && !(ev.target.closest && ev.target.closest('#declaratif-brut'))) cacherBulleSeq();
 });
 window.addEventListener('scroll', () => { const b = document.getElementById('seq-bulle'); if (b && !b.hidden) b.hidden = true; }, {passive: true});
+
+/* ── Le rappel de l'étape d'avant ── */
+const SLOT_VERS_VOLET = {contexte: 'contexte', antecedents: 'antecedents', cds: 'cp', interventions: 'interventions', consequence: 'consequences'};
+function decoupageFige() { return !!(state.codage && state.codage.actif); }
+// À côté de Catégoriser : la séquence de l'épisode, en lecture seule ; cliquer un passage mène à l'élément correspondant.
+function renderDecouperRecap(el, evt) {
+  const eps = analyseEpisodes(), e = analyseEtat(), n = e.episode + 1;
+  const sq = sequenceActive(evt);
+  const tete = '<div class="analyse-episode-tete recap-tete">' +
+    '<button type="button" class="analyse-fleche" aria-label="Épisode précédent" onclick="changerEpisodeAnalyse(-1)"' + (e.episode <= 0 ? ' disabled' : '') + '>‹</button>' +
+    '<div class="analyse-episode-titre">Épisode ' + n + ' / ' + eps.length + '</div>' +
+    '<button type="button" class="analyse-fleche" aria-label="Épisode suivant" onclick="changerEpisodeAnalyse(1)"' + (e.episode >= eps.length - 1 ? ' disabled' : '') + '>›</button></div>';
+  const fige = decoupageFige() ? '<div class="recap-fige"><b>Primo codage :</b> le découpage est celui de la référente. On le lit, on ne le modifie pas : tout le monde catégorise les mêmes éléments.</div>' : '';
+  if (!sq) {
+    el.innerHTML = tete + fige + '<div class="recap-fige">Cet épisode n\'est pas encore rangé : Catégoriser lit ses cases de formulaire telles quelles.' +
+      (decoupageFige() ? '' : '<br><button type="button" class="btn btn-secondary btn-sm" style="margin-top:6px;" onclick="allerDecouper(\'' + esc(evt.id) + '\')">→ Ranger cet épisode</button>') + '</div>' +
+      blocNotesAnalyse('decouper', evt.id, 'Notes sur ce rangement');
+    return;
+  }
+  const noms = etiquettesDeCits(sq, n);
+  const chip = (slot, cit, vol) => {
+    const volet = SLOT_VERS_VOLET[slot], elId = idElementDeCit(evt, slot, cit);
+    const cats = (state.m3.categories || {})[volet] || {};
+    const points = catDunItem(volet, elId).map(cid => '<i title="' + esc((cats[cid] || {}).nom || '') + '" style="background:' + esc((cats[cid] || {}).color || '#999') + ';"></i>').join('');
+    const texte = String(cit.texte).replace(/\s+/g, ' ');
+    return '<div class="seq-chip seq-chip-lecture' + (e.elementActif === elId ? ' actif' : '') + '" data-el="' + esc(elId) + '" style="--c:var(--vol-' + vol + '-deep);" title="Voir cet élément dans Catégoriser" onclick="allerAElementSeq(\'' + volet + '\',\'' + esc(elId) + '\')">' +
+      '<span class="seq-chip-num">' + esc(noms[cit.id] || '') + '</span><span class="seq-chip-texte">« ' + esc(texte.length > 110 ? texte.slice(0, 109) + '…' : texte) + ' »</span>' +
+      (points ? '<span class="seq-chip-points">' + points + '</span>' : '') + '</div>';
+  };
+  const carte = (titre, slot, liste, vol) => liste.length
+    ? '<div class="seq-slot" style="--c:var(--vol-' + vol + '-deep);--bg-slot:var(--vol-' + vol + '-pale);"><div class="seq-slot-nom"><span>' + esc(titre) + '</span></div>' + liste.map(c => chip(slot, c, vol)).join('') + '</div>' : '';
+  el.innerHTML = tete + fige +
+    '<p class="analyse-note">La séquence de l\'épisode' + (sq.termine ? '' : ' <i>(rangement pas encore terminé)</i>') + '. Cliquez un passage pour le retrouver dans la liste.</p>' +
+    carte('Contexte', 'contexte', sq.contexte, 'contexte') +
+    sq.phases.map((p, i) => (p.antecedents.length + p.cds.length + p.interventions.length)
+      ? '<div class="seq-carte" style="--c:var(--vol-comportement-deep);"><div class="seq-carte-tete"><span class="seq-carte-nom">Phase ' + (i + 1) + '</span></div>' +
+          carte('Antécédent', 'antecedents', p.antecedents, 'antecedent') + carte('CD', 'cds', p.cds, 'comportement') + carte('Intervention', 'interventions', p.interventions, 'intervention') + '</div>' : '').join('') +
+    carte('Conséquence', 'consequence', sq.consequence, 'consequence') +
+    blocNotesAnalyse('decouper', evt.id, 'Notes sur ce rangement');
+}
+// Un clic sur un passage de la séquence : on ouvre le bon volet et on montre l'élément dans la liste.
+function allerAElementSeq(volet, elId) {
+  analyseEtat().elementActif = elId;
+  if ((state.m3 || {}).sous !== volet) changerSous(volet);
+  const cible = [...document.querySelectorAll('#m3-items-list .m3-item')].find(x => x.dataset.itemId === elId);
+  if (cible) {
+    const evtBloc = cible.closest('.m3-evt');
+    if (evtBloc && evtBloc.classList.contains('replie')) basculerRepliEvt(evtBloc.dataset.evtId);
+    cible.scrollIntoView({block: 'center', behavior: 'smooth'});
+    cible.classList.add('flash-el'); setTimeout(() => cible.classList.remove('flash-el'), 1600);
+  }
+  renderDecouper();
+}
+// Cliquer un élément dans Catégoriser : la séquence de son épisode s'ouvre à côté, avec l'élément en évidence.
+function focusEpisodeDeItem(itemId) {
+  const i = analyseEpisodes().findIndex(e => String(itemId).indexOf('e' + e.id + '_') === 0);
+  if (i < 0) return;
+  const e = analyseEtat();
+  e.episode = i; e.elementActif = itemId;
+  if (analyseVisible() && e.pos === 2) renderDecouper();
+}
+// À côté d'Interpréter : les catégories créées, volet par volet.
+function renderCategoriesRecap() {
+  const el = document.getElementById('categories-recap');
+  if (!el) return;
+  ensureM3();
+  el.innerHTML = '<p class="analyse-note">Les catégories créées, volet par volet : l\'étape d\'avant. Cliquez un volet pour y retourner.</p>' + M3_SOUS.map(s => {
+    const cats = state.m3.categories[s.id] || {};
+    const items = extraireItems(s.id).filter(it => !it.vide);
+    const classes = items.filter(it => catDunItem(s.id, it.id).length > 0).length;
+    const ligne = (id, enfant) => '<div class="recap-cat' + (enfant ? ' enfant' : '') + '"><i style="background:' + esc(cats[id].color || '#999') + ';"></i><span>' + esc(cats[id].nom || 'sans nom') + '</span><span class="recap-n">' + (cats[id].items || []).length + '</span></div>';
+    const racines = catsRacines(s.id).filter(id => cats[id]);
+    return '<div class="recap-volet" style="--c:var(--vol-' + esc(s.couleur) + '-deep);"><div class="recap-volet-titre" onclick="changerSous(\'' + s.id + '\'); allerAnalyse(2);">' + esc(s.icon + ' ' + s.label) +
+      '<span class="recap-n">' + classes + '/' + items.length + ' classés</span></div>' +
+      (racines.length ? racines.map(id => ligne(id, false) + catsEnfants(s.id, id).filter(c => cats[c]).map(c => ligne(c, true)).join('')).join('') : '<div class="seq-vide">Aucune catégorie.</div>') + '</div>';
+  }).join('');
+}
+
+/* ── Notes d'analyse : une case libre par panneau, pour se poser des questions, noter ce qu'il faudra creuser ── */
+function notesAnalyse() { ensureM3(); if (!state.m3.notes) state.m3.notes = {}; return state.m3.notes; }
+function noteAnalyse(panneau, cle) { return ((notesAnalyse()[panneau]) || {})[cle] || ''; }
+let minuteurNotes = null;
+function enregistrerNoteAnalyse(panneau, cle, valeur) {
+  const n = notesAnalyse();
+  if (!n[panneau]) n[panneau] = {};
+  const v = String(valeur || '');
+  if (v.trim()) n[panneau][cle] = v; else delete n[panneau][cle];
+  clearTimeout(minuteurNotes);
+  minuteurNotes = setTimeout(() => { persist(); renderAnalyseEtapes(); }, 500);
+}
+function blocNotesAnalyse(panneau, cle, titre) {
+  const v = noteAnalyse(panneau, String(cle));
+  return '<details class="analyse-notes no-print"' + (v ? ' open' : '') + '><summary>💬 ' + esc(titre || 'Notes d\'analyse') + (v ? ' <span class="analyse-notes-pastille" title="Une note est écrite">•</span>' : '') + '</summary>' +
+    '<textarea class="analyse-notes-champ" placeholder="Une question à se poser, quelque chose à creuser…" aria-label="' + esc(titre || 'Notes d\'analyse') + '" oninput="enregistrerNoteAnalyse(\'' + panneau + '\',\'' + esc(String(cle)) + '\', this.value)">' + esc(v) + '</textarea></details>';
+}
+// Catégoriser et Interpréter n'ont pas de rendu à eux pour leurs notes : un conteneur en fin de panneau.
+function renderNotesPanneaux() {
+  const place = (panneauId, id, html) => {
+    const corps = document.querySelector('#' + panneauId + ' .analyse-corps'); if (!corps) return;
+    let c = document.getElementById(id);
+    if (!c) { c = document.createElement('div'); c.id = id; corps.appendChild(c); }
+    c.innerHTML = html;
+  };
+  const volet = (state.m3 && state.m3.sous) || 'cp';
+  place('pan-categoriser', 'notes-categoriser', modeAnalyse() === 2 ? '' : blocNotesAnalyse('categoriser', volet, 'Notes sur ce volet'));
+  place('pan-interpreter', 'notes-interpreter', blocNotesAnalyse('interpreter', 'general', 'Notes sur l\'interprétation'));
+}
 
 function route(name, fromHistory){
   // Si on quitte le formulaire d\'épisode sans valider, conserver la
@@ -12215,9 +12378,9 @@ const _CONTROLES = [
     const sauvePos = analyseEtat().pos, sauveEp = analyseEtat().episode;
     try {
       route('m3');
-      const apresM3 = [analyseEtat().pos, vue.classList.contains('show'), document.querySelector('.analyse-panneau.actif').id].join(',');
+      const apresM3 = [analyseEtat().pos, vue.classList.contains('show'), [...document.querySelectorAll('.analyse-panneau.actif')].map(p => p.id).join('+')].join(',');
       route('m4');
-      const apresM4 = [analyseEtat().pos, document.querySelector('.analyse-panneau.actif').id].join(',');
+      const apresM4 = [analyseEtat().pos, [...document.querySelectorAll('.analyse-panneau.actif')].map(p => p.id).join('+')].join(',');
       allerAnalyse(1, {sansDefilement: true});
       const panneaux = [...document.querySelectorAll('#analyse-piste > .analyse-panneau')];
       const voisins = panneaux.filter(p => p.classList.contains('voisin')).map(p => p.dataset.pos).join('');
@@ -12228,7 +12391,7 @@ const _CONTROLES = [
       const nav = [...document.querySelectorAll('#baf-nav-group .nav-btn')].map(b => b.textContent.trim()).join(',');
       const enveloppes = !!document.getElementById('view-m3') && !!document.getElementById('view-m4') && !document.querySelector('section#view-m3, section#view-m4');
       return _bancEgal('Organiser → Catégoriser (rang 2) | Interpréter → rang 3 | Déclaratif brut et Découper côte à côte : voisin 2, deux panneaux inertes | 4 pastilles, la première allumée | adresses | menu à quatre modules | contenus gardés dans les panneaux',
-        '2,true,pan-categoriser|3,pan-interpreter|2,2|4,Déclaratif brut|m3,m4,analyser,analyser|Préambule,Recueillir,Analyser,Synthèse|true',
+        '2,true,pan-decouper+pan-categoriser|3,pan-categoriser+pan-interpreter|2,2|4,Déclaratif brut|m3,m4,analyser,analyser|Préambule,Recueillir,Analyser,Synthèse|true',
         [apresM3, apresM4, voisins + ',' + inertes, pastilles + ',' + enCours, adresses, nav, enveloppes].join('|'));
     } finally {
       analyseEtat().pos = sauvePos; analyseEtat().episode = sauveEp;
@@ -12503,7 +12666,7 @@ const _CONTROLES = [
       vue.classList.add('show');
       analyseEtat().episode = 0; oublierTravailSeq();
       allerAnalyse(1, {sansDefilement: true});
-      const paire = document.getElementById('analyse-piste').classList.contains('paire');
+      const paire = document.getElementById('analyse-piste').classList.contains('m-0');
       const actifs = [...document.querySelectorAll('#analyse-piste > .analyse-panneau.actif')].map(p => p.id).join(',');
       const pastilles = document.querySelectorAll('#analyse-etapes .analyse-etape.on').length;
       const proposition = !!document.querySelector('#decouper-panneau .seq-info');
@@ -12532,6 +12695,123 @@ const _CONTROLES = [
       analyseEtat().episode = sauveEp; analyseEtat().pos = sauvePos; oublierTravailSeq();
       if (!etaitMontree) vue.classList.remove('show');
       const sl = getSelection(); if (sl) sl.removeAllRanges();
+      try { allerAnalyse(sauvePos, {sansDefilement: true}); } catch (er) { /* vue masquée */ }
+    }
+  }},
+  {nom:'Analyser : trois positions, toujours deux panneaux nets (déclaratif + découpage, découpage + catégorisation, catégorisation + interprétation)', test: () => {
+    const sauvePos = analyseEtat().pos;
+    try {
+      const lire = pos => {
+        allerAnalyse(pos, {sansDefilement: true});
+        const piste = document.getElementById('analyse-piste');
+        const mode = ['m-0', 'm-1', 'm-2'].filter(c => piste.classList.contains(c)).join('');
+        const actifs = [...document.querySelectorAll('#analyse-piste > .analyse-panneau.actif')].map(p => p.id.replace('pan-', '')).join('+');
+        const pastilles = [...document.querySelectorAll('#analyse-etapes .analyse-etape.on .analyse-etape-nom')].map(x => x.textContent).join('+');
+        const recap = !document.getElementById('categories-recap').hidden, liste = !document.getElementById('view-m3').hidden;
+        return [mode, actifs, pastilles, recap ? 'rappel' : 'liste', liste ? 'liste' : 'masquee'].join(' ');
+      };
+      const r0 = lire(0), r1 = lire(1), r2 = lire(2), r3 = lire(3);
+      route('m3'); const m3 = analyseEtat().pos; route('m4'); const m4 = analyseEtat().pos;
+      return _bancEgal('position 0 | « Découper » ouvre la position 0 | Catégoriser | Interpréter | route(m3) | route(m4)',
+        'm-0 declaratif+decouper Déclaratif brut+Découper liste liste # m-0 declaratif+decouper Déclaratif brut+Découper liste liste # m-1 decouper+categoriser Découper+Catégoriser liste liste # m-2 categoriser+interpreter Catégoriser+Interpréter rappel masquee # 2 # 3',
+        [r0, r1, r2, r3, m3, m4].join(' # '));
+    } finally { allerAnalyse(sauvePos, {sansDefilement: true}); route('accueil'); }
+  }},
+  {nom:'Analyser : à côté de Catégoriser, la séquence de l\'épisode en lecture seule, qui suit l\'élément cliqué ; à côté d\'Interpréter, les catégories', test: () => {
+    const sauveEvts = state.m2.evenements, sauveM3 = JSON.stringify(state.m3), vraiPersist = persist, vraiConfirm = window.confirm;
+    const sauveEp = analyseEtat().episode, sauvePos = analyseEtat().pos;
+    const vue = document.getElementById('view-analyser'), etaitMontree = vue.classList.contains('show');
+    persist = () => {}; window.confirm = () => true;
+    try {
+      const evt1 = {id: 'rc1', date: '2026-03-02', heure: '09:10', comportement: 'Il a crié. Puis il a tapé le mur.', obtenu: 'Du temps.', antecedents: [{id: 'a1', texte: 'On lui a demandé de ranger.'}]};
+      const evt2 = {id: 'rc2', date: '2026-03-03', heure: '09:10', comportement: 'Il a refusé.'};
+      state.m2.evenements = [evt1, evt2]; ensureM3(); state.m3.decoupages = {}; state.m3.decoupagesVolets = {}; state.m3.sequences = {}; state.m3.notes = {};
+      ['cp', 'contexte', 'antecedents', 'consequences', 'interventions'].forEach(v => { state.m3.categories[v] = {}; });
+      vue.classList.add('show');
+      oublierTravailSeq();
+      appliquerSequence(evt1, propositionSequence(evt1), {sansDemande: true});
+      const ant = elementsEvt('antecedents', evt1)[0];
+      state.m3.categories.antecedents.k1 = {nom: 'Demande', color: '#10B981', items: [ant.id]};
+      state.m3.categories.cp.k2 = {nom: 'Cris', color: '#C2431F', items: [elementsEvt('cp', evt1)[0].id]};
+      analyseEtat().episode = 1; analyseEtat().elementActif = null;
+      allerAnalyse(2, {sansDefilement: true});
+      const nonRange = /pas encore rangé/.test(document.getElementById('decouper-panneau').textContent) && !!document.querySelector('#decouper-panneau .btn');
+      focusEpisodeDeItem(ant.id);                                       // un élément d'Épisode 1 est cliqué : la séquence s'ouvre sur lui
+      const episode = analyseEtat().episode === 0 && /Épisode 1 \/ 2/.test(document.querySelector('#decouper-panneau .analyse-episode-titre').textContent);
+      const chips = [...document.querySelectorAll('#decouper-panneau .seq-chip-lecture')];
+      const actif = chips.filter(c => c.classList.contains('actif')).map(c => c.querySelector('.seq-chip-num').textContent).join(',');
+      const points = chips.filter(c => c.querySelector('.seq-chip-points i')).length;
+      const lecture = !document.querySelector('#decouper-panneau .seq-ici') && !document.querySelector('#decouper-panneau .seq-chip-menu');
+      allerAnalyse(3, {sansDefilement: true});
+      const recap = document.getElementById('categories-recap').textContent.replace(/\s+/g, ' ');
+      const catsListees = /Demande/.test(recap) && /Cris/.test(recap) && /1\/1 classés/.test(recap);
+      return _bancEgal('épisode non rangé : invitation | élément cliqué : bon épisode | élément en évidence | passages classés marqués | lecture seule | catégories rappelées avec leurs comptes',
+        'true|true|Antécédent 1.1.1|2|true|true',
+        [nonRange, episode, actif, points, lecture, catsListees].join('|'));
+    } finally {
+      persist = vraiPersist; window.confirm = vraiConfirm; state.m2.evenements = sauveEvts; state.m3 = JSON.parse(sauveM3);
+      analyseEtat().episode = sauveEp; analyseEtat().pos = sauvePos; analyseEtat().elementActif = null; oublierTravailSeq();
+      if (!etaitMontree) vue.classList.remove('show');
+      try { allerAnalyse(sauvePos, {sansDefilement: true}); } catch (er) { /* vue masquée */ }
+    }
+  }},
+  {nom:'Analyser : des notes libres dans chaque panneau, qui restent dans le fichier socle mais pas dans un codage vierge', test: () => {
+    const sauveM3 = JSON.stringify(state.m3), sauveEvts = state.m2.evenements, vraiPersist = persist;
+    persist = () => {};
+    try {
+      state.m2.evenements = [{id: 'nt1', date: '2026-03-02', comportement: 'Il a crié.'}]; ensureM3(); state.m3.notes = {};
+      enregistrerNoteAnalyse('declaratif', 'nt1', 'À creuser : le contexte de la veille.');
+      enregistrerNoteAnalyse('categoriser', 'cp', 'Regrouper avec « Opposition » ?');
+      enregistrerNoteAnalyse('interpreter', 'general', 'Trois séquences à revoir.');
+      const lues = [noteAnalyse('declaratif', 'nt1'), noteAnalyse('categoriser', 'cp'), noteAnalyse('interpreter', 'general')].join(' / ');
+      enregistrerNoteAnalyse('categoriser', 'cp', '   ');
+      const effacee = noteAnalyse('categoriser', 'cp') === '' && !('cp' in state.m3.notes.categoriser);
+      const html = blocNotesAnalyse('declaratif', 'nt1', 'Notes sur cet épisode');
+      const champ = /<details[^>]* open>/.test(html) && /À creuser/.test(html);
+      state.m3.sequences = {nt1: {v: 1, termine: true, contexte: [], phases: [nouvellePhase()], consequence: [], ecarte: []}};
+      state.m3.decoupages = {nt1: {mode: 'simultane', unites: [{id: 'u', champ: 'comportement', debut: 0, texte: 'Il a crié.'}], charnieres: []}};
+      const vierge = codageVierge().m3;
+      const garde = !vierge.notes && !!vierge.sequences && !!vierge.decoupages && vierge.decoupages.nt1.unites.length === 1 && Object.keys(vierge.categories.cp).length === 0;
+      return _bancEgal('notes lues | une note vidée disparaît | la note ouvre sa case | codage vierge : pas de notes, mais le découpage de la référente',
+        'À creuser : le contexte de la veille. / Regrouper avec « Opposition » ? / Trois séquences à revoir.|true|true|true',
+        [lues, effacee, champ, garde].join('|'));
+    } finally { persist = vraiPersist; state.m3 = JSON.parse(sauveM3); state.m2.evenements = sauveEvts; }
+  }},
+  {nom:'Double codage : le découpage reste celui de la référente — il part dans le codage vierge, se lit sans se modifier en primo codage, et reste après « prendre la catégorisation du fichier socle »', test: () => {
+    const sauveM3 = JSON.stringify(state.m3), sauveEvts = state.m2.evenements, sauveComp = state.comparaison, sauveCodage = state.codage;
+    const vraiPersist = persist, vraiConfirm = window.confirm; let demandes = 0;
+    const vue = document.getElementById('view-analyser'), etaitMontree = vue.classList.contains('show'), sauveEp = analyseEtat().episode, sauvePos = analyseEtat().pos;
+    persist = () => {}; window.confirm = () => { demandes++; return true; };
+    try {
+      const evt = {id: 'dc1', date: '2026-03-02', heure: '09:10', comportement: 'Il a crié.', obtenu: 'Du temps.'};
+      state.m2.evenements = [evt]; ensureM3(); state.m3.decoupages = {}; state.m3.decoupagesVolets = {}; state.m3.sequences = {}; delete state.comparaison;
+      ['cp', 'contexte', 'antecedents', 'consequences', 'interventions'].forEach(v => { state.m3.categories[v] = {}; });
+      appliquerSequence(evt, propositionSequence(evt), {sansDemande: true});
+      state.m3.categories.cp.k = {nom: 'Cris', color: '#C2431F', items: [elementsEvt('cp', evt)[0].id]};
+      // Exporter un codage vierge alors que le rangement n'est pas dit « terminé » : on prévient (ici on renonce)
+      const nonTermines = (state.m2.evenements || []).filter(e => !episodeDecoupe(e)).length;
+      const avant = demandes; window.confirm = () => { demandes++; return false; };
+      exporterKitCodage();
+      window.confirm = () => { demandes++; return true; };
+      const prevenu = demandes - avant === 1;
+      // Prendre la catégorisation du socle comme A : le découpage reste dans le socle
+      prendreCategorisationDuSocle('A', true);
+      const reste = !!state.m3.sequences.dc1 && !!state.m3.decoupages.dc1 && sequenceActive(evt) !== null;
+      const copieA = !!state.comparaison.A.categories.cp && Object.keys(state.m3.categories.cp).length === 0;
+      // En primo codage : le déclaratif ne se sélectionne plus, Découper se lit
+      state.codage = {actif: true};
+      vue.classList.add('show'); oublierTravailSeq(); analyseEtat().episode = 0;
+      allerAnalyse(0, {sansDefilement: true});
+      const figee = !document.querySelector('#declaratif-brut .brut-texte') && /découpage est celui de la référente/.test(document.getElementById('decouper-panneau').textContent) &&
+        !document.querySelector('#decouper-panneau .seq-ici');
+      return _bancEgal('épisodes dont le rangement n\'est pas terminé | l\'export prévient | le découpage reste dans le socle | la catégorisation est le codage A, le socle repart vierge | primo codage : découpage figé',
+        '1|true|true|true|true', [nonTermines, prevenu, reste, copieA, figee].join('|'));
+    } finally {
+      persist = vraiPersist; window.confirm = vraiConfirm; state.m3 = JSON.parse(sauveM3); state.m2.evenements = sauveEvts;
+      if (sauveComp) state.comparaison = sauveComp; else delete state.comparaison;
+      if (sauveCodage) state.codage = sauveCodage; else delete state.codage;
+      analyseEtat().episode = sauveEp; analyseEtat().pos = sauvePos; oublierTravailSeq();
+      if (!etaitMontree) vue.classList.remove('show');
       try { allerAnalyse(sauvePos, {sansDefilement: true}); } catch (er) { /* vue masquée */ }
     }
   }},
@@ -15539,6 +15819,7 @@ function renderM3() {
   renderM3Tabs();
   renderM3Sous(state.m3.sous);
   renderDoubleCodage();
+  try { renderNotesPanneaux(); } catch (er) { /* panneaux pas encore posés */ }
   ajusterColonneCats();
 }
 
@@ -15903,6 +16184,7 @@ function assignPopupContent(sousId, itemId) {
 function ouvrirAssign(sousId, itemId, event) {
   fermerPopup();
   ensureM3();
+  try { focusEpisodeDeItem(itemId); } catch (er) { /* panneaux pas encore posés */ }
   popupSousId = sousId;
   popupItemId = itemId;
 
@@ -16234,6 +16516,7 @@ function titreCompteVolet(sousId, classes, declares) {
 
 function renderM3Tabs() {
   ensureM3();
+  try { if (analyseVisible() && analyseEtat().pos === 2) renderDecouper(); } catch (er) { /* panneaux pas encore posés */ }
   const evts = state.m2.evenements || [];
   if (evts.length === 0) return;
   const tabsEl = document.getElementById('m3-tabs');
@@ -20591,11 +20874,18 @@ function categoriesVides() {
 /* Organiser et Interpréter vides. Les drapeaux de migration (clés en « _ »)
    sont gardés : sans eux, une migration qui n'est pas idempotente se
    rejouerait sur des données qui n'en ont pas besoin. */
+/* Le découpage est celui de la référente : un codage vierge l'emporte, pour que les deux codeurs catégorisent les mêmes éléments
+   (Arthur et Émilie, 08/10/2026). Les notes d'analyse restent à chacun. */
+function decoupageDeLaReferente() {
+  const m3 = state.m3 || {}, out = {};
+  ['decoupages', 'decoupagesVolets', 'sequences'].forEach(k => { if (m3[k]) out[k] = JSON.parse(JSON.stringify(m3[k])); });
+  return out;
+}
 function codageVierge() {
   const drapeaux = {};
   Object.keys(state.m3 || {}).forEach(k => { if (k.charAt(0) === '_') drapeaux[k] = state.m3[k]; });
   return {
-    m3: Object.assign({sous: 'cp', categories: categoriesVides()}, drapeaux),
+    m3: Object.assign({sous: 'cp', categories: categoriesVides()}, drapeaux, decoupageDeLaReferente()),
     m4: {sous: 'pattern', patterns: [], gradations: [], vase: {monte: [], descend: [], texte: ''}, paliers: {}, courbeJour: null}
   };
 }
@@ -20614,10 +20904,13 @@ function construireKitCodage() {
 }
 
 function exporterKitCodage() {
+  const nonTermines = (state.m2.evenements || []).filter(e => !episodeDecoupe(e)).length;
+  if (nonTermines && !confirm(nonTermines + ' épisode' + (nonTermines > 1 ? 's' : '') + ' sur ' + (state.m2.evenements || []).length + (nonTermines > 1 ? ' n\'ont' : ' n\'a') +
+      ' pas son rangement terminé (Analyser › Découper). Les codeurs catégoriseront ce qui existe ; si le découpage change ensuite, leurs classements ne s\'appliqueront plus aux mêmes éléments.\n\nExporter quand même ?')) return;
   const kit = construireKitCodage();
   const prenom = ((state.m1 && state.m1.prenom) || 'sans_nom').replace(/[^a-zA-Z0-9]/g, '_');
   telechargerTexte(JSON.stringify(kit, null, 2), 'RDAF-codage-vierge_' + prenom + '_' + horodatageFichier() + '.json');
-  showToast('Codage vierge exporté : aucune catégorie, rien dans Interpréter. Un par codeur.');
+  showToast('Codage vierge exporté : le découpage de la référente, aucune catégorie, rien dans Interpréter. Un par codeur.');
 }
 
 function ouvrirKitCodage(lu) {
@@ -20654,7 +20947,7 @@ function effacerCodage() {
   if (!confirm("Effacer tout le codage de ce dossier ?\n\n" +
       "· Catégoriser : " + nbCats + " catégorie" + (nbCats > 1 ? 's' : '') + " et les éléments qui y sont rangés\n" +
       "· Interpréter : " + nbSeq + " séquence" + (nbSeq > 1 ? 's' : '') + ", les signes du vase de tension et ses paliers\n\n" +
-      "Le préambule, les épisodes et les fichiers déclarants reçus sont conservés. " +
+      "Le préambule, les épisodes, leur découpage et les fichiers déclarants reçus sont conservés. " +
       "Exportez d'abord si vous voulez garder une trace de ce codage.\n\nEffacer ?")) return;
   const vierge = codageVierge();
   state.m3 = vierge.m3;
@@ -20716,7 +21009,7 @@ function prendreCategorisationDuSocle(slot, sansDemande) {
     const cats = state.m3.categories || {};
     const n = Object.keys(cats).reduce((a, v) => a + Object.keys(cats[v] || {}).length, 0);
     if (!confirm('Prendre la catégorisation de ce fichier socle comme codage ' + slot + ' ?\n\n' +
-        '· Ce que vous avez catégorisé dans Catégoriser (' + n + ' catégorie' + (n > 1 ? 's' : '') + ', et vos découpages) devient le codage ' + slot + ', gardé dans le comparateur.\n' +
+        '· Ce que vous avez catégorisé dans Catégoriser (' + n + ' catégorie' + (n > 1 ? 's' : '') + ') devient le codage ' + slot + ', gardé dans le comparateur. Le découpage reste dans le fichier socle : c\'est celui de la référente.\n' +
         '· Le fichier socle repart vierge côté Catégoriser : la synthèse s\'y écrira, ligne par ligne, en arbitrant A et B.\n' +
         '· Interpréter n\'est pas touché.\n\n' +
         'Conseil : exportez-la d\'abord en primo codage (fenêtre « Double codage ») si vous voulez en garder un fichier.\n\nContinuer ?')) return false;
@@ -20736,8 +21029,6 @@ function prendreCategorisationDuSocle(slot, sansDemande) {
     decoupagesVolets: copie(state.m3.decoupagesVolets)
   };
   Object.keys(state.m3.categories).forEach(v => { state.m3.categories[v] = {}; });
-  state.m3.decoupages = {};
-  state.m3.decoupagesVolets = {};
   if (!sansDemande) {
     persist();
     renderComparateur();
@@ -20771,11 +21062,11 @@ function renderDoubleCodage() {
       'qui sera comptée. Elle se fait donc à deux.</p>' +
       '<ol class="dc-etapes">' +
         '<li><b>Primo codage, séparément.</b> « Exporter un codage vierge » produit le fichier de départ : le préambule et les ' +
-          'épisodes, aucune catégorie, rien dans Interpréter. Un par codeur ; chacun catégorise dans le sien, ' +
+          'épisodes avec leur découpage (fait d\'abord, une fois, par la référente), aucune catégorie, rien dans Interpréter. Un par codeur ; chacun catégorise dans le sien, ' +
           'à partir du seul déclaratif. Vous avez déjà catégorisé dans ce fichier socle ? « Exporter ma catégorisation en primo codage » en fait un fichier ; ' +
           'ou, dans le comparateur, « Prendre la catégorisation de ce fichier socle » en fait directement le codage A ou B.</li>' +
         '<li><b>Synthèse, à deux.</b> En réunion, sur un seul poste : ouvrez le fichier socle, puis « Comparer les deux primo codages », ' +
-          'et importez-les. Les découpages des épisodes s\'arbitrent d\'abord ; ensuite, chaque élément se lit sur une ligne, le codage A à côté du codage B, et vous arbitrez la synthèse, qui s\'écrit ici. ' +
+          'et importez-les. Chaque élément se lit sur une ligne, le codage A à côté du codage B, et vous arbitrez la synthèse, qui s\'écrit ici. ' +
           'Les signes qui entrent dans le vase de tension s\'arbitrent aussi en synthèse, et Interpréter se fait directement en synthèse.</li>' +
         '<li><b>La synthèse est le seul codage.</b> « Terminer la synthèse », dans le comparateur, efface les deux primo codages du fichier socle. ' +
           'Supprimez aussi leurs fichiers, là où ils sont rangés.</li>' +
@@ -21726,7 +22017,7 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
-const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":7942,"retrait":1761,"depots":58}]};
+const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":8754,"retrait":1811,"depots":59}]};
 
 function svgActiviteCode() {
   const mois = ACTIVITE_CODE.mois || [];
@@ -21765,6 +22056,23 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-08',
+    version: 'v2026.10.08-19',
+    titre: "Analyser : toujours deux panneaux nets, notes libres, double codage",
+    corps: `
+<p><b>Analyser : toujours deux panneaux nets, et des notes libres</b> (Arthur et Émilie — Catégoriser, et le double codage) :</p>
+<ul>
+<li><b>Trois positions du carrousel.</b> <b>Déclaratif brut + Découper</b> (comme à l'étape d'avant) ; puis <b>Découper + Catégoriser</b> ; puis <b>Catégoriser + Interpréter</b>. On a toujours besoin de voir l'étape d'avant pour faire la suivante ; les deux autres panneaux restent flous sur les côtés, et un clic dessus y mène. Les étapes d'en-tête allument leurs deux panneaux.</li>
+<li><b>À côté de Catégoriser : la séquence de l'épisode.</b> À gauche, étroite, en lecture seule : le contexte, les phases (antécédent, CD, intervention), la conséquence, avec les points de couleur des catégories déjà données. <b>Cliquer un élément dans la liste</b> de Catégoriser ouvre à côté la séquence de son épisode, l'élément en évidence ; <b>cliquer un passage de la séquence</b> ouvre le bon volet et montre l'élément dans la liste. Un épisode pas encore rangé le dit, avec un bouton « Ranger cet épisode ». Les flèches changent d'épisode.</li>
+<li><b>À côté d'Interpréter : les catégories.</b> Une colonne étroite rappelle les catégories créées, volet par volet, avec le nombre d'éléments de chacune et la part classée ; cliquer un volet y retourne.</li>
+<li><b>Notes d'analyse.</b> Chaque panneau a sa case libre « 💬 Une question, quelque chose à creuser ? » : une par épisode pour Déclaratif brut et pour Découper, une par volet pour Catégoriser, une pour Interpréter. Elles s'enregistrent toutes seules et font partie du fichier socle ; elles ne partent <b>pas</b> dans un codage vierge (ce sont les notes de chacun).</li>
+<li><b>Double codage : la référente découpe seule.</b> Le découpage n'est plus une affaire de codeur : « Exporter un codage vierge » emporte <b>le découpage de la référente</b> (les épisodes, leur rangement, aucune catégorie), pour que les deux codeurs catégorisent exactement les mêmes éléments. En primo codage, Découper se lit sans se modifier ; la BAF prévient à l'export si des épisodes n'ont pas leur rangement terminé. « Effacer le codage » et « Prendre la catégorisation de ce fichier socle » n'effacent plus le découpage. Les anciens primo codages, qui portent leur propre découpage, s'arbitrent toujours comme avant.</li>
+<li><b>Pas encore fait</b> : l'effet des interventions et les phases dans les statistiques d'Interpréter ; le glisser-déposer (le menu « ⋯ » fait la même chose) ; la mise à jour du mode d'emploi, du document EMIA et des FAQ pour tout Analyser.</li>
+</ul>
+`
+  },
 
   {
     date: '2026-10-08',
@@ -23068,8 +23376,8 @@ const REPERES = [
            <p>Remplie dans Word plutôt qu'à la main, elle s'importe d'un coup : « Ajouter un ou des épisodes » → « Importer une grille ABC Word (.docx) ». La BAF montre ce qu'elle a lu avant d'ajouter quoi que ce soit. (Elle ne lit pas les PDF.)</p>
            <p class="repere-renvoi">Mode d'emploi, § 1.1 et § 1.4.</p>`},
       {groupe: "Organiser et interpréter", q: "Comment organiser les données ? Qu'est-ce que le double codage ?",
-       r: `<p>Organiser, c'est regrouper en catégories ce qui se ressemble, volet par volet : contexte, antécédent, comportement, conséquence, intervention. Or <b>catégoriser, c'est déjà mesurer</b> : c'est ce geste qui transforme un texte en une donnée qui sera comptée. Le référent et le clinicien organisent donc d'abord <b>chacun de leur côté</b>, à partir du seul déclaratif et sans catégorie de départ : c'est le <b>primo codage</b>, fait dans un codage vierge que le référent exporte du fichier socle. Une catégorisation déjà faite dans le fichier socle peut devenir l'un des deux codages : « Exporter ma catégorisation en primo codage », ou, dans le comparateur, « Prendre la catégorisation de ce fichier socle ».</p>
-           <p>Ils se réunissent ensuite, sur un seul poste, et ouvrent « Comparer les deux primo codages » : on arbitre d'abord les découpages des épisodes, puis chaque élément se lit sur une ligne — le codage A, le codage B, la synthèse. « Terminer la synthèse » efface les deux primo codages : la synthèse devient le seul codage.</p>
+       r: `<p>Organiser, c'est regrouper en catégories ce qui se ressemble, volet par volet : contexte, antécédent, comportement, conséquence, intervention. Or <b>catégoriser, c'est déjà mesurer</b> : c'est ce geste qui transforme un texte en une donnée qui sera comptée. Le référent et le clinicien organisent donc d'abord <b>chacun de leur côté</b>, à partir du seul déclaratif et sans catégorie de départ : c'est le <b>primo codage</b>, fait dans un codage vierge que le référent exporte du fichier socle — après avoir découpé les épisodes, une fois pour tous : les deux codeurs catégorisent les mêmes éléments. Une catégorisation déjà faite dans le fichier socle peut devenir l'un des deux codages : « Exporter ma catégorisation en primo codage », ou, dans le comparateur, « Prendre la catégorisation de ce fichier socle ».</p>
+           <p>Ils se réunissent ensuite, sur un seul poste, et ouvrent « Comparer les deux primo codages » : chaque élément se lit sur une ligne — le codage A, le codage B, la synthèse. « Terminer la synthèse » efface les deux primo codages : la synthèse devient le seul codage.</p>
            <p><b>À éviter :</b> catégoriser en pensant déjà à la fonction. On regroupe ce qui se ressemble ; l'hypothèse vient après.</p>
            <p class="repere-renvoi">Mode d'emploi, partie 2 — Organiser : le double codage.</p>`},
       {q: "Comment ranger ce que le déclarant a écrit ?",
