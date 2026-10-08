@@ -1696,6 +1696,21 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
 .m3-evt-items{margin-left:7px;padding-left:12px;border-left:2px solid var(--line-soft);}
 .m3-evt.replie > .m3-evt-items, .m3-evt.replie > .m3-evt-source{display:none;}
 .m3-evt.replie .m3-evt-plier{transform:rotate(-90deg);}
+/* Un évènement porte la couleur de son avancement dans le volet ouvert (Arthur, 08/10/2026) : vert = tout est classé,
+   ocre = en cours, rose = rien de classé. L'icône et le « 2/5 » disent la même chose sans la couleur. */
+.m3-evt.etat-fait{--etat-c:var(--sauge-deep);--etat-p:var(--sauge-pale);}
+.m3-evt.etat-cours{--etat-c:var(--ocre-deep);--etat-p:var(--ocre-pale);}
+.m3-evt.etat-rien{--etat-c:var(--rose-deep);--etat-p:var(--rose-pale);}
+.m3-evt.etat-fait > .m3-evt-tete, .m3-evt.etat-cours > .m3-evt-tete, .m3-evt.etat-rien > .m3-evt-tete{
+  background:var(--etat-p);border-left:4px solid var(--etat-c);border-radius:0 8px 8px 0;padding:4px 8px 4px 6px;
+}
+.m3-evt-etat{flex-shrink:0;white-space:nowrap;cursor:help;font-size:11px;font-weight:700;color:var(--etat-c);background:#fff;border:1px solid var(--etat-c);border-radius:999px;padding:1px 8px;}
+/* Replié, un évènement tient sur une seule ligne : l'étiquette des CD se raccourcit, les boutons ne gardent que leur icône. */
+.m3-evt-titre{white-space:nowrap;}
+.m3-evt-nbcd{white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis;flex-shrink:1;}
+.m3-evt-tete .m3-item-detail, .m3-evt-decouper{flex-shrink:0;white-space:nowrap;}
+.m3-evt.replie > .m3-evt-tete{flex-wrap:nowrap;}
+.m3-evt.replie .m3-evt-decouper .lib{display:none;}
 .m3-item-cd{
   display:inline-block;margin:0 4px 4px 0;background:var(--vol-comportement-deep);color:#fff;
   font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:999px;
@@ -10425,6 +10440,47 @@ const _CONTROLES = [
       try { renderM3Sous('cp'); } catch (e) { /* vue masquée */ }
     }
   }},
+  {nom:'Organiser : un évènement porte la couleur de son avancement, et replié il tient sur une seule ligne', test: () => {
+    const sauveCats = JSON.stringify(state.m3.categories.cp);
+    const cats = state.m3.categories.cp;
+    const items = [{id: 'za'}, {id: 'zb'}, {id: 'zc', vide: true}];
+    const statut = () => statutEvtM3('cp', items).statut + ' ' + statutEvtM3('cp', items).c + '/' + statutEvtM3('cp', items).n;
+    const v = [];
+    try {
+      Object.keys(cats).forEach(k => { delete cats[k]; });
+      v.push(statut());                                                   // rien de classé
+      cats.k = {nom: 'K', color: '#111111', items: ['za']}; v.push(statut());           // en cours
+      cats.k.items.push('zb'); v.push(statut());                          // tout classé (le « non renseigné » ne compte pas)
+      v.push(statutEvtM3('cp', [{id: 'zc', vide: true}]).statut);         // rien à classer
+    } finally { Object.keys(cats).forEach(k => { delete cats[k]; }); Object.assign(cats, JSON.parse(sauveCats)); }
+    // Dans la colonne : la classe de chaque évènement suit son badge, et replié, chaque en-tête tient sur une ligne.
+    const vue = document.getElementById('view-m3');
+    let coherent = true, uneLigne = true, nb = 0;
+    if (vue && (state.m2.evenements || []).length && window.innerWidth >= 721) {
+      const etait = vue.classList.contains('show');
+      const sauveReplies = new Set(evtsReplies);
+      try {
+        vue.classList.add('show');
+        renderM3Sous('cp');
+        document.querySelectorAll('#m3-items-list .m3-evt').forEach(e => {
+          const b = e.querySelector('.m3-evt-etat');
+          nb++;
+          if (!b) { if (/\betat-/.test(e.className)) coherent = false; return; }
+          const m = /(\d+)\/(\d+)/.exec(b.textContent);
+          const attendu = +m[1] === +m[2] ? 'fait' : +m[1] ? 'cours' : 'rien';
+          if (!e.classList.contains('etat-' + attendu)) coherent = false;
+        });
+        replierTousEvts(true);
+        document.querySelectorAll('#m3-items-list .m3-evt-tete').forEach(h => { if (h.offsetHeight > 50) uneLigne = false; });
+      } finally {
+        evtsReplies.clear(); sauveReplies.forEach(x => evtsReplies.add(x));
+        try { renderM3(); } catch (e) { /* vue masquée */ }
+        if (!etait) vue.classList.remove('show');
+      }
+    }
+    return _bancEgal('statuts | classes cohérentes avec les badges | en-têtes repliés sur une ligne',
+      'rien 0/2 # cours 1/2 # fait 2/2 # vide | true | true', v.join(' # ') + ' | ' + coherent + ' | ' + uneLigne);
+  }},
   {nom:'Les couleurs des catégories se distinguent deux à deux', test: () => {
     /* Ce qui fait confondre deux catégories, c'est la teinte : les deux violets
        d'avant n'étaient séparés que de 10°, les deux rouges de 13°. Entre deux
@@ -11888,6 +11944,15 @@ function majRepliEvt(evtId) {
   if (b) { b.setAttribute('aria-expanded', String(!replie)); b.title = (replie ? 'Déplier' : 'Replier') + ' cet évènement'; }
 }
 
+/* L'avancement d'un évènement dans le volet ouvert : combien de ses éléments sont classés (un volet non renseigné
+   n'a rien à classer). */
+function statutEvtM3(sousId, items) {
+  const reels = (items || []).filter(it => !it.vide);
+  const n = reels.length;
+  const c = reels.filter(it => catDunItem(sousId, it.id).length > 0).length;
+  return {n, c, statut: !n ? 'vide' : c === n ? 'fait' : c ? 'cours' : 'rien'};
+}
+
 /* Un évènement dans la colonne de gauche : son en-tête (numéro, CD, détail),
    puis ses éléments du volet ouvert, en tiroir. */
 function blocEvtM3(sousId, sous, groupe, cats, etiquettes) {
@@ -11897,15 +11962,22 @@ function blocEvtM3(sousId, sous, groupe, cats, etiquettes) {
   const replie = evtsReplies.has(String(evt.id));
   const src = [evt.date ? formatDate(evt.date) : '', evt.heure, evt.moment, evt.declarant].filter(Boolean).join(' · ');
   const nCD = st.cds.length;
-  return `<div class="m3-evt${replie ? ' replie' : ''}" data-evt-id="${esc(evt.id)}">
+  const av = statutEvtM3(sousId, groupe.items);
+  const pl = (k, mot) => k + ' ' + mot + (k > 1 ? 's' : '');
+  const titreEtat = av.statut === 'fait' ? 'Tout est classé dans cet évènement : ' + pl(av.n, 'élément') + ' sur ' + av.n + '.'
+    : av.statut === 'cours' ? av.c + ' élément' + (av.c > 1 ? 's classés' : ' classé') + ' sur ' + av.n + ' : il en reste ' + (av.n - av.c) + ' à classer.'
+    : av.statut === 'rien' ? 'Rien n\'est encore classé dans cet évènement : ' + pl(av.n, 'élément') + ' à classer.' : '';
+  const badgeEtat = av.statut === 'vide' ? '' : '<span class="m3-evt-etat" title="' + esc(titreEtat) + '">' + ({fait: '✓', cours: '◐', rien: '○'})[av.statut] + ' ' + av.c + '/' + av.n + '</span>';
+  return `<div class="m3-evt${replie ? ' replie' : ''}${av.statut !== 'vide' ? ' etat-' + av.statut : ''}" data-evt-id="${esc(evt.id)}">
     <div class="m3-evt-tete">
       <button type="button" class="m3-cat-plier m3-evt-plier" aria-expanded="${!replie}" title="${replie ? 'Déplier' : 'Replier'} cet évènement" onclick="basculerRepliEvt('${esc(evt.id)}')">▾</button>
       <span class="m3-evt-titre">Évènement ${n}</span>
+      ${badgeEtat}
       ${st.mode === 'aucun' ? '<span class="m3-evt-nbcd m3-evt-aucun">aucun CD</span>' : ''}
       ${nCD > 1 ? `<span class="m3-evt-nbcd" title="${st.mode === 'sequence' ? 'Les CD se suivent : ce qui s\'est passé entre deux CD est la conséquence du premier et l\'antécédent du suivant.' : 'Plusieurs CD en même temps.'}">${nCD} CD ${st.mode === 'sequence' ? 'à la suite' : 'en même temps'}</span>` : ''}
       <span class="m3-evt-espace"></span>
       <button type="button" class="m3-item-detail" title="Revoir l'évènement complet" onclick="ouvrirDetailEvt(${groupe.evtIdx},'${sousId}',event)">détail</button>
-      ${sousId === 'cp' ? `<button type="button" class="m3-evt-decouper no-print" title="Repérer plusieurs CD dans cet évènement, chacun par une citation exacte du déclaratif" onclick="ouvrirDecoupage('${esc(evt.id)}',event)">✂ ${st.decoupe ? 'Modifier le découpage' : 'Découper'}</button>` : ''}
+      ${sousId === 'cp' ? `<button type="button" class="m3-evt-decouper no-print" title="Repérer plusieurs CD dans cet évènement, chacun par une citation exacte du déclaratif" onclick="ouvrirDecoupage('${esc(evt.id)}',event)" aria-label="${st.decoupe ? 'Modifier le découpage' : 'Découper'}">✂<span class="lib"> ${st.decoupe ? 'Modifier le découpage' : 'Découper'}</span></button>` : ''}
     </div>
     ${st.decoupe && !decoupageAJour(evt) ? `<div class="m3-evt-alerte">Le texte de cet évènement a changé depuis le découpage : un passage cité n'y est plus. ${sousId === 'cp' ? 'Ouvrez « Modifier le découpage ».' : 'Voir le volet Comportements.'}</div>` : ''}
     ${src ? `<div class="m3-evt-source">${esc(src)}</div>` : ''}
@@ -12776,9 +12848,14 @@ function renderM3Sous(sousId) {
   document.getElementById('m3-items-title').textContent = sous.icon + ' ' + sous.label + ' décrits';
   const nVides = items.filter(it => it.vide).length;
   const nReels = items.length - nVides;
+  const parEvt = {};
+  items.forEach(it => { (parEvt[it.evtIdx] = parEvt[it.evtIdx] || []).push(it); });
+  const aFinir = Object.keys(parEvt).filter(k => ['rien', 'cours'].indexOf(statutEvtM3(sousId, parEvt[k]).statut) !== -1).length;
   document.getElementById('m3-items-count').innerHTML =
     nReels + ' élément' + (nReels > 1 ? 's' : '') +
-    (nVides > 0 ? ` <span style="color:var(--sauge-deep);">· ${nVides} non renseigné${nVides>1?'s':''}</span>` : '');
+    (nVides > 0 ? ` <span style="color:var(--sauge-deep);">· ${nVides} non renseigné${nVides>1?'s':''}</span>` : '') +
+    (aFinir > 0 ? ` <span style="color:var(--ocre-deep);">· ${aFinir} évènement${aFinir>1?'s':''} à finir</span>`
+      : nReels > 0 ? ' <span style="color:var(--sauge-deep);">· tout est classé ✓</span>' : '');
   document.getElementById('m3-items-help').textContent = sous.help;
 
   // ── Colonne gauche : les évènements, et leurs éléments en tiroir ──
@@ -18746,7 +18823,7 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
-const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":4348,"retrait":962,"depots":42}]};
+const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":4610,"retrait":966,"depots":43}]};
 
 function svgActiviteCode() {
   const mois = ACTIVITE_CODE.mois || [];
@@ -18785,6 +18862,20 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-08',
+    version: 'v2026.10.08-3',
+    titre: "Organiser : évènements repliés sur une ligne, code couleur d'avancement",
+    corps: `
+<p><b>Organiser, colonne de gauche</b> (Arthur) :</p>
+<ul>
+<li><b>Tout replier</b> : un évènement replié tient maintenant sur une seule ligne. Avant, ceux dont l'en-tête portait beaucoup de texte (« 2 CD à la suite », « Modifier le découpage ») passaient sur deux lignes. L'étiquette des CD se raccourcit si besoin, et les boutons « détail » et « ✂ » restent à leur place (le mot « Découper » ne s'affiche que déplié).</li>
+<li><b>Un code couleur par évènement</b>, selon son avancement dans le volet ouvert : <b>vert ✓</b> tout est classé, <b>ocre ◐</b> en cours, <b>rose ○</b> rien de classé. Le badge « 2/5 » dit combien d'éléments sont classés (un passage non renseigné ne compte pas) ; passez la souris dessus pour le détail. Les évènements sans rien à classer dans ce volet restent neutres.</li>
+<li>Au-dessus de la liste, le compteur dit aussi combien d'évènements restent <b>à finir</b> dans le volet (« · 12 évènements à finir »), ou « tout est classé ✓ ».</li>
+</ul>
+`
+  },
 
   {
     date: '2026-10-08',
