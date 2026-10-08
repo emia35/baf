@@ -1722,6 +1722,12 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
 .m3-evt-decouper:hover{background:var(--vol-comportement-pale);}
 .m3-evt-decouper.ctx{border-color:var(--vol-contexte);color:var(--vol-contexte-deep);}
 .m3-evt-decouper.ctx:hover{background:var(--vol-contexte-pale);}
+.m3-retenir{margin-left:8px;font:inherit;font-size:11.5px;font-weight:700;color:var(--vol-contexte-deep);background:var(--card);border:1px solid var(--vol-contexte);border-radius:999px;padding:2px 10px;cursor:pointer;}
+.m3-retenir:hover{background:var(--vol-contexte-pale);}
+.m3-cat-lien{flex-shrink:0;color:var(--vol-contexte-deep);font-weight:700;cursor:help;}
+.m3-cat-name[readonly]{cursor:default;}
+.m3-assign-plustot{margin:0 0 8px;border-bottom:1px solid var(--line-soft);padding-bottom:6px;}
+.m3-assign-plustot summary{font-size:12px;font-weight:700;color:var(--vol-contexte-deep);cursor:pointer;margin-bottom:4px;}
 .dec-texte mark.dec-m-ctx{background:none;border-bottom:2px solid var(--vol-contexte-deep);}
 .dec-texte mark.dec-m-ctx::before{color:var(--vol-contexte-deep);}
 .dec-case-ctx{border-color:var(--vol-contexte);}
@@ -10569,6 +10575,73 @@ const _CONTROLES = [
       const dv = JSON.parse(sauveDV); if (dv) state.m3.decoupagesVolets = dv; else delete state.m3.decoupagesVolets;
     }
   }},
+  {nom:'Contexte : la BAF propose les CD catégorisés plus tôt le même jour, sans toucher aux « n/m »', test: () => {
+    const sauveEvts = state.m2.evenements, sauveCp = JSON.stringify(state.m3.categories.cp), sauveCx = JSON.stringify(state.m3.categories.contexte);
+    const sauveCren = JSON.stringify(state.m1.journeeCreneaux || []);
+    try {
+      state.m1.journeeCreneaux = [{nom: 'Matin', debut: '08h00', fin: '12h00', id: 'cr_m'}, {nom: 'Après-midi', debut: '13h00', fin: '17h00', id: 'cr_a'}];
+      const e = (id, date, heure, extra) => Object.assign({id, date, heure, comportement: 'x', antecedents: [], interventions: []}, extra || {});
+      state.m2.evenements = [e('pt1', '2026-02-02', '09:10'), e('pt2', '2026-02-02', '11:00'), e('pt3', '2026-02-02', '14:30', {avantLoin: 'Nuit courte.'}),
+        e('pt4', '2026-02-03', '15:00'), e('pt5', '2026-02-02', '', {moment: 'Après-midi'}), e('pt6', '2026-02-02', '')];
+      ensureM3();
+      const cp = state.m3.categories.cp;
+      Object.keys(cp).forEach(k => delete cp[k]);
+      cp.cc1 = {nom: 'Cris', color: '#10B981', items: ['ept1_0']};
+      cp.cc2 = {nom: 'Coups', color: '#0EA5E9', items: ['ept2_0']};
+      const sugg = id => elementsEvt('contexte', state.m2.evenements.find(x => x.id === id)).filter(x => x.tag === 'plus-tot').map(x => x.suggestion).join(',') || '-';
+      const resume = ['pt1', 'pt2', 'pt3', 'pt4', 'pt5', 'pt6'].map(id => id + ':' + sugg(id)).join('|');
+      const reels = extraireItems('contexte').filter(it => !it.vide).length;
+      return _bancEgal('propositions par évènement (même jour, strictement plus tôt, repli sur le moment) | éléments comptés dans les « n/m »',
+        'pt1:-|pt2:cc1|pt3:cc1,cc2|pt4:-|pt5:cc1,cc2|pt6:-|1', resume + '|' + reels);
+    } finally {
+      state.m2.evenements = sauveEvts; state.m1.journeeCreneaux = JSON.parse(sauveCren);
+      const cp = state.m3.categories.cp; Object.keys(cp).forEach(k => delete cp[k]); Object.assign(cp, JSON.parse(sauveCp));
+      const cx = state.m3.categories.contexte; Object.keys(cx).forEach(k => delete cx[k]); Object.assign(cx, JSON.parse(sauveCx));
+    }
+  }},
+
+  {nom:'Contexte : « Précédé de … » se range sans recréer de catégorie, son nom suit celui du comportement', test: () => {
+    const sauveEvts = state.m2.evenements, sauveCp = JSON.stringify(state.m3.categories.cp), sauveCx = JSON.stringify(state.m3.categories.contexte);
+    const vraiPersist = persist; persist = () => {};
+    const vraiConfirm = window.confirm; window.confirm = () => true;
+    const vraiToast = showToast; showToast = () => {};
+    try {
+      const e = (id, heure, extra) => Object.assign({id, date: '2026-02-02', heure, comportement: 'x', antecedents: [], interventions: []}, extra || {});
+      state.m2.evenements = [e('lk1', '09:10'), e('lk2', '14:30', {avantLoin: 'Il avait déjà crié.'})];
+      ensureM3();
+      const cp = state.m3.categories.cp, cx = state.m3.categories.contexte;
+      Object.keys(cp).forEach(k => delete cp[k]); Object.keys(cx).forEach(k => delete cx[k]);
+      cp.cc1 = {nom: 'Cris', color: '#10B981', items: ['elk1_0']};
+      const item = elementsEvt('contexte', state.m2.evenements[1]);
+      const propose = item.find(x => x.tag === 'plus-tot');
+      const popup = assignPopupContent('contexte', propose.id);
+      const section = /Précédé d'un CD de la même journée/.test(popup) && /proposé/.test(popup);
+      retenirPlusTot(propose.id, 'cc1');                                   // un clic : la catégorie liée naît
+      const idLiee = catLieeDe('cc1');
+      const nom1 = cx[idLiee].nom;
+      assignerPlusTot('elk2_0', 'cc1');                                    // le texte du pro, rangé dans la même catégorie
+      const items = cx[idLiee].items.join(',');
+      const nbCats = Object.keys(cx).length;
+      const stats = statsContexte(state.m2.evenements, state.m3.categories);
+      const unSeulCompte = stats.nX['Précédé de Cris'] === 1;               // les deux éléments, un seul évènement : compté une fois
+      renommerCat('cp', 'cc1', 'Hurlements');
+      const nom2 = cx[idLiee].nom;
+      supprimerCat('cp', 'cc1');
+      const sansLien = cx[idLiee] && !cx[idLiee].ref && cx[idLiee].nom === 'Précédé de Hurlements';
+      // Une catégorie liée ne reçoit pas de sous-catégories
+      cp.cc9 = {nom: 'Fuite', color: '#111111', items: []};
+      const id9 = assurerCatLiee('cc9');
+      cx.libre = {nom: 'Libre', color: '#222222', items: []};
+      const refus = !deplacerCat('contexte', 'libre', id9, null);
+      return _bancEgal('section dans le popup | nom créé | éléments rangés | une seule catégorie | évènement compté une fois | nom suivi | lien rompu proprement | pas de sous-catégorie dans une catégorie liée',
+        'true|Précédé de Cris|elk2_pcc1,elk2_0|1|true|Précédé de Hurlements|true|true', [section, nom1, items, nbCats, unSeulCompte, nom2, sansLien, refus].join('|'));
+    } finally {
+      persist = vraiPersist; window.confirm = vraiConfirm; showToast = vraiToast; state.m2.evenements = sauveEvts;
+      const cp = state.m3.categories.cp; Object.keys(cp).forEach(k => delete cp[k]); Object.assign(cp, JSON.parse(sauveCp));
+      const cx = state.m3.categories.contexte; Object.keys(cx).forEach(k => delete cx[k]); Object.assign(cx, JSON.parse(sauveCx));
+      try { renderM3(); } catch (er) { /* vue masquée */ }
+    }
+  }},
   {nom:'Les couleurs des catégories se distinguent deux à deux', test: () => {
     /* Ce qui fait confondre deux catégories, c'est la teinte : les deux violets
        d'avant n'étaient séparés que de 10°, les deux rouges de 13°. Entre deux
@@ -11702,7 +11775,7 @@ const M3_SOUS = [
        forçait à inventer des catégories qui recouvraient les deux. */
     id: 'contexte',
     label: 'Contexte', icon: '🕰', couleur: 'contexte',
-    help: 'Ce qui précède de loin : la nuit, le week-end, un traitement modifié, un remplacement, une douleur signalée la veille. Ça ne déclenche rien tout seul, mais ça remplit le vase — et un même antécédent ne produit pas le même effet selon le contexte. « ✂ Découper » permet d\'y repérer plusieurs éléments, chacun par une citation exacte du déclaratif.',
+    help: 'Ce qui précède de loin : la nuit, le week-end, un traitement modifié, un remplacement, une douleur signalée la veille. Ça ne déclenche rien tout seul, mais ça remplit le vase — et un même antécédent ne produit pas le même effet selon le contexte. « ✂ Découper » permet d\'y repérer plusieurs éléments, chacun par une citation exacte du déclaratif. Les CD déjà catégorisés plus tôt le même jour sont proposés (« plus tôt dans la journée »), et tout élément peut se ranger dans « Précédé de… » une catégorie de comportement, sans créer de catégorie.',
     placeholder: 'ex : Sommeil court, Retour de week-end, Absence d\'un référent, Douleur signalée…',
     extract: (evt) => {
       const parts = [];
@@ -11906,7 +11979,7 @@ function structureCD(evt, decoupages) {
 /* Les éléments d'un évènement dans un volet : ceux de son déclaratif, puis ceux
    que fait naître la séquence de ses CD. `relie` dit à quel CD l'élément se
    rattache (son rang dans la séquence) ; `suite` marque un CD venu après un autre. */
-function elementsEvt(sousId, evt) {
+function elementsEvtBase(sousId, evt) {
   const sous = M3_SOUS.find(s => s.id === sousId);
   if (!sous || !evt) return [];
   // Un contexte découpé : chaque passage cité est un élément (identifiant e{évènement}_x{passage}).
@@ -11939,6 +12012,131 @@ function elementsEvt(sousId, evt) {
   return base.concat(plus);
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   « PRÉCÉDÉ D'UN CD » DANS LE CONTEXTE (Arthur, 08/10/2026)
+   ══════════════════════════════════════════════════════════════════════
+   Le contexte dit souvent « il avait déjà crié ce matin » : un CD plus tôt dans la journée, que l'équipe a peut-être
+   aussi catégorisé dans Comportements. Deux choses :
+   · la BAF propose, dans le contexte d'un évènement, les CD catégorisés des évènements plus tôt le même jour : un
+     élément « plus tôt dans la journée » (tag plus-tot), qui ne compte pas dans les « n/m » (il est vide : proposé, pas
+     déclaré) et se retient d'un clic ;
+   · tout élément du contexte peut se ranger dans « Précédé de <catégorie de comportement> » sans recréer de catégorie :
+     une catégorie de contexte « liée » (ref: {volet: 'cp', cat}) naît au premier rangement, et son nom suit celui de la
+     catégorie de comportement. Le reste (liens contexte → comportement, vase…) se lit comme pour toute catégorie de
+     contexte : les statistiques comptent par noms, et par évènement (un même nom n'est compté qu'une fois). */
+function minutesDansLaJournee(evt) {
+  const h = /^(\d{1,2}):(\d{2})/.exec(String((evt && evt.heure) || ''));
+  if (h) return parseInt(h[1], 10) * 60 + parseInt(h[2], 10);
+  // Sans heure : le début du moment de la journée, d'après la journée type.
+  const c = evt && evt.moment ? creneauDuMoment(evt.moment) : null;
+  if (!c) return null;
+  const debuts = c.derive ? c.plages.map(p => heureOptionToMin(p.debut)) : [heureOptionToMin(c.debut)];
+  const ok = debuts.filter(d => d !== null && d !== undefined);
+  return ok.length ? Math.min.apply(null, ok) : null;
+}
+// Les CD catégorisés des évènements plus tôt le même jour, par catégorie de comportement.
+function cdPlusTotLeMemeJour(evt) {
+  if (!evt || !evt.date) return [];
+  const m = minutesDansLaJournee(evt);
+  if (m === null) return [];
+  const par = {};
+  (state.m2.evenements || []).forEach((autre, i) => {
+    if (!autre || autre === evt || autre.date !== evt.date) return;
+    const ma = minutesDansLaJournee(autre);
+    if (ma === null || ma >= m) return;   // plus tôt, strictement
+    elementsEvt('cp', autre).forEach(el => {
+      catDunItem('cp', el.id).forEach(catId => {
+        const liste = par[catId] || (par[catId] = []);
+        if (!liste.some(x => x.n === i + 1)) liste.push({n: i + 1, heure: autre.heure || ''});
+      });
+    });
+  });
+  return Object.keys(par).filter(c => cheminCat('cp', c)).map(cat => ({cat, evts: par[cat]}));
+}
+function elementsPlusTot(evt) {
+  return cdPlusTotLeMemeJour(evt).map(s => ({
+    id: 'e' + evt.id + '_p' + s.cat, tag: 'plus-tot', vide: true, suggestion: s.cat,
+    texte: 'CD « ' + cheminCat('cp', s.cat) + ' » — ' + s.evts.map(x => 'évènement ' + x.n + (x.heure ? ' (' + x.heure.replace(':', 'h') + ')' : '')).join(', ')
+  }));
+}
+// Le contexte d'un évènement : ce qu'on y a repéré, plus ce que la BAF propose.
+function elementsEvt(sousId, evt) {
+  const base = elementsEvtBase(sousId, evt);
+  return sousId === 'contexte' && evt && evt.id ? base.concat(elementsPlusTot(evt)) : base;
+}
+
+function nomCatLiee(cpCatId) { return 'Précédé de ' + cheminCat('cp', cpCatId); }
+function catLieeDe(cpCatId) {
+  const cats = ((state.m3 || {}).categories || {}).contexte || {};
+  return Object.keys(cats).find(id => cats[id].ref && cats[id].ref.cat === cpCatId) || null;
+}
+function assurerCatLiee(cpCatId) {
+  ensureM3();
+  const cats = state.m3.categories.contexte;
+  let id = catLieeDe(cpCatId);
+  if (id) return id;
+  const cp = (state.m3.categories.cp || {})[cpCatId];
+  if (!cp) return null;
+  id = 'cat_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5);
+  cats[id] = {nom: nomCatLiee(cpCatId), color: cp.color || catColorFor(Object.keys(cats).length), items: [], ref: {volet: 'cp', cat: cpCatId}};
+  return id;
+}
+/* Le nom d'une catégorie liée suit celui de sa catégorie de comportement (renommée, déplacée) ; si celle-ci n'existe
+   plus, la catégorie de contexte reste, sans lien. Renvoie vrai si quelque chose a changé. */
+function synchroniserCatsLiees() {
+  const m3 = state.m3;
+  if (!m3 || !m3.categories || !m3.categories.contexte) return false;
+  const cats = m3.categories.contexte, cp = m3.categories.cp || {};
+  let change = false;
+  Object.keys(cats).forEach(id => {
+    const c = cats[id];
+    if (!c.ref) return;
+    if (!cp[c.ref.cat]) { delete c.ref; change = true; return; }
+    const nom = nomCatLiee(c.ref.cat);
+    if (c.nom !== nom) { c.nom = nom; change = true; }
+  });
+  return change;
+}
+// Dans le popup d'un élément du contexte : « Précédé d'un CD de la même journée… », avec les catégories de comportement.
+function sectionPlusTot(sousId, itemId, item) {
+  if (sousId !== 'contexte') return '';
+  const racines = catsRacines('cp');
+  if (!racines.length) return '';
+  const cp = state.m3.categories.cp || {};
+  const cats = state.m3.categories.contexte || {};
+  const actives = catDunItem('contexte', itemId);
+  const ligne = (cpId, estEnfant) => {
+    const c = cp[cpId];
+    if (!c) return '';
+    const lie = catLieeDe(cpId);
+    const on = !!lie && actives.indexOf(lie) !== -1;
+    const propose = !!item && item.suggestion === cpId;
+    return '<button class="m3-assign-opt" style="' + (on ? 'background:var(--ocre-pale);color:var(--ocre-deep);' : '') + (estEnfant ? 'padding-left:26px;font-weight:500;' : '') +
+      '" onclick="assignerPlusTot(\'' + itemId + '\',\'' + cpId + '\')">' +
+      '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' + (c.color || 'var(--ocre)') + ';margin-right:6px;vertical-align:middle;' + (estEnfant ? 'opacity:.55;' : '') + '"></span>' +
+      (estEnfant ? '<span style="color:var(--ink-soft);">↳ </span>' : '') + esc(c.nom) +
+      (propose ? ' <i style="font-weight:400;color:var(--ink-soft);">· proposé</i>' : '') + (on ? ' ✓' : '') + '</button>';
+  };
+  const ouvert = (item && item.suggestion) || actives.some(id => cats[id] && cats[id].ref);
+  return '<details class="m3-assign-plustot"' + (ouvert ? ' open' : '') + '><summary>Précédé d\'un CD de la même journée…</summary><div class="m3-assign-list">' +
+    racines.map(r => ligne(r, false) + catsEnfants('cp', r).map(e => ligne(e, true)).join('')).join('') + '</div></details>';
+}
+function assignerPlusTot(itemId, cpCatId) {
+  const id = assurerCatLiee(cpCatId);
+  if (id) assignerItem('contexte', itemId, id);
+}
+// « ＋ Retenir » sur un élément proposé : le range dans « Précédé de … » d'un clic (ne bascule pas : il est retenu).
+function retenirPlusTot(itemId, cpCatId, ev) {
+  if (ev) ev.stopPropagation();
+  const id = assurerCatLiee(cpCatId);
+  if (!id) return;
+  const cat = state.m3.categories.contexte[id];
+  if ((cat.items || []).indexOf(itemId) === -1) cat.items = (cat.items || []).concat(itemId);
+  persist();
+  renderM3Sous('contexte');
+  renderM3Tabs();
+}
+
 // Extraire tous les items d'un sous-module depuis les évènements
 function extraireItems(sousId) {
   const sous = M3_SOUS.find(s => s.id === sousId);
@@ -11956,7 +12154,7 @@ function extraireItems(sousId) {
     // catégoriser. Rien n'est écrit dans l'évènement : c'est calculé à la lecture.
     if (!elements.length && sousId === 'cp' && structureCD(evt).mode === 'aucun') {
       items.push(Object.assign({id: `e${evt.id}_aucun`, texte: 'Aucun CD retenu dans cet évènement', tag: 'aucun-cd', vide: true}, quand));
-    } else if (!elements.length) {
+    } else if (!elements.some(el => el.tag !== 'plus-tot')) {
       items.push(Object.assign({id: `e${evt.id}_vide`, texte: 'Non renseigné', tag: 'non-renseigne', vide: true}, quand));
     }
   });
@@ -12107,6 +12305,8 @@ function blocItemM3(sousId, sous, item, cats, etiquettes, st, n) {
   let lien = '';
   if (sousId === 'cp' && etiquettes[item.id]) {
     lien = `<span class="m3-item-cd" title="Évènement ${n}, ${etiquettes[item.id]}${item.suite ? ', venu à la suite du précédent' : ''}.">${etiquettes[item.id]}</span>`;
+  } else if (item.tag === 'plus-tot') {
+    lien = '<span class="m3-item-cd" style="background:var(--vol-contexte-deep);" title="Proposé par la BAF : un CD déjà catégorisé dans un évènement plus tôt le même jour. À retenir si vous le jugez utile : il ne compte pas dans les « n/m ».">plus tôt dans la journée</span>';
   } else if (item.tag === 'decoupe-volet' && etiquettes[item.id]) {
     lien = '<span class="m3-item-cd" style="background:var(--vol-contexte-deep);" title="Passage du contexte, repéré dans le déclaratif de l\'évènement ' + n + '.">' + etiquettes[item.id] + '</span>';
   } else if (item.tag === 'charniere') {
@@ -12115,15 +12315,18 @@ function blocItemM3(sousId, sous, item, cats, etiquettes, st, n) {
   } else if (st.mode === 'sequence' && !item.vide && (sousId === 'antecedents' || sousId === 'consequences')) {
     lien = `<span class="m3-item-lien">${sousId === 'antecedents' ? 'avant ' + cd(0) : 'après ' + cd(dernier)}</span>`;
   }
+  const dejaRetenu = item.tag === 'plus-tot' && catIds.some(cid => cats[cid] && cats[cid].ref && cats[cid].ref.cat === item.suggestion);
+  const boutonRetenir = item.tag === 'plus-tot' && !dejaRetenu
+    ? '<button type="button" class="m3-retenir no-print" title="Ranger dans « Précédé de ' + esc(cheminCat('cp', item.suggestion)) + ' » : une catégorie de contexte liée à ce comportement est créée au besoin" onclick="retenirPlusTot(\'' + item.id + '\',\'' + item.suggestion + '\',event)">＋ Retenir comme contexte</button>' : '';
   return `<div class="m3-item${catIds.length>0?' categorise':''}${item.vide?' item-vide':''}" data-volet="${sous.couleur || ''}" data-item-id="${esc(item.id)}" onclick="ouvrirAssign('${sousId}','${item.id}',event)">
     <div style="flex:1">
       ${lien}
       ${item.tag==='post-intervention' ? `<span class="m3-item-tag-post" title="Le déclarant l'a décrit dans « Et ensuite ? », après une intervention.">après une intervention</span>` : ''}
       ${item.tag==='presume-declencheur' ? `<span class="m3-item-tag-post" style="background:var(--vol-antecedent-deep);" title="Le déclarant pense que c'est ce qui a déclenché — à vous d'en juger. Jaune ocre : couleur de l'antécédent.">présumé déclencheur</span>` : ''}
       ${item.tag==='resume' ? `<span class="m3-item-tag-post" style="background:var(--slate);" title="Répondu en mode rapide : une seule case pour toute l'étape. Le détail n'a pas été déroulé.">résumé rapide</span>` : ''}
-      ${item.vide ? `<span class="m3-item-tag-post" style="background:var(--line);color:var(--ink-soft);" title="Ce volet n'a pas été rempli par le déclarant">non renseigné</span>` : ''}
+      ${item.vide && item.tag !== 'plus-tot' ? `<span class="m3-item-tag-post" style="background:var(--line);color:var(--ink-soft);" title="Ce volet n'a pas été rempli par le déclarant">non renseigné</span>` : ''}
       <div class="m3-item-text">${esc(item.texte)}</div>
-      <div style="margin-top:5px;">${catBadge}</div>
+      <div style="margin-top:5px;">${catBadge}${boutonRetenir}</div>
     </div>
   </div>`;
 }
@@ -13234,14 +13437,16 @@ function changerSous(sousId) {
 function renderM3Sous(sousId) {
   const sous = M3_SOUS.find(s => s.id === sousId);
   if (!sous) return;
+  synchroniserCatsLiees();
 
   const items = extraireItems(sousId);
   const cats = state.m3.categories[sousId] || {};
 
   // Titre et help colonne gauche
   document.getElementById('m3-items-title').textContent = sous.icon + ' ' + sous.label + ' décrits';
-  const nVides = items.filter(it => it.vide).length;
-  const nReels = items.length - nVides;
+  const nPropositions = items.filter(it => it.tag === 'plus-tot').length;
+  const nVides = items.filter(it => it.vide && it.tag !== 'plus-tot').length;
+  const nReels = items.length - nVides - nPropositions;
   const parEvt = {};
   items.forEach(it => { (parEvt[it.evtIdx] = parEvt[it.evtIdx] || []).push(it); });
   const aFinir = Object.keys(parEvt).filter(k => ['rien', 'cours'].indexOf(statutEvtM3(sousId, parEvt[k]).statut) !== -1).length;
@@ -13293,11 +13498,11 @@ function renderM3Sous(sousId) {
             ondragstart="glisserCat(event,'${sousId}','${catId}')" ondragend="finGlisserCat()" onkeydown="clavierCat(event,'${sousId}','${catId}')">⠿</span>
           <button type="button" class="m3-cat-plier" aria-expanded="${cat.replie ? 'false' : 'true'}" title="${cat.replie ? 'Déplier' : 'Replier'} cette catégorie" onclick="basculerRepliCat('${sousId}','${catId}')">▾</button>
           <button type="button" class="m3-cat-color" style="background:${color};" title="Changer la couleur" aria-label="Changer la couleur de cette catégorie" onclick="ouvrirPaletteCat('${sousId}','${catId}',this,event)"></button>
-          <input class="m3-cat-name" value="${esc(cat.nom)}"
+          ${cat.ref ? '<span class="m3-cat-lien" title="Liée à une catégorie de comportement : son nom suit le sien.">↔</span>' : ''}<input class="m3-cat-name" value="${esc(cat.nom)}"${cat.ref ? ' readonly' : ''}
             onchange="renommerCat('${sousId}','${catId}',this.value)"
             placeholder="${estEnfant ? 'Nom de la sous-catégorie' : 'Nom de la catégorie'}">
           <span class="m3-cat-count">${compte}</span>
-          ${estEnfant ? '' : `<button class="m3-cat-del" onclick="ajouterSousCategorie('${sousId}','${catId}')" title="Ajouter une sous-catégorie" style="color:var(--sauge-deep);">＋</button>`}
+          ${estEnfant || cat.ref ? '' : `<button class="m3-cat-del" onclick="ajouterSousCategorie('${sousId}','${catId}')" title="Ajouter une sous-catégorie" style="color:var(--sauge-deep);">＋</button>`}
           <button class="m3-cat-del" onclick="supprimerCat('${sousId}','${catId}')" title="Supprimer cette catégorie">✕</button>
         </div>
         <div class="m3-cat-items">
@@ -13386,6 +13591,7 @@ function motifRefusDeplacement(sousId, catId, parentId) {
   if (parentId === catId) return 'Une catégorie ne peut pas se ranger dans elle-même.';
   const parent = cats[parentId];
   if (!parent) return 'Catégorie introuvable.';
+  if (parent.ref) return '« ' + parent.nom + ' » suit une catégorie de comportement : elle ne reçoit pas de sous-catégories.';
   if (parent.parent && cats[parent.parent]) return '« ' + parent.nom + ' » est déjà une sous-catégorie : on s\'arrête à un niveau.';
   if (catsEnfants(sousId, catId).length) return '« ' + cat.nom + ' » a déjà des sous-catégories : on s\'arrête à un niveau. Déplacez d\'abord ses sous-catégories.';
   return '';
@@ -13417,6 +13623,7 @@ function deplacerCat(sousId, catId, parentId, avantId) {
     if (cats[parentId].color) cat.color = cats[parentId].color;
     delete cats[parentId].replie;   // on voit où elle est allée
   } else delete cat.parent;
+  synchroniserCatsLiees();
   persist();
   renderM3Sous(sousId);
   if (parentId && parentId !== ancienParent) showToast('« ' + cat.nom + ' » est maintenant une sous-catégorie de « ' + cats[parentId].nom + ' ».');
@@ -13552,10 +13759,11 @@ function assignPopupContent(sousId, itemId) {
   return `
     <h5>Assigner à une ou plusieurs catégories</h5>
     <div style="font-size:12px;color:var(--ink-soft);margin-bottom:10px;font-style:italic;">"${esc(preview)}"</div>
+    ${sectionPlusTot(sousId, itemId, item)}
     <div class="m3-assign-list">
     ${catKeys.length === 0
       ? `<div style="font-size:12.5px;color:var(--ink-soft);font-style:italic;margin-bottom:8px;">Créez d\'abord une catégorie.</div>`
-      : catsRacines(sousId).map(catId => {
+      : catsRacines(sousId).filter(id => !cats[id].ref).map(catId => {
           const ligne = (id, estEnfant) => {
             const cat = cats[id];
             if (!cat) return '';
@@ -13566,7 +13774,7 @@ function assignPopupContent(sousId, itemId) {
               ${estEnfant ? '<span style="color:var(--ink-soft);">↳ </span>' : ''}${esc(cat.nom)}${isActive?' ✓':''}
             </button>`;
           };
-          return ligne(catId, false) + catsEnfants(sousId, catId).map(e => ligne(e, true)).join('');
+          return ligne(catId, false) + catsEnfants(sousId, catId).filter(e => !cats[e].ref).map(e => ligne(e, true)).join('');
         }).join('')
     }
     </div>
@@ -13867,6 +14075,7 @@ function renommerCat(sousId, catId, nom) {
     // et personne n'a envie d'y penser en pleine catégorisation.
     nom = (nom || '').replace(/^\s*(\p{Ll})/u, (m, c) => m.replace(c, c.toUpperCase()));
     state.m3.categories[sousId][catId].nom = nom;
+    synchroniserCatsLiees();
     persist();
     renderM3Tabs(); // mettre à jour les badges
     renderM3Sous(sousId); // rafraîchir les badges sur les items
@@ -13882,6 +14091,7 @@ function supprimerCat(sousId, catId) {
   if (!confirm(message)) return;
   enfants.forEach(id => delete state.m3.categories[sousId][id]);
   delete state.m3.categories[sousId][catId];
+  synchroniserCatsLiees();
   persist();
   renderM3Sous(sousId);
   renderM3Tabs();
@@ -18693,7 +18903,7 @@ function renderComparateur() {
   };
   const celluleElement = (item) => {
     const src = [item.date ? formatDate(item.date) : '', item.moment].filter(Boolean).join(' · ');
-    const tag = item.vide ? 'non renseigné'
+    const tag = item.tag === 'plus-tot' ? 'plus tôt dans la journée' : item.vide ? 'non renseigné'
       : ({'post-intervention': 'après une intervention', 'presume-declencheur': 'déclencheur présumé', 'resume': 'résumé rapide', 'charniere': 'entre deux CD'})[item.tag] || '';
     return '<td class="cmp-cell cmp-el">' +
       (etiqCmp[item.id] ? '<span class="cmp-tag cmp-tag-cd">' + etiqCmp[item.id] + '</span>' : '') +
@@ -19223,7 +19433,7 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
-const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":4705,"retrait":970,"depots":44}]};
+const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":5140,"retrait":989,"depots":45}]};
 
 function svgActiviteCode() {
   const mois = ACTIVITE_CODE.mois || [];
@@ -19262,6 +19472,22 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-08',
+    version: 'v2026.10.08-5',
+    titre: "Contexte : « Précédé de … », les CD plus tôt dans la journée",
+    corps: `
+<p><b>Contexte : « Précédé de … »</b> (Arthur) — un CD déjà arrivé plus tôt dans la journée se retrouve dans le contexte, sans recréer de catégorie.</p>
+<ul>
+<li><b>La BAF propose.</b> Dans le contexte d'un évènement, elle ajoute, pour chaque catégorie de comportement des évènements <b>plus tôt le même jour</b>, un élément « plus tôt dans la journée » : « CD « Cris » — évènement 3 (09h10) ». Un bouton <b>« ＋ Retenir comme contexte »</b> le range d'un clic. Cet élément est une proposition : il <b>ne compte pas dans les « n/m »</b> du volet tant qu'on ne l'a pas retenu, et rien n'est rangé tout seul.</li>
+<li><b>Plus tôt</b> veut dire : même date, heure strictement antérieure. Sans heure, la BAF prend le début du moment de la journée (d'après la journée type) ; sans heure ni moment, l'évènement n'est pas pris en compte.</li>
+<li><b>Sans recréer de catégorie.</b> Dans le popup de n'importe quel élément du contexte, un repli « Précédé d'un CD de la même journée… » liste les catégories de comportement. Choisir « Cris » range l'élément dans « <b>Précédé de Cris</b> », une catégorie de contexte <b>liée</b> qui naît au premier rangement (repérée par ↔, nom non modifiable à la main).</li>
+<li>Son nom suit celui de la catégorie de comportement, y compris quand on la renomme ou la déplace. Si on supprime celle-ci, la catégorie de contexte reste, sans lien.</li>
+<li>Les lectures du contexte d'Interpréter la comptent comme n'importe quelle catégorie : « Avec Précédé de Cris → Auto-agression ». Un évènement n'est compté qu'une fois, même si le texte du pro et la proposition de la BAF sont tous deux rangés dans « Précédé de Cris ».</li>
+</ul>
+`
+  },
 
   {
     date: '2026-10-08',
