@@ -2983,6 +2983,21 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
   background:var(--paper);
 }
 .m3-cat-enfant .m3-cat-name{font-size:13px;}
+/* Glisser une catégorie (Arthur, 08/10/2026) : la changer de place, la déposer sur une autre pour en faire une
+   sous-catégorie, la sortir de sa catégorie. Les « emplacements » entre les cartes ne prennent pas de place : ils
+   recouvrent l'espace entre deux cartes et ne se montrent que pendant qu'on glisse. */
+.m3-cat-poignee{flex-shrink:0;cursor:grab;color:var(--ink-soft);font-size:15px;line-height:1;padding:2px 2px;border-radius:4px;user-select:none;}
+.m3-cat-poignee:hover, .m3-cat-poignee:focus-visible{color:var(--ink);background:var(--paper);outline:none;}
+.m3-cat-poignee:active{cursor:grabbing;}
+.m3-cat.glisse{opacity:.45;}
+.m3-slot{height:14px;margin:-7px 0;position:relative;z-index:2;}
+.m3-slot.dans-parent{margin-left:18px;}
+#m3-cats-list.glisse-actif .m3-slot::before{content:"";display:block;height:3px;margin-top:5px;border-radius:2px;background:repeating-linear-gradient(90deg,var(--sauge-deep) 0 8px,transparent 8px 13px);}
+#m3-cats-list.glisse-actif .m3-slot.depot::before{height:5px;margin-top:4px;background:var(--sauge-deep);}
+.m3-cat.replie > .m3-slot{display:none;}
+.m3-cat.depot-dans{outline:2px dashed var(--sauge-deep);outline-offset:2px;}
+.m3-cat.depot-dans > .m3-cat-header{background:var(--sauge-pale);}
+.m3-cat.depot-dans > .m3-cat-header::after{content:"↳ sous-catégorie";font-size:11.5px;font-weight:700;color:var(--sauge-deep);white-space:nowrap;}
 
 /* Volet laissé vide par le déclarant : visible mais visiblement creux */
 .m3-item.item-vide{
@@ -10337,6 +10352,79 @@ const _CONTROLES = [
     } finally { state.m3.sous = sauve; }
   }},
 
+  {nom:'Catégories : on les réordonne et on les imbrique en les glissant (un seul niveau)', test: () => {
+    const sauve = JSON.stringify(state.m3.categories.cp);
+    const vraiPersist = persist; persist = () => {};
+    const vraiToast = showToast; showToast = () => {};
+    try {
+      const cats = state.m3.categories.cp;
+      Object.keys(cats).forEach(k => delete cats[k]);
+      cats.a = {nom: 'A', color: '#111111', items: []};
+      cats.b = {nom: 'B', color: '#222222', items: ['x']};
+      cats.c = {nom: 'C', color: '#333333', items: []};
+      cats.d = {nom: 'D', color: '#111111', items: [], parent: 'a'};
+      const vue = () => catsRacines('cp').map(r => cats[r].nom + (catsEnfants('cp', r).length ? '(' + catsEnfants('cp', r).map(e => cats[e].nom).join('+') + ')' : '')).join(' ');
+      const touche = (key, id) => clavierCat({key, preventDefault() {}}, 'cp', id);
+      const v = [];
+      deplacerCat('cp', 'c', null, 'a'); v.push(vue());                       // C devant A
+      deplacerCat('cp', 'b', 'c', null); v.push(vue());                       // B dans C
+      const couleur = cats.b.color === '#333333' && cats.b.items[0] === 'x';  // elle prend la couleur de C et garde ses éléments
+      const refus1 = deplacerCat('cp', 'a', 'c', null);                       // A a déjà une sous-catégorie : refus
+      const refus2 = deplacerCat('cp', 'c', 'b', null);                       // B est déjà une sous-catégorie : refus
+      v.push(vue());
+      deplacerCat('cp', 'd', null, 'c'); v.push(vue());                       // D sort de A, devant C
+      deplacerCat('cp', 'a', 'c', null); v.push(vue());                       // A (sans sous-catégorie) dans C
+      deplacerCat('cp', 'a', 'c', 'b'); v.push(vue());                        // A devant B, dans C
+      touche('ArrowDown', 'a'); v.push(vue());                                // ↓ : A après B
+      touche('ArrowLeft', 'a'); v.push(vue());                                // ← : A sort de C
+      touche('ArrowRight', 'a'); v.push(vue());                               // → : A dans la catégorie du dessus (C)
+      const ordreFichier = Object.keys(JSON.parse(JSON.stringify(cats))).join('') === Object.keys(cats).join('');
+      return _bancEgal('suites | couleur et éléments suivent | refus | ordre gardé dans le fichier',
+        'C A(D) B # C(B) A(D) # C(B) A(D) # D C(B) A # D C(B+A) # D C(A+B) # D C(B+A) # D C(B) A # D C(B+A) | true | false,false | true',
+        v.join(' # ') + ' | ' + couleur + ' | ' + [refus1, refus2].join(',') + ' | ' + ordreFichier);
+    } finally {
+      persist = vraiPersist; showToast = vraiToast;
+      const cats = state.m3.categories.cp;
+      Object.keys(cats).forEach(k => delete cats[k]);
+      Object.assign(cats, JSON.parse(sauve));
+      try { renderM3Sous('cp'); } catch (e) { /* vue masquée */ }
+    }
+  }},
+
+  {nom:'Catégories : la poignée et les emplacements sont là, et un vrai glisser-déposer imbrique', test: () => {
+    const sauve = JSON.stringify(state.m3.categories.cp);
+    const vraiPersist = persist; persist = () => {};
+    const vraiToast = showToast; showToast = () => {};
+    try {
+      const cats = state.m3.categories.cp;
+      Object.keys(cats).forEach(k => delete cats[k]);
+      cats.d = {nom: 'D', color: '#444444', items: []};
+      cats.c = {nom: 'C', color: '#333333', items: []};
+      cats.b = {nom: 'B', color: '#222222', items: [], parent: 'c'};
+      renderM3Sous('cp');
+      const poignees = document.querySelectorAll('#m3-cats-list .m3-cat-poignee');
+      const slots = document.querySelectorAll('#m3-cats-list .m3-slot');
+      const glissables = [...poignees].every(p => p.getAttribute('draggable') === 'true');
+      const dt = new DataTransfer();
+      const ev = (type, cible) => cible.dispatchEvent(new DragEvent(type, {bubbles: true, cancelable: true, dataTransfer: dt}));
+      const poigneeD = document.querySelector('#mcat-d > .m3-cat-header .m3-cat-poignee');
+      ev('dragstart', poigneeD);
+      const bloc = document.getElementById('mcat-c');
+      ev('dragover', bloc);
+      const survol = bloc.classList.contains('depot-dans');
+      ev('drop', bloc);
+      ev('dragend', poigneeD);
+      const apres = cats.d.parent === 'c' && cats.d.color === '#333333' && catGlisse === null;
+      return _bancEgal('poignées | emplacements | toutes glissables | surbrillance | D rangée dans C',
+        '3|5|true|true|true', [poignees.length, slots.length, glissables, survol, apres].join('|'));
+    } finally {
+      persist = vraiPersist; showToast = vraiToast;
+      const cats = state.m3.categories.cp;
+      Object.keys(cats).forEach(k => delete cats[k]);
+      Object.assign(cats, JSON.parse(sauve));
+      try { renderM3Sous('cp'); } catch (e) { /* vue masquée */ }
+    }
+  }},
   {nom:'Les couleurs des catégories se distinguent deux à deux', test: () => {
     /* Ce qui fait confondre deux catégories, c'est la teinte : les deux violets
        d'avant n'étaient séparés que de 10°, les deux rouges de 13°. Entre deux
@@ -12727,8 +12815,11 @@ function renderM3Sous(sousId) {
       const nEnfants = enfants.length;
       const compte = catItems.length + ' élément' + (catItems.length > 1 ? 's' : '') +
         (cat.replie && nEnfants ? ', ' + nEnfants + ' sous-catégorie' + (nEnfants > 1 ? 's' : '') : '');
-      return `<div class="m3-cat${estEnfant?' m3-cat-enfant':''}${cat.replie?' replie':''}" id="mcat-${catId}">
+      return `<div class="m3-cat${estEnfant?' m3-cat-enfant':''}${cat.replie?' replie':''}" id="mcat-${catId}" ${estEnfant ? 'ondragover="survolCatEnfant(event)"' : 'ondragover="survolCatDans(event,\'' + catId + '\')" ondragleave="quitterCatDans(event)" ondrop="deposerCatDans(event,\'' + catId + '\')"'}>
         <div class="m3-cat-header">
+          <span class="m3-cat-poignee no-print" role="button" tabindex="0" draggable="true" aria-label="Déplacer cette catégorie"
+            title="Glisser pour changer l'ordre, ou le déposer sur une autre catégorie pour en faire une sous-catégorie. Au clavier : ↑ ↓ pour monter ou descendre, → pour la ranger dans la catégorie du dessus, ← pour la sortir."
+            ondragstart="glisserCat(event,'${sousId}','${catId}')" ondragend="finGlisserCat()" onkeydown="clavierCat(event,'${sousId}','${catId}')">⠿</span>
           <button type="button" class="m3-cat-plier" aria-expanded="${cat.replie ? 'false' : 'true'}" title="${cat.replie ? 'Déplier' : 'Replier'} cette catégorie" onclick="basculerRepliCat('${sousId}','${catId}')">▾</button>
           <button type="button" class="m3-cat-color" style="background:${color};" title="Changer la couleur" aria-label="Changer la couleur de cette catégorie" onclick="ouvrirPaletteCat('${sousId}','${catId}',this,event)"></button>
           <input class="m3-cat-name" value="${esc(cat.nom)}"
@@ -12748,10 +12839,12 @@ function renderM3Sous(sousId) {
               </span>`).join('')
           }
         </div>
-        ${enfants.map((e, j) => blocCat(e, idx + j + 1, true)).join('')}
+        ${enfants.map((e, j) => slotCat(catId, e) + blocCat(e, idx + j + 1, true)).join('') + (enfants.length ? slotCat(catId, null) : '')}
       </div>`;
     };
-    catsEl.innerHTML = racines.map((catId, idx) => blocCat(catId, idx, false)).join('');
+    // Les « emplacements » entre les cartes servent à glisser ; inutiles s'il n'y a qu'une catégorie.
+    const plusieurs = Object.keys(cats).length > 1;
+    catsEl.innerHTML = racines.map((catId, idx) => (plusieurs ? slotCat(null, catId) : '') + blocCat(catId, idx, false)).join('') + (plusieurs ? slotCat(null, null) : '');
   }
   // Un seul bouton (Arthur, 02/10/2026) : « Tout replier » tant qu'une catégorie est dépliée.
   const plierEl = document.getElementById('m3-cats-plier');
@@ -12802,6 +12895,154 @@ function cheminCat(sousId, catId) {
   if (!cat) return '';
   const parent = cat.parent && cats[cat.parent];
   return parent ? `${parent.nom} › ${cat.nom}` : cat.nom;
+}
+
+/* ── Changer l'ordre des catégories, les imbriquer (Arthur, 08/10/2026) ──────────
+   Une catégorie se glisse par sa poignée ⠿ :
+   · sur un emplacement entre deux cartes : elle prend cette place (dans le même niveau) ;
+   · sur une autre catégorie : elle devient sa sous-catégorie ;
+   · sur un emplacement au premier niveau : une sous-catégorie sort de sa catégorie.
+   On s'arrête à un niveau de sous-catégories : une catégorie qui a déjà des sous-catégories ne se range pas dans
+   une autre, et on ne range rien dans une sous-catégorie. Ses éléments la suivent ; une sous-catégorie prend la
+   couleur de sa catégorie, comme à sa création. L'ordre est celui des clés de l'objet : on le réécrit sur place. */
+let catGlisse = null;   // {sousId, catId} pendant un glisser
+
+function motifRefusDeplacement(sousId, catId, parentId) {
+  const cats = state.m3.categories[sousId] || {};
+  const cat = cats[catId];
+  if (!cat) return 'Catégorie introuvable.';
+  if (!parentId) return '';
+  if (parentId === catId) return 'Une catégorie ne peut pas se ranger dans elle-même.';
+  const parent = cats[parentId];
+  if (!parent) return 'Catégorie introuvable.';
+  if (parent.parent && cats[parent.parent]) return '« ' + parent.nom + ' » est déjà une sous-catégorie : on s\'arrête à un niveau.';
+  if (catsEnfants(sousId, catId).length) return '« ' + cat.nom + ' » a déjà des sous-catégories : on s\'arrête à un niveau. Déplacez d\'abord ses sous-catégories.';
+  return '';
+}
+
+/* Place `catId` sous `parentId` (null : au premier niveau), devant `avantId` (null : à la fin). Renvoie vrai si fait. */
+function deplacerCat(sousId, catId, parentId, avantId) {
+  ensureM3();
+  const cats = state.m3.categories[sousId] || {};
+  const motif = motifRefusDeplacement(sousId, catId, parentId);
+  if (motif) { showToast(motif); return false; }
+  const cat = cats[catId];
+  const ancienParent = cat.parent && cats[cat.parent] ? cat.parent : null;
+  const bloc = [catId].concat(catsEnfants(sousId, catId));   // une catégorie emmène ses sous-catégories
+  const ordre = Object.keys(cats).filter(id => bloc.indexOf(id) === -1);
+  let pos;
+  if (avantId && ordre.indexOf(avantId) !== -1) pos = ordre.indexOf(avantId);
+  else if (parentId) {
+    const freres = catsEnfants(sousId, parentId).filter(id => id !== catId);
+    pos = ordre.indexOf(freres.length ? freres[freres.length - 1] : parentId) + 1;
+  } else pos = ordre.length;
+  Array.prototype.splice.apply(ordre, [pos, 0].concat(bloc));
+  const gardees = {};
+  ordre.forEach(id => { gardees[id] = cats[id]; });
+  Object.keys(cats).forEach(id => { delete cats[id]; });
+  ordre.forEach(id => { cats[id] = gardees[id]; });
+  if (parentId) {
+    cat.parent = parentId;
+    if (cats[parentId].color) cat.color = cats[parentId].color;
+    delete cats[parentId].replie;   // on voit où elle est allée
+  } else delete cat.parent;
+  persist();
+  renderM3Sous(sousId);
+  if (parentId && parentId !== ancienParent) showToast('« ' + cat.nom + ' » est maintenant une sous-catégorie de « ' + cats[parentId].nom + ' ».');
+  else if (!parentId && ancienParent) showToast('« ' + cat.nom + ' » est de nouveau une catégorie à part entière.');
+  return true;
+}
+
+// L'emplacement entre deux cartes (parent : la catégorie qui l'accueille, ou rien au premier niveau).
+function slotCat(parentId, avantId) {
+  return '<div class="m3-slot no-print' + (parentId ? ' dans-parent' : '') + '" data-parent="' + (parentId || '') + '" data-avant="' + (avantId || '') +
+    '" ondragover="survolSlot(event,this)" ondragleave="quitterSlot(this)" ondrop="deposerSlot(event,this)"></div>';
+}
+function glisserCat(ev, sousId, catId) {
+  catGlisse = {sousId, catId};
+  if (ev.dataTransfer) {
+    ev.dataTransfer.effectAllowed = 'move';
+    try {
+      ev.dataTransfer.setData('text/plain', catId);
+      const tete = ev.currentTarget && ev.currentTarget.closest ? ev.currentTarget.closest('.m3-cat-header') : null;
+      if (tete && ev.dataTransfer.setDragImage) ev.dataTransfer.setDragImage(tete, 16, 16);
+    } catch (e) { /* certains navigateurs */ }
+  }
+  // Après le départ du glisser : changer l'affichage plus tôt l'annulerait dans certains navigateurs.
+  setTimeout(() => {
+    const bloc = document.getElementById('mcat-' + catId);
+    if (bloc && catGlisse) bloc.classList.add('glisse');
+    const liste = document.getElementById('m3-cats-list');
+    if (liste && catGlisse) liste.classList.add('glisse-actif');
+  }, 0);
+}
+function finGlisserCat() {
+  catGlisse = null;
+  const liste = document.getElementById('m3-cats-list');
+  if (liste) {
+    liste.classList.remove('glisse-actif');
+    liste.querySelectorAll('.glisse, .depot, .depot-dans').forEach(e => e.classList.remove('glisse', 'depot', 'depot-dans'));
+  }
+}
+function survolSlot(ev, slot) {
+  if (!catGlisse) return;
+  ev.stopPropagation();
+  if (motifRefusDeplacement(catGlisse.sousId, catGlisse.catId, slot.dataset.parent || null)) return;
+  ev.preventDefault();
+  if (ev.dataTransfer) ev.dataTransfer.dropEffect = 'move';
+  slot.classList.add('depot');
+}
+function quitterSlot(slot) { slot.classList.remove('depot'); }
+function deposerSlot(ev, slot) {
+  ev.preventDefault();
+  ev.stopPropagation();
+  const g = catGlisse;
+  finGlisserCat();
+  if (g) deplacerCat(g.sousId, g.catId, slot.dataset.parent || null, slot.dataset.avant || null);
+}
+// Sur une catégorie : « dedans ». Une sous-catégorie ne reçoit rien et empêche sa catégorie de réagir à sa place.
+function survolCatDans(ev, id) {
+  if (!catGlisse) return;
+  ev.stopPropagation();
+  if (id === catGlisse.catId || motifRefusDeplacement(catGlisse.sousId, catGlisse.catId, id)) return;
+  ev.preventDefault();
+  if (ev.dataTransfer) ev.dataTransfer.dropEffect = 'move';
+  if (ev.currentTarget) ev.currentTarget.classList.add('depot-dans');
+}
+function quitterCatDans(ev) {
+  const c = ev.currentTarget;
+  if (c && !(ev.relatedTarget && c.contains(ev.relatedTarget))) c.classList.remove('depot-dans');
+}
+function survolCatEnfant(ev) { if (catGlisse) ev.stopPropagation(); }
+function deposerCatDans(ev, id) {
+  ev.preventDefault();
+  ev.stopPropagation();
+  const g = catGlisse;
+  finGlisserCat();
+  if (g && id !== g.catId) deplacerCat(g.sousId, g.catId, id, null);
+}
+// Au clavier : ↑ ↓ changent la place, → range dans la catégorie du dessus, ← sort de sa catégorie.
+function clavierCat(ev, sousId, catId) {
+  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].indexOf(ev.key) === -1) return;
+  ev.preventDefault();
+  const cats = state.m3.categories[sousId] || {};
+  const cat = cats[catId];
+  if (!cat) return;
+  const parentId = cat.parent && cats[cat.parent] ? cat.parent : null;
+  const freres = parentId ? catsEnfants(sousId, parentId) : catsRacines(sousId);
+  const i = freres.indexOf(catId);
+  let fait = false;
+  if (ev.key === 'ArrowUp' && i > 0) fait = deplacerCat(sousId, catId, parentId, freres[i - 1]);
+  else if (ev.key === 'ArrowDown' && i >= 0 && i < freres.length - 1) fait = deplacerCat(sousId, catId, parentId, freres[i + 2] || null);
+  else if (ev.key === 'ArrowRight' && !parentId && i > 0) fait = deplacerCat(sousId, catId, freres[i - 1], null);
+  else if (ev.key === 'ArrowLeft' && parentId) {
+    const racines = catsRacines(sousId);
+    fait = deplacerCat(sousId, catId, null, racines[racines.indexOf(parentId) + 1] || null);
+  }
+  if (fait) setTimeout(() => {
+    const p = document.querySelector('#mcat-' + catId + ' > .m3-cat-header .m3-cat-poignee');
+    if (p) p.focus();
+  }, 0);
 }
 
 function ajouterSousCategorie(sousId, parentId) {
@@ -18505,7 +18746,7 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
-const ACTIVITE_CODE = {"jusqua":"2026-10-05","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":3820,"retrait":915,"depots":41}]};
+const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":4348,"retrait":962,"depots":42}]};
 
 function svgActiviteCode() {
   const mois = ACTIVITE_CODE.mois || [];
@@ -18544,6 +18785,23 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-08',
+    version: 'v2026.10.08-2',
+    titre: "Organiser : glisser les catégories pour les réordonner ou les imbriquer",
+    corps: `
+<p><b>Organiser</b> : les catégories se déplacent maintenant à la souris. Chaque catégorie a une poignée <b>⠿</b> à gauche de son nom.</p>
+<ul>
+<li><b>Changer l'ordre</b> : glissez la poignée, et déposez-la entre deux catégories (une ligne apparaît aux endroits possibles).</li>
+<li><b>En faire une sous-catégorie</b> : déposez-la sur une autre catégorie. Ses éléments la suivent ; elle prend la couleur de sa catégorie, comme à sa création.</li>
+<li><b>La sortir</b> : une sous-catégorie glissée entre deux catégories du premier niveau redevient une catégorie à part entière ; elle se déplace aussi d'une sous-catégorie à une autre, et se range librement parmi ses voisines.</li>
+<li><b>Un seul niveau</b>, comme avant : une catégorie qui a déjà des sous-catégories ne se range pas dans une autre, et on ne range rien dans une sous-catégorie ; l'outil le dit.</li>
+<li><b>Au clavier</b> : poignée sélectionnée, ↑ ↓ pour monter ou descendre, → pour la ranger dans la catégorie du dessus, ← pour la sortir.</li>
+</ul>
+<p>Cela marche dans les cinq volets. Le glisser n'existe pas sur écran tactile (téléphone, tablette) : seul le clavier permet de réordonner.</p>
+`
+  },
 
   {
     date: '2026-10-08',
