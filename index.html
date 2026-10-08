@@ -3549,6 +3549,68 @@ body.seq-selection .seq-case .seq-vide{display:none;}
 @media (max-width:600px){.synth-confiance .discret{display:none;}}
 @media (max-width:900px){.synth-page{grid-template-columns:minmax(0,1fr);}.synth-sommaire{display:none;}.synth-partie .kpi-row{grid-template-columns:1fr;}#view-synthese .deux-feuilles{grid-template-columns:1fr;}}
 @media print{.synth-page{display:block;}.synth-sommaire,.synth-tete-droite{display:none;}}
+/* ── Les pistes à discuter, l'équipe et les chiffres (passe 185) ── */
+.export-seul{display:none;}
+.synth-sommaire{max-height:calc(100vh - var(--header-h,60px) - var(--subbar-h,0px) - 36px);overflow:auto;scrollbar-width:thin;}
+.synth-epingles{margin:16px 4px 4px;padding:11px 12px 9px;border-radius:12px;background:var(--sel-pale);}
+.synth-epingles-tete{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--ink);}
+.synth-epingles ol{margin:8px 0 0;padding:0 0 0 16px;font-size:12px;line-height:1.4;color:var(--ink-soft);}
+.synth-epingles li{margin:0 0 6px;}
+.synth-epingles li.va{cursor:pointer;}
+.synth-epingles li.va:hover{color:var(--ink);}
+.synth-epingles p{margin:6px 0 0;font-size:11.5px;color:var(--ink-faint);}
+.epingle-retirer{float:right;margin:0 -4px 0 4px;padding:0 4px;border:0;border-radius:5px;background:transparent;font-size:11px;color:var(--ink-faint);cursor:pointer;}
+.epingle-retirer:hover{background:var(--sheet);color:var(--ink);}
+.synth-lire{display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px;margin:0 0 14px;padding:10px 14px;border-radius:12px;background:var(--slate-pale);font-size:12.5px;color:var(--slate);}
+.synth-lire[hidden]{display:none;}
+.synth-lire-ex{position:relative;display:inline-block;width:66px;height:18px;}
+.synth-lire-ex .a{position:absolute;left:0;right:0;top:8px;height:3px;border-radius:2px;background:var(--line);}
+.synth-lire-ex .t{position:absolute;left:22px;top:2px;width:2px;height:15px;background:var(--ink-soft);}
+.synth-lire-ex .p{position:absolute;left:46px;top:3px;width:12px;height:12px;border-radius:50%;background:var(--slate);}
+.synth-piste{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:24px;align-items:center;}
+.synth-piste.flash{animation:apparaitre .6s var(--ease);box-shadow:var(--ombre-feuille),0 0 0 3px var(--sel);}
+.synth-solidite{display:flex;align-items:center;gap:8px;margin:0 0 6px;font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--s);}
+.synth-solidite .pts{font-size:11px;letter-spacing:2px;}
+.piste-phrase{margin:0;font:400 17px/1.5 var(--police-lecture);color:var(--ink);}
+.piste-phrase b{font-weight:600;}
+.piste-pied{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:10px;}
+.bt.epingle.on{background:var(--sel-pale);box-shadow:inset 0 0 0 1.5px var(--sel-deep);color:#7A5C00;}
+.piste-episodes{display:none;margin-top:8px;font-size:12px;color:var(--ink-soft);}
+.synth-piste.eps-ouverts .piste-episodes{display:block;}
+.piste-episodes button{margin:2px 4px 2px 0;padding:1px 8px;border:0;border-radius:6px;background:var(--surface);font:600 12px var(--police-interface);color:var(--ink);cursor:pointer;}
+.piste-episodes button:hover{background:var(--slate-pale);}
+.synth-ecart{position:relative;height:84px;margin:0 16px;}
+.synth-ecart .axe{position:absolute;left:0;right:0;top:28px;height:4px;border-radius:2px;background:var(--line-feuille);}
+.synth-ecart .seg{position:absolute;top:28px;height:4px;border-radius:2px;background:var(--s);opacity:.45;}
+.synth-ecart .base{position:absolute;top:18px;width:2px;height:24px;margin-left:-1px;background:var(--ink-soft);}
+.synth-ecart .base span{position:absolute;top:27px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:10.5px;color:var(--ink-faint);}
+.synth-ecart .obs{position:absolute;top:21px;width:18px;height:18px;margin-left:-9px;border-radius:50%;background:var(--s);box-shadow:0 0 0 3px var(--sheet);}
+.synth-ecart .obs span{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:13px;font-weight:700;color:var(--s);}
+.synth-ecart .eff{position:absolute;right:-16px;bottom:0;font-size:11.5px;color:var(--ink-soft);}
+.synth-ecart .eff-word{display:none;}
+.synth-autres{margin-top:14px;}
+.synth-autres[hidden]{display:none;}
+.synth-autres-table{width:100%;border-collapse:collapse;font-size:13px;}
+.synth-autres-table th,.synth-autres-table td{padding:7px 8px;border-top:1px solid var(--line-feuille);text-align:left;vertical-align:middle;}
+.synth-autres-table th{border-top:0;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);}
+.synth-autres-table td.n{text-align:right;white-space:nowrap;color:var(--ink-soft);font-variant-numeric:tabular-nums;}
+.synth-tag{display:inline-block;margin:1px 0;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:600;}
+.synth-tag-vide{background:var(--surface);color:var(--ink-faint);}
+.synth-fleche{color:var(--ink-faint);}
+.synth-ligne{margin:0 0 6px;font-size:13px;line-height:1.7;}
+.synth-equipe{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:0 0 14px;}
+#view-synthese .synth-equipe > .feuille{margin:0;}
+.note-eq-titre{margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);}
+.synth-chaine{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:6px 0;}
+.synth-chaine i{font-style:normal;color:var(--ink-faint);}
+.synth-chaine i.monte{color:var(--vase-monte-deep);font-weight:700;}
+.synth-accord{display:inline-block;margin-top:8px;padding:4px 10px;border-radius:10px;font-size:12px;font-weight:600;line-height:1.45;}
+.synth-accord.oui{background:var(--sauge-pale);color:var(--vol-comportement-texte);}
+.synth-accord.peu{background:var(--surface);color:var(--ink-soft);}
+.note-eq p{margin:8px 0 0;font:400 14.5px/1.55 var(--police-lecture);color:var(--ink);}
+@media (max-width:900px){.synth-equipe{grid-template-columns:minmax(0,1fr);}}
+@media (max-width:700px){.synth-piste{grid-template-columns:minmax(0,1fr);gap:8px;}}
+@media print{.export-seul{display:block;}}
 #tiroir-notes .analyse-notes-champ{min-height:240px;margin:0;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font:400 14.5px/1.6 var(--police-lecture);resize:vertical;}
 .analyse-note{margin:0 0 14px;font-size:13px;color:var(--ink-soft);}
 .analyse-champ{margin:0 0 12px;padding:10px 14px;background:var(--card);border:1px solid var(--line);border-radius:10px;}
@@ -4590,6 +4652,7 @@ body.seq-selection .seq-case .seq-vide{display:none;}
         <button type="button" data-cible="synth-equipe" style="--c:var(--vol-comportement)" onclick="allerPartieSynthese('synth-equipe')"><i></i>Ce que l'équipe a repéré</button>
         <span class="synth-sommaire-titre">Le détail</span>
         <button type="button" data-cible="synth-tout" onclick="allerPartieSynthese('synth-tout')"><i></i>Toutes les données</button>
+        <div class="synth-epingles" id="synth-epingles-sommaire"></div>
       </nav>
 
       <div class="synth-lecture">
@@ -4645,24 +4708,32 @@ body.seq-selection .seq-case .seq-vide{display:none;}
           <div class="feuille synth-block" id="synth-montee"></div>
         </section>
 
-        <section class="synth-partie" id="synth-pistes" style="--c:var(--sel-deep)">
+        <section class="synth-partie" id="synth-pistes" style="--c:var(--sel-deep);--hl:var(--sel)">
           <div class="surtitre"><i></i>Les pistes à discuter</div>
           <p class="phrase" id="synth-phrase-pistes"></p>
-          <div class="feuille synth-block" id="synth-suggestions-card">
-            <div class="suggestion-section" id="synth-correlations-card"><div id="synth-correlations"></div></div>
+          <div class="feuille export-seul synth-epingles-export" id="synth-epingles-export"></div>
+          <div class="synth-lire" id="synth-lire-pistes">
+            <span class="synth-lire-ex no-print" aria-hidden="true"><i class="a"></i><i class="t"></i><i class="p"></i></span>
+            <span>Le point : ce qu'on observe ; le trait : l'ordinaire.</span>
+            <span>Des co-occurrences calculées sur vos catégories, pas des causes.</span>
+            <span>●●● au moins 10 épisodes et deux fois l'ordinaire · ●●○ au moins 5 et 1,4 fois.</span>
           </div>
+          <div id="synth-pistes-liste"></div>
+          <details class="repli synth-tout-bloc synth-autres" id="synth-autres"><summary id="synth-autres-titre"></summary><div class="repli-corps" id="synth-autres-corps"></div></details>
         </section>
 
         <section class="synth-partie" id="synth-equipe" style="--c:var(--vol-comportement-deep);--hl:var(--vol-comportement-hl)">
           <div class="surtitre"><i></i>Ce que l'équipe a repéré</div>
           <p class="phrase" id="synth-phrase-equipe"></p>
-          <div class="feuille synth-block"><div id="synth-m4"></div></div>
+          <div id="synth-m4"></div>
         </section>
 
         <section class="synth-partie" id="synth-tout">
           <div class="surtitre">Le détail</div>
           <p class="phrase petite">Toutes les données, pour qui veut vérifier.</p>
           <details class="repli synth-tout-bloc"><summary>Les catégories, volet par volet</summary><div class="repli-corps"><div id="synth-m3"></div></div></details>
+          <details class="repli synth-tout-bloc"><summary>Les séquences complètes qui reviennent</summary><div class="repli-corps" id="synth-sequences"></div></details>
+          <details class="repli synth-tout-bloc"><summary>Quand le contexte change l'effet d'un antécédent</summary><div class="repli-corps" id="synth-modulations"></div></details>
           <details class="repli synth-tout-bloc"><summary>Quand un nouveau comportement apparaît après une intervention</summary><div class="repli-corps" id="synth-chaines"></div></details>
           <details class="repli synth-tout-bloc"><summary>L'indice de confiance, critère par critère</summary><div class="repli-corps"><button type="button" class="bt" onclick="ouvrirTiroir('tiroir-indice')">Ouvrir le détail</button></div></details>
         </section>
@@ -9944,80 +10015,6 @@ function refreshSynthese(){
     }
   }
 
-  // ── M4 : patterns + gradations + vase ──────────────────────────────────
-  const synthM4El = document.getElementById('synth-m4');
-  if (synthM4El) {
-    ensureM4();
-    const patterns = state.m4.patterns || [];
-    const grads = state.m4.gradations || [];
-    // Le vase se calcule aussi sur les épisodes cotés : il peut s'afficher avant
-    // qu'on ait rien écrit dans Interpréter.
-    const saisi = patterns.length > 0 || grads.length > 0 || vaseSaisiDansInterpreter();
-    const blocVase = blocVaseSynthese();
-    if (!saisi && !blocVase) {
-      synthM4El.innerHTML = '<span style="color:var(--ink-soft);font-style:italic;">L’étape Interpréter (module 2) n’a pas encore été remplie.</span>';
-    } else {
-      let html = saisi ? '' : '<div style="color:var(--ink-soft);font-style:italic;margin-bottom:12px;">L’étape Interpréter (module 2) n’a pas encore été remplie.</div>';
-      if (patterns.length > 0) {
-        ensureM3();
-        const cats3 = state.m3.categories;
-        html += `<div style="margin-bottom:14px;">
-          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin-bottom:8px;">🔗 Patterns ABC proposés (${patterns.length})</div>`;
-        patterns.forEach((p, i) => {
-          const getLabel = (sousId, catId) => {
-            if (!catId) return '?';
-            const c = (cats3[sousId] || {})[catId];
-            return c ? c.nom : '?';
-          };
-          const pastille = (txt, fond, encre) => `<span style="background:${fond};color:${encre};border-radius:6px;padding:3px 9px;font-size:13px;">${esc(txt)}</span>`;
-          const xsIds = (p.xs || []).filter(Boolean);
-          const asIds = (p.as && p.as.length) ? p.as : (p.a ? [p.a] : []);
-          const csIds = (p.cs && p.cs.length) ? p.cs : (p.c ? [p.c] : []);
-          const groupe = (ids, sousId, fond, encre) => ids.filter(Boolean).length
-            ? ids.filter(Boolean).map(id => pastille(getLabel(sousId, id), fond, encre)).join('<span style="color:var(--ink-soft);font-size:11px;"> + </span>')
-            : pastille('?', fond, encre);
-          html += `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;font-size:13.5px;">
-            <span style="font-weight:700;color:var(--ink-soft);font-size:12px;">Pattern ${i+1}</span>
-            ${xsIds.length ? groupe(xsIds, 'contexte', 'var(--vol-contexte-pale)', 'var(--vol-contexte-texte)') + '<span style="color:var(--ink-soft);">→</span>' : ''}
-            ${groupe(asIds, 'antecedents', 'var(--vol-antecedent-pale)', 'var(--vol-antecedent-texte)')}
-            <span style="color:var(--ink-soft);">→</span>
-            ${pastille(getLabel('cp', p.b), 'var(--vol-comportement-pale)', 'var(--vol-comportement-texte)')}
-            <span style="color:var(--ink-soft);">→</span>
-            ${groupe(csIds, 'consequences', 'var(--vol-consequence-pale)', 'var(--vol-consequence-texte)')}
-            ${p.b2 ? `<span style="color:var(--ink-soft);">↳</span>${pastille(getLabel('cp', p.b2), 'var(--vol-comportement-pale)', 'var(--vol-comportement-texte)')}<span style="font-size:10.5px;color:var(--ink-soft);">post-intervention</span>` : ''}
-          </div>`;
-        });
-        html += '</div>';
-      }
-      if (grads.length > 0) {
-        ensureM3();
-        const catsCp = state.m3.categories.cp || {};
-        const pastilleCp = (id) => '<span style="background:var(--vol-comportement-pale);color:var(--vol-comportement-texte);border-radius:6px;padding:3px 9px;font-size:13px;">' +
-          esc(catsCp[id] ? cheminCatDans(catsCp, id) : '?') + '</span>';
-        html += '<div style="margin-bottom:14px;">' +
-          '<div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin-bottom:8px;">📈 Séquences de montée en tension (' + grads.length + ')</div>' +
-          grads.map(g => {
-            const etapes = (g.cps || []).filter(Boolean);
-            return '<div style="margin-bottom:10px;">' +
-              '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13.5px;">' +
-                '<span style="font-weight:700;color:var(--ink-soft);font-size:12px;">' + esc(g.label || 'Séquence') + '</span>' +
-                (etapes.length
-                  ? etapes.map(pastilleCp).join('<span style="color:var(--rose-deep);font-weight:700;">↗</span>')
-                  : '<span style="color:var(--ink-soft);font-style:italic;">aucune étape choisie</span>') +
-              '</div>' +
-              (g.note && g.note.trim() ? '<div style="font-size:12.5px;color:var(--ink-soft);font-style:italic;margin-top:4px;">' + esc(g.note.trim()) + '</div>' : '') +
-            '</div>';
-          }).join('') +
-        '</div>';
-      }
-      html += blocVase;
-      synthM4El.innerHTML = html;
-    }
-  }
-
-  // Co-occurrences
-  renderCorrelations();
-
   // Indice de confiance du recueil
   renderIndice();
 
@@ -10131,24 +10128,360 @@ function renderSyntheseLecture() {
   pose('synth-histo-contexte', barresSynth('contexte', 'Contexte', 'de plus loin') || vide('contexte'));
   pose('synth-phrase-apres', csq.length ? 'Ce qui suit le plus souvent, pour ' + esc(prenom) + ' : ' + listeCats(csq, 2, ' ou ') + '.' : 'Catégorisez les conséquences (Analyser › Catégoriser) pour voir ce que ça lui apporte.');
   pose('synth-histo-consequences', barresSynth('consequences', 'Conséquences pour ' + prenom, 'juste après') || vide('consequences'));
-  // La tension
+  // La tension : ce que chaque intervention a fait (redescente à gauche, montée à droite), puis le palier atteint par comportement.
   const parties = partiesStatsGradation();
-  pose('synth-phrase-tension', monte ? 'Après ' + emSynth(guillemetsSynth(monte.nom)) + ', la tension monte ' + monte.nAug + ' fois sur ' + monte.n + '.'
-    : stG.nEffet ? 'Aucune intervention ne se détache par la montée de la tension.' : 'Notez l\'effet des interventions (Analyser › Découper) pour voir ce qui fait monter ou redescendre la tension.');
-  const chaines = parties.filter(p => p.indexOf('data-partie="chaines"') >= 0), montee = parties.filter(p => chaines.indexOf(p) < 0);
-  pose('synth-montee', montee.length ? montee.join('') : '<p class="discret">Pas encore assez d\'interventions catégorisées, avec leur effet, pour en dire quelque chose.</p>');
+  const descend = Object.values(stG.effets).filter(e => e.n >= 3 && e.nDesc / e.n >= 0.5).sort((a, b) => (b.nDesc / b.n) - (a.nDesc / a.n) || b.n - a.n)[0];
+  const phrasesT = [];
+  if (monte) phrasesT.push('après ' + emSynth(guillemetsSynth(monte.nom)) + ', la tension monte ' + monte.nAug + ' fois sur ' + monte.n);
+  if (descend) phrasesT.push('après ' + emSynth(guillemetsSynth(descend.nom)) + ', ' + (monte ? 'elle' : 'la tension') + ' redescend ' + descend.nDesc + ' fois sur ' + descend.n);
+  const phraseT = phrasesT.join(' ; ');
+  pose('synth-phrase-tension', phraseT ? phraseT.charAt(0).toUpperCase() + phraseT.slice(1) + '.'
+    : stG.nEffet ? 'Aucune intervention ne se détache, ni par la montée de la tension, ni par sa redescente.' : 'Notez l\'effet des interventions (Analyser › Découper) pour voir ce qui fait monter ou redescendre la tension.');
+  const diverge = partieDivergeSynthese(stG);
+  const paliers = parties.filter(p => p.indexOf('data-partie="paliers"') >= 0), chaines = parties.filter(p => p.indexOf('data-partie="chaines"') >= 0);
+  pose('synth-montee', diverge || paliers.length ? diverge + paliers.join('') : '<p class="discret">Pas encore assez d\'interventions catégorisées, avec leur effet, pour en dire quelque chose.</p>');
   // Son titre est déjà celui du repli.
   pose('synth-chaines', chaines.length ? chaines.join('').replace(/<div class="sg-titre">[^<]*<\/div>/, '') : '<p class="discret">Aucun comportement catégorisé n\'est encore apparu après une intervention.</p>');
-  // Les pistes, l'équipe
-  const carte = document.getElementById('synth-correlations-card');
-  const pistesVides = !carte || carte.style.display === 'none';
-  pose('synth-phrase-pistes', pistesVides ? 'Rien ne se détache pour l\'instant : il faut des épisodes catégorisés pour que des rapprochements apparaissent.'
-    : 'Les rapprochements que font apparaître les données, avec leurs effectifs : ' + emSynth('des co-occurrences, pas des causes') + '.');
-  ensureM4();
-  const nP = (state.m4.patterns || []).length, nG = (state.m4.gradations || []).length;
-  pose('synth-phrase-equipe', nP || nG ? (nP ? nP + ' pattern' + (nP > 1 ? 's' : '') + ' ABC' : '') + (nP && nG ? ' et ' : '') + (nG ? nG + ' séquence' + (nG > 1 ? 's' : '') + ' de montée' : '') + ' proposé' + (nP + nG > 1 ? 's' : '') + ' par l\'équipe, dans Interpréter.'
-    : 'L\'équipe n\'a encore rien proposé dans Interpréter : patterns, séquences de montée, vase.');
+  // Les pistes, l'équipe, le détail des croisements : un seul calcul pour les trois.
+  const r = rapprochementsSynthese();
+  renderPistesSynthese(r);
+  renderEquipeSynthese(r);
+  renderDetailCroisements(r);
   initSommaireSynthese();
+}
+/* ── Les pistes à discuter (passe 185) ─────────────────────────────────────────────────────────────────────────────
+   Tous les rapprochements que la BAF sait compter, ramenés à une même forme : ce qu'on observe (obs) à côté de
+   l'ordinaire (base), avec l'effectif (n sur N). N'est une piste que ce qui s'écarte NETTEMENT de l'ordinaire, sur
+   assez d'épisodes : au moins 5, et au moins 1,4 fois l'ordinaire ; ●●● à partir de 10 et de 2 fois (validé par
+   Arthur, 08/10/2026). Le reste est replié dessous, avec la raison. Ce sont des co-occurrences, pas des causes. */
+const PISTE_MIN = 5, PISTE_ECART = 1.4, PISTE_FORT_MIN = 10, PISTE_FORT_ECART = 2, PISTES_MAX = 8;
+function soliditePiste(n, obs, base) {
+  const ratio = base > 0 ? obs / base : (obs > 0 ? Infinity : 0);
+  if (n >= PISTE_FORT_MIN && ratio >= PISTE_FORT_ECART - 1e-9) return 3;
+  if (n >= PISTE_MIN && ratio >= PISTE_ECART - 1e-9) return 2;
+  return 0;
+}
+function rapprochementsSynthese() {
+  ensureM3();
+  const evts = state.m2.evenements || [];
+  const SEP = '¦';
+  const tous = [];
+  const ajouter = (type, g, d, n, N, obs, base, eps) => {
+    if (n < CORR_MIN || !N || !(obs > base)) return;
+    tous.push({cle: type + SEP + g + SEP + d, type, g, d, n, N, obs, base, ratio: base > 0 ? obs / base : Infinity, sol: soliditePiste(n, obs, base), eps: [...new Set(eps)]});
+  };
+  // 1. Les séquences antécédent → CD → conséquence (une par épisode, une par CD quand ils se suivent).
+  const unites = unitesABC();
+  const nV = {A: {}, B: {}, C: {}}, avec = {A: 0, B: 0, C: 0}, paires = {};
+  unites.forEach(u => {
+    ['A', 'B', 'C'].forEach(v => { if (u[v].length) avec[v]++; u[v].forEach(x => { nV[v][x] = (nV[v][x] || 0) + 1; }); });
+    [['ab', 'A', 'B'], ['ac', 'A', 'C'], ['bc', 'B', 'C']].forEach(([t, vg, vd]) => u[vg].forEach(g => u[vd].forEach(d => {
+      const k = t + SEP + g + SEP + d;
+      const p = paires[k] || (paires[k] = {t, vg, vd, g, d, n: 0, eps: []});
+      p.n++; p.eps.push(u.evt.id);
+    })));
+  });
+  Object.values(paires).forEach(p => {
+    const N = nV[p.vg][p.g] || 0;
+    ajouter(p.t, p.g, p.d, p.n, N, N ? p.n / N : 0, avec[p.vd] ? (nV[p.vd][p.d] || 0) / avec[p.vd] : 0, p.eps);
+  });
+  // 2. Le contexte, épisode par épisode : ce qu'il change au comportement, et à la hauteur du vase (avec ce contexte, et sans).
+  const nX = {}, nB = {}, xb = {}, vase = {};
+  let evtB = 0, nCotes = 0, nHaut = 0;
+  evts.forEach(evt => {
+    if (!evt || !evt.id) return;
+    const X = catsDeEvt('contexte', evt.id), B = catsDeEvt('cp', evt.id);
+    if (B.length) evtB++;
+    B.forEach(b => { nB[b] = (nB[b] || 0) + 1; });
+    X.forEach(x => {
+      nX[x] = (nX[x] || 0) + 1;
+      B.forEach(b => { const k = x + SEP + b; const p = xb[k] || (xb[k] = {x, b, n: 0, eps: []}); p.n++; p.eps.push(evt.id); });
+    });
+    const pal = palierDe(tensionPicEvt(evt));
+    if (!pal) return;
+    const haut = pal.min >= 60;   // « angoissé » ou « débordé »
+    nCotes++;
+    if (haut) nHaut++;
+    X.forEach(x => { const v = vase[x] || (vase[x] = {n: 0, haut: 0, eps: []}); v.n++; if (haut) { v.haut++; v.eps.push(evt.id); } });
+  });
+  Object.values(xb).forEach(p => ajouter('xb', p.x, p.b, p.n, nX[p.x], p.n / nX[p.x], evtB ? (nB[p.b] || 0) / evtB : 0, p.eps));
+  Object.keys(vase).forEach(x => {
+    const v = vase[x], nSans = nCotes - v.n;
+    if (nSans >= SUGG_MIN_OCCURRENCES) ajouter('xv', x, '', v.haut, v.n, v.haut / v.n, (nHaut - v.haut) / nSans, v.eps);
+  });
+  // 3. L'effet des interventions sur la tension, à côté de celui de l'ensemble des interventions.
+  const stG = statsGradation(evts, state.m3.categories);
+  if (stG.nEffet) Object.values(stG.effets).forEach(e => {
+    ajouter('ivm', e.nom, '', e.nAug, e.n, e.nAug / e.n, stG.nAug / stG.nEffet, e.epsAug);
+    ajouter('ivd', e.nom, '', e.nDesc, e.n, e.nDesc / e.n, stG.nDesc / stG.nEffet, e.epsDesc);
+  });
+  const exces = p => (p.obs - p.base) * p.N;
+  tous.sort((p, q) => q.sol - p.sol || exces(q) - exces(p) || q.n - p.n);
+  const parCle = {};
+  tous.forEach(p => { parCle[p.cle] = p; });
+  return {tous, pistes: tous.filter(p => p.sol > 0), autres: tous.filter(p => !p.sol), parCle, unites, stG};
+}
+const VOLET_PISTE = {a: 'antecedent', b: 'comportement', c: 'consequence', x: 'contexte'};
+function tagSynth(nom, volet) {
+  return '<span class="synth-tag" style="background:var(--vol-' + volet + '-pale);color:var(--vol-' + volet + '-texte)">' + esc(nom) + '</span>';
+}
+function phrasePiste(p) {
+  const b = t => '<b>' + esc(guillemetsSynth(t)) + '</b>';
+  switch (p.type) {
+    case 'ab': return 'Après ' + b(p.g) + ', le comportement est plus souvent ' + b(p.d) + '.';
+    case 'ac': return 'Après ' + b(p.g) + ', l\'épisode se termine plus souvent par ' + b(p.d) + '.';
+    case 'bc': return 'Quand le comportement est ' + b(p.g) + ', ce qui suit est plus souvent ' + b(p.d) + '.';
+    case 'xb': return 'Quand ' + b(p.g) + ' est noté, le comportement est plus souvent ' + b(p.d) + '.';
+    case 'xv': return 'Quand ' + b(p.g) + ' est noté, le vase monte plus souvent jusqu\'à « angoissé » ou « débordé ».';
+    case 'ivm': return 'Après ' + b(p.g) + ', la tension <b>monte</b> plus souvent qu\'après les autres interventions.';
+    case 'ivd': return 'Après ' + b(p.g) + ', la tension <b>redescend</b> plus souvent qu\'après les autres interventions.';
+  }
+  return '';
+}
+function textePiste(p) { const d = document.createElement('div'); d.innerHTML = phrasePiste(p); return d.textContent; }
+function courtPiste(p) {
+  const f = ' <span class="synth-fleche">→</span> ';
+  if (p.type === 'xv') return tagSynth(p.g, 'contexte') + f + 'vase « angoissé » ou plus';
+  if (p.type === 'ivm' || p.type === 'ivd') return tagSynth(p.g, 'intervention') + f + (p.type === 'ivm' ? 'la tension monte' : 'la tension redescend');
+  return tagSynth(p.g, VOLET_PISTE[p.type.charAt(0)]) + f + tagSynth(p.d, VOLET_PISTE[p.type.charAt(1)]);
+}
+function courtTextePiste(p) {
+  const q = guillemetsSynth;
+  if (p.type === 'xv') return q(p.g) + ' → vase haut';
+  if (p.type === 'ivm' || p.type === 'ivd') return q(p.g) + (p.type === 'ivm' ? ' → la tension monte' : ' → la tension redescend');
+  return q(p.g) + ' → ' + q(p.d);
+}
+function libBasePiste(p) { return p.type === 'xv' ? 'sans ce contexte' : 'd\'habitude'; }
+function ratioTexte(r) { return r === Infinity ? '—' : '×' + (Math.round(r * 10) / 10).toString().replace('.', ','); }
+function pctSynth(x) { return Math.round(x * 100); }
+// Le dessin d'une piste : le point = ce qu'on observe, le trait = l'ordinaire ; l'écart se voit d'un coup d'œil.
+function dessinEcartPiste(p) {
+  const o = pctSynth(p.obs), b = pctSynth(p.base);
+  return '<div class="synth-ecart">' +
+    '<span class="axe"></span><span class="seg" style="left:' + b + '%;width:' + Math.max(0, o - b) + '%"></span>' +
+    '<span class="base" style="left:' + b + '%"><span>' + libBasePiste(p) + ' ' + b + ' %</span></span>' +
+    '<span class="obs" style="left:' + o + '%"><span>' + o + ' %</span></span>' +
+    '<span class="eff">' + p.n + ' sur ' + p.N + ' · ' + ratioTexte(p.ratio) + '</span>' +
+    '<span class="eff-word">' + p.n + ' sur ' + p.N + ' (' + o + ' %), ' + libBasePiste(p) + ' ' + b + ' % · ' + ratioTexte(p.ratio) + '</span>' +
+  '</div>';
+}
+function poserSynth(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
+let pistesSynthese = [];
+function renderPistesSynthese(r) {
+  const liste = document.getElementById('synth-pistes-liste');
+  if (!liste) return;
+  ensureM4();
+  if (!Array.isArray(state.m4.epingles)) state.m4.epingles = [];
+  const epinglees = new Set(state.m4.epingles.map(e => e.cle));
+  const rangs = {};
+  (state.m2.evenements || []).forEach((e, i) => { if (e && e.id) rangs[e.id] = i + 1; });
+  pistesSynthese = r.pistes.slice(0, PISTES_MAX);
+  const reste = r.pistes.slice(PISTES_MAX).concat(r.autres);
+  liste.innerHTML = pistesSynthese.map((p, i) => {
+    const on = epinglees.has(p.cle);
+    const eps = p.eps.filter(id => rangs[id]).sort((a, b) => rangs[a] - rangs[b]);
+    return '<div class="feuille synth-piste" id="synth-piste-' + i + '" style="--s:' + (p.sol === 3 ? 'var(--sel-deep)' : 'var(--slate)') + '">' +
+      '<div class="synth-piste-texte">' +
+        '<div class="synth-solidite"><span class="pts">' + (p.sol === 3 ? '●●●' : '●●○') + '</span>' + (p.sol === 3 ? 'À regarder en premier' : 'Piste') + '</div>' +
+        '<p class="piste-phrase">' + phrasePiste(p) + '</p>' +
+        '<div class="piste-pied no-print">' +
+          '<button type="button" class="bt epingle' + (on ? ' on' : '') + '" onclick="epinglerPiste(' + i + ')">' + (on ? '📌 À discuter' : '📌 Garder pour la réunion') + '</button>' +
+          (eps.length ? '<button type="button" class="bt-lien" onclick="this.closest(\'.synth-piste\').classList.toggle(\'eps-ouverts\')">voir ' + (eps.length > 1 ? 'les ' + eps.length + ' épisodes' : 'l\'épisode') + '</button>' : '') +
+        '</div>' +
+        (eps.length ? '<div class="piste-episodes no-print">Épisodes : ' + eps.map(id => '<button type="button" data-evt="' + esc(String(id)) + '" onclick="voirEpisodeSynthese(this.dataset.evt)" title="Ouvrir l\'épisode dans Analyser">' + rangs[id] + '</button>').join('') + '</div>' : '') +
+      '</div>' + dessinEcartPiste(p) +
+    '</div>';
+  }).join('');
+  const autres = document.getElementById('synth-autres');
+  if (autres) {
+    autres.hidden = !reste.length;
+    poserSynth('synth-autres-titre', reste.length > 1 ? reste.length + ' autres rapprochements, plus faibles ou sur trop peu d\'épisodes' : reste.length ? 'Un autre rapprochement, plus faible ou sur trop peu d\'épisodes' : '');
+    poserSynth('synth-autres-corps', reste.length ? tableAutresPistes(reste.slice(0, 40)) + (reste.length > 40 ? '<p class="discret">… et ' + (reste.length - 40) + ' autres.</p>' : '') : '');
+  }
+  const lire = document.getElementById('synth-lire-pistes');
+  if (lire) lire.hidden = !pistesSynthese.length;
+  const k = r.pistes.length, k3 = r.pistes.filter(p => p.sol === 3).length;
+  const categorise = r.unites.some(u => u.A.length || u.B.length || u.C.length);
+  poserSynth('synth-phrase-pistes', !categorise && !k ? 'Rien ne se détache pour l\'instant : il faut des épisodes catégorisés pour que des rapprochements apparaissent.'
+    : !k ? 'Aucun rapprochement ne sort nettement de l\'ordinaire pour l\'instant.'
+    : (k > 1 ? k + ' rapprochements ' + emSynth('sortent nettement de l\'ordinaire') : 'Un rapprochement ' + emSynth('sort nettement de l\'ordinaire')) +
+      (k3 ? ', dont ' + (k3 > 1 ? k3 + ' à regarder en premier' : 'un à regarder en premier') : '') + (k > PISTES_MAX ? ' ; les ' + PISTES_MAX + ' plus nets ci-dessous' : '') + '.');
+  renderEpinglesSynthese(r);
+}
+function tableAutresPistes(l) {
+  const motif = p => p.sol ? (p.sol === 3 ? '●●● piste' : '●●○ piste') : p.n < PISTE_MIN ? 'trop peu d\'épisodes' : p.ratio < 1.15 ? 'presque l\'ordinaire' : 'écart modeste';
+  return '<table class="synth-autres-table"><thead><tr><th>Rapprochement</th><th>Observé</th><th>Comparé à</th><th></th></tr></thead><tbody>' +
+    l.map(p => '<tr><td>' + courtPiste(p) + '</td><td class="n">' + p.n + ' sur ' + p.N + ' · ' + pctSynth(p.obs) + ' %</td>' +
+      '<td class="n">' + libBasePiste(p) + ' ' + pctSynth(p.base) + ' %</td><td class="n">' + motif(p) + '</td></tr>').join('') + '</tbody></table>';
+}
+// 📌 Les pistes gardées pour la réunion : dans le fichier socle (state.m4.epingles), jamais dans un codage vierge.
+function renderEpinglesSynthese(r) {
+  const ep = (state.m4 && state.m4.epingles) || [];
+  const item = (e, k, retirer) => {
+    const p = r.parCle[e.cle];
+    const i = pistesSynthese.findIndex(x => x.cle === e.cle);
+    const libelle = retirer ? (p ? courtTextePiste(p) : (e.court || e.texte)) : e.texte;
+    return '<li' + (retirer && i >= 0 ? ' class="va" onclick="allerPisteSynthese(' + i + ')"' : '') + ' title="' + esc(e.texte) + '">' + (retirer ? '<button type="button" class="epingle-retirer" title="Ne plus garder pour la réunion" aria-label="Ne plus garder pour la réunion" onclick="event.stopPropagation(); desepinglerPiste(' + k + ')">✕</button>' : '') + esc(libelle) +
+      (retirer ? (p ? '' : ' <span class="discret">· n\'apparaît plus dans les données</span>')
+        : p ? ' <span class="discret">· ' + p.n + ' sur ' + p.N + ', ' + ratioTexte(p.ratio) + '</span>' : ' <span class="discret">· n\'apparaît plus dans les données</span>') +
+      '</li>';
+  };
+  poserSynth('synth-epingles-sommaire', '<div class="synth-epingles-tete">📌 À discuter <span class="compteur">' + ep.length + '</span></div>' +
+    (ep.length ? '<ol>' + ep.map((e, k) => item(e, k, true)).join('') + '</ol>' : '<p>Épinglez une piste pour la garder pour la réunion.</p>'));
+  poserSynth('synth-epingles-export', ep.length ? '<div class="feuille-titre">📌 À discuter en réunion</div><ol>' + ep.map((e, k) => item(e, k, false)).join('') + '</ol>' : '');
+}
+function epinglerPiste(i) {
+  const p = pistesSynthese[i];
+  if (!p) return;
+  ensureM4();
+  if (!Array.isArray(state.m4.epingles)) state.m4.epingles = [];
+  const k = state.m4.epingles.findIndex(e => e.cle === p.cle);
+  if (k >= 0) state.m4.epingles.splice(k, 1);
+  else state.m4.epingles.push({cle: p.cle, texte: textePiste(p), court: courtTextePiste(p)});
+  persist();
+  renderPistesSynthese(rapprochementsSynthese());
+}
+function desepinglerPiste(k) {
+  ensureM4();
+  if (!Array.isArray(state.m4.epingles) || !state.m4.epingles[k]) return;
+  state.m4.epingles.splice(k, 1);
+  persist();
+  renderPistesSynthese(rapprochementsSynthese());
+}
+function allerPisteSynthese(i) {
+  const c = document.getElementById('synth-piste-' + i);
+  if (!c) return;
+  marquerSommaireSynthese('synth-pistes');
+  sommaireSyntheseFige = Date.now() + 1000;
+  c.scrollIntoView({behavior: 'smooth', block: 'center'});
+  c.classList.remove('flash'); void c.offsetWidth; c.classList.add('flash');
+}
+// « Voir les épisodes » : chacun s'ouvre dans Analyser, sur son déclaratif brut.
+function voirEpisodeSynthese(id) {
+  const i = analyseEpisodes().findIndex(e => String(e.id) === String(id));
+  if (i < 0) return;
+  const e = analyseEtat();
+  e.episode = i;
+  e.pos = 0;
+  route('analyser');
+}
+// L'équipe et les chiffres se répondent : pour chaque intuition d'Interpréter, la BAF dit si les chiffres vont dans le même sens.
+function renderEquipeSynthese(r) {
+  const el = document.getElementById('synth-m4');
+  if (!el) return;
+  ensureM3();
+  ensureM4();
+  const cats = state.m3.categories;
+  const nom = (sousId, id) => id && (cats[sousId] || {})[id] ? cheminCat(sousId, id) : '';
+  const pastille = (t, volet) => t ? tagSynth(t, volet) : '<span class="synth-tag synth-tag-vide">?</span>';
+  const groupe = (l, volet) => l.length ? l.map(t => pastille(t, volet)).join(' <span class="discret">+</span> ') : pastille('', volet);
+  const fl = '<i>→</i>';
+  const patterns = state.m4.patterns || [], grads = state.m4.gradations || [];
+  const saisi = patterns.length > 0 || grads.length > 0 || vaseSaisiDansInterpreter();
+  const blocVase = blocVaseSynthese();
+  const cartes = [];
+  let nAccord = 0;
+  patterns.forEach((p, i) => {
+    const X = (p.xs || []).map(id => nom('contexte', id)).filter(Boolean);
+    const A = (p.as && p.as.length ? p.as : (p.a ? [p.a] : [])).map(id => nom('antecedents', id)).filter(Boolean);
+    const B = nom('cp', p.b), B2 = nom('cp', p.b2);
+    const C = (p.cs && p.cs.length ? p.cs : (p.c ? [p.c] : [])).map(id => nom('consequences', id)).filter(Boolean);
+    const chaine = (X.length ? groupe(X, 'contexte') + fl : '') + groupe(A, 'antecedent') + fl + pastille(B, 'comportement') + fl + groupe(C, 'consequence') +
+      (B2 ? '<i>↳</i>' + pastille(B2, 'comportement') + '<span class="discret">après une intervention</span>' : '');
+    const cles = [];
+    A.forEach(a => C.forEach(c => cles.push('ac¦' + a + '¦' + c)));
+    if (B) {
+      A.forEach(a => cles.push('ab¦' + a + '¦' + B));
+      C.forEach(c => cles.push('bc¦' + B + '¦' + c));
+      X.forEach(x => cles.push('xb¦' + x + '¦' + B));
+    }
+    const vus = cles.map(k => r.parCle[k]).filter(Boolean).sort((p1, p2) => p2.sol - p1.sol || (p2.obs - p2.base) * p2.N - (p1.obs - p1.base) * p1.N);
+    const m = vus[0];
+    let accord = '';
+    if (m && m.sol) {
+      nAccord++;
+      accord = '<span class="synth-accord oui">✓ Les chiffres vont dans le même sens · ' + esc(courtTextePiste(m)) + ' : ' + m.n + ' sur ' + m.N + ', ' + ratioTexte(m.ratio) + '</span>';
+    } else if (cles.length) {
+      const nTrip = A.length && C.length ? r.unites.filter(u => A.some(a => u.A.indexOf(a) >= 0) && (!B || u.B.indexOf(B) >= 0) && C.some(c => u.C.indexOf(c) >= 0)).length : -1;
+      accord = '<span class="synth-accord peu">Peu visible dans les chiffres' +
+        (m ? ' · ' + esc(courtTextePiste(m)) + ' : ' + m.n + ' sur ' + m.N : nTrip >= 0 ? ' · ' + nTrip + ' séquence' + (nTrip > 1 ? 's' : '') + ' complète' + (nTrip > 1 ? 's' : '') + ' sur ' + r.unites.length : '') + '</span>' +
+        '<p>Une intuition peut être juste sans être encore visible dans les chiffres : à garder, et à vérifier.</p>';
+    }
+    cartes.push('<div class="feuille note-eq"><div class="note-eq-titre">Pattern ' + (i + 1) + ' · proposé dans Interpréter</div><div class="synth-chaine">' + chaine + '</div>' + accord + '</div>');
+  });
+  grads.forEach(g => {
+    const etapes = (g.cps || []).filter(Boolean).map(id => nom('cp', id)).filter(Boolean);
+    let accord = '';
+    if (etapes.length > 1) {
+      const vus = [];
+      for (let k = 1; k < etapes.length; k++) { const c = r.stG.chaines[etapes[k - 1] + ' ¦ ' + etapes[k]]; if (c) vus.push(c); }
+      const lu = c => esc(guillemetsSynth(c.de) + ' ↗ ' + guillemetsSynth(c.vers)) + ' : ' + (c.n > 1 ? c.n + ' fois' : 'une fois');
+      if (vus.some(c => c.n >= CORR_MIN)) {
+        nAccord++;
+        accord = '<span class="synth-accord oui">✓ Observé dans les épisodes · ' + vus.filter(c => c.n >= CORR_MIN).map(lu).join(' ; ') + '</span>';
+      } else accord = '<span class="synth-accord peu">' + (vus.length ? 'Vu une seule fois dans les épisodes · ' + vus.map(lu).join(' ; ') : 'Pas encore observé : aucun épisode où ces comportements se suivent') + '</span>';
+    }
+    cartes.push('<div class="feuille note-eq"><div class="note-eq-titre">' + esc(g.label || 'Séquence de montée') + ' · proposée dans Interpréter</div>' +
+      '<div class="synth-chaine">' + (etapes.length ? etapes.map(t => pastille(t, 'comportement')).join('<i class="monte">↗</i>') : '<span class="discret">aucune étape choisie</span>') + '</div>' +
+      (g.note && g.note.trim() ? '<p>' + esc(g.note.trim()) + '</p>' : '') + accord + '</div>');
+  });
+  el.innerHTML = (saisi ? '' : '<p class="discret">Rien n\'a encore été proposé dans Interpréter.</p>') +
+    (cartes.length ? '<div class="synth-equipe">' + cartes.join('') + '</div>' : '') +
+    (blocVase ? '<div class="feuille synth-block synth-vase">' + blocVase + '</div>' : '');
+  const nI = patterns.length + grads.length;
+  poserSynth('synth-phrase-equipe', !saisi && !blocVase ? 'L\'équipe n\'a encore rien proposé dans Interpréter : patterns, séquences de montée, vase.'
+    : !nI ? (saisi ? 'Le vase de tension, tel que l\'équipe le décrit.' : 'Rien n\'est encore proposé dans Interpréter ; le vase se dessine déjà à partir des épisodes cotés.')
+    : (nI > 1 ? nI + ' intuitions' : 'Une intuition') + ' de l\'équipe' +
+      (nAccord ? ', dont ' + emSynth((nAccord > 1 ? nAccord + ' qui se voient' : 'une qui se voit') + ' aussi dans les chiffres') : ', ' + emSynth('pas encore visible' + (nI > 1 ? 's' : '') + ' dans les chiffres')) + '.');
+}
+// « Toutes les données » : les séquences complètes qui reviennent, et le contexte qui change l'effet d'un antécédent.
+function renderDetailCroisements(r) {
+  const trip = {};
+  r.unites.forEach(u => u.A.forEach(a => u.B.forEach(b => u.C.forEach(c => { const k = a + '¦' + b + '¦' + c; trip[k] = (trip[k] || 0) + 1; }))));
+  const l = Object.keys(trip).map(k => { const [a, b, c] = k.split('¦'); return {a, b, c, n: trip[k]}; }).filter(t => t.n >= CORR_MIN).sort((x, y) => y.n - x.n).slice(0, 12);
+  poserSynth('synth-sequences', l.length
+    ? '<p class="discret">Antécédent, comportement et conséquence catégorisés ensemble dans une même séquence, ce nombre de fois, sur ' + r.unites.length + ' séquences. Un décompte, pas une hypothèse.</p>' +
+      l.map(t => '<div class="synth-ligne">' + tagSynth(t.a, 'antecedent') + ' → ' + tagSynth(t.b, 'comportement') + ' → ' + tagSynth(t.c, 'consequence') + ' <span class="discret">' + t.n + ' fois</span></div>').join('')
+    : '<p class="discret">Aucune séquence complète ne revient encore deux fois.</p>');
+  const lec = lecturesContexte(statsContexte(state.m2.evenements || [], state.m3.categories));
+  poserSynth('synth-modulations', lec.modulations.length
+    ? '<p class="discret">Après le même antécédent, la part d\'un comportement quand ce contexte est noté, et quand il ne l\'est pas.</p>' +
+      lec.modulations.slice(0, 8).map(m => '<div class="synth-ligne">Après ' + tagSynth(m.a, 'antecedent') + ' → ' + tagSynth(m.b, 'comportement') + ', quand ' + tagSynth(m.x, 'contexte') + ' est noté : <b>' + pctSynth(m.avec) + ' %</b> ' +
+        '<span class="discret">(' + m.nAXB + ' sur ' + m.nAX + '), contre ' + pctSynth(m.sans) + ' % sans ce contexte (' + m.nSansB + ' sur ' + m.nSans + ')</span>' + reserveEffectif(Math.min(m.nAX, m.nSans)) + '</div>').join('')
+    : '<p class="discret">Aucun contexte ne change nettement l\'effet d\'un antécédent pour l\'instant.</p>');
+}
+// La tension, d'un seul dessin : pour chaque intervention, la part suivie d'une redescente (à gauche) et d'une montée (à droite).
+function svgDivergeInterventions(lignes) {
+  const H = 26, C = 370, L = 135, Y0 = 24;
+  const couper = t => t.length > 30 ? t.slice(0, 29) + '…' : t;
+  let corps = '<text x="' + (C - 8) + '" y="13" font-size="11" font-weight="700" text-anchor="end" fill="var(--vase-descend-deep)">↘ redescend</text>' +
+    '<text x="' + (C + 8) + '" y="13" font-size="11" font-weight="700" fill="var(--vase-monte-deep)">↗ monte</text>';
+  lignes.forEach((e, i) => {
+    const y = Y0 + i * H, wd = L * e.nDesc / e.n, wm = L * e.nAug / e.n;
+    corps += '<text x="0" y="' + (y + 13) + '" font-size="12.5" font-weight="600" fill="var(--ink)">' + esc(couper(e.nom)) + '<title>' + esc(e.nom) + '</title></text>' +
+      '<rect x="' + (C - L) + '" y="' + (y + 4) + '" width="' + (2 * L) + '" height="12" rx="6" fill="var(--line-soft)"/>' +
+      (wd ? '<rect x="' + (C - wd).toFixed(1) + '" y="' + (y + 4) + '" width="' + wd.toFixed(1) + '" height="12" fill="var(--vase-descend)"><title>' + e.nDesc + ' sur ' + e.n + ' : redescend</title></rect>' : '') +
+      (wm ? '<rect x="' + C + '" y="' + (y + 4) + '" width="' + wm.toFixed(1) + '" height="12" fill="var(--vase-monte)"><title>' + e.nAug + ' sur ' + e.n + ' : monte</title></rect>' : '') +
+      '<text x="' + (C + L + 12) + '" y="' + (y + 13) + '" font-size="12" fill="var(--ink-soft)">↘ ' + e.nDesc + ' · ↗ ' + e.nAug + ' · sur ' + e.n + (e.n < 5 ? ' *' : '') + '</text>';
+  });
+  const h = Y0 + lignes.length * H + 2;
+  corps += '<rect x="' + (C - 1) + '" y="' + (Y0 - 2) + '" width="2" height="' + (h - Y0) + '" fill="var(--ink-soft)"/>';
+  return '<svg class="graphique sg-graphique" viewBox="0 0 640 ' + h + '" xmlns="http://www.w3.org/2000/svg" role="img" ' +
+    'aria-label="Part des interventions suivies d\'une redescente ou d\'une montée de la tension">' + corps + '</svg>';
+}
+function partieDivergeSynthese(st) {
+  const effets = Object.values(st.effets);
+  if (!effets.length) return '';
+  const lignes = effets.slice().sort((a, b) => b.n - a.n).slice(0, 8)
+    .sort((a, b) => (a.nAug - a.nDesc) / a.n - (b.nAug - b.nDesc) / b.n || b.n - a.n);
+  const sansCat = st.nIvSansCat === 1 ? ' 1 intervention pas encore catégorisée ne figure pas ci-dessous.'
+    : st.nIvSansCat > 1 ? ' ' + st.nIvSansCat + ' interventions pas encore catégorisées ne figurent pas ci-dessous.' : '';
+  return '<div class="sg-partie" data-partie="diverge">' +
+    '<div class="sg-titre">Ce que chaque intervention a fait à la tension</div>' +
+    '<div class="sg-aide">Sur ' + st.nEffet + ' intervention' + (st.nEffet > 1 ? 's' : '') + ' dont l\'effet est noté : à gauche, la part suivie d\'une redescente ; à droite, d\'une montée ; le reste, aucun effet visible.' + sansCat + '</div>' +
+    '<div class="sg-graphique-wrap" data-graphique="Ce que chaque intervention a fait à la tension">' + svgDivergeInterventions(lignes) + '</div>' +
+    (lignes.some(e => e.n < 5) ? '<div class="sg-etoile">* Moins de cinq interventions : une piste, pas une tendance.</div>' : '') +
+  '</div>';
 }
 // Après un clic, le sommaire reste sur la partie choisie le temps du défilement, même si d'autres parties passent.
 let sommaireSyntheseFige = 0;
@@ -10695,88 +11028,6 @@ function computeCorrelations() {
   };
 }
 
-function renderCorrelations() {
-  const card = document.getElementById('synth-correlations-card');
-  const el   = document.getElementById('synth-correlations');
-  if (!card || !el) return;
-
-  const evts = state.m2.evenements || [];
-  const correl = computeCorrelations() || {};
-  const ante_cons = correl.ante_cons || [], cp_cons = correl.cp_cons || [], triplets = correl.triplets || [];
-  const hasAny = ante_cons.length > 0 || cp_cons.length > 0 || triplets.length > 0;
-
-  // La montée en tension a sa partie à elle (« La tension ») ; ici, ce qui se rapproche, et le contexte.
-  const contexte = sectionContexteSynthese();
-  if ((evts.length < CORR_MIN || !hasAny) && !contexte) {
-    card.style.display = 'none';
-    return;
-  }
-  card.style.display = '';
-
-  // Construire une ligne de corrélation
-  /* Le taux affiché est CONDITIONNEL : sur les épisodes qui portent le terme
-     de gauche, quelle part porte aussi celui de droite. Il divisait par le
-     nombre total d'épisodes du dossier, donc il sous-estimait
-     systématiquement, d'autant plus que la catégorisation était partielle :
-     9 fois sur 12 s'affichait 23 % au lieu de 75 %. Le taux de base est donné
-     à côté, faute de quoi un pourcentage seul ne dit rien — c'est déjà ce que
-     fait le module de suggestions, dans le même outil. */
-  const corrLine = (item, colorA, colorB, icon) => {
-    const base = item.base || 0;
-    const pct = base ? Math.min(100, Math.round(item.n / base * 100)) : 0;
-    const nTot = correl.nEvts || evts.length;
-    const baseDroite = (correl.baseCons || {})[item.right] || 0;
-    const pctBase = nTot ? Math.round(baseDroite / nTot * 100) : 0;
-    const comparaison = baseDroite
-      ? `<span class="corr-base">contre ${pctBase}% en général</span>` : '';
-    return `<div class="corr-row">
-      <span class="corr-tag" style="background:${colorA};">${esc(item.left)}</span>
-      <span class="corr-arrow">${icon}</span>
-      <span class="corr-tag" style="background:${colorB};">${esc(item.right)}</span>
-      <span class="corr-count">${item.n} sur ${base}</span>
-      <span class="corr-bar-wrap"><span class="corr-bar" style="width:${pct}%;"></span></span>
-      <span class="corr-pct">${pct}%</span>
-      ${comparaison}
-    </div>`;
-  };
-
-  let html = '';
-
-  if (ante_cons.length > 0) {
-    html += `<div class="corr-section">
-      <div class="corr-section-title">⏮ Antécédent → ⏭ Conséquence</div>
-      ${noteSource('conditionnel')}${noteSource('attention')}<div class="corr-note">Lecture : sur les séquences qui portent cet antécédent, quelle part porte aussi cette conséquence. Le second chiffre dit à quelle fréquence cette conséquence apparaît dans l'ensemble du dossier — c'est la comparaison qui donne du sens au premier, pas le pourcentage seul.</div>
-      ${ante_cons.map(p => corrLine(p, 'var(--ocre-pale)', 'var(--rose-pale)', '→')).join('')}
-    </div>`;
-  }
-
-  if (triplets.length > 0) {
-    html += `<div class="corr-section">
-      <div class="corr-section-title">⏮ 🎥 ⏭ Séquences complètes qui reviennent</div>
-      <div class="corr-note">Ces trois éléments ont été catégorisés ensemble dans une même séquence (antécédent → CD → conséquence), ce nombre de fois. C'est un décompte, pas une hypothèse : à vous d'en faire un pattern dans Interpréter, ou non.</div>
-      ${triplets.map(t => `<div class="corr-row">
-        <span class="corr-tag" style="background:var(--ocre-pale);">${esc(t.a)}</span>
-        <span class="corr-arrow">→</span>
-        <span class="corr-tag" style="background:var(--sauge-pale);">${esc(t.b)}</span>
-        <span class="corr-arrow">→</span>
-        <span class="corr-tag" style="background:var(--rose-pale);">${esc(t.c)}</span>
-        <span class="corr-count">${t.n} fois sur ${correl.nEvts || evts.length} séquence${(correl.nEvts || evts.length) > 1 ? 's' : ''}</span>
-      </div>`).join('')}
-    </div>`;
-  }
-
-  if (cp_cons.length > 0) {
-    html += `<div class="corr-section">
-      <div class="corr-section-title">🎥 Comportement → ⏭ Conséquence</div>
-      <div class="corr-note">Sur les séquences qui portent ce comportement, quelle part porte aussi cette conséquence. C'est souvent là que la fonction se lit — à condition de comparer au taux d'ensemble donné à côté.</div>
-      ${cp_cons.map(p => corrLine(p, 'var(--sauge-pale)', 'var(--rose-pale)', '→')).join('')}
-    </div>`;
-  }
-
-  el.innerHTML = html + contexte;
-  allegerSuggestions(el);
-}
-
 function refreshAccueilBadges(){
   const n = (state.m2.evenements||[]).length;
   const badge = document.getElementById('count-m2');
@@ -11068,6 +11319,18 @@ function construireFichierWord(clone){
     .synth-barre .nom{display:inline-block;width:62%;font-size:9.5pt;}
     .synth-barre .b{display:none;}
     .synth-barre .n{display:inline-block;width:30%;font-size:9pt;color:#6B6152;}
+    .synth-piste{border:0.75pt solid #E6DFD2;background:#FFFDF8;padding:8pt 10pt;margin:0 0 8pt;}
+    .synth-solidite{font-size:8.5pt;font-weight:bold;color:#9C7A00;text-transform:uppercase;}
+    .piste-phrase{font-family:Georgia,'Times New Roman',serif;font-size:11pt;margin:2pt 0 3pt;}
+    .synth-ecart .axe, .synth-ecart .seg, .synth-ecart .base, .synth-ecart .obs, .synth-ecart .eff, .synth-lire-ex{display:none;}
+    .synth-ecart .eff-word{font-size:9pt;color:#6B6152;}
+    .synth-lire{font-size:9pt;color:#6B6152;margin:0 0 6pt;}
+    .synth-tag{padding:0 4pt;font-size:9pt;}
+    .synth-ligne{font-size:9.5pt;margin:0 0 3pt;}
+    .synth-accord{font-size:9pt;font-weight:bold;color:#46685A;}
+    .note-eq-titre{font-size:8pt;font-weight:bold;color:#A39A8A;text-transform:uppercase;}
+    .synth-chaine{margin:3pt 0;}
+    .synth-autres-table td, .synth-autres-table th{font-size:9pt;}
     .legende-volets{border:0.75pt solid #D9D0C0;background:#F5F0E8;padding:5pt 8pt;margin:0 0 8pt;font-size:9pt;}
     .legende-volets .lv-item{margin-right:14pt;}
     .lv-pastille{display:inline-block;width:9pt;height:9pt;}
@@ -14866,6 +15129,59 @@ const _CONTROLES = [
       'essentiel,quand,avant,apres,tension,pistes,equipe,tout | 8 | true | true | true | true | true | true',
       [parties, sommaire, phraseOk, chaleur, somme, confiance, indiceDansTiroir, unSeulExport].join(' | '));
   }},
+
+  {nom:'Synthèse, les pistes : au moins 5 épisodes et 1,4 fois l\'ordinaire (●●● à 10 et 2 fois), triées ; épinglées dans le fichier socle, pas dans un codage vierge', test: () => {
+    const regle = [soliditePiste(10, .5, .25), soliditePiste(9, .5, .25), soliditePiste(10, .49, .25), soliditePiste(5, .42, .3), soliditePiste(5, .41, .3), soliditePiste(4, .9, .1)].join(',');
+    refreshSynthese();
+    const r = rapprochementsSynthese();
+    const estPiste = p => p.n >= PISTE_MIN && p.ratio >= PISTE_ECART - 1e-9;
+    const regleTenue = r.pistes.every(estPiste) && !r.autres.some(estPiste) && r.tous.every(p => p.obs > p.base && p.n <= p.N);
+    const triees = r.pistes.every((p, i) => !i || r.pistes[i - 1].sol >= p.sol);
+    const cartes = document.querySelectorAll('#synth-pistes-liste .synth-piste').length === Math.min(r.pistes.length, PISTES_MAX);
+    const aDesPistes = pistesSynthese.length > 0;
+    let epingle = 'sans piste';
+    if (aDesPistes) {
+      ensureM4();
+      const avant = JSON.stringify(state.m4.epingles || []), vraiPersist = persist;
+      persist = () => {};
+      try {
+        state.m4.epingles = [];
+        epinglerPiste(0);
+        const dansLeSocle = state.m4.epingles.length === 1 && state.m4.epingles[0].cle === pistesSynthese[0].cle;
+        const auSommaire = document.querySelectorAll('#synth-epingles-sommaire li').length === 1;
+        const pourLExport = document.querySelectorAll('#synth-epingles-export li').length === 1;
+        const pasDansLeVierge = !('epingles' in codageVierge().m4);
+        epinglerPiste(0);
+        epingle = [dansLeSocle, auSommaire, pourLExport, pasDansLeVierge, state.m4.epingles.length === 0].join(',');
+      } finally { persist = vraiPersist; state.m4.epingles = JSON.parse(avant); refreshSynthese(); }
+    }
+    return _bancEgal('règle (10 et 2× ; 9 ; 1,96× ; 5 et 1,4× ; 1,37× ; 4 épisodes) | règle tenue | triées par solidité | une carte par piste | épingler : dans le socle, au sommaire, à l\'export, pas dans le codage vierge, puis retirer',
+      '3,2,2,2,0,0 | true | true | true | ' + (aDesPistes ? 'true,true,true,true,true' : 'sans piste'),
+      [regle, regleTenue, triees, cartes, epingle].join(' | '));
+  }},
+
+  {nom:'Synthèse : l\'équipe et les chiffres se répondent ; la tension en barres divergentes (redescend, monte)', test: () => {
+    ensureM3();
+    ensureM4();
+    refreshSynthese();
+    const r = rapprochementsSynthese(), st = r.stG;
+    const coherents = Object.values(st.effets).every(e => e.nAug + e.nDesc <= e.n && e.epsAug.length === e.nAug && e.epsDesc.length === e.nDesc) && st.nAug + st.nDesc <= st.nEffet;
+    const diverge = document.querySelector('#synth-montee [data-partie="diverge"]');
+    const barres = Object.keys(st.effets).length ? !!(diverge && diverge.querySelector('svg')) : !diverge;
+    const cartes = document.querySelectorAll('#synth-m4 .note-eq').length === (state.m4.patterns || []).length + (state.m4.gradations || []).length;
+    // Un pattern taillé sur une piste antécédent → conséquence : la BAF dit que les chiffres vont dans le même sens.
+    const ac = r.pistes.find(p => p.type === 'ac');
+    let accord = 'sans piste';
+    if (ac) {
+      const idDe = (sousId, nom) => Object.keys(state.m3.categories[sousId] || {}).find(id => cheminCat(sousId, id) === nom);
+      const avant = JSON.stringify(state.m4.patterns);
+      state.m4.patterns = [{id: 'pbanc', label: 'P', as: [idDe('antecedents', ac.g)], b: '', cs: [idDe('consequences', ac.d)], xs: [], b2: ''}];
+      try { renderEquipeSynthese(rapprochementsSynthese()); accord = String(!!document.querySelector('#synth-m4 .synth-accord.oui')); }
+      finally { state.m4.patterns = JSON.parse(avant); refreshSynthese(); }
+    }
+    return _bancEgal('montées et redescentes ≤ effets notés, épisodes comptés | barres divergentes | une carte par intuition | un pattern appuyé par les chiffres le dit',
+      'true | true | true | ' + (ac ? 'true' : 'sans piste'), [coherents, barres, cartes, accord].join(' | '));
+  }},
 ];
 
 function verifierCalculs(silencieux) {
@@ -17926,17 +18242,6 @@ function phrasesContexte() {
   return out;
 }
 
-function sectionContexteSynthese() {
-  const phrases = phrasesContexte();
-  if (!phrases.length) return '';
-  return '<div class="corr-section">' +
-    '<div class="corr-section-title">🕰 Le contexte</div>' +
-    '<div class="corr-note">Le contexte ne déclenche rien tout seul : il remplit le vase, et fait qu\'un même antécédent ne produit pas le même effet ' +
-      'd\'un jour à l\'autre. On regarde donc ce qui change quand il est noté, toujours à côté de ce qu\'on voit sans lui.</div>' +
-    phrases.map(p => '<div class="sp-item">' + p + '</div>').join('') +
-  '</div>';
-}
-
 /* Après le rendu : les textes d'aide passent sous « Comment lire », et au-delà
    de trois constats, les autres attendent sous « Voir les N autres ». */
 function allegerSuggestions(racine) {
@@ -18439,8 +18744,15 @@ function statsGradation(evts, categories, decoupages) {
   const catsCp = (categories && categories.cp) || {};
   const nomsDe = (cats, itemId) => catsDeItemDans(cats, itemId).map(id => cheminCatDans(cats, id));
   const nomsDeCits = (cats, evt, slot, cits) => [...new Set(cits.reduce((acc, c) => acc.concat(nomsDe(cats, idElementDeCit(evt, slot, c))), []))];
-  const AUGMENTATION = 'Augmentation de la tension';
-  const st = {effets: {}, nEffet: 0, nAug: 0, nIvSansCat: 0, paliers: {}, nEvtSansPic: 0, chaines: {}, nEvtPost: 0};
+  const AUGMENTATION = 'Augmentation de la tension', DIMINUTION = 'Diminution de la tension';
+  const st = {effets: {}, nEffet: 0, nAug: 0, nDesc: 0, nIvSansCat: 0, paliers: {}, nEvtSansPic: 0, chaines: {}, nEvtPost: 0};
+  // Par catégorie d'intervention : l'effet noté, les montées, les redescentes, et dans quels épisodes (les pistes de la Synthèse).
+  const compterEffet = (nom, sens, evtId) => {
+    const e = st.effets[nom] || (st.effets[nom] = {nom, n: 0, nAug: 0, nDesc: 0, epsAug: [], epsDesc: []});
+    e.n++;
+    if (sens === 'monte') { e.nAug++; e.epsAug.push(evtId); }
+    if (sens === 'descend') { e.nDesc++; e.epsDesc.push(evtId); }
+  };
 
   (evts || []).forEach(evt => {
     if (!evt || !evt.id) return;
@@ -18458,29 +18770,23 @@ function statsGradation(evts, categories, decoupages) {
         if (!sens) return;
         st.nEffet++;
         if (sens === 'monte') st.nAug++;
+        if (sens === 'descend') st.nDesc++;
         const noms = nomsDeCits(catsIv, evt, 'interventions', [cit]);
         if (!noms.length) { st.nIvSansCat++; return; }
-        noms.forEach(nom => {
-          const e = st.effets[nom] || (st.effets[nom] = {nom, n: 0, nAug: 0});
-          e.n++;
-          if (sens === 'monte') e.nAug++;
-        });
+        noms.forEach(nom => compterEffet(nom, sens, evt.id));
       }));
     } else {
       interventions.forEach(iv => {
         if (!iv.effet) return;
         st.nEffet++;
         if (iv.effet === AUGMENTATION) st.nAug++;
+        if (iv.effet === DIMINUTION) st.nDesc++;
       });
       avecTexte.forEach((iv, k) => {
         if (!iv.effet) return;
         const noms = [...new Set(idsElementsIntervention(evt, iv, k).reduce((acc, id) => acc.concat(nomsDe(catsIv, id)), []))];
         if (!noms.length) { st.nIvSansCat++; return; }
-        noms.forEach(nom => {
-          const e = st.effets[nom] || (st.effets[nom] = {nom, n: 0, nAug: 0});
-          e.n++;
-          if (iv.effet === AUGMENTATION) e.nAug++;
-        });
+        noms.forEach(nom => compterEffet(nom, iv.effet === AUGMENTATION ? 'monte' : iv.effet === DIMINUTION ? 'descend' : 'rien', evt.id));
       });
     }
 
@@ -18607,7 +18913,7 @@ function partiesStatsGradation() {
     }));
     const sansCat = st.nIvSansCat === 1 ? ' 1 intervention pas encore catégorisée ne figure pas ci-dessous.'
       : st.nIvSansCat > 1 ? ' ' + st.nIvSansCat + ' interventions pas encore catégorisées ne figurent pas ci-dessous.' : '';
-    parties.push('<div class="sg-partie">' +
+    parties.push('<div class="sg-partie" data-partie="effets">' +
       '<div class="sg-titre">Après quelles interventions la tension augmente</div>' +
       '<div class="sg-aide">Sur les ' + ch(pluriel(st.nEffet, 'intervention')) + ' dont l\'effet est noté, ' + ch(base + ' %') +
         ' sont suivies d\'une augmentation de la tension. Le trait vertical marque ce taux d\'ensemble ; en rose, les interventions nettement au-dessus.' + sansCat + '</div>' +
@@ -18622,7 +18928,7 @@ function partiesStatsGradation() {
   if (paliers.length) {
     const sansPic = st.nEvtSansPic === 1 ? ' 1 épisode sans pic coté ne compte pas.'
       : st.nEvtSansPic > 1 ? ' ' + st.nEvtSansPic + ' épisodes sans pic coté ne comptent pas.' : '';
-    parties.push('<div class="sg-partie">' +
+    parties.push('<div class="sg-partie" data-partie="paliers">' +
       '<div class="sg-titre">Jusqu\'où monte le vase, comportement par comportement</div>' +
       '<div class="sg-aide">Pour chaque catégorie, le palier atteint au plus fort de l\'épisode ; à droite, le palier le plus fréquent. ' +
         'Les catégories sont rangées du palier médian le plus bas au plus haut : <b>un ordre de montée à discuter</b>, pas une séquence observée.' + sansPic + '</div>' +
@@ -23284,6 +23590,23 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-09',
+    version: 'v2026.10.09-2',
+    titre: "Les pistes à discuter",
+    corps: `
+<p><b>Les pistes à discuter</b> (Arthur et Émilie — la Synthèse, seconde partie) :</p>
+<ul>
+<li><b>Seulement ce qui s'écarte nettement de l'ordinaire.</b> Un rapprochement devient une piste à partir de 5 épisodes et d'un écart d'au moins 1,4 fois l'ordinaire ; ●●● « à regarder en premier » à partir de 10 épisodes et de 2 fois. Les autres sont repliés juste dessous, chacun avec sa raison : trop peu d'épisodes, écart modeste, presque l'ordinaire.</li>
+<li><b>Une piste = une phrase, un dessin, un effectif.</b> Le point montre ce qu'on observe, le trait l'ordinaire : l'écart se voit d'un coup d'œil. Sont comptés : antécédent → comportement, antécédent → conséquence, comportement → conséquence, contexte → comportement, contexte → hauteur du vase, et l'effet de chaque intervention sur la tension. « Voir les épisodes » ouvre chacun dans Analyser.</li>
+<li><b>📌 Garder pour la réunion</b> : la piste rejoint la liste « À discuter » du sommaire, et part dans le document Word. Les épingles restent dans le fichier socle, jamais dans un codage vierge.</li>
+<li><b>L'équipe et les chiffres se répondent.</b> Pour chaque pattern proposé dans Interpréter, la BAF dit si les chiffres vont dans le même sens, ou si ce n'est pas (encore) visible ; pour chaque séquence de montée, si l'enchaînement a été observé dans les épisodes. Une intuition peut être juste sans être encore visible dans les chiffres : la page le rappelle.</li>
+<li><b>La tension, d'un seul dessin</b> : pour chaque intervention, la part suivie d'une redescente à gauche, d'une montée à droite. La phrase de tête dit aussi ce qui fait redescendre.</li>
+<li><b>Dans « Toutes les données »</b>, repliés : les séquences complètes qui reviennent, et le contexte qui change l'effet d'un antécédent.</li>
+</ul>
+`
+  },
 
   {
     date: '2026-10-09',
