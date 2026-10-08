@@ -3468,6 +3468,35 @@ body.seq-selection .seq-case .seq-vide{display:none;}
 .seq-chip-sens.sens-monte{background:var(--vase-monte-pale);color:var(--vase-monte-deep);}
 .seq-chip-sens.sens-descend{background:var(--vase-descend-pale);color:var(--vase-descend-deep);}
 .recap-fige{margin:0 0 12px;padding:8px 12px;border-radius:10px;background:var(--surface);font-size:12.5px;line-height:1.5;color:var(--ink-soft);}
+/* ── Catégoriser et Interpréter dans la charte (passe 183) : les volets et les onglets en segment, deux feuilles côte à côte,
+   des éléments sans cadre, des catégories posées sur la surface, Interpréter en feuilles. Habillage seulement. ── */
+#view-analyser .m3-tabs{display:flex;flex-wrap:wrap;justify-content:flex-start;gap:3px;margin:0 0 14px;padding:3px;border-radius:11px;background:var(--paper-deep);overflow:visible;}
+#view-analyser .m3-tab{flex-direction:row;align-items:center;gap:6px;height:32px;padding:0 10px;border:0;border-radius:8px;background:transparent;box-shadow:none;font-size:13px;font-weight:600;color:var(--ink-soft);}
+#view-analyser .m3-tab:hover{color:var(--ink);}
+#view-analyser .m3-tab.on{background:var(--sheet);color:var(--ink);box-shadow:0 2px 8px rgba(44,36,22,.08);}
+#view-analyser .m3-tab-ligne{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
+#view-analyser .m3-tab .m3-tab-count{margin:0;padding:0;background:none;font-size:11.5px;font-weight:500;color:var(--ink-faint);}
+#view-analyser .m3-tab-bulle{order:-1;width:9px;height:9px;opacity:1;transform:none;}
+#view-analyser .m3-tab.on .m3-tab-bulle{transform:none;}
+#view-analyser .m3-layout{gap:14px;}
+#view-analyser .m3-col-items,#view-analyser .m3-col-cats{padding:14px 16px;border:0;border-radius:var(--rayon-feuille);background:var(--sheet);box-shadow:var(--ombre-feuille);}
+#view-analyser .m3-col-header{margin-bottom:10px;padding-bottom:0;border-bottom:0;}
+#view-analyser .m3-col-title{font-size:13.5px;}
+#view-analyser .m3-col-count{color:var(--ink-faint);}
+#view-analyser .aide-repliable{border:0;background:var(--surface);}
+#view-analyser .m3-item{margin-bottom:6px;padding:8px 10px;border:0;border-radius:10px;background:var(--surface);transition:background .15s,box-shadow .15s;}
+#view-analyser .m3-item:hover{box-shadow:inset 0 0 0 1.5px var(--line);}
+#view-analyser .m3-item-text{font:400 14.5px/1.5 var(--police-lecture);color:var(--ink);}
+#view-analyser .m3-cat{border:0;border-radius:12px;background:var(--surface);}
+#view-analyser .m3-cat-header{background:transparent;border-bottom:1px solid var(--line-feuille);}
+#view-analyser .card{border:0;border-radius:var(--rayon-feuille);background:var(--sheet);box-shadow:var(--ombre-feuille);padding:18px 22px;}
+#view-analyser .m4-tabs{display:inline-flex;flex-wrap:wrap;gap:3px;margin:0 0 16px;padding:3px;border-radius:11px;background:var(--paper-deep);}
+#view-analyser .m4-tab{height:32px;padding:0 12px;border:0;border-radius:8px;background:transparent;font-size:13px;font-weight:600;color:var(--ink-soft);}
+#view-analyser .m4-tab:hover{color:var(--ink);}
+#view-analyser .m4-tab.on{background:var(--sheet);color:var(--ink);box-shadow:0 2px 8px rgba(44,36,22,.08);}
+#view-analyser .recap-volet{margin:0 0 10px;padding:10px 12px;border:0;border-radius:12px;background:var(--sheet);box-shadow:var(--ombre-legere);}
+#view-analyser .recap-volet-titre{font-size:11px;letter-spacing:.07em;}
+#view-analyser .recap-cat i{width:9px;height:9px;}
 #tiroir-notes .analyse-notes-champ{min-height:240px;margin:0;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font:400 14.5px/1.6 var(--police-lecture);resize:vertical;}
 .analyse-note{margin:0 0 14px;font-size:13px;color:var(--ink-soft);}
 .analyse-champ{margin:0 0 12px;padding:10px 14px;background:var(--card);border:1px solid var(--line);border-radius:10px;}
@@ -22945,7 +22974,7 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
-const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":10234,"retrait":2086,"depots":68}]};
+const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":10580,"retrait":2260,"depots":69}]};
 
 function svgActiviteCode() {
   const mois = ACTIVITE_CODE.mois || [];
@@ -22984,6 +23013,21 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-08',
+    version: 'v2026.10.08-29',
+    titre: "Catégoriser et Interpréter dans la même charte",
+    corps: `
+<p><b>Catégoriser et Interpréter dans la même charte</b> (Arthur et Émilie) :</p>
+<ul>
+<li><b>Les volets de Catégoriser et les onglets d'Interpréter</b> deviennent des segments, comme partout : un point de couleur par volet, le compte « classés / décrits » en discret.</li>
+<li><b>Deux feuilles côte à côte</b> : les éléments à gauche, les catégories à droite, sans cadres. Les éléments se posent sur la surface de la feuille, leur texte en serif ; les catégories aussi.</li>
+<li><b>Interpréter en feuilles</b> (patterns, gradation, vase, exploration), et le rappel des catégories, à côté, plus lisible.</li>
+<li>Rien ne change dans ce que fait Catégoriser ou Interpréter : c'est un habillage.</li>
+</ul>
+`
+  },
 
   {
     date: '2026-10-08',
