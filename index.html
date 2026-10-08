@@ -4718,6 +4718,7 @@ function migrerVocabulaireEffet() {
   const EFFET_MAP = {
     'Aggravation': 'Augmentation de la tension',
     'Apaisement': 'Diminution de la tension',
+    'Disparition de la tension': 'Diminution de la tension',
     'Aucun effet visible': 'Aucun effet visible',
   };
   (state.m2.evenements || []).forEach(evt => {
@@ -8114,7 +8115,8 @@ function retirerAntecedentEvt(i) {
 // ── Interventions de l'entourage (liste dynamique, étape "intervention") ──
 // Échelle d'effet dans l'ordre de l'efficacité, pour qualifier la montée ou
 // la descente de la tension provoquée par l'intervention.
-const EFFET_INTERVENTION_OPTIONS = ['Disparition de la tension','Diminution de la tension','Aucun effet visible','Augmentation de la tension'];
+// Trois réponses, comme les trois sens que retient l'analyse (monte, rien, descend) : « Disparition de la tension » est devenue « Diminution de la tension ».
+const EFFET_INTERVENTION_OPTIONS = ['Diminution de la tension','Aucun effet visible','Augmentation de la tension'];
 // Un nouveau CD apparaît après l'intervention aussi bien en cas d'augmentation
 // de la tension qu'en l'absence d'effet visible (pas seulement en aggravation).
 function effetNeedsCdPost(effet) {
@@ -8178,7 +8180,7 @@ function verifierCoherenceTension(i) {
   if (!effet || apres === null || isNaN(apres) || avant === null) { box.style.display = 'none'; return; }
   const delta = apres - avant;
   let souci = '';
-  if ((effet === 'Diminution de la tension' || effet === 'Disparition de la tension') && delta >= 0) {
+  if (effet === 'Diminution de la tension' && delta >= 0) {
     souci = 'vous indiquez « ' + effet.toLowerCase() + ' », mais le niveau passe de ' + avant + ' à ' + apres;
   } else if (effet === 'Augmentation de la tension' && delta <= 0) {
     souci = 'vous indiquez une augmentation de la tension, mais le niveau passe de ' + avant + ' à ' + apres;
@@ -10902,7 +10904,7 @@ function simuler(idx){
     for (let k = 0; k < nbInter; k++) {
       const iv = piocher(P.interventions);
       if (interventions.some(x => x.texte === iv.texte)) continue;
-      const effet = pondere(iv.effets);
+      const effet = pondere(iv.effets).replace('Disparition de la tension', 'Diminution de la tension');
       noter('interventions', iv.texte + ' → ' + effet, iv.cat);
       const appelleUnCD = effetNeedsCdPost(effet) && alea() < 0.5;
       const cdPost = appelleUnCD ? piocher(P.comportements) : null;
@@ -10941,8 +10943,7 @@ function simuler(idx){
     interventions.forEach(iv => {
       if (alea() > 0.78) return;
       let apres = courant;
-      if (iv.effet === 'Disparition de la tension') apres = 5 + Math.round(alea() * 18);
-      else if (iv.effet === 'Diminution de la tension') apres = Math.max(8, courant - 18 - Math.round(alea() * 22));
+      if (iv.effet === 'Diminution de la tension') apres = Math.max(8, courant - 18 - Math.round(alea() * 22));
       else if (iv.effet === 'Aucun effet visible') apres = Math.max(0, Math.min(100, courant + Math.round((alea() - 0.5) * 12)));
       else apres = Math.min(100, courant + 6 + Math.round(alea() * 14));
       iv.tension = mesure(apres);
@@ -13104,6 +13105,19 @@ const _CONTROLES = [
       if (!etaitMontree) vue.classList.remove('show');
       try { allerAnalyse(sauvePos, {sansDefilement: true}); } catch (er) { /* vue masquée */ }
     }
+  }},
+  {nom:'Effet d\'une intervention : trois réponses, et l\'ancienne « Disparition » devient « Diminution »', test: () => {
+    const sauveEvts = state.m2.evenements;
+    try {
+      state.m2.evenements = [{id: 'ef9', interventions: [{id: 'i1', texte: 'Retrait.', effet: 'Disparition de la tension'}, {id: 'i2', texte: 'Parole.', effet: 'Aggravation'}, {id: 'i3', texte: 'Rien.', effet: 'Aucun effet visible'}]}];
+      migrerVocabulaireEffet();
+      const effets = state.m2.evenements[0].interventions.map(iv => iv.effet).join(' | ');
+      const radios = (renderInterventionBlock({texte: 'a', effet: ''}, 0, 1).match(/type="radio"/g) || []).length;
+      const courriel = lignesCourrielLancement().filter(l => /^\[Paragraphe réservé à l'EMIA 35/.test(l)).length + ',' + /supprimer si vous utilisez la BAF en dehors de l'EMIA/.test(courrielLancement('Léo').tout);
+      return _bancEgal('« Disparition » migre | trois réponses dans la liste | trois boutons dans le formulaire | un paragraphe EMIA entre crochets, supprimable',
+        'Diminution de la tension | Augmentation de la tension | Aucun effet visible # 3 # 3 # 1,true',
+        [effets, EFFET_INTERVENTION_OPTIONS.length, radios, courriel].join(' # '));
+    } finally { state.m2.evenements = sauveEvts; }
   }},
   {nom:'Les couleurs des catégories se distinguent deux à deux', test: () => {
     /* Ce qui fait confondre deux catégories, c'est la teinte : les deux violets
@@ -18249,7 +18263,6 @@ function changerJourCourbe(date) {
 }
 
 const FLECHE_EFFET = {
-  'Disparition de la tension': '↓↓',
   'Diminution de la tension': '↓',
   'Aucun effet visible': '→',
   'Augmentation de la tension': '↑'
@@ -20457,6 +20470,8 @@ function lignesCourrielLancement() {
     '',
     "Comme toute analyse fonctionnelle, cette démarche est supervisée par un clinicien, [nom]. Une fois le recueil terminé, le référent et le clinicien analyseront ensemble les observations. Ils rédigeront, dans un délai de [X] semaines, un document de synthèse : vous y trouverez les hypothèses fonctionnelles — des propositions de lecture sur ce à quoi servent ces comportements pour [prénom] — et les pistes qui en découlent.",
     '',
+    "[Paragraphe réservé à l'EMIA 35 — à supprimer si vous utilisez la BAF en dehors de l'EMIA : L'Équipe Mobile d'Intervention Autisme (EMIA 35) intervient actuellement auprès de [prénom]. Ce travail nourrira notre bilan d'intervention : les préconisations qui découlent des hypothèses seront mises en place et ajustées avec vous. Précisez ici quand et comment ce retour vous sera fait.]",
+    '',
     'Merci de votre participation,',
     '[signature]'
   ];
@@ -22396,7 +22411,7 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
-const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":9563,"retrait":1933,"depots":63}]};
+const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":9634,"retrait":1939,"depots":64}]};
 
 function svgActiviteCode() {
   const mois = ACTIVITE_CODE.mois || [];
@@ -22435,6 +22450,19 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-08',
+    version: 'v2026.10.08-24',
+    titre: "Le courriel avec son paragraphe EMIA, et l'effet d'une intervention à trois réponses",
+    corps: `
+<p><b>Deux retouches</b> (Arthur et Émilie) :</p>
+<ul>
+<li><b>Le courriel de lancement</b> (celui du brouillon à ouvrir dans la messagerie, et du mode d'emploi) reste le courriel général, avec <b>un paragraphe réservé à l'EMIA 35, entre crochets</b> : il présente l'équipe et annonce le bilan d'intervention. Hors EMIA, on le supprime ; le paragraphe le dit lui-même.</li>
+<li><b>L'effet d'une intervention, à trois réponses.</b> Dans le formulaire du déclarant, <i>Disparition de la tension</i> et <i>Diminution de la tension</i> ne font plus qu'une : « Diminution de la tension », avec « Aucun effet visible » et « Augmentation de la tension ». C'est ce que retient l'analyse (monte, rien, descend). Une ancienne réponse « Disparition » est reprise comme « Diminution » à l'ouverture d'un fichier ; rien n'est perdu d'autre que cette nuance.</li>
+</ul>
+`
+  },
 
   {
     date: '2026-10-08',
