@@ -395,6 +395,31 @@ header.top{
 .detailler-bt{background:none;border:0;padding:4px 0;font:inherit;font-size:13px;font-weight:600;color:var(--slate);cursor:pointer;}
 .detailler-bt:hover{text-decoration:underline;}
 .tension-finale-note{margin:0 0 16px;padding:12px 16px;background:var(--paper-deep);border-radius:10px;font-size:13.5px;line-height:1.6;}
+.seq-chip-iv{flex-wrap:wrap;}
+.seq-chip-effet{flex:0 0 100%;display:flex;align-items:center;gap:6px;margin:1px 0 0 2px;font-size:11.5px;color:var(--ink-soft);}
+.seq-chip-effet select{font:inherit;font-size:11.5px;padding:1px 4px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);cursor:pointer;}
+.seq-chip-effet select.sens-monte{border-color:var(--rose);background:var(--rose-pale);color:var(--rose-deep);font-weight:600;}
+.seq-chip-effet select.sens-descend{border-color:var(--vase-descend);background:var(--vase-descend-pale);color:var(--vase-descend-deep);font-weight:600;}
+.seq-chip-effet .sens-defaut{font-style:italic;}
+.seq-chip-sens{flex:none;font-size:11.5px;font-weight:700;padding:0 5px;border-radius:5px;white-space:nowrap;background:var(--paper-deep);color:var(--ink-soft);}
+.seq-chip-sens.sens-monte{background:var(--rose-pale);color:var(--rose-deep);}
+.seq-chip-sens.sens-descend{background:var(--vase-descend-pale);color:var(--vase-descend-deep);}
+.vase-exemples{margin:0 0 14px;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:0 14px;}
+.vase-exemples > summary{cursor:pointer;padding:10px 0;font-size:13.5px;font-weight:600;color:var(--ink);}
+.vase-exemples > summary .vase-ex-aide{font-weight:400;color:var(--ink-soft);}
+.vase-ex-cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:0 0 12px;}
+@media (max-width:720px){.vase-ex-cols{grid-template-columns:1fr;}}
+.vase-ex-col h5{margin:0 0 6px;font-size:12.5px;}
+.vase-ex-col.monte h5{color:var(--vase-monte-deep);}
+.vase-ex-col.descend h5{color:var(--vase-descend-deep);}
+.vase-ex{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;padding:5px 0;border-top:1px solid var(--line-soft);font-size:12.5px;line-height:1.45;}
+.vase-ex-texte{flex:1 1 200px;min-width:0;overflow-wrap:anywhere;}
+.vase-ex-eps{color:var(--ink-soft);font-size:11.5px;white-space:nowrap;}
+.vase-ex-ajouter{border:1px solid var(--line);background:#fff;border-radius:6px;font:inherit;font-size:11.5px;font-weight:700;padding:1px 7px;cursor:pointer;color:var(--ocre-deep);}
+.vase-ex-ajouter:hover{background:var(--paper-deep);}
+.vase-ex-pris{font-size:11.5px;font-weight:700;color:var(--ink-soft);}
+.vase-ex-suite{margin-top:4px;font-size:11.5px;color:var(--ink-soft);}
+.vase-ex-note{padding:0 0 12px;margin:0;font-size:12.5px;color:var(--ink-soft);line-height:1.55;}
 /* ── Découper : ranger le déclaratif dans la séquence de l'épisode (Arthur et Émilie, 08/10/2026) ── */
 /* Trois positions, toujours deux panneaux nets : Déclaratif brut | Découper, puis Découper | Catégoriser, puis Catégoriser | Interpréter
    (on a toujours besoin de voir l'étape d'avant pour faire la suivante) ; les autres restent flous sur les côtés. */
@@ -4153,6 +4178,7 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
       <h4 class="vase-part-titre">2 · Ce qui le remplit, ce qui le vide</h4>
       <div id="vase-apriori"></div>
       <div id="vase-a-situer"></div>
+      <div id="vase-exemples"></div>
       <div class="vase-section">
         <div class="vase-card monte">
           <h4>🔺 Ce qui le fait monter — d'elle ou de lui</h4>
@@ -5282,6 +5308,57 @@ function etiquettesSequence() {
   return lab;
 }
 
+/* ── L'effet d'une intervention : la BAF ne retient que le sens (monte · rien · descend) ──────────────────────────────
+   Le déclarant peut avoir dit l'effet dans le formulaire (quatre réponses) ; l'analyste le lit, le confirme ou le corrige
+   sur le passage rangé dans « Intervention ». cit.effet vaut 'monte', 'rien', 'descend', ou '' (« pas d'effet noté ») ;
+   tant que l'analyste n'a rien choisi (cit.effet absent), c'est la réponse du formulaire qui sert. Ces sens alimentent les
+   statistiques d'Interpréter et les exemples du vase. */
+const SENS_EFFET = {
+  monte:   {nom: 'fait monter',      fleche: '↗', phrase: 'a fait monter la tension'},
+  rien:    {nom: 'ne change rien',   fleche: '→', phrase: 'n\'a rien changé'},
+  descend: {nom: 'fait redescendre', fleche: '↘', phrase: 'a fait redescendre la tension'}
+};
+function sensDeEffetForm(effet) {
+  return effet === 'Augmentation de la tension' ? 'monte' : effet === 'Aucun effet visible' ? 'rien'
+    : (effet === 'Disparition de la tension' || effet === 'Diminution de la tension') ? 'descend' : '';
+}
+// Le sens retenu pour un passage rangé dans « Intervention » : le choix de l'analyste, sinon la réponse du déclarant.
+function sensCit(evt, cit) {
+  if (!cit) return '';
+  if (cit.effet !== undefined) return SENS_EFFET[cit.effet] ? cit.effet : '';
+  if (!/^interventions\.[^.]+\.texte$/.test(cit.champ || '')) return '';
+  const iv = ivDeChamp(evt, cit.champ);
+  return iv ? sensDeEffetForm(iv.effet) : '';
+}
+function sensDuDeclarant(evt, cit) {
+  if (!cit || !/^interventions\.[^.]+\.texte$/.test(cit.champ || '')) return '';
+  const iv = ivDeChamp(evt, cit.champ);
+  return iv ? sensDeEffetForm(iv.effet) : '';
+}
+// Ce que l'analyste a rangé de chaque étape (pour l'indice de confiance) ; null si l'épisode n'est pas rangé.
+function etapesRangees(evt) {
+  const sq = evt && evt.id ? sequenceActive(evt) : null;
+  if (!sq) return null;
+  const quelquUn = cle => sq.phases.some(p => p[cle].length > 0);
+  return {contexte: sq.contexte.length > 0, comportement: quelquUn('cds'), antecedent: quelquUn('antecedents'),
+    intervention: quelquUn('interventions'), consequence: sq.consequence.length > 0};
+}
+// Les interventions de tous les épisodes, rangées selon ce qu'elles ont fait à la tension.
+function interventionsParSens() {
+  const out = {monte: [], rien: [], descend: []};
+  (state.m2.evenements || []).forEach((evt, idx) => {
+    if (!evt || !evt.id) return;
+    const ajoute = (sens, texte) => {
+      const t = String(texte || '').replace(/\s+/g, ' ').trim();
+      if (out[sens] && t) out[sens].push({n: idx + 1, texte: t});
+    };
+    const rang = sequenceActive(evt);
+    if (rang) rang.phases.forEach(p => p.interventions.forEach(c => ajoute(sensCit(evt, c), c.texte)));
+    else (evt.interventions || []).forEach(iv => ajoute(sensDeEffetForm(iv.effet), iv.texte));
+  });
+  return out;
+}
+
 // Le déclaratif d'un épisode, dans l'ordre où on le lit (de ce qui précède à ce qui suit), avec ce que l'analyste peut citer.
 function champsBrut(evt) {
   const liste = [];
@@ -5574,14 +5651,35 @@ function chipSeq(evt, seq, cle, cit, noms) {
   const slot = cle.indexOf('.') >= 0 ? cle.split('.')[1] : cle, c = SLOTS_SEQ[slot] || SLOTS_SEQ.ecarte;
   const texte = String(cit.texte).replace(/\s+/g, ' ');
   const options = clesSlots(seq).filter(x => x[0] !== cle).map(x => '<option value="%V:' + x[0] + '">' + esc(x[1]) + '</option>').join('');
-  return '<div class="seq-chip" data-cit="' + esc(cit.id) + '" style="--c:' + (c.vol ? 'var(--vol-' + c.vol + '-deep)' : 'var(--ink-soft)') + ';">' +
+  // Une intervention porte en plus ce qu'elle a fait à la tension : le sens seulement, que l'analyste lit et corrige.
+  let effet = '';
+  if (slot === 'interventions') {
+    const sens = sensCit(evt, cit), duDeclarant = sensDuDeclarant(evt, cit);
+    effet = '<div class="seq-chip-effet"><label>Effet sur la tension :</label><select class="seq-effet sens-' + (sens || 'aucun') + '" aria-label="Effet de cette intervention sur la tension" ' +
+      'title="Ce que cette intervention a l\'air d\'avoir fait à la tension. La BAF retient seulement ce sens, pour les statistiques d\'Interpréter et les exemples du vase." ' +
+      'onchange="choisirEffetSeq(\'' + esc(cit.id) + '\', this.value)">' +
+      '<option value=""' + (sens ? '' : ' selected') + '>pas d\'effet noté</option>' +
+      Object.keys(SENS_EFFET).map(k => '<option value="' + k + '"' + (sens === k ? ' selected' : '') + '>' + SENS_EFFET[k].fleche + ' ' + SENS_EFFET[k].nom + '</option>').join('') +
+      '</select>' + (duDeclarant && cit.effet === undefined ? '<span class="sens-defaut" title="Le déclarant l\'a indiqué dans le formulaire : vous pouvez le confirmer ou le corriger.">d\'après le déclarant</span>' : '') + '</div>';
+  }
+  return '<div class="seq-chip' + (effet ? ' seq-chip-iv' : '') + '" data-cit="' + esc(cit.id) + '" style="--c:' + (c.vol ? 'var(--vol-' + c.vol + '-deep)' : 'var(--ink-soft)') + ';">' +
     '<span class="seq-chip-num">' + esc(noms[cit.id] || '') + '</span>' +
     '<span class="seq-chip-texte" title="Voir ce passage dans le déclaratif" onclick="montrerCitSeq(\'' + esc(cit.id) + '\')">« ' + esc(texte.length > 150 ? texte.slice(0, 149) + '…' : texte) + ' »</span>' +
     '<select class="seq-chip-menu" aria-label="Déplacer ou copier ce passage" title="Déplacer, ou mettre aussi ailleurs" onchange="actionCitSeq(\'' + esc(cit.id) + '\', this.value); this.selectedIndex = 0;">' +
       '<option value="">⋯</option>' +
       '<optgroup label="Déplacer vers">' + options.split('%V:').join('mv:') + '</optgroup>' +
       '<optgroup label="Mettre aussi dans">' + options.split('%V:').join('cp:') + '</optgroup></select>' +
-    '<button type="button" class="seq-chip-x" title="Retirer ce passage (le texte redevient « pas encore traité »)" aria-label="Retirer" onclick="retirerCitSeq(\'' + esc(cit.id) + '\')">✕</button></div>';
+    '<button type="button" class="seq-chip-x" title="Retirer ce passage (le texte redevient « pas encore traité »)" aria-label="Retirer" onclick="retirerCitSeq(\'' + esc(cit.id) + '\')">✕</button>' + effet + '</div>';
+}
+// Le choix de l'analyste : monte, rien, descend, ou « pas d'effet noté ».
+function choisirEffetSeq(id, valeur) {
+  const evt = analyseEpisodeCourant();
+  if (!evt) return;
+  modifierSeq(evt, seq => {
+    const p = trouverCitSeq(seq, id);
+    if (p && p.slot === 'interventions') p.cit.effet = SENS_EFFET[valeur] ? valeur : '';
+  });
+  renderDecouper();
 }
 function slotSeq(evt, seq, cle, noms, titre) {
   const slot = cle.indexOf('.') >= 0 ? cle.split('.')[1] : cle, c = SLOTS_SEQ[slot], liste = listeDeCle(seq, cle) || [];
@@ -5665,6 +5763,7 @@ function actionCitSeq(id, valeur) {
     if (!p || !cible) return;
     if (cible.some(c => c.champ === p.cit.champ && c.debut === p.cit.debut && c.texte === p.cit.texte)) return;
     const copieCit = Object.assign({}, p.cit, {id: m[1] === 'cp' ? nouvelIdDecoupe() : p.cit.id});
+    if (!/\.interventions$/.test(m[2])) delete copieCit.effet;
     if (m[1] === 'mv') { const l = listeDeCle(seq, p.cle); l.splice(l.indexOf(p.cit), 1); }
     cible.push(copieCit);
     trierSlot(evt, cible);
@@ -5816,6 +5915,7 @@ function renderDecouperRecap(el, evt) {
     const texte = String(cit.texte).replace(/\s+/g, ' ');
     return '<div class="seq-chip seq-chip-lecture' + (e.elementActif === elId ? ' actif' : '') + '" data-el="' + esc(elId) + '" style="--c:var(--vol-' + vol + '-deep);" title="Voir cet élément dans Catégoriser" onclick="allerAElementSeq(\'' + volet + '\',\'' + esc(elId) + '\')">' +
       '<span class="seq-chip-num">' + esc(noms[cit.id] || '') + '</span><span class="seq-chip-texte">« ' + esc(texte.length > 110 ? texte.slice(0, 109) + '…' : texte) + ' »</span>' +
+      (slot === 'interventions' && sensCit(evt, cit) ? '<span class="seq-chip-sens sens-' + sensCit(evt, cit) + '" title="Effet noté : ' + SENS_EFFET[sensCit(evt, cit)].nom + '">' + SENS_EFFET[sensCit(evt, cit)].fleche + '</span>' : '') +
       (points ? '<span class="seq-chip-points">' + points + '</span>' : '') + '</div>';
   };
   const carte = (titre, slot, liste, vol) => liste.length
@@ -9390,15 +9490,11 @@ function computeIndice() {
   const nbLieu = evts.filter(e => e.lieu && e.lieu.trim()).length;
   const nbPresences = evts.filter(e => e.presences && e.presences.trim()).length;
   const nbComportement = evts.filter(e => e.comportement && e.comportement.trim()).length;
-  const nbConsequence = evts.filter(e => (e.obtenu && e.obtenu.trim()) || (e.evite && e.evite.trim())).length;
-  const nbAntecedent = evts.filter(e =>
-    (e.antecedents || []).some(a => a.texte && a.texte.trim()) ||
-    (e.etatAvant && e.etatAvant.trim())
-  ).length;
-  // Un antécédent explicitement désigné comme déclencheur par le déclarant.
-  const nbDeclencheur = evts.filter(e =>
-    (e.antecedents || []).some(a => a.declencheurPresume && a.texte && a.texte.trim())
-  ).length;
+  // Un épisode rangé dans Découper se lit sur sa séquence (c'est ce que l'analyste y a trouvé, même dans un récit libre) ;
+  // les autres, sur les cases du formulaire.
+  const nbConsequence = evts.filter(e => { const r = etapesRangees(e); return r ? r.consequence : !!((e.obtenu && e.obtenu.trim()) || (e.evite && e.evite.trim())); }).length;
+  const nbAntecedent = evts.filter(e => { const r = etapesRangees(e); return r ? r.antecedent : !!((e.antecedents || []).some(a => a.texte && a.texte.trim()) || (e.etatAvant && e.etatAvant.trim())); }).length;
+  const nbCD = evts.filter(e => { const r = etapesRangees(e); return r ? r.comportement : !!(e.comportement && e.comportement.trim()); }).length;
   const nbTemoinDirect = evts.filter(e => e.temoin === 'Témoin direct').length;
 
   // Déclarants uniques (par prénom/initiales)
@@ -9431,7 +9527,8 @@ function computeIndice() {
   const tauxCateg = computeM3Categorisation().pct / 100;
 
   /* Niveau de détail du recueil. Une étape déroulée vaut 1, une étape
-     répondue en une case vaut 0,4, une étape vide vaut 0. Un résumé vaut mieux
+     répondue en une case — ou rangée par l'analyste à partir d'un récit libre — vaut 0,4,
+     une étape vide vaut 0. Un résumé vaut mieux
      que rien, mais il ne permet ni de distinguer un contexte d'un antécédent,
      ni de lire une séquence — d'où une confiance moindre.
      Choix à signaler : c'est un critère parmi les autres, pas un multiplicateur
@@ -9441,7 +9538,7 @@ function computeIndice() {
   let sommeDetail = 0;
   evts.forEach(e => ETAPES_NOTEES.forEach(id => {
     if (etapeDetailRemplie(e, id)) sommeDetail += 1;
-    else if (resumeEtape(e, id)) sommeDetail += 0.4;
+    else if (resumeEtape(e, id) || (etapesRangees(e) || {})[id]) sommeDetail += 0.4;
   }));
   const tauxDetail = n > 0 ? sommeDetail / (n * ETAPES_NOTEES.length) : 0;
 
@@ -9525,15 +9622,15 @@ function computeIndice() {
     },
     {
       id: 'completude_abc',
-      label: 'Complétude de la séquence A→CD→C (antécédent, déclencheur, conséquence)',
-      valeur: n > 0 ? Math.round(((nbAntecedent+nbDeclencheur+nbConsequence)/(n*3))*100) : 0,
+      label: 'Complétude de la séquence A→CD→C (antécédent, comportement-défi, conséquence)',
+      valeur: n > 0 ? Math.round(((nbAntecedent+nbCD+nbConsequence)/(n*3))*100) : 0,
       score: n === 0 ? 0 : (() => {
-        const taux = (nbAntecedent+nbDeclencheur+nbConsequence) / (n*3);
+        const taux = (nbAntecedent+nbCD+nbConsequence) / (n*3);
         return taux >= 0.8 ? 1 : taux >= 0.5 ? 0.5 : 0;
       })(),
-      affichage: n > 0 ? Math.round(((nbAntecedent+nbDeclencheur+nbConsequence)/(n*3))*100) + '% des séquences A→CD→C complètes' : 'Aucun épisode',
+      affichage: n > 0 ? Math.round(((nbAntecedent+nbCD+nbConsequence)/(n*3))*100) + '% des séquences A→CD→C complètes' : 'Aucun épisode',
       conseils: {
-        0: 'Les antécédents, déclencheurs ou conséquences sont souvent absents. C\'est pourtant là que la fonction se lit. Rappelez aux déclarants l\'importance de remplir ces champs.',
+        0: 'Les antécédents, les comportements-défis ou les conséquences sont souvent absents (ou pas encore rangés dans Analyser › Découper, pour un récit en texte libre). C\'est pourtant là que la fonction se lit. Rappelez aux déclarants l\'importance de remplir ces champs.',
         0.5: 'La moitié des séquences sont incomplètes. La fonction sera difficile à lire sur les épisodes incomplets.',
         1: null
       }
@@ -9572,7 +9669,7 @@ function computeIndice() {
       score: tauxDetail >= 0.8 ? 1 : tauxDetail >= 0.5 ? 0.5 : 0,
       affichage: n > 0 ? Math.round(tauxDetail * 100) + '% du détail attendu' : 'Aucun épisode',
       conseils: {
-        0: 'Le recueil est très majoritairement en mode rapide, ou incomplet. Un résumé vaut mieux que rien, mais il ne permet pas de distinguer un contexte d\'un antécédent ni de lire une séquence. Reprenez en mode détaillé les épisodes qui comptent le plus.',
+        0: 'Le recueil est très majoritairement en mode rapide, en récit libre ou incomplet. Un résumé vaut mieux que rien, mais il ne permet pas de distinguer un contexte d\'un antécédent ni de lire une séquence. Reprenez en mode détaillé les épisodes qui comptent le plus.',
         0.5: 'Une bonne part du recueil est en mode rapide. C\'est exploitable — le détail reste ce qui permet de trancher entre deux hypothèses.',
         1: null
       }
@@ -12814,6 +12911,137 @@ const _CONTROLES = [
       if (!etaitMontree) vue.classList.remove('show');
       try { allerAnalyse(sauvePos, {sansDefilement: true}); } catch (er) { /* vue masquée */ }
     }
+  }},
+  {nom:'Effet d\'une intervention : le formulaire propose, l\'analyste confirme ou corrige ; les statistiques et les exemples du vase le lisent', test: () => {
+    const sauveEvts = state.m2.evenements, sauveM3 = JSON.stringify(state.m3), sauveM4 = JSON.stringify(state.m4), vraiPersist = persist, vraiConfirm = window.confirm;
+    persist = () => {}; window.confirm = () => true;
+    try {
+      const evt = {id: 'ef1', date: '2026-03-02', heure: '09:10', comportement: 'Il crie.',
+        interventions: [{id: 'i1', texte: 'Préavis de cinq minutes.', effet: 'Augmentation de la tension'}, {id: 'i2', texte: 'Mise en retrait.', effet: 'Diminution de la tension'},
+          {id: 'i3', texte: 'On n\'a rien dit.', effet: 'Aucun effet visible'}, {id: 'i4', texte: 'Sans effet noté.'}], obtenu: 'Du temps.'};
+      state.m2.evenements = [evt]; ensureM3(); ensureM4(); state.m3.decoupages = {}; state.m3.decoupagesVolets = {}; state.m3.sequences = {}; state.m4.vase = {monte: [], descend: [], texte: ''};
+      appliquerSequence(evt, propositionSequence(evt), {sansDemande: true});
+      const ivs = () => sequenceActive(evt).phases[0].interventions;
+      const sens = () => ivs().map(c => sensCit(evt, c)).join(',');
+      const duForm = sens();
+      const idIv = k => idElementDeCit(evt, 'interventions', ivs()[k]);
+      const cats = {interventions: {kP: {nom: 'Préavis', items: [idIv(0)]}, kR: {nom: 'Retrait', items: [idIv(1), idIv(3)]}}, cp: {}};
+      const lu = st => st.nAug + '/' + st.nEffet + ' ' + Object.keys(st.effets).sort().map(k => k + ' ' + st.effets[k].nAug + '/' + st.effets[k].n).join(';');
+      const stForm = lu(statsGradation([evt], cats)).trim();
+      // L'analyste corrige : le préavis n'a pas d'effet noté, « Sans effet noté » a fait redescendre
+      const s2 = clone(sequenceActive(evt));
+      s2.phases[0].interventions[0].effet = ''; s2.phases[0].interventions[3].effet = 'descend';
+      appliquerSequence(evt, s2, {sansDemande: true});
+      const corrige = sens();
+      const stAnalyste = lu(statsGradation([evt], cats)).trim();
+      // Quand on passe soi-même les découpages à lire, la séquence est ignorée : seul le formulaire parle
+      const stSansSeq = lu(statsGradation([evt], cats, {})).trim();
+      const ex = interventionsParSens();
+      const exTexte = ['monte', 'descend', 'rien'].map(k => k + ':' + ex[k].map(x => x.texte).join('+')).join(' / ');
+      retenirExempleVase('descend', 0); retenirExempleVase('descend', 0);
+      const tags = state.m4.vase.descend.map(t => t.texte + '@' + t.source).join(',');
+      renderVaseExemples();
+      const bloc = document.getElementById('vase-exemples');
+      const blocVase = bloc ? bloc.querySelectorAll('.vase-ex').length + ':' + bloc.querySelectorAll('.vase-ex-pris').length : 'sans-bloc';
+      return _bancEgal('sens d\'après le formulaire | statistiques (formulaire) | sens après correction | statistiques (analyste) | découpages passés à la main : le formulaire seul parle, la correction de l\'analyste est ignorée | exemples | une seule fois au vase, du dehors | bloc du vase',
+        'monte,descend,rien, # 1/3 Préavis 1/1;Retrait 0/1 # ,descend,rien,descend # 0/3 Retrait 0/2 # 1/3 Préavis 1/1;Retrait 0/1 # monte: / descend:Mise en retrait.+Sans effet noté. / rien:On n\'a rien dit. # Mise en retrait.@exterieur # 2:1',
+        [duForm, stForm, corrige, stAnalyste, stSansSeq, exTexte, tags, blocVase].join(' # '));
+    } finally { persist = vraiPersist; window.confirm = vraiConfirm; state.m2.evenements = sauveEvts; state.m3 = JSON.parse(sauveM3); state.m4 = JSON.parse(sauveM4); }
+  }},
+  {nom:'Découper : chaque intervention rangée porte un choix d\'effet (monte, rien, descend), pas les autres passages', test: () => {
+    const sauveEvts = state.m2.evenements, sauveM3 = JSON.stringify(state.m3), vraiPersist = persist, vraiConfirm = window.confirm;
+    const sauveEp = analyseEtat().episode, sauvePos = analyseEtat().pos;
+    const vue = document.getElementById('view-analyser'), etaitMontree = vue.classList.contains('show');
+    persist = () => {}; window.confirm = () => true;
+    try {
+      const evt = {id: 'ef2', date: '2026-03-02', heure: '09:10', comportement: 'Il crie.',
+        interventions: [{id: 'i1', texte: 'Préavis de cinq minutes.', effet: 'Augmentation de la tension'}, {id: 'i2', texte: 'Mise en retrait.', effet: 'Diminution de la tension'}, {id: 'i3', texte: 'Sans effet noté.'}], obtenu: 'Du temps.'};
+      state.m2.evenements = [evt]; ensureM3(); state.m3.decoupages = {}; state.m3.decoupagesVolets = {}; state.m3.sequences = {};
+      vue.classList.add('show');
+      analyseEtat().episode = 0; oublierTravailSeq();
+      allerAnalyse(1, {sansDefilement: true});
+      const choix = () => [...document.querySelectorAll('#decouper-panneau .seq-chip-effet select')];
+      const valeurs = choix().map(s => s.value).join(',');
+      const dAprèsLeDéclarant = document.querySelectorAll('#decouper-panneau .sens-defaut').length;
+      const ailleurs = document.querySelectorAll('#decouper-panneau .seq-chip:not(.seq-chip-iv)').length;
+      const enregistreAvant = !!state.m3.sequences.ef2;
+      const premier = travailSeq(evt).seq.phases[0].interventions[0].id;
+      choisirEffetSeq(premier, 'rien');
+      const seq = sequenceActive(evt);
+      const apres = choix().map(s => s.value).join(',');
+      const enregistre = seq && seq.phases[0].interventions[0].effet;
+      const dernier = travailSeq(evt).seq.phases[0].interventions[2].id;
+      choisirEffetSeq(dernier, 'monte');
+      const sens = sequenceActive(evt).phases[0].interventions.map(c => sensCit(evt, c)).join(',');
+      choisirEffetSeq(premier, '');
+      const efface = sequenceActive(evt).phases[0].interventions.map(c => sensCit(evt, c)).join(',');
+      return _bancEgal('trois choix, proposés par le formulaire | « d\'après le déclarant » sur deux | seuls la conséquence et le CD n\'en ont pas | rien d\'enregistré avant le premier choix | choix pris en compte | enregistré tel quel | une intervention sans réponse du déclarant se choisit | « pas d\'effet noté » efface',
+        'monte,descend, | 2 | 2 | false | rien,descend, | rien | rien,descend,monte | ,descend,monte',
+        [valeurs, dAprèsLeDéclarant, ailleurs, enregistreAvant, apres, enregistre, sens, efface].join(' | '));
+    } finally {
+      persist = vraiPersist; window.confirm = vraiConfirm; state.m2.evenements = sauveEvts; state.m3 = JSON.parse(sauveM3);
+      analyseEtat().episode = sauveEp; analyseEtat().pos = sauvePos; oublierTravailSeq();
+      if (!etaitMontree) vue.classList.remove('show');
+      try { allerAnalyse(sauvePos, {sansDefilement: true}); } catch (er) { /* vue masquée */ }
+    }
+  }},
+  {nom:'Interpréter : les statistiques lisent les phases d\'un épisode rangé (effet par catégorie, enchaînement d\'une phase à la suivante)', test: () => {
+    const sauveEvts = state.m2.evenements, sauveM3 = JSON.stringify(state.m3), vraiPersist = persist, vraiConfirm = window.confirm;
+    persist = () => {}; window.confirm = () => true;
+    try {
+      const evt = {id: 'ph1', date: '2026-03-02', heure: '09:10', comportement: 'Il crie. Elle intervient. Il tape. On le laisse seul. Il crie encore.', obtenu: 'Du temps.', tension: {pic: {v: 85}}};
+      state.m2.evenements = [evt]; ensureM3(); state.m3.decoupages = {}; state.m3.decoupagesVolets = {}; state.m3.sequences = {};
+      const cit = (champ, texte, effet) => { const c = {id: nouvelIdDecoupe(), champ, debut: texteChamp(evt, champ).indexOf(texte), texte}; if (effet) c.effet = effet; return c; };
+      const seq = sequenceVide();
+      seq.phases[0].cds.push(cit('comportement', 'Il crie.'));
+      seq.phases[0].interventions.push(cit('comportement', 'Elle intervient.', 'monte'));
+      seq.phases.push(nouvellePhase());
+      seq.phases[1].antecedents.push(cit('comportement', 'Elle intervient.'));
+      seq.phases[1].cds.push(cit('comportement', 'Il tape.'));
+      // Une phase sans CD entre les deux suivantes : ses interventions comptent aussi dans l'enchaînement
+      seq.phases[1].interventions.push(cit('comportement', 'On le laisse seul.', 'descend'));
+      seq.phases.push(nouvellePhase());
+      seq.phases[2].cds.push(cit('comportement', 'Il crie encore.'));
+      seq.consequence.push(cit('obtenu', 'Du temps.'));
+      appliquerSequence(evt, seq, {sansDemande: true});
+      const id = (slot, c) => idElementDeCit(evt, slot, c);
+      const cats = {
+        cp: {k1: {nom: 'Cris', items: [id('cds', seq.phases[0].cds[0]), id('cds', seq.phases[2].cds[0])]}, k2: {nom: 'Coups', items: [id('cds', seq.phases[1].cds[0])]}},
+        interventions: {k3: {nom: 'Réponse verbale', items: [id('interventions', seq.phases[0].interventions[0])]}, k4: {nom: 'Retrait de l\'entourage', items: [id('interventions', seq.phases[1].interventions[0])]}}};
+      const st = statsGradation([evt], cats);
+      const chaines = Object.values(st.chaines).map(c => c.de + '→' + c.vers + ' après ' + Object.keys(c.apres).sort().join('+') + ' ×' + c.n).sort().join(' | ');
+      const effets = st.nAug + '/' + st.nEffet + ' ' + Object.keys(st.effets).sort().map(k => k + ' ' + st.effets[k].nAug + '/' + st.effets[k].n).join(';');
+      const paliers = Object.keys(st.paliers).join(',') + ' ' + st.nEvtPost;
+      return _bancEgal('enchaînements, avec les interventions rangées entre les deux CD | effets par catégorie | CD de départ et épisodes avec une suite',
+        'Cris→Coups après Réponse verbale ×1 | Cris→Cris après Retrait de l\'entourage ×1 # 1/2 Retrait de l\'entourage 0/1;Réponse verbale 1/1 # Cris 1',
+        chaines + ' # ' + effets + ' # ' + paliers);
+    } finally { persist = vraiPersist; window.confirm = vraiConfirm; state.m2.evenements = sauveEvts; state.m3 = JSON.parse(sauveM3); }
+  }},
+  {nom:'Indice de confiance : un récit libre rangé compte (0,4 par étape), un formulaire détaillé davantage ; A→CD→C se lit sur les phases', test: () => {
+    const sauveEvts = state.m2.evenements, sauveM3 = JSON.stringify(state.m3), vraiPersist = persist, vraiConfirm = window.confirm;
+    persist = () => {}; window.confirm = () => true;
+    try {
+      const mesure = () => { const c = computeIndice().criteres; return c.find(x => x.id === 'completude_abc').valeur + '/' + c.find(x => x.id === 'niveau_detail').valeur; };
+      const libre = {id: 'ix1', date: '2026-03-02', heure: '09:10', texteBrut: 'On lui parle. Il crie. Il se calme.'};
+      state.m2.evenements = [libre]; ensureM3(); state.m3.decoupages = {}; state.m3.decoupagesVolets = {}; state.m3.sequences = {};
+      const nonRange = mesure();
+      const cit = texte => ({id: nouvelIdDecoupe(), champ: 'texteBrut', debut: libre.texteBrut.indexOf(texte), texte});
+      const seq = sequenceVide();
+      seq.phases[0].antecedents.push(cit('On lui parle.'));
+      seq.phases[0].cds.push(cit('Il crie.'));
+      seq.consequence.push(cit('Il se calme.'));
+      appliquerSequence(libre, seq, {sansDemande: true});
+      const range = mesure();
+      state.m2.evenements = [{id: 'ix2', date: '2026-03-02', heure: '09:10', antecedents: [{id: 'a1', texte: 'Consigne.'}], comportement: 'Il crie.', obtenu: 'Du temps.'}];
+      const formulaire = mesure();
+      state.m2.evenements = [{id: 'ix3', date: '2026-03-02', heure: '09:10', comportement: 'Il crie.'}];
+      const partiel = mesure();
+      state.m2.evenements = [{id: 'ix4', date: '2026-03-02', heure: '09:10', resumes: {comportement: 'Il a crié.', antecedent: 'Une consigne.', consequence: 'Du temps.'}}];
+      const resume = mesure();
+      return _bancEgal('récit libre non rangé | rangé (A, CD, C : 3 étapes à 0,4 sur 5) | formulaire détaillé (3 étapes à 1 sur 5) | seulement un CD | résumés rapides (0,4 par étape, mais pas de séquence lisible)',
+        '0/0 | 100/24 | 100/60 | 33/20 | 0/24',
+        [nonRange, range, formulaire, partiel, resume].join(' | '));
+    } finally { persist = vraiPersist; window.confirm = vraiConfirm; state.m2.evenements = sauveEvts; state.m3 = JSON.parse(sauveM3); }
   }},
   {nom:'Les couleurs des catégories se distinguent deux à deux', test: () => {
     /* Ce qui fait confondre deux catégories, c'est la teinte : les deux violets
@@ -17277,48 +17505,81 @@ function medianeStatsGrad(valeurs) {
   return t.length % 2 ? t[m] : (t[m - 1] + t[m]) / 2;
 }
 
-/* Pure : prend les épisodes et les catégories, ne lit rien d'autre. */
+/* Pure : prend les épisodes et les catégories, ne lit rien d'autre — sauf, pour un épisode rangé dans Découper, sa séquence
+   (sauf si l'on passe soi-même les découpages à lire). */
 function statsGradation(evts, categories, decoupages) {
   const catsIv = (categories && categories.interventions) || {};
   const catsCp = (categories && categories.cp) || {};
   const nomsDe = (cats, itemId) => catsDeItemDans(cats, itemId).map(id => cheminCatDans(cats, id));
+  const nomsDeCits = (cats, evt, slot, cits) => [...new Set(cits.reduce((acc, c) => acc.concat(nomsDe(cats, idElementDeCit(evt, slot, c))), []))];
   const AUGMENTATION = 'Augmentation de la tension';
   const st = {effets: {}, nEffet: 0, nAug: 0, nIvSansCat: 0, paliers: {}, nEvtSansPic: 0, chaines: {}, nEvtPost: 0};
 
   (evts || []).forEach(evt => {
     if (!evt || !evt.id) return;
+    // Un épisode rangé dans Découper : ses interventions, ses CD et ses phases viennent de sa séquence.
+    const rang = decoupages === undefined ? sequenceActive(evt) : null;
     const interventions = evt.interventions || [];
     const avecTexte = interventions.filter(iv => iv.texte && iv.texte.trim());
-
-    // 1. L'effet de chaque intervention, rangé sous sa catégorie.
-    interventions.forEach(iv => {
-      if (!iv.effet) return;
-      st.nEffet++;
-      if (iv.effet === AUGMENTATION) st.nAug++;
-    });
-    avecTexte.forEach((iv, k) => {
-      if (!iv.effet) return;
-      const noms = [...new Set(idsElementsIntervention(evt, iv, k).reduce((acc, id) => acc.concat(nomsDe(catsIv, id)), []))];
-      if (!noms.length) { st.nIvSansCat++; return; }
-      noms.forEach(nom => {
-        const e = st.effets[nom] || (st.effets[nom] = {nom, n: 0, nAug: 0});
-        e.n++;
-        if (iv.effet === AUGMENTATION) e.nAug++;
-      });
-    });
-
-    // 2 et 3. Le premier CD (ou les CD simultanés), puis ceux venus à la suite,
-    // avec ce qui s'est passé entre deux : du déclarant (« Et ensuite ? ») ou d'un découpage.
-    const sc = structureCD(evt, decoupages);
     const depart = new Set();
     const apres = [];
-    (sc.mode === 'sequence' ? sc.cds.slice(0, 1) : sc.cds).forEach(cd => nomsDe(catsCp, cd.id).forEach(n => depart.add(n)));
-    // L'ancien champ « gradation » compte avec le comportement de départ, comme avant.
-    if (!sc.decoupe) elementsEvt('cp', evt).filter(el => el.relie === undefined).forEach(el => nomsDe(catsCp, el.id).forEach(n => depart.add(n)));
-    if (sc.mode === 'sequence') sc.cds.slice(1).forEach((cd, j) => {
-      const noms = nomsDe(catsCp, cd.id);
-      if (noms.length) apres.push({noms, nomsIv: nomsIvCharniere(evt, sc.charnieres[j], avecTexte, catsIv, nomsDe)});
-    });
+
+    // 1. L'effet de chaque intervention, rangé sous sa catégorie.
+    if (rang) {
+      rang.phases.forEach(p => p.interventions.forEach(cit => {
+        const sens = sensCit(evt, cit);
+        if (!sens) return;
+        st.nEffet++;
+        if (sens === 'monte') st.nAug++;
+        const noms = nomsDeCits(catsIv, evt, 'interventions', [cit]);
+        if (!noms.length) { st.nIvSansCat++; return; }
+        noms.forEach(nom => {
+          const e = st.effets[nom] || (st.effets[nom] = {nom, n: 0, nAug: 0});
+          e.n++;
+          if (sens === 'monte') e.nAug++;
+        });
+      }));
+    } else {
+      interventions.forEach(iv => {
+        if (!iv.effet) return;
+        st.nEffet++;
+        if (iv.effet === AUGMENTATION) st.nAug++;
+      });
+      avecTexte.forEach((iv, k) => {
+        if (!iv.effet) return;
+        const noms = [...new Set(idsElementsIntervention(evt, iv, k).reduce((acc, id) => acc.concat(nomsDe(catsIv, id)), []))];
+        if (!noms.length) { st.nIvSansCat++; return; }
+        noms.forEach(nom => {
+          const e = st.effets[nom] || (st.effets[nom] = {nom, n: 0, nAug: 0});
+          e.n++;
+          if (iv.effet === AUGMENTATION) e.nAug++;
+        });
+      });
+    }
+
+    // 2 et 3. Le premier CD (ou les CD simultanés), puis ceux venus à la suite, avec ce qui s'est passé entre deux :
+    // les interventions des phases entre les deux (épisode rangé), ou le « Et ensuite ? » du déclarant, ou un découpage.
+    if (rang) {
+      const avecCd = rang.phases.map((p, k) => ({p, k})).filter(x => x.p.cds.length);
+      if (avecCd.length) {
+        nomsDeCits(catsCp, evt, 'cds', avecCd[0].p.cds).forEach(n => depart.add(n));
+        avecCd.slice(1).forEach((x, j) => {
+          const noms = nomsDeCits(catsCp, evt, 'cds', x.p.cds);
+          if (!noms.length) return;
+          const entre = [].concat.apply([], rang.phases.slice(avecCd[j].k, x.k).map(ph => ph.interventions));
+          apres.push({noms, nomsIv: nomsDeCits(catsIv, evt, 'interventions', entre)});
+        });
+      }
+    } else {
+      const sc = structureCD(evt, decoupages);
+      (sc.mode === 'sequence' ? sc.cds.slice(0, 1) : sc.cds).forEach(cd => nomsDe(catsCp, cd.id).forEach(n => depart.add(n)));
+      // L'ancien champ « gradation » compte avec le comportement de départ, comme avant.
+      if (!sc.decoupe) elementsEvt('cp', evt).filter(el => el.relie === undefined).forEach(el => nomsDe(catsCp, el.id).forEach(n => depart.add(n)));
+      if (sc.mode === 'sequence') sc.cds.slice(1).forEach((cd, j) => {
+        const noms = nomsDe(catsCp, cd.id);
+        if (noms.length) apres.push({noms, nomsIv: nomsIvCharniere(evt, sc.charnieres[j], avecTexte, catsIv, nomsDe)});
+      });
+    }
     if (!depart.size) return;
 
     const pic = tensionPicEvt(evt);
@@ -17767,6 +18028,52 @@ function savePalier(id) {
 /* ── 2 · Ce qui le remplit ─────────────────────────────────────────── */
 // Ce que le préambule disait avant qu'on regarde les données : on l'affiche à
 // côté de ce que l'analyse a trouvé, sans les mélanger.
+/* Ce que les épisodes en disent : les interventions après lesquelles la tension a monté ou est redescendue, avec leur effet
+   noté par le déclarant puis confirmé ou corrigé par l'analyste. L'analyste choisit lesquelles retenir au vase. */
+let vaseExemplesOuvert = false;
+function regrouperExemples(liste) {
+  const g = {};
+  liste.forEach(x => { const k = nmTexte(x.texte); (g[k] = g[k] || {texte: x.texte, eps: []}).eps.push(x.n); });
+  return Object.values(g).sort((a, b) => b.eps.length - a.eps.length || a.eps[0] - b.eps[0]);
+}
+function texteExemple(x) { return x.texte.length > 90 ? x.texte.slice(0, 89) + '…' : x.texte; }
+function renderVaseExemples() {
+  const el = document.getElementById('vase-exemples');
+  if (!el) return;
+  ensureM4();
+  const par = interventionsParSens();
+  if (!par.monte.length && !par.descend.length) { el.innerHTML = ''; return; }
+  const colonne = (liste, titre) => {
+    const gr = regrouperExemples(par[liste]);
+    if (!gr.length) return '<div class="vase-ex-col ' + liste + '"><h5>' + titre + '</h5><p class="vase-ex-note">Aucune pour l\'instant.</p></div>';
+    const pris = new Set((state.m4.vase[liste] || []).map(t => nmTexte(t.texte)));
+    return '<div class="vase-ex-col ' + liste + '"><h5>' + titre + ' (' + par[liste].length + ')</h5>' +
+      gr.slice(0, 8).map((x, i) => '<div class="vase-ex"><span class="vase-ex-texte">« ' + esc(x.texte) + ' »</span>' +
+        '<span class="vase-ex-eps">' + (x.eps.length > 1 ? x.eps.length + ' épisodes' : 'épisode ' + x.eps[0]) + '</span>' +
+        (pris.has(nmTexte(texteExemple(x))) ? '<span class="vase-ex-pris">✓ au vase</span>'
+          : '<button type="button" class="vase-ex-ajouter no-print" onclick="retenirExempleVase(\'' + liste + '\',' + i + ')" title="L\'ajouter à « ' + (liste === 'monte' ? 'ce qui le fait monter, du dehors' : 'ce qui le fait redescendre, du dehors') + ' »">＋ au vase</button>') + '</div>').join('') +
+      (gr.length > 8 ? '<div class="vase-ex-suite">et ' + (gr.length - 8) + ' autre' + (gr.length - 8 > 1 ? 's' : '') + '.</div>' : '') + '</div>';
+  };
+  el.innerHTML = '<details class="vase-exemples"' + (vaseExemplesOuvert ? ' open' : '') + ' ontoggle="vaseExemplesOuvert = this.open">' +
+    '<summary>Ce que les épisodes en disent <span class="vase-ex-aide">— ' + par.monte.length + ' intervention' + (par.monte.length > 1 ? 's' : '') + ' suivie' + (par.monte.length > 1 ? 's' : '') + ' d\'une montée, ' +
+      par.descend.length + ' d\'une baisse' + (par.rien.length ? ', ' + par.rien.length + ' sans effet' : '') + '</span></summary>' +
+    '<p class="vase-ex-note">D\'après l\'effet noté pour chaque intervention (par le déclarant, confirmé ou corrigé dans Analyser › Découper). Ce sont des exemples à discuter : retenez ceux que vous voulez voir dans les listes ci-dessous. Ils sont ajoutés « du dehors », puisqu\'il s\'agit de ce que fait l\'entourage.</p>' +
+    '<div class="vase-ex-cols">' + colonne('monte', 'Après quoi la tension a monté') + colonne('descend', 'Après quoi la tension est redescendue') + '</div></details>';
+}
+function retenirExempleVase(liste, i) {
+  ensureM4();
+  if (liste !== 'monte' && liste !== 'descend') return;
+  const x = regrouperExemples(interventionsParSens()[liste])[i];
+  if (!x) return;
+  const texte = texteExemple(x);
+  const l = state.m4.vase[liste] || (state.m4.vase[liste] = []);
+  if (!l.some(t => nmTexte(t.texte) === nmTexte(texte))) l.push({texte, source: 'exterieur'});
+  persist();
+  renderVaseTags();
+  renderVaseExemples();
+  refreshSynthese();
+}
+
 function renderVaseApriori() {
   const el = document.getElementById('vase-apriori');
   if (!el) return;
@@ -17786,6 +18093,7 @@ function renderVaseApriori() {
 function renderVaseTags() {
   ensureM4();
   const vase = state.m4.vase;
+  renderVaseExemples();
   const chip = (liste, i, texte) =>
     '<span class="vase-tag ' + (liste === 'descend' ? 'descend' : 'monte') + '">' + esc(texte) +
     '<button onclick="retirerVaseTag(\'' + liste + '\',' + i + ')">×</button></span>';
@@ -22017,7 +22325,7 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
-const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":8754,"retrait":1811,"depots":59}]};
+const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":9094,"retrait":1843,"depots":60}]};
 
 function svgActiviteCode() {
   const mois = ACTIVITE_CODE.mois || [];
@@ -22056,6 +22364,23 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-08',
+    version: 'v2026.10.08-20',
+    titre: "Interpréter et la synthèse lisent les phases : effet des interventions, vase, indice de confiance",
+    corps: `
+<p><b>Interpréter et la synthèse lisent les phases</b> (Arthur et Émilie — l'effet des interventions, le vase, l'indice de confiance) :</p>
+<ul>
+<li><b>L'effet d'une intervention : monter, rien, redescendre.</b> Dans Découper, chaque passage rangé dans « Intervention » porte un petit choix : <i>fait monter</i>, <i>ne change rien</i>, <i>fait redescendre</i>, ou <i>pas d'effet noté</i>. Si le déclarant a donné l'effet dans le formulaire, il est repris (« d'après le déclarant ») ; l'analyste le confirme ou le corrige. La BAF ne retient que ce sens, pas la nuance de la réponse. Les quatre réponses du formulaire sont inchangées.</li>
+<li><b>Interpréter, « Après quelles interventions la tension augmente ».</b> Pour un épisode rangé, les statistiques lisent la séquence : l'effet de chaque intervention rangée, sous sa catégorie. Pour les enchaînements (« un nouveau comportement après une intervention »), c'est le passage d'une <b>phase</b> à la suivante : le CD de la phase 1, les interventions rangées entre les deux, le CD de la phase 2. Les épisodes pas encore rangés se lisent comme avant, avec les cases du formulaire.</li>
+<li><b>Le vase, « Ce que les épisodes en disent ».</b> Une partie repliée, au-dessus des listes « ce qui le fait monter / redescendre », qui montre les interventions après lesquelles la tension a monté, et celles après lesquelles elle est redescendue (avec leurs épisodes). <b>＋ au vase</b> en ajoute une aux listes, « du dehors » (c'est ce que fait l'entourage). Rien n'est ajouté tout seul : ce sont des exemples à discuter.</li>
+<li><b>L'indice de confiance lit les phases.</b> Pour un épisode rangé dans Découper, la complétude « antécédent · comportement-défi · conséquence » se lit sur ce que l'analyste y a rangé, et non plus seulement sur les cases du formulaire : un récit libre (une transmission) rangé compte donc. Le critère ne regarde plus si un antécédent est <i>désigné déclencheur</i> par le déclarant : il compte les comportements-défis à la place.</li>
+<li><b>Un déclaratif complet vaut plus qu'une transmission, dans l'indice.</b> Le « niveau de détail » compte 1 par étape renseignée dans le formulaire détaillé, 0,4 par étape d'un résumé rapide <b>ou d'un récit libre que l'analyste a rangé</b>, 0 par étape vide. Un récit libre non rangé ne compte pas encore : le ranger dans Découper lui donne sa place dans l'indice.</li>
+<li><b>Pas encore fait</b> : le glisser-déposer (le menu « ⋯ » fait la même chose) ; la mise à jour du mode d'emploi, du document EMIA et des FAQ pour tout Analyser (dernier lot).</li>
+</ul>
+`
+  },
 
   {
     date: '2026-10-08',
@@ -23383,6 +23708,7 @@ const REPERES = [
       {q: "Comment ranger ce que le déclarant a écrit ?",
        r: `<p>Le déclarant raconte comme il peut, souvent un peu partout. Dans Analyser, <b>Découper</b> range son texte dans la séquence de l'épisode : le <b>contexte</b>, puis une ou plusieurs <b>phases</b> (un antécédent, un CD, une intervention), puis la <b>conséquence</b>. À gauche, le déclaratif brut, qu'on ne touche jamais ; on y sélectionne un passage, et une petite bulle propose où le ranger.</p>
            <p>Chaque passage est une <b>citation exacte</b> : le déclaratif n'est jamais réécrit. Un même passage peut être rangé à deux endroits (l'intervention d'une phase est souvent l'antécédent de la suivante), et ce qui n'entre nulle part se met dans « Non retenu » : la barre d'avancement dit quelle part du texte est rangée. La BAF propose un premier rangement à partir des cases du formulaire ; on le corrige librement.</p>
+           <p>Sur chaque <b>intervention</b> rangée, un petit choix dit ce qu'elle a fait à la tension : <i>fait monter</i>, <i>ne change rien</i> ou <i>fait redescendre</i>. Si le déclarant l'a indiqué dans le formulaire, c'est repris (« d'après le déclarant ») et on le confirme ou on le corrige. La BAF ne retient que ce sens : il alimente les statistiques d'Interpréter et les exemples du vase.</p>
            <p class="repere-renvoi">Mode d'emploi, partie 2 — Organiser : le double codage (à jour avec la fin de la refonte).</p>`},
       {q: "Que fait l'étape « Interpréter » ?",
        r: `<p>Elle se fait directement en synthèse, à deux, dans le fichier socle. Elle cherche ce qui se répète : les séquences qui reviennent, les moments et les lieux où le comportement apparaît — et ceux où il n'apparaît pas —, la façon dont la tension monte chez la personne.</p>
@@ -23431,13 +23757,13 @@ const LEXIQUE_BAF = {
   "antécédent": "Ce qui s'est passé juste avant le comportement, dans les secondes ou minutes précédentes. Il y en a souvent plusieurs. Le déclarant peut signaler celui qui lui semble avoir déclenché — c'est un avis, pas un verdict.",
   "conséquence": "Ce qui change pour la personne après le comportement : ce qu'elle obtient, ce qu'elle évite. C'est souvent là que la fonction du comportement se lit. À ne pas confondre avec l'intervention, qui est ce que l'entourage a fait.",
   "intervention": "Ce que l'entourage a fait en réponse au comportement, et avec quel effet sur la tension. Une intervention peut apaiser, ne rien changer, ou produire à son tour un nouveau comportement-défi.",
-  "découpage": "Dans Analyser, le geste par lequel l'analyste range ce que dit le déclaratif dans la séquence de l'épisode : contexte, phase 1 (antécédent, CD, intervention), phases suivantes, conséquence. Chaque passage est une citation exacte du déclaratif, qui n'est jamais réécrit ; un même passage peut être rangé à deux endroits, et ce qui n'entre nulle part se met de côté (« non retenu »), pour que tout le texte soit traité. Un passage rangé porte son nom : CD 3.1.2 est le deuxième CD de la première phase du troisième épisode. La BAF propose un premier rangement à partir des cases du formulaire ; l'analyste le corrige librement. Le découpage fait partie du codage.",
+  "découpage": "Dans Analyser, le geste par lequel l'analyste range ce que dit le déclaratif dans la séquence de l'épisode : contexte, phase 1 (antécédent, CD, intervention), phases suivantes, conséquence. Chaque passage est une citation exacte du déclaratif, qui n'est jamais réécrit ; un même passage peut être rangé à deux endroits, et ce qui n'entre nulle part se met de côté (« non retenu »), pour que tout le texte soit traité. Un passage rangé porte son nom : CD 3.1.2 est le deuxième CD de la première phase du troisième épisode. La BAF propose un premier rangement à partir des cases du formulaire ; l'analyste le corrige librement. Sur chaque intervention rangée, l'analyste note aussi ce qu'elle a fait à la tension (elle la fait monter, ne change rien, ou la fait redescendre). Le découpage fait partie du codage.",
   "CD à la suite": "Un comportement-défi qui en suit un autre dans le même épisode : des cris, puis l'éducatrice demande de se calmer, puis des coups contre le mur. Ce qui s'est passé entre les deux est la conséquence du premier CD et l'antécédent du suivant.",
   "séquence": "Une suite antécédent → CD → conséquence. Un épisode en compte une ; quand ses CD se suivent, une par CD : ce qui s'est passé entre deux CD est la conséquence de l'un et l'antécédent du suivant. Les croisements d'Interpréter se comptent par séquence.",
   "crise": "Les comportements-défis repérés dans un même épisode. Ils sont numérotés CD 3.1, CD 3.2… : 3 pour le troisième épisode dans l'ordre chronologique, puis le rang du CD dans l'épisode. Un CD que l'on découpe en plusieurs devient CD 3.1.1, CD 3.1.2… et les autres gardent leur numéro.",
   "pattern": "Une séquence qui semble se répéter, composée à partir des catégories créées dans Organiser. Ce n'est pas une certitude : c'est une hypothèse de lecture, à discuter.",
   "gradation": "La façon dont la tension monte chez la personne : un signe discret d'abord, puis ça s'intensifie. Repérer la gradation permet d'intervenir avant le pic.",
-  "indice de confiance": "Dans la synthèse, un indicateur de la robustesse du recueil — volume, pluralité des regards, durée, complétude, part d'observation directe. À ne pas confondre avec l'ICAF, qui évalue l'analyse fonctionnelle entière.",
+  "indice de confiance": "Dans la synthèse, un indicateur de la robustesse du recueil — volume, pluralité des regards, durée, complétude de la séquence (antécédent, comportement-défi, conséquence — lue sur le rangement de l'analyste quand l'épisode est rangé), niveau de détail (un formulaire détaillé pèse plus qu'un résumé rapide ou qu'un récit libre rangé), part d'observation directe. À ne pas confondre avec l'ICAF, qui évalue l'analyse fonctionnelle entière.",
   "BAF": "Boussole pour une Analyse Fonctionnelle. L'enveloppe : elle réunit le RDAF (outil 1) et l'ICAF (outil 2).",
   "RDAF": "L'outil 1, le recueil de données. Il se déroule en trois étapes — Recueillir, Organiser, Interpréter. Il prépare l'analyse fonctionnelle, il ne la produit pas.",
   "ICAF": "L'outil 2, l'indice de confiance. Il évalue la qualité méthodologique d'une analyse fonctionnelle terminée — pas la personne, pas les déclarants.",
