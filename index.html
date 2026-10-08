@@ -389,6 +389,12 @@ header.top{
 .grille-sans-date{color:var(--rouge-deep,#B04A3A);font-weight:600;}
 .grille-modal .fenetre-actions{margin-top:6px;}
 .grille-scroll{max-height:42vh;overflow:auto;}
+/* ── Le formulaire en quatre étapes : avant, pendant, après, tension (Arthur et Émilie, 08/10/2026) ── */
+.etape-intro{margin:0 0 14px;font-size:14px;color:var(--ink-soft);line-height:1.6;}
+.mode-etape{margin:-4px 0 18px;}
+.detailler-bt{background:none;border:0;padding:4px 0;font:inherit;font-size:13px;font-weight:600;color:var(--slate);cursor:pointer;}
+.detailler-bt:hover{text-decoration:underline;}
+.tension-finale-note{margin:0 0 16px;padding:12px 16px;background:var(--paper-deep);border-radius:10px;font-size:13.5px;line-height:1.6;}
 .trous-modal-liste{max-height:48vh;overflow:auto;}
 .cov-deja{margin-top:14px;font-size:13px;}
 .cov-deja summary{cursor:pointer;font-weight:600;color:var(--ink-soft);}
@@ -6392,6 +6398,8 @@ function tensionPicEvt(evt) {
 }
 function evtEstCote(evt) {
   if (niveauxMontee(evt).length) return true;
+  const apres = mesureTension(evt, 'apres');
+  if (apres && apres.v !== null) return true;
   return (evt.interventions || []).some(iv => iv.tension && iv.tension.v !== null && iv.tension.v !== undefined);
 }
 
@@ -6414,6 +6422,9 @@ function pointsTensionEvt(evt) {
       v: v, note: t.note || '', intervention: iv
     });
   });
+  // Le niveau perçu à la fin de l'épisode (formulaire en quatre étapes) : il ferme la courbe, sans entrer dans la montée.
+  const fin = mesureTension(evt, 'apres');
+  if (fin && (fin.v !== null || fin.note)) pts.push({cle: 'apres', label: "à la fin de l'épisode", v: fin.v, note: fin.note});
   return pts;
 }
 
@@ -6675,7 +6686,7 @@ function etapeDetailRemplie(d, id) {
     case 'comportement': return rempli(d.comportement);
     case 'antecedent':   return (d.antecedents || []).some(a => rempli(a && a.texte)) || rempli(d.etatAvant);
     case 'intervention': return (d.interventions || []).some(iv => rempli(iv && iv.texte)) || rempli(d.interAutre);
-    case 'consequence':  return rempli(d.obtenu) || rempli(d.evite) || rempli(d.finPersonne) || rempli(d.entourage);
+    case 'consequence':  return rempli(d.obtenu) || rempli(d.evite) || rempli(d.finPersonne);
     default: return false;
   }
 }
@@ -6690,25 +6701,19 @@ function modeEtape(id) {
   if (modeForceEtape[id]) return modeForceEtape[id];
   if (etapeDetailRemplie(formDraft, id)) return 'detaille';
   if (resumeEtape(formDraft, id)) return 'rapide';
-  return (state.m2 && state.m2.modeSaisie === 'rapide') ? 'rapide' : 'detaille';
+  return 'rapide';
 }
 function basculerModeEtape(id, mode) {
   // On sauvegarde ce qui est à l'écran avant de changer de forme.
   try { Object.assign(formDraft, collecterEtape(ETAPES[currentEtapeIdx])); } catch(e) {}
   modeForceEtape[id] = mode;
-  // Le choix se retient pour les étapes et les épisodes suivants.
-  if (!state.m2) state.m2 = {};
-  state.m2.modeSaisie = mode;
   renderEtape(currentEtapeIdx);
 }
 
 function blocModeEtape(id, mode) {
-  return '<div class="mode-etape no-print">' +
-    '<span class="me-label">Comment voulez-vous répondre ?</span>' +
-    '<span class="mode-etape-btns">' +
-      '<button type="button" class="' + (mode === 'rapide' ? 'active' : '') + '" onclick="basculerModeEtape(\'' + id + '\',\'rapide\')" title="Une seule case libre pour toute l\'étape">⚡ Rapide</button>' +
-      '<button type="button" class="' + (mode !== 'rapide' ? 'active' : '') + '" onclick="basculerModeEtape(\'' + id + '\',\'detaille\')" title="Les questions déroulées, une à une">🔬 Détaillé</button>' +
-    '</span></div>';
+  return '<div class="mode-etape no-print">' + (mode === 'rapide'
+    ? '<button type="button" class="detailler-bt" onclick="basculerModeEtape(\'' + id + '\',\'detaille\')" title="Les questions déroulées, une à une : si vous avez plus à dire">▾ Détailler, question par question</button>'
+    : '<button type="button" class="detailler-bt" onclick="basculerModeEtape(\'' + id + '\',\'rapide\')" title="Revenir à une seule case">▴ Revenir à une seule case</button>') + '</div>';
 }
 
 function blocRapide(id, d) {
@@ -6734,9 +6739,8 @@ function blocRappelResume(id, d) {
 function rendreEtape(etape, d) {
   if (!RAPIDE_ETAPES[etape.id]) return etape.render(d);
   const mode = modeEtape(etape.id);
-  const barre = blocModeEtape(etape.id, mode);
-  if (mode === 'rapide') return barre + blocRapide(etape.id, d);
-  return barre + blocRappelResume(etape.id, d) + etape.render(d);
+  if (mode === 'rapide') return blocRapide(etape.id, d) + blocModeEtape(etape.id, mode);
+  return blocModeEtape(etape.id, mode) + blocRappelResume(etape.id, d) + etape.render(d);
 }
 
 // En mode rapide les champs détaillés ne sont pas à l'écran : appeler
@@ -6755,7 +6759,12 @@ function collecterEtape(etape) {
   return out;
 }
 
-const ETAPES = [
+/* Le formulaire a quatre étapes — avant, pendant, après, tension — plus une page de présentation (qui déclare, quand) et le
+   récapitulatif. Chaque étape réunit deux cases libres ; « Détailler » déroule les questions de l'ancien mode détaillé,
+   qui existe toujours : un épisode déjà détaillé s'ouvre détaillé. Les données sont celles d'avant (mêmes champs) : les
+   fichiers déjà faits, et ceux des déclarants, se rouvrent sans rien perdre. */
+const ETAPES_DETAIL = [
+
   {
     id: 'declarant',
     label: 'Qui déclare ?', court: 'Déclarant',
@@ -6862,9 +6871,6 @@ const ETAPES = [
           <div class="help">Nuit agitée ? Retour de week-end famille ? Changement d'emploi du temps ? Médicament modifié ? Maladie ? Douleur signalée ? "RAS" est une réponse valide si vous êtes sûr·e — mais vérifiez deux fois.</div>
           <textarea id="f-avantloin" placeholder="ex : retour de week-end famille ce matin. Ou : rien de particulier signalé.">${esc(d.avantLoin||'')}</textarea>
         </div>
-        ${vaseWidget('contexte', mesureTension(d, 'contexte'),
-          'Où en était le vase avant tout ça ?',
-          "Le niveau de fond, avant que la séquence ne commence : ce que vous avez perçu de son état général ce jour-là. Les paliers sont des repères, pas des crans — 52 et 68 sont des valeurs légitimes.")}
       </div>`,
     collect: () => ({
       lieu: val('f-lieu'),
@@ -6895,10 +6901,6 @@ const ETAPES = [
             ).join('')}
           </div>
         </div>
-        ${d.intensite ? `<div class="vase-ancienne">Cet épisode porte une <b>intensité déclarée avec l'ancienne échelle</b> : « ${esc(d.intensite)} ». Cette échelle a été remplacée par le vase de tension — merci de coter le vase ci-dessous. L'ancienne valeur est conservée telle quelle : elle n'est pas convertie, personne n'a jamais dit « 70 ».</div>` : ''}
-        ${vaseWidget('pic', mesureTension(d, 'pic'),
-          'Où en était le vase au moment le plus fort ?',
-          "Votre impression, pas une mesure d'appareil : vous dites ce que vous avez perçu.")}
       </div>`,
     collect: () => ({
       comportement: val('f-comportement'),
@@ -6930,9 +6932,6 @@ const ETAPES = [
           <div class="help">⚠ Décrivez ce que vous avez <em>observé</em>, pas ce que vous avez <em>conclu</em>. "Il tournait en rond depuis 10 min" est une observation. "Il était anxieux" est une interprétation.</div>
           <textarea id="f-etatavant" placeholder="ex : il tournait en rond dans le couloir depuis une dizaine de minutes, regardait souvent vers la porte.">${esc(d.etatAvant||'')}</textarea>
         </div>
-        ${vaseWidget('antecedent', mesureTension(d, 'antecedent'),
-          'Où en était le vase juste avant le comportement ?',
-          "Entre le niveau de fond et le plus fort du comportement : où en était-il dans les minutes qui ont précédé ?")}
       </div>`;
     },
     collect: () => ({
@@ -6972,7 +6971,7 @@ const ETAPES = [
         effet: radioVal(`finter-eff-${i}`),
         precision: val(`f-inter-precision-${i}`),
         cdPostIntervention: val(`f-inter-cdpost-${i}`),
-        tension: lireVase('iv' + i) || null,
+        tension: (() => { const l = lireVase('iv' + i); return l !== undefined ? l : ((prevList[i] && prevList[i].tension) || null); })(),
       }));
       return {
         interventions,
@@ -7001,17 +7000,11 @@ const ETAPES = [
           <label for="f-finpersonne">Comment s'est terminé l'épisode pour la personne ?</label>
           <textarea id="f-finpersonne" placeholder="ex : s'est calmée progressivement, a fini par s'asseoir seule dans un coin. S'est endormie. A repris l'activité.">${esc(d.finPersonne||'')}</textarea>
         </div>
-        <div class="field champ-entourage">
-          <label for="f-entourage">Et pour l'entourage ? <span style="font-weight:400;color:var(--ink-soft);">(facultatif)</span></label>
-          <div class="help">Ce que le comportement a produit chez les autres : la peur, une blessure, la fatigue, la fratrie… Ce n'est pas la conséquence pour la personne, mais ça compte.</div>
-          <textarea id="f-entourage" placeholder="ex : sa petite sœur s'est réfugiée dans sa chambre. J'ai eu mal au bras toute la soirée.">${esc(d.entourage||'')}</textarea>
-        </div>
       </div>`,
     collect: () => ({
       obtenu: val('f-obtenu'),
       evite: val('f-evite'),
       finPersonne: val('f-finpersonne'),
-      entourage: val('f-entourage'),
     })
   },
   {
@@ -7058,6 +7051,71 @@ const ETAPES = [
     })
   }
 ];
+
+const sousEtape = id => ETAPES_DETAIL.find(e => e.id === id);
+// Les cases de plusieurs sous-étapes se lisent ensemble : chacune ne garde que SON résumé (sinon la dernière écraserait les autres).
+function collecterSousEtapes(ids) {
+  const out = {};
+  const resumes = Object.assign({}, formDraft.resumes || {});
+  ids.forEach(id => {
+    const c = collecterEtape(sousEtape(id));
+    if (c.resumes) { if (c.resumes[id]) resumes[id] = c.resumes[id]; else delete resumes[id]; delete c.resumes; }
+    Object.assign(out, c);
+  });
+  if (Object.keys(resumes).length || formDraft.resumes) out.resumes = resumes;
+  return out;
+}
+const blocEntourage = d =>
+  '<div class="card champ-entourage"><div class="field" style="margin-bottom:0;">' +
+    '<label for="f-entourage">Et pour l\'entourage ? <span style="font-weight:400;color:var(--ink-soft);">(facultatif)</span></label>' +
+    '<div class="help">Ce que le comportement a produit chez les autres : la peur, une blessure, la fatigue, la fratrie… Ce n\'est pas la conséquence pour la personne, mais ça compte. Case libre : l\'équipe la lira, elle ne sera pas classée dans une catégorie.</div>' +
+    '<textarea id="f-entourage" placeholder="ex : sa petite sœur s\'est réfugiée dans sa chambre. J\'ai eu mal au bras toute la soirée.">' + esc(d.entourage || '') + '</textarea>' +
+  '</div></div>';
+
+const ETAPES = [
+  Object.assign({}, sousEtape('declarant'), {label: 'Avant de commencer : qui déclare, et quand ?', court: 'Qui · quand'}),
+  {
+    id: 'avant', numero: 1, label: "Avant l'épisode", court: 'Avant',
+    render: d => '<p class="etape-intro">Deux choses : ce qui précède <b>de loin</b> (le contexte), puis ce qui s\'est passé <b>juste avant</b> — ce qu\'on appelle parfois le déclencheur. Une case chacune suffit ; « Détailler » ouvre les questions pas à pas.</p>' +
+      rendreEtape(sousEtape('contexte'), d) + rendreEtape(sousEtape('antecedent'), d),
+    collect: () => collecterSousEtapes(['contexte', 'antecedent'])
+  },
+  {
+    id: 'pendant', numero: 2, label: "Pendant l'épisode", court: 'Pendant',
+    render: d => '<p class="etape-intro">Ce qui s\'est passé, comme si une caméra l\'avait filmé, <b>et</b> ce que vous ou l\'entourage avez fait. Vous n\'avez rien à découper : c\'est l\'équipe qui y repérera ensuite les comportements à analyser.</p>' +
+      rendreEtape(sousEtape('comportement'), d) + rendreEtape(sousEtape('intervention'), d),
+    collect: () => collecterSousEtapes(['comportement', 'intervention'])
+  },
+  {
+    id: 'apres', numero: 3, label: "Après l'épisode", court: 'Après',
+    render: d => '<p class="etape-intro">Ce que ça a changé <b>pour la personne</b> — ce qu\'elle a obtenu, ce qu\'elle a évité — et ce que ça a produit <b>chez l\'entourage</b>.</p>' +
+      rendreEtape(sousEtape('consequence'), d) + blocEntourage(d),
+    collect: () => Object.assign(collecterSousEtapes(['consequence']), {entourage: val('f-entourage')})
+  },
+  {
+    id: 'tension', numero: 4, label: 'Le niveau de tension perçu', court: 'Tension',
+    render: d => '<div class="tension-finale-note"><b>Pour finir : où en était la tension de la personne, avant, pendant et après ?</b> C\'est votre impression, pas une mesure. Un clic sur un palier suffit ; « je ne sais pas » est une réponse.</div>' +
+      (d.intensite ? '<div class="vase-ancienne">Cet épisode porte une <b>intensité déclarée avec l\'ancienne échelle</b> : « ' + esc(d.intensite) + ' ». Cette échelle a été remplacée par le vase de tension — merci de coter le vase ci-dessous. L\'ancienne valeur est conservée telle quelle : elle n\'est pas convertie, personne n\'a jamais dit « 70 ».</div>' : '') +
+      '<div class="card">' +
+        vaseWidget('antecedent', mesureTension(d, 'antecedent'), 'Avant : où en était le vase juste avant le comportement ?',
+          "Entre le niveau de fond et le plus fort du comportement : où en était-il dans les minutes qui ont précédé ?") +
+      '</div><div class="card">' +
+        vaseWidget('pic', mesureTension(d, 'pic'), 'Pendant : où en était le vase au moment le plus fort ?',
+          "Votre impression, pas une mesure d'appareil : vous dites ce que vous avez perçu.") +
+      '</div><div class="card">' +
+        vaseWidget('apres', mesureTension(d, 'apres'), 'Après : où en était le vase à la fin de l\'épisode ?',
+          "Une fois l'épisode terminé — après ce que vous ou l'entourage avez fait. C'est ce point qui montre si la tension est redescendue, ou non.") +
+      '</div>',
+    collect: () => ({tension: ['antecedent', 'pic', 'apres'].reduce((t, cle) => majTension(t, cle), formDraft.tension)})
+  },
+  sousEtape('recap')
+];
+// Un brouillon de l'ancien formulaire (sept étapes) se reprend à l'étape qui contient la sienne.
+const ETAPE_ANCIENNE_VERS_NOUVELLE = [0, 1, 2, 1, 2, 3, 5];
+function indexEtapeBrouillon(b) {
+  const i = (b && b.etape) || 0;
+  return (b && b.etapeV === 2) ? Math.min(i, ETAPES.length - 1) : (ETAPE_ANCIENNE_VERS_NOUVELLE[i] || 0);
+}
 
 // Les points cotés d'un épisode, en une ligne lisible.
 function resumeTensionTexte(evt) {
@@ -7210,10 +7268,6 @@ function renderInterventionBlock(iv, i, total) {
         <div class="help">Si la situation a pris une autre tournure après cette intervention, vous pouvez la décrire ici. Vous pouvez aussi tout raconter dans « Ce qui s'est passé » : l'équipe s'y retrouvera.</div>
         <textarea id="f-inter-cdpost-${i}" style="min-height:56px;" placeholder="ex : est passé des cris à des coups contre le mur.">${esc(iv.cdPostIntervention||'')}</textarea>
       </div>
-      ${vaseWidget('iv' + i, iv.tension,
-        'Où en était le vase après cette intervention ?',
-        "C'est ce point qui donne à la courbe sa branche descendante — ou qui montre qu'elle ne descend pas.", true)}
-      <div id="f-inter-tension-alerte-${i}" class="vase-alerte" style="display:none;"></div>
       ${total > 1 ? `<button type="button" class="grad-item-del" onclick="retirerInterventionEvt(${i})" title="Supprimer cette intervention" style="margin-top:4px;">✕ Supprimer cette intervention</button>` : ''}
     </div>`;
 }
@@ -7545,6 +7599,7 @@ function saveBrouillon() {
     editId: evt ? evt.id : null,
     draft: Object.assign({}, formDraft),
     etape: currentEtapeIdx,
+    etapeV: 2,
     maj: Date.now()
   };
   currentBrouillonId = entree.id;
@@ -7581,7 +7636,7 @@ function reprendreBrouillon(id) {
   if (!b) return;
   currentBrouillonId = b.id;
   formDraft = Object.assign({}, b.draft);
-  currentEtapeIdx = b.etape || 0;
+  currentEtapeIdx = indexEtapeBrouillon(b);
   formEditIdx = (b.editId !== null && b.editId !== undefined)
     ? state.m2.evenements.findIndex(e => e.id === b.editId)
     : null;
@@ -7634,14 +7689,14 @@ function renderEtape(idx) {
   stepper.innerHTML = ETAPES.map((e, i) => {
     let cls = i < idx ? 'done' : i === idx ? 'current' : '';
     return `<div class="step-item ${cls}" role="button" tabindex="0" onclick="aller(${i})" title="Aller à : ${esc(e.label)}">
-      <div class="step-nom">${esc(e.court || e.label)}</div>
+      <div class="step-nom">${e.numero ? e.numero + '. ' : ''}${esc(e.court || e.label)}</div>
       <div class="step-dot"></div>
     </div>`;
   }).join('');
 
   // Label d\'étape
   document.getElementById('form-step-label').textContent =
-    `Étape ${idx + 1} / ${total} — ${ETAPES[idx].label}`;
+    ETAPES[idx].numero ? `Étape ${ETAPES[idx].numero} / 4 — ${ETAPES[idx].label}` : ETAPES[idx].label;
 
   // Contenu
   document.getElementById('form-etapes').innerHTML = rendreEtape(ETAPES[idx], formDraft);
@@ -7817,10 +7872,11 @@ function lireQuandQui(texte) {
 function lireVaseGrille(texte) {
   const t = String(texte || ''), out = {};
   const nb = re => { const m = re.exec(t); if (!m) return null; const v = +m[1]; return v >= 0 && v <= 100 ? v : null; };
-  const c = nb(/contexte\D{0,8}(\d{1,3})/i), a = nb(/avant\D{0,8}(\d{1,3})/i), p = nb(/(?:au\s+)?plus\s+fort\D{0,8}(\d{1,3})/i);
+  const c = nb(/contexte\D{0,8}(\d{1,3})/i), a = nb(/avant\D{0,8}(\d{1,3})/i), p = nb(/(?:pendant|(?:au\s+)?plus\s+fort)\D{0,8}(\d{1,3})/i), f = nb(/apr[eè]s\D{0,8}(\d{1,3})/i);
   if (c !== null) out.contexte = {v: c, note: ''};
   if (a !== null) out.antecedent = {v: a, note: ''};
   if (p !== null) out.pic = {v: p, note: ''};
+  if (f !== null) out.apres = {v: f, note: ''};
   if (!Object.keys(out).length) { const seul = /^\s*(\d{1,3})\s*$/.exec(t); if (seul && +seul[1] <= 100) out.pic = {v: +seul[1], note: ''}; }
   return out;
 }
@@ -8047,7 +8103,7 @@ function refreshM2List(){
         const quoi = evt
           ? 'Modifications sur « ' + esc((evt.comportement || evt.texteBrut || 'épisode sans description').substring(0,40)) + ' »'
           : 'Nouvel épisode' + (b.draft && b.draft.date ? ' du ' + esc(formatDate(b.draft.date)) : '');
-        const etape = (b.etape || 0) + 1;
+        const etape = indexEtapeBrouillon(b) + 1;
         return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;">
           <span style="flex:1;min-width:0;">${quoi} <span style="color:var(--ink-soft);">— étape ${etape} / ${ETAPES.length}</span></span>
           <button class="btn btn-ghost btn-sm" onclick="reprendreBrouillon('${b.id}')">Reprendre →</button>
@@ -10530,7 +10586,7 @@ const _CONTROLES = [
   {nom:'Le formulaire ne demande pas de CD au déclarant', test: () => {
     /* Lexique du 01/10/2026 : le déclarant décrit un épisode ; le CD, c'est
        l'analyste qui le repère. On relit l'étape détaillée et le mode rapide. */
-    const etape = ETAPES.find(e => e.id === 'comportement');
+    const etape = ETAPES_DETAIL.find(e => e.id === 'comportement');
     const texte = (etape.label + ' ' + etape.render({}) + ' ' + JSON.stringify(RAPIDE_ETAPES.comportement) +
       ' ' + renderInterventionBlock({effet: 'Augmentation de la tension'}, 0, 1)).replace(/<[^>]+>/g, ' ');
     const fautifs = ['nouveau CD', 'CD post-intervention', 'Décrivez le comportement'].filter(t => texte.includes(t));
@@ -11662,6 +11718,75 @@ const _CONTROLES = [
     return _bancEgal('dates (jj/mm/aa, jj.mm.aaaa, sans année, en toutes lettres, ISO) | heures | dates impossibles refusées | vase : chiffre seul, cases vides, chiffre hors échelle',
       '2026-03-12,2026-04-03,' + annee + '-03-05,2026-02-01,2026-05-06|09:00,14:05,-|-,-|60,0,55,0',
       [r.slice(0, 5).join(','), r.slice(5, 8).join(','), r.slice(8).join(','), v.join(',')].join('|'));
+  }},
+  {nom:'Formulaire : quatre étapes (avant, pendant, après, tension), une case libre chacune, le détail se déplie', test: () => {
+    const sauveDraft = formDraft, sauveIdx = currentEtapeIdx, sauveForce = modeForceEtape, sauveEdit = formEditIdx;
+    const sauveStepper = document.getElementById('form-stepper').innerHTML;
+    try {
+      formDraft = {}; modeForceEtape = {}; formEditIdx = null;
+      const noms = ETAPES.map(e => (e.numero ? e.numero + '.' : '·') + e.court).join(' ');
+      const ids = (i) => { renderEtape(i); return ['resume-contexte', 'resume-antecedent', 'resume-comportement', 'resume-intervention', 'resume-consequence', 'f-entourage', 'vase-val-antecedent', 'vase-val-pic', 'vase-val-apres', 'vase-val-contexte']
+        .filter(x => document.getElementById(x)).join(','); };
+      const e1 = ids(1), e2 = ids(2), e3 = ids(3), e4 = ids(4);
+      const label = [1, 2, 3, 4].map(i => { renderEtape(i); return document.getElementById('form-step-label').textContent; }).join(' | ');
+      // Les deux cases d'une étape se lisent ensemble, sans s'écraser
+      renderEtape(1);
+      document.getElementById('resume-contexte').value = 'Retour de week-end.';
+      document.getElementById('resume-antecedent').value = 'On lui a demandé de ranger.';
+      const lu1 = collecterEtape(ETAPES[1]);
+      Object.assign(formDraft, lu1);
+      const deux = [lu1.resumes.contexte, lu1.resumes.antecedent].join(' / ');
+      // Détailler : les questions apparaissent, la case reste lue comme résumé, et revenir à une case ne perd rien
+      basculerModeEtape('antecedent', 'detaille');
+      const detail = !!document.getElementById('f-ant-texte-0') && !!document.getElementById('resume-contexte') && !document.getElementById('resume-antecedent');
+      document.getElementById('f-ant-texte-0').value = 'La consigne de ranger.';
+      document.getElementById('f-ant-decl-0').checked = true;
+      const lu2 = collecterEtape(ETAPES[1]);
+      Object.assign(formDraft, lu2);
+      const detailLu = lu2.antecedents[0].texte + ',' + lu2.antecedents[0].declencheurPresume + ',' + lu2.resumes.contexte + ',' + lu2.resumes.antecedent;
+      return _bancEgal('étapes | avant : contexte + juste avant | pendant | après (+ entourage, hors catégorie) | tension : trois vases, pas de vase du contexte | intitulés | deux cases lues ensemble | détailler ouvre les questions | le détail est lu, les résumés gardés',
+        '·Qui · quand 1.Avant 2.Pendant 3.Après 4.Tension ·Récapitulatif|resume-contexte,resume-antecedent|resume-comportement,resume-intervention|resume-consequence,f-entourage|vase-val-antecedent,vase-val-pic,vase-val-apres|Étape 1 / 4 — Avant l\'épisode | Étape 2 / 4 — Pendant l\'épisode | Étape 3 / 4 — Après l\'épisode | Étape 4 / 4 — Le niveau de tension perçu|Retour de week-end. / On lui a demandé de ranger.|true|La consigne de ranger.,true,Retour de week-end.,On lui a demandé de ranger.',
+        [noms, e1, e2, e3, e4, label, deux, detail, detailLu].join('|'));
+    } finally {
+      formDraft = sauveDraft; currentEtapeIdx = sauveIdx; modeForceEtape = sauveForce; formEditIdx = sauveEdit;
+      document.getElementById('form-stepper').innerHTML = sauveStepper;
+    }
+  }},
+  {nom:'Formulaire : la tension se demande une fois, en conclusion ; l\'ancien se garde ; l\'après ferme la courbe sans entrer dans la montée', test: () => {
+    const sauveDraft = formDraft, sauveIdx = currentEtapeIdx, sauveForce = modeForceEtape;
+    try {
+      // Un épisode d'avant : trois niveaux, une intervention cotée, un fond (contexte)
+      formDraft = {tension: {contexte: {v: 30, note: ''}, antecedent: {v: 50, note: ''}, pic: {v: 70, note: 'crie'}},
+        interventions: [{id: 'iv1', texte: 'Préavis', effet: 'Diminution de la tension', tension: {v: 30, note: ''}}]};
+      renderEtape(4);
+      vaseChoisir('apres', 10);                                  // « tranquille »
+      const t = collecterEtape(ETAPES[4]).tension;
+      const garde = [t.contexte.v, t.antecedent.v, t.pic.v, t.pic.note, t.apres.v].join(',');
+      // La page des interventions ne touche plus à la cote de l'intervention
+      renderEtape(2);
+      const iv = collecterEtape(ETAPES[2]).interventions[0];
+      const ivGardee = iv.tension && iv.tension.v === 30 && iv.texte === 'Préavis';
+      const evt = {tension: t, interventions: formDraft.interventions};
+      const pts = pointsTensionEvt(evt).map(p => p.cle).join(',');
+      const montee = niveauxMontee(evt).join(',');
+      return _bancEgal('anciens niveaux gardés + « après » | cote de l\'intervention gardée | courbe : contexte, juste avant, pic, intervention, fin | montée sans l\'après | « après » compte comme épisode coté',
+        '30,50,70,crie,10|true|contexte,antecedent,pic,iv0,apres|30,50,70|true',
+        [garde, ivGardee, pts, montee, evtEstCote({tension: {apres: {v: 40, note: ''}}})].join('|'));
+    } finally { formDraft = sauveDraft; currentEtapeIdx = sauveIdx; modeForceEtape = sauveForce; }
+  }},
+  {nom:'Formulaire : l\'entourage est une case libre, un brouillon d\'avant se reprend à la bonne étape, la grille papier dit avant · pendant · après', test: () => {
+    const entourageSeul = etapeDetailRemplie({entourage: 'Sa sœur a eu peur.'}, 'consequence');
+    const detailVrai = etapeDetailRemplie({obtenu: 'Du temps.'}, 'consequence');
+    const reprise = [0, 1, 2, 3, 4, 5, 6].map(i => indexEtapeBrouillon({etape: i})).join('') + '/' + [0, 3, 5].map(i => indexEtapeBrouillon({etape: i, etapeV: 2})).join('');
+    const rapideParDefaut = ['contexte', 'antecedent', 'comportement', 'intervention', 'consequence'].every(id => { const s = formDraft; formDraft = {}; const m = modeEtape(id); formDraft = s; return m === 'rapide'; });
+    const v = lireVaseGrille('avant  40\npendant  70\naprès  20');
+    const ancien = lireVaseGrille('contexte  40\navant  55\nau plus fort  80');
+    const celluleVierge = lireGrilleABC(lireCorpsDocx('<w:document xmlns:w="' + W_NS + '"><w:body>' + corpsGrilleABC() + '</w:body></w:document>'));
+    const texteGrille = corpsGrilleABC().replace(/<[^>]+>/g, ' ');
+    return _bancEgal('entourage seul ≠ détail | un vrai détail | brouillons d\'avant remappés / ceux d\'après gardés | rapide par défaut | grille papier : avant, pendant, après | anciens libellés lus aussi | la grille vierge reste reconnue',
+      'false|true|0121235/035|true|40,70,20|40,55,80|true',
+      [entourageSeul, detailVrai, reprise, rapideParDefaut, [v.antecedent.v, v.pic.v, v.apres.v].join(','), [ancien.contexte.v, ancien.antecedent.v, ancien.pic.v].join(','),
+       celluleVierge.grille && /avant\s+___\s+pendant\s+___\s+apr/.test(texteGrille)].join('|'));
   }},
   {nom:'Les couleurs des catégories se distinguent deux à deux', test: () => {
     /* Ce qui fait confondre deux catégories, c'est la teinte : les deux violets
@@ -17542,9 +17667,9 @@ function corpsGrilleABC() {
   ];
 
   const celluleVase = () => ({contenu: [
-    docxP('contexte  ___', {taille: 16, couleur: DOCX_C.inkSoft, apres: 200}),
     docxP('avant  ___', {taille: 16, couleur: DOCX_C.inkSoft, apres: 200}),
-    docxP('au plus fort  ___', {taille: 16, couleur: DOCX_C.inkSoft, apres: 0})
+    docxP('pendant  ___', {taille: 16, couleur: DOCX_C.inkSoft, apres: 200}),
+    docxP('après  ___', {taille: 16, couleur: DOCX_C.inkSoft, apres: 0})
   ]});
 
   const ligneVide = () => [
@@ -17729,7 +17854,7 @@ function corpsGuide() {
 
     docxTitre(2, 'Le vase de tension') +
     docxP('On a tous un vase qui se remplit de ce qu\'on vit : ce qui vient de l\'intérieur — le fonctionnement, l\'angoisse, l\'histoire, le corps — et ce qui vient du dehors — l\'environnement, les épisodes qui tombent.') +
-    docxP('Sur la grille, vous notez où il en est à trois moments, de 0 à 100 : au moment du contexte, juste avant le comportement, et au plus fort. Les paliers servent de repères :') +
+    docxP('Sur la grille, vous notez où il en est à trois moments, de 0 à 100 : avant, pendant et après l\'épisode. Les paliers servent de repères :') +
     docxTableau([[
       {fond: 'A8D5CD', contenu: [docxP('0-20\ntranquille', {gras: true, taille: 17, align: 'center', apres: 0})]},
       {fond: 'C7D6CD', contenu: [docxP('20-40\nnormal', {gras: true, taille: 17, align: 'center', apres: 0})]},
@@ -17774,8 +17899,8 @@ function corpsGuide() {
       'Il a obtenu cinq minutes de plus sur son activité et n\'a pas eu à aller au repas tout de suite. L\'épisode s\'est terminé quand l\'éducatrice est partie.',
       DOCX_C.consequence, DOCX_C.consequenceTexte) +
     colonne('Vase',
-      'Trois chiffres de 0 à 100 : au moment du contexte, juste avant, au plus fort. Vide si vous ne savez pas.',
-      'contexte 30 · avant 60 · au plus fort 90.',
+      'Trois chiffres de 0 à 100 : avant, pendant, après. Vide si vous ne savez pas.',
+      'avant 40 · pendant 90 · après 30.',
       DOCX_C.papierFonce, DOCX_C.ink) +
     colonne('Commentaire',
       'Ce qui ne rentrait dans aucune case : une intuition, un doute, un détail qui vous a frappé.',
@@ -20858,7 +20983,7 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
-const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":7231,"retrait":1685,"depots":55}]};
+const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":7750,"retrait":1712,"depots":57}]};
 
 function svgActiviteCode() {
   const mois = ACTIVITE_CODE.mois || [];
@@ -20900,6 +21025,23 @@ const NOTES_VERSION = [
 
   {
     date: '2026-10-08',
+    version: 'v2026.10.08-17',
+    titre: "Le formulaire de recueil en quatre étapes",
+    corps: `
+<p><b>Le formulaire de recueil, en quatre étapes</b> (Arthur et Émilie — Recueillir, suite) :</p>
+<ul>
+<li><b>Quatre étapes</b> au lieu de sept : <b>1. Avant l'épisode</b> (le contexte, et ce qui s'est passé juste avant — le déclencheur), <b>2. Pendant</b> (ce qui s'est passé, et ce que l'entourage a fait), <b>3. Après</b> (la conséquence pour la personne, et pour l'entourage), <b>4. Le niveau de tension perçu</b>. Une page de présentation (qui déclare, quand) vient avant ; le récapitulatif, après.</li>
+<li><b>Une case libre par sujet.</b> Chaque étape propose deux cases, rédigées comme le mode rapide : écrire en quelques lignes suffit. <b>« Détailler »</b> déroule, pour la case concernée, les questions de l'ancien mode détaillé (plusieurs antécédents avec « présumé déclencheur », plusieurs interventions avec leur effet, ce qu'elle a obtenu ou évité…) ; « Revenir à une seule case » les referme. Le choix rapide / détaillé n'est plus demandé : on commence en rapide, on détaille quand on a plus à dire.</li>
+<li><b>La tension, une seule fois, à la fin.</b> On ne la demande plus à chaque étape : le déclarant dit où en était le vase <b>avant</b>, <b>pendant</b> (au plus fort) et <b>après</b> l'épisode, avec les signes remarqués s'il le souhaite. L'ancien « contexte » du vase et la cote donnée après chaque intervention ne sont plus demandés, mais restent dans les épisodes déjà faits, lus et affichés comme avant. Le niveau d'après ferme la courbe d'un épisode ; il n'entre pas dans la « montée », pour ne pas faire passer un épisode bien désamorcé pour moins grave.</li>
+<li><b>L'entourage</b> devient une case libre de l'étape « Après » : lue par l'équipe, jamais classée dans une catégorie. Elle ne compte plus comme « détail » de la conséquence.</li>
+<li><b>Rien n'est perdu.</b> Ce sont les mêmes champs qu'avant : les fichiers socle, déclarants et codages déjà faits s'ouvrent sans changement ; un épisode déjà détaillé s'ouvre détaillé ; un brouillon de l'ancien formulaire se reprend à l'étape qui correspond. La grille ABC papier suit : sa case « Vase » demande maintenant <b>avant · pendant · après</b> (l'import Word lit aussi les anciens libellés).</li>
+<li><b>Pas encore fait</b> : l'effet de chaque intervention reste demandé au déclarant, comme décidé ; la mise à jour des modes d'emploi, du guide papier détaillé et du document EMIA pour ce formulaire est prévue avec le balayage final.</li>
+</ul>
+`
+  },
+
+  {
+    date: '2026-10-08',
     version: 'v2026.10.08-16',
     titre: "Importer une grille ABC Word",
     corps: `
@@ -20909,7 +21051,7 @@ const NOTES_VERSION = [
 <li><b>La grille de la BAF, remplie dans Word</b> : la BAF la reconnaît à ses en-têtes (« Quand · Qui », « Contexte », « Antécédent », « Ce qui s'est passé »…), même si le tableau court sur plusieurs pages. <b>Chaque ligne remplie devient un épisode</b>, les cases reprises <b>telles quelles</b> (comme le mode rapide, dont la grille est la copie conforme) : contexte, juste avant, ce qui s'est passé, intervention, conséquence, entourage. La case « Quand · Qui » est lue pour la <b>date</b> (12/03/2026, 3.4.26, 5 mars…), l'<b>heure</b> (9h30, 14:05), le <b>moment</b> de la journée et le « J'ai vu la scène moi-même » coché ; ce qui est écrit est de toute façon conservé tel quel. La case « Vase » donne les trois niveaux (contexte, avant, au plus fort) quand les chiffres sont écrits.</li>
 <li><b>Rien n'est ajouté sans que vous ayez vu la liste</b> : une fenêtre montre ce qui a été lu (les lignes sans date sont signalées) et demande qui a rempli la grille ; les épisodes déjà présents (même date, même heure, même texte) sont ignorés, donc importer deux fois la même grille ne fait pas de doublons.</li>
 <li><b>Un autre document Word</b> (une transmission, un compte rendu) est repris <b>tel quel, comme un texte brut</b> : sa fenêtre s'ouvre avec le texte déjà collé, pour y mettre qui l'a écrit, la date et le moment.</li>
-<li><b>Limites.</b> Une date écrite sans année est lue dans l'année en cours. Un document très mis en forme (zones de texte, images) peut perdre ce qui s'y trouve. Éprouvé avec la grille de la BAF remplie par programme (fichier non compressé, puis compressé comme Word le fait) et avec un vrai document Word (lu en entier, reconnu comme « pas une grille »). Une grille réellement remplie à la main dans Word n'a pas pu être essayée : à tester sur une vraie grille avant de s'y fier.</li>
+<li><b>Limites.</b> Une date écrite sans année est lue dans l'année en cours. Un document très mis en forme (zones de texte, images) peut perdre ce qui s'y trouve. Éprouvé avec la grille de la BAF remplie par programme (fichier non compressé, puis compressé comme Word le fait) et avec un vrai document Word (lu en entier, reconnu comme « pas une grille »). Une grille réellement remplie à la main dans Word n'a pas pu être essayée : à tester sur une vraie grille avant de s'y fier.</li>
 </ul>
 `
   },
@@ -22143,6 +22285,7 @@ const REPERES = [
       {q: "Que reçoit un déclarant, et que doit-il faire ?",
        r: `<p>Un courriel qui pose le projet, et le <b>fichier déclarant</b> en pièce jointe. Pour décrire ce qu'il observe :</p>
            <p>il ouvre dans son navigateur la page <b>emia35.github.io/baf/#declarant</b>, clique sur « Importer mon fichier » et choisit le fichier joint (sur téléphone, il l'enregistre d'abord dans « Fichiers » ou « Téléchargements »). Il écrit ce qu'il a observé — et signale aussi les journées où il ne s'est rien produit —, puis appuie sur « Télécharger pour sauvegarder » : sinon, tout peut se perdre. La fois suivante, il revient à la même adresse et ouvre toujours le dernier fichier en date. À la fin du recueil, il renvoie ce dernier fichier.</p>
+           <p>Le formulaire tient en <b>quatre étapes</b> : avant l'épisode (le contexte, et ce qui s'est passé juste avant), pendant (ce qui s'est passé, et ce que l'entourage a fait), après (la conséquence pour la personne, et pour l'entourage), puis le <b>niveau de tension perçu</b>, avant, pendant et après, demandé une seule fois à la fin. Une case libre par sujet suffit ; « Détailler » ouvre les questions pas à pas.</p>
            <p>Une personne, un fichier : à plusieurs, chacun ouvre le fichier reçu sur son propre appareil.</p>
            <p class="repere-renvoi">Mode d'emploi, § 1.3 — c'est ce que dit le courriel.</p>`},
       {q: "Comment travailler à plusieurs sur la même analyse ?",
