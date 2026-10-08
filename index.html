@@ -3120,6 +3120,10 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
 .repere-r p:last-child{margin-bottom:0;}
 .repere-r b{color:var(--ink);}
 .repere-r code{background:var(--paper-deep);border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-size:12.5px;font-family:monospace;}
+.repere-cat-titre{font-size:17px;margin:0 0 14px;color:var(--slate);}
+.repere-groupe{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--slate);margin:22px 0 2px;}
+.repere-groupe:first-of-type{margin-top:4px;}
+.repere-renvoi{font-size:12.5px;color:var(--ink-soft);font-style:italic;}
 
 /* ── GLOSSAIRE TOOLTIP ── */
 .gw{position:relative;display:inline;cursor:help;border-bottom:1px dotted var(--sauge-deep);color:var(--slate);font-weight:600;}
@@ -10885,6 +10889,43 @@ const _CONTROLES = [
       '✉ Transmettre un fichier déclarant,Commencer le recueil →|✉ Transmettre un fichier déclarant|Transmettre un fichier déclarant|⬇ Télécharger le fichier déclarant,✉ Transmettre le fichier déclarant par mail',
       [pre.join(','), recueillir, titre, fenetre.join(',')].join('|'));
   }},
+  {nom:'La FAQ de l\'outil renvoie au mode d\'emploi, et ses titres ressortent en bleu', test: () => {
+    renderReperes();
+    const cartes = [...document.querySelectorAll('#reperes-contenu .card')];
+    const titre = t => { const h = [...document.querySelectorAll('#reperes-contenu h3.repere-cat-titre')].find(x => x.textContent.trim() === t); return h || null; };
+    const sonde = document.createElement('span'); sonde.style.color = 'var(--slate)'; document.body.appendChild(sonde);
+    const bleu = getComputedStyle(sonde).color; document.body.removeChild(sonde);
+    const h1 = titre("Questions sur l'analyse fonctionnelle"), h2 = titre("Questions sur l'outil");
+    const colores = !!h1 && !!h2 && getComputedStyle(h1).color === bleu && getComputedStyle(h2).color === bleu;
+    const outil = REPERES.find(c => c.titre === "Questions sur l'outil").questions;
+    const qs = outil.map(x => x.q);
+    const pratiques = ['Comment commencer une analyse fonctionnelle avec la BAF ?', 'Comment créer et transmettre un fichier déclarant ?', 'Comment sauvegarder son travail, et le retrouver ?'].every(q => qs.indexOf(q) !== -1);
+    const rubriques = outil.filter(x => x.groupe).length;
+    const rubriquesAffichees = h2 ? h2.parentElement.querySelectorAll('.repere-groupe').length : 0;
+    const renvois = outil.filter(x => /repere-renvoi/.test(x.r)).length;
+    const anciennesGardees = ['Est-ce que la BAF pense à ma place ?', 'Où sont stockées les données ? Qui peut les voir ?', 'Que ne faut-il jamais écrire dans la BAF ?'].every(q => qs.indexOf(q) !== -1);
+    const uniques = new Set(qs).size === qs.length;
+    return _bancEgal('deux titres bleus | questions pratiques présentes | rubriques (5) affichées | au moins 12 renvois au mode d\'emploi | questions d\'origine gardées | pas de doublon',
+      'true|true|5,5|true|true|true', [colores, pratiques, rubriques + ',' + rubriquesAffichees, renvois >= 12, anciennesGardees, uniques].join('|'));
+  }},
+  {nom:'Mode d\'emploi Word : un plan que le volet de navigation affiche, et un sommaire dont chaque lien trouve son titre', test: () => {
+    const x = corpsModeEmploiGeneral();
+    const bien = (() => {
+      const d = new DOMParser().parseFromString('<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>' + x + '</w:body></w:document>', 'application/xml');
+      return !d.querySelector('parsererror');
+    })();
+    const niveaux = [0, 1, 2].map(n => (x.match(new RegExp('<w:outlineLvl w:val="' + n + '"/>', 'g')) || []).length);
+    const liens = [...x.matchAll(/<w:hyperlink w:anchor="([^"]+)"/g)].map(m => m[1]);
+    const signets = [...x.matchAll(/<w:bookmarkStart w:id="(\d+)" w:name="([^"]+)"\/>/g)];
+    const noms = signets.map(m => m[2]), ids = signets.map(m => m[1]);
+    const trouves = liens.length > 0 && liens.every(l => noms.indexOf(l) !== -1);
+    const fins = (x.match(/<w:bookmarkEnd /g) || []).length;
+    const uniques = new Set(ids).size === ids.length && new Set(noms).size === noms.length;
+    const titreNotice = x.indexOf('Notice d&apos;utilisation') !== -1;
+    return _bancEgal('XML valide | titres de niveaux 1, 2 et 3 (au moins 2, 8 et 5) | chaque lien a son signet | autant de fins que de débuts | identifiants uniques | pas de marqueur oublié | titre de la notice',
+      'true|true,true,true|true|true|true|true|true',
+      [bien, [niveaux[0] >= 2, niveaux[1] >= 8, niveaux[2] >= 5].join(','), trouves, fins === signets.length, uniques, x.indexOf('@@SOMMAIRE@@') === -1, titreNotice].join('|'));
+  }},
   {nom:'Les couleurs des catégories se distinguent deux à deux', test: () => {
     /* Ce qui fait confondre deux catégories, c'est la teinte : les deux violets
        d'avant n'étaient séparés que de 10°, les deux rouges de 13°. Entre deux
@@ -16597,8 +16638,11 @@ function docxRun(t, o) {
 function docxP(contenu, o) {
   o = o || {};
   const runs = Array.isArray(contenu)
-    ? contenu.map(r => docxRun(r.t, r)).join('')
+    ? contenu.map(r => r.lien ? '<w:hyperlink w:anchor="' + xe(r.lien) + '" w:history="1">' + docxRun(r.t, r) + '</w:hyperlink>' : docxRun(r.t, r)).join('')
     : docxRun(contenu, o);
+  // Un signet (« ancre ») fait d'un titre la cible d'un lien du sommaire ; un niveau de plan l'affiche dans le volet de navigation de Word.
+  const signet = o.ancre ? (docxP.signets = (docxP.signets || 0) + 1) : 0;
+  const corps = signet ? '<w:bookmarkStart w:id="' + signet + '" w:name="' + xe(o.ancre) + '"/>' + runs + '<w:bookmarkEnd w:id="' + signet + '"/>' : runs;
   const bordure = o.traitGauche
     ? '<w:pBdr><w:left w:val="single" w:sz="18" w:space="6" w:color="' + o.traitGauche + '"/></w:pBdr>'
     : '';
@@ -16608,15 +16652,16 @@ function docxP(contenu, o) {
     (o.align ? '<w:jc w:val="' + o.align + '"/>' : '') +
     (o.retrait ? '<w:ind w:left="' + o.retrait + '"/>' : '') +
     bordure + fond +
+    (o.niveauPlan != null ? '<w:outlineLvl w:val="' + o.niveauPlan + '"/>' : '') +
     '</w:pPr>';
-  return '<w:p>' + pPr + runs + '</w:p>';
+  return '<w:p>' + pPr + corps + '</w:p>';
 }
 
 function docxTitre(niveau, texte) {
   const tailles = {1: 36, 2: 28, 3: 24};
   return docxP(texte, {
     gras: true, taille: tailles[niveau] || 24, couleur: DOCX_C.slate,
-    avant: niveau === 1 ? 0 : 280, apres: 120
+    avant: niveau === 1 ? 0 : 280, apres: 120, niveauPlan: Math.max(0, niveau - 1)
   });
 }
 
@@ -16725,11 +16770,11 @@ function telechargerDocx(nomFichier, corps, paysage) {
 
 const LIEN_BAF = 'emia35.github.io/baf';
 
-function docxIntertitre(texte, couleurFond, couleurTrait) {
-  return docxP(texte, {
+function docxIntertitre(texte, couleurFond, couleurTrait, plan) {
+  return docxP(texte, Object.assign({
     gras: true, taille: 22, couleur: DOCX_C.ink,
     fond: couleurFond, traitGauche: couleurTrait, avant: 240, apres: 120
-  });
+  }, plan || {}));
 }
 
 /* ── 1. La grille ABC ───────────────────────────────────────────────── */
@@ -17147,11 +17192,19 @@ async function validerCodeJournal(ev) {
    destiné à des équipes qui découvrent, c'est une confusion garantie. */
 function corpsModeEmploiGeneral() {
   const bleu = DOCX_C.slate;
+  const plan = [];
+  /* Un titre du plan : niveau 0 = titre, 1 = partie, 2 = sous-partie (le volet de navigation de Word les affiche).
+     Un titre « au sommaire » reçoit un signet, cible du lien. */
+  const niv = (niveau, texte, sommaire) => {
+    const o = {niveauPlan: niveau};
+    if (sommaire) { o.ancre = '_BAF_sommaire_' + (plan.length + 1); plan.push({niveau, texte, ancre: o.ancre}); }
+    return o;
+  };
   const saut = '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
   const etape = (titre, qui) => docxP([
     {t: titre, gras: true, taille: 23, couleur: bleu},
     {t: '   ' + qui, italique: true, taille: 17, couleur: DOCX_C.inkSoft}
-  ], {avant: 170, apres: 40});
+  ], {avant: 170, apres: 40, niveauPlan: 1});
   const pf = (gras, suite) => docxP([
     {t: '–  ', couleur: DOCX_C.inkSoft, taille: 20},
     {t: gras, gras: true, taille: 20},
@@ -17164,9 +17217,9 @@ function corpsModeEmploiGeneral() {
     docxP([
       {t: num + '   ', gras: true, taille: 30, couleur: bleu},
       {t: titre, gras: true, taille: 30, couleur: bleu}
-    ], {avant: 380, apres: sous ? 40 : 120}) +
+    ], Object.assign({avant: 380, apres: sous ? 40 : 120}, niv(1, num + ' ' + titre, true))) +
     (sous ? docxP([{t: sous, italique: true, couleur: DOCX_C.inkSoft}], {apres: 140}) : '');
-  const sousPartie = (t) => docxP(t, {gras: true, taille: 23, couleur: DOCX_C.ink, avant: 220, apres: 60});
+  const sousPartie = (t) => docxP(t, Object.assign({gras: true, taille: 23, couleur: DOCX_C.ink, avant: 220, apres: 60}, niv(2, t, true)));
   const dansBaf = (t) => docxP([
     {t: 'Dans la BAF : ', gras: true, taille: 17, couleur: DOCX_C.inkSoft},
     {t: t, taille: 17, couleur: DOCX_C.inkSoft, italique: true}
@@ -17185,10 +17238,10 @@ function corpsModeEmploiGeneral() {
 
   const courriel = lignesCourrielLancement();
 
-  return (
+  const corps = (
     /* ════ La fiche process ════ */
     docxP([{t: 'Fiche process', taille: 24, couleur: bleu}], {align: 'center', apres: 0}) +
-    docxP([{t: "Mode d'emploi : faire une analyse fonctionnelle avec la BAF", gras: true, taille: 34, couleur: bleu}], {align: 'center', apres: 0}) +
+    docxP([{t: "Mode d'emploi : faire une analyse fonctionnelle avec la BAF", gras: true, taille: 34, couleur: bleu}], {align: 'center', apres: 0, niveauPlan: 0}) +
     docxP([{t: 'Pour tous', italique: true, taille: 24, couleur: bleu}], {align: 'center', apres: 120}) +
     docxP([{t: "Le déroulé d'une analyse fonctionnelle avec la BAF, en une page. Le détail de chaque étape suit, dans la notice d'utilisation.", italique: true, taille: 19, couleur: DOCX_C.inkSoft}], {align: 'center', apres: 120}) +
     docxP([
@@ -17218,7 +17271,7 @@ function corpsModeEmploiGeneral() {
     etape("Pour aller plus loin : évaluer la qualité de l'analyse", 'facultatif · dans la BAF : ICAF') +
     pf('', "L'ICAF évalue une analyse fonctionnelle terminée. C'est un travail long, à réserver aux équipes qui peuvent y consacrer du temps.") +
 
-    docxP([{t: 'Les réflexes', gras: true, couleur: bleu, taille: 20}], {fond: DOCX_C.papierFonce, traitGauche: bleu, avant: 200, apres: 0}) +
+    docxP([{t: 'Les réflexes', gras: true, couleur: bleu, taille: 20}], {fond: DOCX_C.papierFonce, traitGauche: bleu, avant: 200, apres: 0, niveauPlan: 1}) +
     reflexe("Sauvegarder, c'est exporter. ", "Le fichier .json téléchargé est la seule vraie sauvegarde : rangez-le dans le dossier partagé de la personne.") +
     reflexe('Toujours repartir du dernier fichier. ', "Importez-le à chaque séance de travail, même si la BAF affiche déjà un dossier : un collègue a pu avancer depuis.") +
     reflexe('On ne retouche jamais le déclaratif. ', 'Ce que les déclarants ont écrit reste tel quel.') +
@@ -17229,14 +17282,15 @@ function corpsModeEmploiGeneral() {
 
     /* ════ La notice ════ */
     docxTitre(1, "Notice d'utilisation") +
+    '@@SOMMAIRE@@' +
 
-    docxIntertitre("La BAF, c'est deux outils", DOCX_C.papierFonce, bleu) +
+    docxIntertitre("La BAF, c'est deux outils", DOCX_C.papierFonce, bleu, niv(1, "La BAF, c'est deux outils", true)) +
     puce('Le RDAF, Recueil de Données pour une Analyse Fonctionnelle (outil 1), ', 'recueille et prépare les données, en trois étapes : Recueillir, Organiser, Interpréter.') +
     puce("L'ICAF, Indice de Confiance pour une Analyse Fonctionnelle (outil 2, facultatif), ", "évalue la qualité d'une analyse fonctionnelle une fois terminée. C'est un travail long, à réserver aux équipes qui peuvent y consacrer du temps.") +
     encadre([{t: "Ce qui se passe entre les deux, l'analyse fonctionnelle elle-même, c'est le travail du binôme et de l'équipe.", gras: true}], DOCX_C.papierFonce, bleu) +
     docxP('', {apres: 40}) +
 
-    docxIntertitre("La BAF, c'est trois rôles", DOCX_C.papierFonce, bleu) +
+    docxIntertitre("La BAF, c'est trois rôles", DOCX_C.papierFonce, bleu, niv(1, "La BAF, c'est trois rôles", true)) +
     docxTableau([
       [
         {contenu: [docxP('Rôle', {gras: true, taille: 19})], fond: DOCX_C.papierFonce},
@@ -17260,7 +17314,7 @@ function corpsModeEmploiGeneral() {
       ]
     ], [2000, 5000, 2638], {hauteur: 420}) +
 
-    docxIntertitre("Une analyse fonctionnelle, c'est trois étapes", DOCX_C.papierFonce, bleu) +
+    docxIntertitre("Une analyse fonctionnelle, c'est trois étapes", DOCX_C.papierFonce, bleu, niv(1, "Une analyse fonctionnelle, c'est trois étapes", true)) +
     puce('Recueillir ', 'des données qualitatives sur les comportements-défis ciblés, dans tous les lieux de vie de la personne. (avec le RDAF)') +
     puce('Organiser et interpréter ', 'ces données, en binôme. (avec le RDAF)') +
     puce('Formuler les hypothèses fonctionnelles, ', "avec le regard clinique du binôme et de l'équipe. (sans la BAF)") +
@@ -17336,7 +17390,7 @@ function corpsModeEmploiGeneral() {
     texte("Le tout se rédige dans un document d'analyse fonctionnelle, à partager avec les déclarants.") +
 
     /* ── 4 ── */
-    docxP([{t: "Pour aller plus loin : évaluer la qualité de l'analyse", gras: true, taille: 30, couleur: bleu}], {avant: 380, apres: 40}) +
+    docxP([{t: "Pour aller plus loin : évaluer la qualité de l'analyse", gras: true, taille: 30, couleur: bleu}], Object.assign({avant: 380, apres: 40}, niv(1, "Pour aller plus loin : évaluer la qualité de l'analyse", true))) +
     docxP([{t: "Facultatif. C'est un travail long, et pas facile : à réserver aux équipes qui peuvent y consacrer du temps.", italique: true, couleur: DOCX_C.inkSoft}], {apres: 140}) +
     dansBaf('Indice de confiance (ICAF)') +
     texte("L'ICAF évalue la qualité méthodologique d'une analyse fonctionnelle terminée. Ce qui vous attend :") +
@@ -17353,6 +17407,15 @@ function corpsModeEmploiGeneral() {
       {t: "Il contient l'ensemble du matériel et le travail d'analyse. Ce qui circule vers l'extérieur, c'est le document d'analyse fonctionnelle — pas le fichier."}
     ], DOCX_C.consequence, DOCX_C.consequenceTrait)
   );
+
+  // Le sommaire se construit une fois tous les titres posés : il reprend les parties de la notice, avec un lien vers chacune.
+  const sommaire = () =>
+    docxP([{t: 'Sommaire', gras: true, taille: 26, couleur: bleu}], {avant: 80, apres: 20}) +
+    docxP([{t: 'Ctrl + clic sur un titre pour y aller. Le volet de navigation de Word (Affichage → Volet de navigation) affiche la même liste, à tout moment.', italique: true, taille: 17, couleur: DOCX_C.inkSoft}], {apres: 80}) +
+    plan.map(e => docxP([{t: e.texte, lien: e.ancre, gras: e.niveau === 1, taille: e.niveau === 1 ? 20 : 19, couleur: e.niveau === 1 ? bleu : DOCX_C.ink}],
+      {retrait: e.niveau === 1 ? 140 : 440, avant: e.niveau === 1 ? 50 : 0, apres: e.niveau === 1 ? 30 : 10})).join('') +
+    docxP('', {apres: 60});
+  return corps.replace('@@SOMMAIRE@@', () => sommaire());
 }
 
 function telechargerModeEmploiGeneral() { telechargerDocx('BAF_Mode-emploi-pour-tous.docx', corpsModeEmploiGeneral(), false); }
@@ -19987,7 +20050,7 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
-const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":6037,"retrait":1147,"depots":50}]};
+const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":6158,"retrait":1152,"depots":51}]};
 
 function svgActiviteCode() {
   const mois = ACTIVITE_CODE.mois || [];
@@ -20026,6 +20089,22 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-08',
+    version: 'v2026.10.08-11',
+    titre: "FAQ plus pratique, et un plan dans le mode d'emploi Word",
+    corps: `
+<p><b>FAQ plus pratique, et mode d'emploi Word avec un plan</b> (Arthur et Émilie) :</p>
+<ul>
+<li><b>FAQ, « Questions sur l'outil ».</b> Quatorze questions pratiques s'ajoutent, qui reprennent ce que répond le mode d'emploi, dans l'ordre d'une analyse : <i>Comment commencer une analyse fonctionnelle avec la BAF ? Comment préparer la démarche ? À quoi sert le préambule ? Comment créer et transmettre un fichier déclarant ? Que reçoit un déclarant, et que doit-il faire ? Comment recevoir les fichiers déclarants ? Que faire des grilles papier ? Comment organiser les données ? Comment repérer plusieurs comportements-défis dans un même évènement ? Que fait Interpréter ? Comment formuler les hypothèses ? À quoi sert l'ICAF ? Comment sauvegarder son travail ? Où trouver le mode d'emploi ?</i> Chaque réponse est courte et dit où lire la suite dans le mode d'emploi (« § 1.3 »…).</li>
+<li><b>Rubriques.</b> Les questions de l'outil sont rangées sous cinq petits titres (Pour se lancer, Recueillir, Organiser et interpréter, Après le recueil, Sauvegarde, données et confidentialité) pour qu'on s'y retrouve ; les anciennes questions sont gardées.</li>
+<li><b>Titres en bleu.</b> « Questions sur l'analyse fonctionnelle » et « Questions sur l'outil » prennent le bleu de la page, comme les autres titres de partie.</li>
+<li><b>Mode d'emploi Word (« Pour tous »).</b> Les titres sont maintenant de vrais niveaux de plan : le <b>volet de navigation</b> de Word (Affichage → Volet de navigation) affiche la liste des parties et permet d'y aller d'un clic, et une table des matières automatique de Word fonctionne. Un <b>sommaire</b> en tête de la notice reprend les parties, avec des liens (Ctrl + clic).</li>
+<li><b>Ce qui n'est pas fait.</b> Le sommaire n'a pas de numéros de page (seul Word sait les calculer : Références → Table des matières les ajoute). La version <b>EMIA</b> du mode d'emploi n'a pas reçu ce plan : à décider.</li>
+</ul>
+`
+  },
 
   {
     date: '2026-10-08',
@@ -21143,12 +21222,85 @@ const REPERES = [
   {
     titre: "Questions sur l'outil",
     questions: [
-      {q: "Est-ce que la BAF pense à ma place ?",
+      {groupe: "Pour se lancer", q: "Est-ce que la BAF pense à ma place ?",
        r: `<p>Non. Elle ne pose aucun diagnostic et ne formule aucune hypothèse. Elle vous aide à structurer la démarche <b>avant</b> l'analyse — le recueil, l'organisation et la lecture des données (outil 1) — et, si vous le souhaitez, à en évaluer la qualité <b>après</b> (outil 2, facultatif).</p>
            <p>Ce qui se passe entre les deux — formuler des hypothèses, décider quoi proposer — reste votre travail. Tout ce que l'outil fait apparaître, catégories, régularités, pourcentages, est un matériau de discussion, jamais une conclusion.</p>`},
       {q: "Qui fait quoi dans la BAF ?",
        r: `<p>La BAF réunit deux outils : le <b>RDAF</b> (outil 1), qui recueille et prépare les données en trois étapes — Recueillir, Organiser, Interpréter —, et l'<b>ICAF</b> (outil 2, facultatif), qui évalue la qualité d'une analyse fonctionnelle terminée.</p>
            <p><b>Le déclarant</b> remplit le recueil : il décrit ce qu'il observe là où il accompagne la personne. <b>L'analyste</b> organise et interprète les données, puis fait l'analyse fonctionnelle — dans la démarche proposée, c'est le binôme formé par le référent et le clinicien. <b>Le cotateur</b>, si l'équipe choisit d'évaluer son analyse, remplit l'ICAF.</p>`},
+      {q: "Comment commencer une analyse fonctionnelle avec la BAF ?",
+       r: `<p>Dans cet ordre :</p>
+           <p><b>1. Préparer en binôme</b> — le référent de la démarche et le clinicien qui la supervise : un à trois comportements-défis, la piste somatique vérifiée, les dates du recueil, au moins un déclarant par lieu de vie, un prénom d'emprunt.</p>
+           <p><b>2. Remplir le préambule</b> dans la BAF, puis appeler chaque déclarant pour le vérifier et lui présenter la démarche.</p>
+           <p><b>3. Transmettre le fichier déclarant</b> à tous les déclarants, par mail (Recueillir → Transmettre un fichier déclarant).</p>
+           <p><b>4. Recevoir</b> les fichiers qu'ils renvoient (Recueillir → Ajouter des fichiers déclarants), <b>puis organiser et interpréter</b> les données, en binôme.</p>
+           <p><b>5. Formuler les hypothèses fonctionnelles</b> — là, on est hors de l'outil.</p>
+           <p class="repere-renvoi">Mode d'emploi : la fiche process, en une page, puis la notice — à télécharger dans Ressources.</p>`},
+      {q: "Comment préparer la démarche avant d'ouvrir la BAF ?",
+       r: `<p>Avant de lancer quoi que ce soit, le binôme répond à six questions, et les porte en réunion d'équipe s'il y en a une :</p>
+           <p><b>Quels comportements visez-vous ?</b> Un à trois comportements-défis, décrits comme une caméra les aurait filmés. <b>Une cause somatique a-t-elle été recherchée ?</b> Le bilan médical vient avant l'analyse fonctionnelle. <b>Combien de temps durera le recueil ?</b> Une date de début, une date de fin, et le temps d'analyser. <b>Qui seront les déclarants ?</b> Au moins un par lieu de vie. <b>Par quels moyens ?</b> En ligne avec un fichier déclarant, ou sur papier. <b>Qui porte la démarche, qui la supervise ?</b> Un référent, et un clinicien.</p>
+           <p>Choisissez aussi un <b>prénom d'emprunt</b>, et gardez-le d'un bout à l'autre, y compris dans les fichiers échangés.</p>
+           <p class="repere-renvoi">Mode d'emploi, § 1.1 Préparer la démarche.</p>`},
+      {q: "Où trouver le mode d'emploi ?",
+       r: `<p>Dans <b>Ressources</b>, rubrique « Mode d'emploi » : la version <b>Pour tous</b>, à télécharger (.docx), qui compte une fiche process d'une page puis la notice, avec un sommaire pour s'y retrouver ; et la version <b>EMIA</b>, réservée à l'équipe (un code est demandé).</p>
+           <p>Les questions de cette page en reprennent les parties, dans l'ordre : chacune dit où lire la suite.</p>`},
+      {groupe: "Recueillir", q: "À quoi sert le préambule, et comment le remplir ?",
+       r: `<p>Le préambule dit ce que l'équipe sait déjà de la personne avant toute observation : ses espaces de vie, sa journée type avec ses horaires réels, la nuit, les trajets, ce qu'on connaît de son vase de tension. C'est le point de départ commun à tous les déclarants.</p>
+           <p>La journée type n'est pas décorative : c'est elle qui fournit les moments dans lesquels tous les évènements viendront se ranger — avec les textes que l'on écrit, case par case, dans l'emploi du temps détaillé.</p>
+           <p>Une fois rempli, le référent appelle chaque déclarant qu'il veut mobiliser pour le vérifier avec lui et lui présenter la démarche : personne ne doit être surpris par le courriel de lancement.</p>
+           <p class="repere-renvoi">Mode d'emploi, § 1.2 Remplir le préambule, et le vérifier avec les futurs déclarants.</p>`},
+      {q: "Comment créer et transmettre un fichier déclarant ?",
+       r: `<p>Dans Recueillir — ou tout en bas du Préambule —, le bouton <b>« Transmettre un fichier déclarant »</b> ouvre une fenêtre à deux gestes : <b>télécharger</b> le fichier, ou le <b>transmettre par mail</b>.</p>
+           <p>Par mail, la BAF télécharge un <b>brouillon de message</b> (un fichier .eml) : le courriel du mode d'emploi, avec le prénom du préambule déjà posé, et le fichier déclarant déjà joint. En l'ouvrant, votre messagerie (Outlook, Thunderbird…) crée le message : il ne reste qu'à compléter les [crochets], ajouter les adresses et envoyer. Avec une messagerie en ligne, la fenêtre propose de copier le texte du mail ; vous joignez alors vous-même le fichier téléchargé.</p>
+           <p>Le fichier déclarant est <b>vierge, et le même pour tous</b> : le préambule, aucun évènement, rien du travail d'analyse.</p>
+           <p class="repere-renvoi">Mode d'emploi, § 1.3 Lancer le recueil, avec le modèle de courriel.</p>`},
+      {q: "Que reçoit un déclarant, et que doit-il faire ?",
+       r: `<p>Un courriel qui pose le projet, et le <b>fichier déclarant</b> en pièce jointe. Pour décrire ce qu'il observe :</p>
+           <p>il ouvre dans son navigateur la page <b>emia35.github.io/baf/#declarant</b>, clique sur « Importer mon fichier » et choisit le fichier joint (sur téléphone, il l'enregistre d'abord dans « Fichiers » ou « Téléchargements »). Il écrit ce qu'il a observé — et signale aussi les journées où il ne s'est rien produit —, puis appuie sur « Télécharger pour sauvegarder » : sinon, tout peut se perdre. La fois suivante, il revient à la même adresse et ouvre toujours le dernier fichier en date. À la fin du recueil, il renvoie ce dernier fichier.</p>
+           <p>Une personne, un fichier : à plusieurs, chacun ouvre le fichier reçu sur son propre appareil.</p>
+           <p class="repere-renvoi">Mode d'emploi, § 1.3 — c'est ce que dit le courriel.</p>`},
+      {q: "Comment travailler à plusieurs sur la même analyse ?",
+       r: `<p><b>Pour recueillir</b>, le référent envoie à chaque déclarant un <i>fichier déclarant</i> vierge, le même pour tous : le préambule, sans aucun évènement ni travail d'analyse. Chaque déclarant l'ouvre sur son propre appareil, depuis la page déclarant de la BAF — une personne, un fichier —, décrit ce qu'il observe et sauvegarde son fichier au fur et à mesure ; à la fin, il envoie le dernier. Le référent l'ajoute à son <i>fichier socle</i> : chaque évènement garde sa provenance, et les envois successifs ne se dupliquent pas. Ceux qui ne peuvent pas utiliser l'outil numérique remplissent une grille ABC papier, disponible dans Ressources.</p>
+           <p><b>Pour organiser</b>, référent et clinicien font d'abord un primo codage chacun de leur côté, chacun dans son <i>codage vierge</i>, à partir du seul déclaratif : chacun y repère les CD de chaque évènement, puis les catégorise. Ils se réunissent ensuite et arbitrent ensemble, découpages compris, dans le fichier socle, la catégorisation de synthèse, qui devient le seul codage. Interpréter se fait directement en synthèse.</p>
+           <p>Le fichier socle, lui, ne circule pas : il reste chez le référent. Ce qui part vers l'extérieur, c'est le document d'analyse fonctionnelle.</p>`},
+      {q: "Pourquoi déclarer les journées où il ne se passe rien ?",
+       r: `<p>Parce qu'une journée sans comportement-défi est une donnée, pas un vide. Sans elle, l'outil ne peut pas distinguer « il ne s'est rien passé » de « personne n'a rempli » : la fréquence qu'il affiche mesure alors les signalements, pas les comportements.</p>
+           <p>Et les moments où le comportement n'apparaît pas sont souvent les plus instructifs : ils disent ce qui aide la personne.</p>`},
+      {q: "Comment recevoir les fichiers déclarants ?",
+       r: `<p>Dans Recueillir, <b>« Ajouter des fichiers déclarants »</b> : vous pouvez en choisir plusieurs à la fois. Chaque évènement garde sa provenance, et la BAF les range dans l'ordre chronologique. Chaque fichier contient tout ce que le déclarant a écrit depuis le début : les évènements déjà reçus sont mis à jour, les nouveaux s'ajoutent, et un fichier plus ancien ne remplace rien.</p>
+           <p>La BAF vous aide à lire ce qui arrive : elle demande d'où vient un fichier quand le déclarant ne l'a pas précisé, et vous prévient quand deux personnes ont repris le même fichier chacune de leur côté — rien n'est perdu dans votre fichier socle, mais conseillez-leur un fichier chacune.</p>
+           <p>Regardez ensuite les <b>périodes observées</b> : l'outil repère les journées sans information. Allez demander ce qui s'est passé plutôt que de deviner.</p>
+           <p class="repere-renvoi">Mode d'emploi, § 1.4 Recevoir les fichiers déclarants.</p>`},
+      {q: "Que faire quand un déclarant ne veut pas, ou ne peut pas, utiliser l'outil ?",
+       r: `<p>Il remplit une <b>grille ABC papier</b> : elle est dans Ressources, rubrique « Version papier », avec le préambule et un guide de remplissage.</p>
+           <p>Le référent la saisit ensuite dans la BAF <b>telle qu'elle a été écrite</b> : la grille reprend colonne pour colonne le mode rapide, la recopie ne demande aucune décision. Recopiez les mots tels quels, sans les réinterpréter.</p>
+           <p class="repere-renvoi">Mode d'emploi, § 1.1 et § 1.4.</p>`},
+      {groupe: "Organiser et interpréter", q: "Comment organiser les données ? Qu'est-ce que le double codage ?",
+       r: `<p>Organiser, c'est regrouper en catégories ce qui se ressemble, volet par volet : contexte, antécédent, comportement, conséquence, intervention. Or <b>catégoriser, c'est déjà mesurer</b> : c'est ce geste qui transforme un texte en une donnée qui sera comptée. Le référent et le clinicien organisent donc d'abord <b>chacun de leur côté</b>, à partir du seul déclaratif et sans catégorie de départ : c'est le <b>primo codage</b>, fait dans un codage vierge que le référent exporte du fichier socle.</p>
+           <p>Ils se réunissent ensuite, sur un seul poste, et ouvrent « Comparer les deux primo codages » : on arbitre d'abord les découpages des évènements, puis chaque élément se lit sur une ligne — le codage A, le codage B, la synthèse. « Terminer la synthèse » efface les deux primo codages : la synthèse devient le seul codage.</p>
+           <p><b>À éviter :</b> catégoriser en pensant déjà à la fonction. On regroupe ce qui se ressemble ; l'hypothèse vient après.</p>
+           <p class="repere-renvoi">Mode d'emploi, partie 2 — Organiser : le double codage.</p>`},
+      {q: "Comment repérer plusieurs comportements-défis dans un même évènement ?",
+       r: `<p>Le déclarant décrit une scène, souvent d'un seul tenant ; c'est l'analyste qui y repère un ou plusieurs comportements-défis, en même temps ou l'un après l'autre. Dans Organiser, <b>« ✂ Découper »</b> s'en charge : on sélectionne le passage à la souris dans le texte du déclarant, et une petite bulle propose où le ranger.</p>
+           <p>Chaque CD est une <b>citation exacte</b> : le déclaratif n'est jamais réécrit. Ce qui s'est passé entre deux CD devient la conséquence du premier et l'antécédent du suivant. Le contexte, les antécédents, les conséquences et les interventions se découpent de la même façon.</p>
+           <p class="repere-renvoi">Mode d'emploi, partie 2 — Organiser : le double codage.</p>`},
+      {q: "Que fait l'étape « Interpréter » ?",
+       r: `<p>Elle se fait directement en synthèse, à deux, dans le fichier socle. Elle cherche ce qui se répète : les séquences qui reviennent, les moments et les lieux où le comportement apparaît — et ceux où il n'apparaît pas —, la façon dont la tension monte chez la personne.</p>
+           <p><b>La BAF compte et signale ; elle ne conclut pas.</b> Un pourcentage calculé sur quelques évènements est une piste, pas une tendance, et l'outil le dit à chaque fois.</p>
+           <p>Le binôme y propose aussi un <b>vase de tension</b> propre à la personne, à partir des signes précurseurs que les déclarants ont décrits. Une fois figé, il remplace les descriptions génériques pour les recueils suivants — jamais en cours de recueil : on ne déplace pas l'unité de mesure pendant qu'on mesure.</p>
+           <p class="repere-renvoi">Mode d'emploi, partie 2 — Interpréter : chercher ce qui se répète, en binôme.</p>`},
+      {groupe: "Après le recueil", q: "Et après la BAF, comment formuler les hypothèses ?",
+       r: `<p>Ici, la BAF ne peut plus vous aider : l'étape demande un regard clinique, c'est pour cela qu'un clinicien supervise la démarche. Posez les pièces du puzzle sur la table — ce que la BAF a fait apparaître n'est qu'une d'entre elles, avec les observations sur les lieux de vie, les évaluations, les entretiens — et sollicitez l'équipe au besoin.</p>
+           <p>Formulez des hypothèses fonctionnelles : plusieurs sont possibles, et ce sont des hypothèses, pas des vérités. Le tout se rédige dans un <b>document d'analyse fonctionnelle</b>, à partager avec les déclarants.</p>
+           <p class="repere-renvoi">Mode d'emploi, partie 3 — Formuler les hypothèses fonctionnelles.</p>`},
+      {q: "À quoi sert l'ICAF, et faut-il l'utiliser ?",
+       r: `<p>C'est <b>facultatif</b>. L'ICAF évalue la qualité méthodologique d'une analyse fonctionnelle terminée — le document d'analyse, pas le recueil seul ; le travail produit, pas la personne accompagnée, pas les déclarants. C'est un travail long, à réserver aux équipes qui peuvent y consacrer du temps.</p>
+           <p>Cotez à plusieurs, et séparément : les écarts entre cotateurs sont plus instructifs que la note. Et un indice bas n'invalide rien : il dit où le matériel est mince, donc ce qu'il faudrait aller chercher.</p>
+           <p class="repere-renvoi">Mode d'emploi, partie 4 — Pour aller plus loin : évaluer la qualité de l'analyse.</p>`},
+      {groupe: "Sauvegarde, données et confidentialité", q: "Comment sauvegarder son travail, et le retrouver ?",
+       r: `<p>Dès que vous remplissez la moindre case, la BAF garde une mémoire de l'analyse dans le navigateur de cet ordinateur. Cette mémoire est locale : c'est comme un document Word ouvert et pas encore enregistré. <b>Pour enregistrer, cliquez sur « Exporter »</b>, dans la barre sous l'en-tête (sur téléphone, dans le menu « Dossier ») : la BAF télécharge un fichier .json — le fichier socle —, qui est la sauvegarde de votre analyse tout entière.</p>
+           <p><b>À la fin de chaque séance</b>, exportez et rangez le fichier dans le dossier partagé de la personne ; gardez les versions précédentes : la date et l'heure sont dans le nom de chaque fichier. <b>Au début de chaque séance</b>, importez le dernier fichier du dossier partagé, même si la BAF affiche déjà un dossier : c'est la version de votre dernière séance, et un collègue a pu avancer depuis.</p>
+           <p class="repere-renvoi">Mode d'emploi, § 1.2 — encadré « Où la BAF garde-t-elle votre travail ? ».</p>`},
       {q: "Où sont stockées les données ? Qui peut les voir ?",
        r: `<p>Tout fonctionne dans votre navigateur. <b>Rien n'est envoyé, stocké ou transmis à un serveur</b>, de quelque façon que ce soit.</p>
            <p>Le dossier en cours reste enregistré dans ce navigateur, sur cet appareil. C'est ce qui vous évite de perdre votre travail en fermant l'onglet — et c'est aussi ce qui fait que, <b>sur un poste partagé, la personne suivante le retrouve</b>. Exportez votre dossier, et effacez-le en quittant. Si vous videz les données du navigateur sans avoir exporté, le travail est perdu.</p>`},
@@ -21157,13 +21309,6 @@ const REPERES = [
       {q: "Est-ce qu'on retouche ce que les déclarants ont écrit ?",
        r: `<p>Jamais. Le déclaratif est la donnée de base : c'est le discours d'un professionnel ou d'une famille, avec son point de vue et ses biais propres, et il doit garder ce caractère.</p>
            <p>Le travail de l'analyste ne commence qu'à l'étape <b>Organiser</b>. Tout ce qui y est produit — CD repérés dans un évènement, catégories, regroupements — se lit par-dessus et n'est jamais réécrit dans l'évènement : un CD est une citation exacte de ce que le déclarant a écrit. On peut donc toujours revenir au matériau d'origine.</p>`},
-      {q: "Comment travailler à plusieurs sur la même analyse ?",
-       r: `<p><b>Pour recueillir</b>, le référent envoie à chaque déclarant un <i>fichier déclarant</i> vierge, le même pour tous : le préambule, sans aucun évènement ni travail d'analyse. Chaque déclarant l'ouvre sur son propre appareil, depuis la page déclarant de la BAF — une personne, un fichier —, décrit ce qu'il observe et sauvegarde son fichier au fur et à mesure ; à la fin, il envoie le dernier. Le référent l'ajoute à son <i>fichier socle</i> : chaque évènement garde sa provenance, et les envois successifs ne se dupliquent pas. Ceux qui ne peuvent pas utiliser l'outil numérique remplissent une grille ABC papier, disponible dans Ressources.</p>
-           <p><b>Pour organiser</b>, référent et clinicien font d'abord un primo codage chacun de leur côté, chacun dans son <i>codage vierge</i>, à partir du seul déclaratif : chacun y repère les CD de chaque évènement, puis les catégorise. Ils se réunissent ensuite et arbitrent ensemble, découpages compris, dans le fichier socle, la catégorisation de synthèse, qui devient le seul codage. Interpréter se fait directement en synthèse.</p>
-           <p>Le fichier socle, lui, ne circule pas : il reste chez le référent. Ce qui part vers l'extérieur, c'est le document d'analyse fonctionnelle.</p>`},
-      {q: "Pourquoi déclarer les journées où il ne se passe rien ?",
-       r: `<p>Parce qu'une journée sans comportement-défi est une donnée, pas un vide. Sans elle, l'outil ne peut pas distinguer « il ne s'est rien passé » de « personne n'a rempli » : la fréquence qu'il affiche mesure alors les signalements, pas les comportements.</p>
-           <p>Et les moments où le comportement n'apparaît pas sont souvent les plus instructifs : ils disent ce qui aide la personne.</p>`},
     ]
   },
 ];
@@ -21201,7 +21346,7 @@ const LEXIQUE_BAF = {
   "référent": "Le professionnel qui porte la démarche : il la prépare, lance le recueil, reçoit les fichiers déclarants et fait l'analyse avec le clinicien qui la supervise.",
   "cotateur": "Celui ou celle qui remplit l'ICAF sur une analyse fonctionnelle terminée. Coter à plusieurs, séparément, est plus instructif que la note elle-même.",
   "fichier socle": "Le fichier du référent : le préambule, tous les évènements reçus, et tout le travail d'analyse. C'est lui qu'on exporte et qu'on range dans le dossier partagé de l'équipe ; il ne circule pas au-dehors.",
-  "fichier déclarant": "Le fichier propre à chaque déclarant. Le référent en crée un vierge, le même pour tous : le préambule, sans aucun évènement ni travail d'analyse. Chacun l'ouvre depuis la page déclarant de la BAF, y décrit ses évènements et ses périodes observées, le sauvegarde à chaque séance, repart toujours du dernier, et envoie le dernier. Le référent l'ajoute à son fichier socle, chaque évènement gardant sa provenance. Une personne, un fichier : à deux sur le même fichier, on se marche dessus.",
+  "fichier déclarant": "Le fichier propre à chaque déclarant. Le référent en transmet un vierge, le même pour tous : le préambule, sans aucun évènement ni travail d'analyse. Chacun l'ouvre depuis la page déclarant de la BAF, y décrit ses évènements et ses périodes observées, le sauvegarde à chaque séance, repart toujours du dernier, et envoie le dernier. Le référent l'ajoute à son fichier socle, chaque évènement gardant sa provenance. Une personne, un fichier : à deux sur le même fichier, on se marche dessus.",
   "période observée": "Une journée ou une plage de jours déclarée comme observée, avec ou sans comportement-défi. Sans elle, l'outil ne peut pas distinguer « il ne s'est rien passé » de « personne n'a rempli ».",
   "vase de tension": "L'image qu'emploie la BAF pour la tension qui s'accumule chez la personne, en cinq paliers. Le déclarant pose un palier et note les signes de tension qu'il a remarqués ; l'équipe en tire l'échelle décrite propre à la personne.",
   "double codage": "La catégorisation faite d'abord séparément par deux personnes — le référent et le clinicien, par exemple —, chacune dans son codage vierge et à partir du seul déclaratif, puis saisie à deux, en synthèse, dans le fichier socle. La synthèse devient le seul codage.",
@@ -21243,8 +21388,8 @@ function renderReperes() {
   if (!el) return;
   let html = '<h3 class="res-cat-titre premier" id="reperes-faq">FAQ</h3>' + REPERES.map(cat => `
     <div class="card">
-      <h3 style="font-size:17px;margin-bottom:14px;">${esc(cat.titre)}</h3>
-      ${cat.questions.map(item => `
+      <h3 class="repere-cat-titre">${esc(cat.titre)}</h3>
+      ${cat.questions.map(item => (item.groupe ? '<h4 class="repere-groupe">' + esc(item.groupe) + '</h4>' : '') + `
         <details class="repere-q">
           <summary>${esc(item.q)}</summary>
           <div class="repere-r">${item.r}</div>
