@@ -1665,7 +1665,7 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
   .accueil-actions, .multiposte-info,
   .mode-toggle-bar, .mode-approfondi-panel,
   .m3-tabs, .m4-tabs,
-  .actions-row, #btn-details-toggle,
+  .actions-row,
   .abc-add-btn, .grad-add-btn,
   .m3-col-cats, .vase-input-row,
   .abc-pattern-del, .abc-pattern-label,
@@ -3497,6 +3497,58 @@ body.seq-selection .seq-case .seq-vide{display:none;}
 #view-analyser .recap-volet{margin:0 0 10px;padding:10px 12px;border:0;border-radius:12px;background:var(--sheet);box-shadow:var(--ombre-legere);}
 #view-analyser .recap-volet-titre{font-size:11px;letter-spacing:.07em;}
 #view-analyser .recap-cat i{width:9px;height:9px;}
+/* ── La Synthèse par questions (passe 184, la charte) : un sommaire fixe, une phrase en tête de chaque partie puis un seul
+   dessin, la confiance en pastille (le détail dans un tiroir), le détail replié, un seul export. ── */
+.mod-header.synth-tete{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin:0 0 8px;padding:16px 0 14px;border-bottom:0;}
+.synth-tete h2{margin:0;font-size:24px;letter-spacing:-.01em;}
+.synth-qui{font-size:13px;color:var(--ink-soft);}
+.synth-tete-droite{display:flex;align-items:center;gap:10px;margin-left:auto;}
+.synth-confiance{display:inline-flex;align-items:center;gap:8px;height:34px;white-space:nowrap;padding:0 12px 0 5px;border:0;border-radius:999px;background:var(--sheet);box-shadow:var(--ombre-legere);font:500 13px var(--police-interface);color:var(--ink);}
+.synth-confiance b{display:inline-grid;place-items:center;height:24px;padding:0 8px;border-radius:999px;font-size:12px;}
+.synth-confiance b.ok{background:var(--sauge-pale);color:var(--vol-comportement-texte);}
+.synth-confiance b.moyen{background:var(--ocre-pale);color:var(--vol-antecedent-texte);}
+.synth-confiance b.faible{background:var(--rose-pale);color:var(--rose-deep);}
+.synth-page{display:grid;grid-template-columns:190px minmax(0,1fr);gap:32px;align-items:start;}
+.synth-sommaire{position:sticky;top:calc(var(--header-h,60px) + var(--subbar-h,0px) + 18px);display:flex;flex-direction:column;gap:2px;}
+.synth-sommaire-titre{margin:14px 10px 4px;font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-faint);}
+.synth-sommaire-titre:first-child{margin-top:0;}
+.synth-sommaire button{display:flex;align-items:center;gap:9px;padding:6px 10px;border:0;border-radius:9px;background:transparent;font:13px var(--police-interface);color:var(--ink-soft);text-align:left;}
+.synth-sommaire button i{flex:none;width:7px;height:7px;border-radius:50%;background:var(--c,var(--line));}
+.synth-sommaire button:hover{background:var(--surface);color:var(--ink);}
+.synth-sommaire button.on{background:var(--sheet);box-shadow:0 1px 0 var(--line-soft);font-weight:600;color:var(--ink);}
+.synth-partie{margin:0 0 44px;scroll-margin-top:calc(var(--header-h,60px) + var(--subbar-h,0px) + 16px);}
+#view-synthese .phrase.petite{font-size:19px;}
+#view-synthese .feuille.synth-block{margin-bottom:0;}
+#view-synthese .deux-feuilles{align-items:start;}
+.synth-partie .kpi-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:0 0 14px;}
+.synth-partie .kpi{min-width:0;margin:0;padding:14px 16px;border:0;border-radius:var(--rayon-feuille);background:var(--sheet);box-shadow:var(--ombre-feuille);text-align:left;}
+.synth-partie .kpi .val{font-size:26px;font-weight:700;letter-spacing:-.02em;line-height:1.15;color:var(--ink);}
+.synth-partie .kpi .lbl{margin-top:4px;font-size:11px;letter-spacing:.06em;color:var(--ink-faint);}
+.synth-partie .kpi .kpi-sub{font-style:normal;color:var(--ink-soft);}
+.synth-resume .lecture + .lecture{margin-top:6px;}
+.synth-avertir{margin:10px 0 0;font-size:12px;color:var(--ink-faint);}
+.synth-chaleur{width:100%;border-collapse:separate;border-spacing:4px;font-size:12.5px;}
+.synth-chaleur th{font-size:11.5px;font-weight:600;color:var(--ink-faint);text-align:center;}
+.synth-chaleur th.m{padding-right:8px;font-size:12.5px;font-weight:500;color:var(--ink-soft);text-align:right;white-space:nowrap;}
+.synth-chaleur td{height:30px;border-radius:7px;font-weight:600;color:rgba(44,36,22,.6);text-align:center;}
+.synth-chaleur .tot{font-weight:500;color:var(--ink-soft);text-align:right;}
+.synth-question{margin:14px 0 0;padding:12px 14px;border-radius:12px;background:var(--surface);font:400 15px/1.55 var(--police-lecture);}
+.synth-question b{display:block;margin-bottom:2px;font:700 11px var(--police-interface);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);}
+.synth-tout-bloc{margin:0 0 8px;padding:12px 16px;border-radius:14px;background:var(--sheet);box-shadow:var(--ombre-legere);}
+#view-synthese .bloc-image-actions{opacity:0;transition:opacity .2s;}
+#view-synthese .synth-block:hover > .bloc-image-actions,#view-synthese .synth-block:focus-within > .bloc-image-actions{opacity:1;}
+#view-synthese .volet-histo{margin-bottom:6px;}
+.synth-barre{display:grid;grid-template-columns:minmax(0,1fr) minmax(70px,150px) 30px;gap:12px;align-items:center;max-width:600px;margin:0 0 8px;font-size:13.5px;line-height:1.3;color:var(--ink);}
+.synth-barre .nom{overflow-wrap:anywhere;}
+.synth-barre .b{height:10px;border-radius:5px;background:var(--line-feuille);overflow:hidden;}
+.synth-barre .b i{display:block;height:100%;border-radius:5px;background:var(--bar,var(--slate));}
+.synth-barre .n{font-size:12.5px;color:var(--ink-soft);text-align:right;font-variant-numeric:tabular-nums;}
+.synth-vide .synth-partie:not(#synth-essentiel),.synth-vide .synth-sommaire,.synth-vide .synth-confiance,.synth-vide #synth-essentiel .kpi-row,.synth-vide .synth-resume{display:none;}
+.synth-vide .synth-page{grid-template-columns:minmax(0,1fr);}
+#synth-montee .sg-partie:first-child,#synth-chaines .sg-partie{padding-top:0;border-top:0;}
+@media (max-width:600px){.synth-confiance .discret{display:none;}}
+@media (max-width:900px){.synth-page{grid-template-columns:minmax(0,1fr);}.synth-sommaire{display:none;}.synth-partie .kpi-row{grid-template-columns:1fr;}#view-synthese .deux-feuilles{grid-template-columns:1fr;}}
+@media print{.synth-page{display:block;}.synth-sommaire,.synth-tete-droite{display:none;}}
 #tiroir-notes .analyse-notes-champ{min-height:240px;margin:0;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font:400 14.5px/1.6 var(--police-lecture);resize:vertical;}
 .analyse-note{margin:0 0 14px;font-size:13px;color:var(--ink-soft);}
 .analyse-champ{margin:0 0 12px;padding:10px 14px;background:var(--card);border:1px solid var(--line);border-radius:10px;}
@@ -4514,85 +4566,117 @@ body.seq-selection .seq-case .seq-vide{display:none;}
       <span id="print-titre">BAF — Boussole pour une Analyse Fonctionnelle</span>
       <span id="print-profil"></span>
     </div>
-    <div class="mod-header">
-      <span class="temps-tag tag-m4">Lecture transversale</span>
-      <h2>Synthèse de l'analyse fonctionnelle</h2>
-      <div class="sub">Se met à jour à mesure que vous remplissez les modules.</div>
+    <div class="mod-header synth-tete">
+      <h2>Synthèse</h2>
+      <span class="synth-qui" id="synth-qui"></span>
+      <span class="synth-tete-droite no-print">
+        <button type="button" class="synth-confiance" id="synth-confiance" onclick="ouvrirTiroir('tiroir-indice')" title="L'indice de confiance du recueil, critère par critère"></button>
+        <button type="button" class="bt plein" onclick="ouvrirExportModal()" title="Un document Word (.doc), pour le bilan">Exporter pour le bilan</button>
+      </span>
     </div>
 
     <div id="synth-codage-encours"></div>
 
-    <div class="card synth-block">
-      <h4>Profil</h4>
-      <div id="synth-profil" style="font-size:14.5px;color:var(--ink);">
-        <span style="color:var(--ink-soft);font-style:italic;">Le module 1 n'a pas encore été rempli.</span>
+    <div class="synth-page">
+      <nav class="synth-sommaire no-print" id="synth-sommaire" aria-label="Sommaire de la synthèse">
+        <span class="synth-sommaire-titre">Ce que racontent les données</span>
+        <button type="button" data-cible="synth-essentiel" onclick="allerPartieSynthese('synth-essentiel')"><i></i>L'essentiel</button>
+        <button type="button" data-cible="synth-quand" style="--c:var(--slate)" onclick="allerPartieSynthese('synth-quand')"><i></i>Quand ?</button>
+        <button type="button" data-cible="synth-avant" style="--c:var(--vol-antecedent)" onclick="allerPartieSynthese('synth-avant')"><i></i>Ce qui précède</button>
+        <button type="button" data-cible="synth-apres" style="--c:var(--vol-consequence)" onclick="allerPartieSynthese('synth-apres')"><i></i>Ce que ça lui apporte</button>
+        <button type="button" data-cible="synth-tension" style="--c:var(--vase-monte)" onclick="allerPartieSynthese('synth-tension')"><i></i>La tension</button>
+        <span class="synth-sommaire-titre">Pour la réunion</span>
+        <button type="button" data-cible="synth-pistes" style="--c:var(--sel-deep)" onclick="allerPartieSynthese('synth-pistes')"><i></i>Les pistes à discuter</button>
+        <button type="button" data-cible="synth-equipe" style="--c:var(--vol-comportement)" onclick="allerPartieSynthese('synth-equipe')"><i></i>Ce que l'équipe a repéré</button>
+        <span class="synth-sommaire-titre">Le détail</span>
+        <button type="button" data-cible="synth-tout" onclick="allerPartieSynthese('synth-tout')"><i></i>Toutes les données</button>
+      </nav>
+
+      <div class="synth-lecture">
+        <section class="synth-partie" id="synth-essentiel">
+          <div class="surtitre">L'essentiel</div>
+          <p class="phrase" id="synth-phrase-essentiel"></p>
+          <div class="kpi-row">
+            <div class="kpi"><div class="val" id="kpi-nb-evt">0</div><div class="lbl">Épisodes</div></div>
+            <div class="kpi"><div class="val" id="kpi-frequence">—</div><div class="lbl">Fréquence</div><div class="kpi-sub" id="kpi-frequence-detail"></div></div>
+            <div class="kpi"><div class="val" id="kpi-moment">—</div><div class="lbl">Moment dominant</div><div class="kpi-sub" id="kpi-moment-heures"></div></div>
+          </div>
+          <div class="feuille synth-resume">
+            <div id="synth-profil" class="lecture"></div>
+            <div id="synth-resume" class="lecture"></div>
+            <p class="synth-avertir">Ces phrases décrivent ce que les données montrent le plus souvent. Elles ne disent pas pourquoi : c'est le travail de l'équipe.</p>
+          </div>
+        </section>
+
+        <section class="synth-partie" id="synth-quand" style="--c:var(--slate)">
+          <div class="surtitre"><i></i>Quand ?</div>
+          <p class="phrase" id="synth-phrase-quand"></p>
+          <div class="feuille synth-block">
+            <div class="feuille-titre">Les épisodes, par moment de la journée et par jour <small>survolez une case pour le détail</small></div>
+            <div id="synth-chaleur"></div>
+            <details class="repli" id="synth-details-repli" ontoggle="detailsVisible = this.open; if (this.open) renderCharts();">
+              <summary>Le détail : par mois, par jour, par heure, et chaque épisode sur la semaine</summary>
+              <div class="repli-corps" id="synth-details"><div id="synth-charts-grid"></div></div>
+            </details>
+          </div>
+        </section>
+
+        <section class="synth-partie" id="synth-avant" style="--c:var(--vol-antecedent-deep);--hl:var(--vol-antecedent-hl)">
+          <div class="surtitre"><i></i>Ce qui précède</div>
+          <p class="phrase" id="synth-phrase-avant"></p>
+          <div class="deux-feuilles">
+            <div class="feuille synth-block" id="synth-histo-antecedents" style="--bar:var(--vol-antecedent)"></div>
+            <div class="feuille synth-block" id="synth-histo-contexte" style="--bar:var(--vol-contexte)"></div>
+          </div>
+        </section>
+
+        <section class="synth-partie" id="synth-apres" style="--c:var(--vol-consequence-deep);--hl:var(--vol-consequence-hl)">
+          <div class="surtitre"><i></i>Ce que ça lui apporte</div>
+          <p class="phrase" id="synth-phrase-apres"></p>
+          <div class="feuille synth-block" style="--bar:var(--vol-consequence)">
+            <div id="synth-histo-consequences"></div>
+            <div class="synth-question"><b>La question pour l'équipe</b>Échapper à quelque chose ? Obtenir quelque chose ? Les deux, selon les moments ? C'est ici que se lit la fonction : les données ne tranchent pas.</div>
+          </div>
+        </section>
+
+        <section class="synth-partie" id="synth-tension" style="--c:var(--vase-monte-deep);--hl:rgba(226,86,47,.22)">
+          <div class="surtitre"><i></i>La tension</div>
+          <p class="phrase" id="synth-phrase-tension"></p>
+          <div class="feuille synth-block" id="synth-montee"></div>
+        </section>
+
+        <section class="synth-partie" id="synth-pistes" style="--c:var(--sel-deep)">
+          <div class="surtitre"><i></i>Les pistes à discuter</div>
+          <p class="phrase" id="synth-phrase-pistes"></p>
+          <div class="feuille synth-block" id="synth-suggestions-card">
+            <div class="suggestion-section" id="synth-correlations-card"><div id="synth-correlations"></div></div>
+          </div>
+        </section>
+
+        <section class="synth-partie" id="synth-equipe" style="--c:var(--vol-comportement-deep);--hl:var(--vol-comportement-hl)">
+          <div class="surtitre"><i></i>Ce que l'équipe a repéré</div>
+          <p class="phrase" id="synth-phrase-equipe"></p>
+          <div class="feuille synth-block"><div id="synth-m4"></div></div>
+        </section>
+
+        <section class="synth-partie" id="synth-tout">
+          <div class="surtitre">Le détail</div>
+          <p class="phrase petite">Toutes les données, pour qui veut vérifier.</p>
+          <details class="repli synth-tout-bloc"><summary>Les catégories, volet par volet</summary><div class="repli-corps"><div id="synth-m3"></div></div></details>
+          <details class="repli synth-tout-bloc"><summary>Quand un nouveau comportement apparaît après une intervention</summary><div class="repli-corps" id="synth-chaines"></div></details>
+          <details class="repli synth-tout-bloc"><summary>L'indice de confiance, critère par critère</summary><div class="repli-corps"><button type="button" class="bt" onclick="ouvrirTiroir('tiroir-indice')">Ouvrir le détail</button></div></details>
+        </section>
       </div>
     </div>
 
-    <div class="card synth-block">
-      <h4>Chiffres clés</h4>
-      <div class="kpi-row">
-        <div class="kpi"><div class="val" id="kpi-nb-evt">0</div><div class="lbl">Épisodes</div></div>
-        <div class="kpi"><div class="val" id="kpi-frequence">—</div><div class="lbl">Fréquence</div><div class="kpi-sub" id="kpi-frequence-detail"></div></div>
-        <div class="kpi"><div class="val" id="kpi-moment">—</div><div class="lbl">Moment dominant</div><div class="kpi-sub" id="kpi-moment-heures"></div></div>
+    <aside class="tiroir" id="tiroir-indice" aria-hidden="true" aria-label="Indice de confiance du recueil">
+      <div class="tiroir-tete"><h2>Indice de confiance du recueil</h2><button type="button" class="bt-rond" aria-label="Fermer" onclick="fermerTiroir('tiroir-indice')">✕</button></div>
+      <div class="tiroir-corps">
+        <p class="discret">Il jauge la solidité du matériau recueilli, pas la qualité de l'analyse clinique. Il pointe les manques, pour aider à cibler ce qu'il reste à renforcer — pas pour invalider ce qui est déjà fait.</p>
+        <div id="synth-indice-global" style="margin-bottom:18px;"></div>
+        <div id="synth-indice-detail"></div>
       </div>
-      <div style="margin-top:14px;">
-        <button class="btn btn-ghost btn-sm" id="btn-details-toggle" onclick="toggleDetailsStats()" style="font-size:13px;">
-          📊 Afficher les détails
-        </button>
-      </div>
-      <div id="synth-details" style="display:none;margin-top:18px;">
-        <div id="synth-charts-grid">
-          <!-- Niveaux de répartition remplis dynamiquement -->
-        </div>
-      </div>
-    </div>
-
-    <div class="card synth-block">
-      <h4>Organisation des données (module 2)</h4>
-      <div id="synth-m3"></div>
-    </div>
-
-    <div class="card synth-block" id="synth-suggestions-card">
-      <h4>Ce que les données suggèrent <span style="font-size:11px;font-weight:400;color:var(--ink-soft);margin-left:6px;">— matériau à examiner avec un clinicien</span></h4>
-
-      <div class="suggestion-section" id="synth-correlations-card">
-        <div class="suggestion-tete">
-          <span class="suggestion-etiquette compte">Ce que les chiffres montrent</span>
-          <span class="suggestion-note">Calculé à partir de vos catégorisations. Ce sont des co-occurrences, pas des causes — l'outil ne conclut pas à votre place.</span>
-        </div>
-        <div id="synth-correlations"></div>
-      </div>
-
-      <div class="suggestion-section">
-        <div class="suggestion-tete">
-          <span class="suggestion-etiquette main">Ce que vous avez repéré</span>
-          <span class="suggestion-note">Saisi à la main dans Interpréter. Une intuition clinique peut être juste sans être encore visible dans les chiffres — et l'inverse.</span>
-        </div>
-        <div id="synth-m4"></div>
-      </div>
-    </div>
-
-    <div class="card synth-block" id="synth-indice-card">
-      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px;">
-        <h4 style="margin:0;">Indice de confiance du recueil</h4>
-        <span style="font-size:11px;font-weight:400;color:var(--ink-soft);">mini indice de confiance · qualité du déclaratif uniquement</span>
-      </div>
-      <div class="help" style="margin-bottom:14px;">Cet indice jauge la <i>solidité du matériau collecté</i>, pas la qualité de l'analyse clinique. Il pointe les manques pour vous aider à cibler ce qu'il reste à renforcer — pas pour invalider ce que vous avez déjà.</div>
-      <div id="synth-indice-global" style="margin-bottom:18px;"></div>
-      <div id="synth-indice-detail"></div>
-    </div>
-
-    <div class="actions-row">
-      <div class="export-choix">
-        <button class="btn btn-gold" onclick="exporterJSON()">💾 Exporter le fichier socle</button>
-        <span class="export-format">fichier <b>.json</b> — pour reprendre le travail dans la BAF</span>
-      </div>
-      <div class="export-choix">
-        <button class="btn btn-secondary" onclick="ouvrirExportModal()">📄 Exporter les données</button>
-        <span class="export-format">document <b>.doc</b> — pour un bilan, ouvrable dans Word</span>
-      </div>
-    </div>
+    </aside>
   </section>
 
 <!-- Modale de choix des sections à exporter -->
@@ -9936,6 +10020,162 @@ function refreshSynthese(){
 
   // Indice de confiance du recueil
   renderIndice();
+
+  // La page par questions : la pastille, les phrases, la carte, un dessin par partie.
+  renderSyntheseLecture();
+}
+
+/* ── La Synthèse par questions (passe 184, la charte) ───────────────────────────────────────────────────────────────
+   On lit d'abord ce que racontent les données, question par question — quand, ce qui précède, ce que ça lui apporte, la
+   tension — chacune avec une phrase en clair puis un seul dessin ; puis ce qui est à discuter ; le détail reste, replié.
+   Les phrases DÉCRIVENT ce qui revient le plus souvent : elles ne disent pas pourquoi. */
+const NOMS_JOURS_SYNTH = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
+function emSynth(t) { return '<em>' + esc(t) + '</em>'; }
+function guillemetsSynth(t) { return '« ' + t + ' »'; }
+function jourSemaine(e) { const d = e && e.date ? new Date(e.date + 'T12:00:00') : null; return d && !isNaN(d) ? (d.getDay() + 6) % 7 : -1; }
+// Les catégories racines d'un volet, avec le nombre d'éléments qu'elles portent (sous-catégories comprises), les plus fréquentes d'abord.
+function comptesVolet(sousId) {
+  ensureM3();
+  const cats = state.m3.categories[sousId] || {};
+  const presents = new Set(extraireItems(sousId).map(it => it.id));
+  return catsRacines(sousId).map(id => {
+    const vus = new Set();
+    [id].concat(catsEnfants(sousId, id)).forEach(c => ((cats[c] || {}).items || []).forEach(i => { if (presents.has(i)) vus.add(i); }));
+    return {id, nom: (cats[id] || {}).nom || '', n: vus.size};
+  }).filter(x => x.n > 0 && x.nom).sort((a, b) => b.n - a.n);
+}
+// Les barres d'une partie : une par catégorie racine (ses sous-catégories comprises), triées, d'une seule couleur — celle du volet.
+function barresSynth(sousId, titre, precision) {
+  const l = comptesVolet(sousId);
+  if (!l.length) return '';
+  const cats = state.m3.categories[sousId] || {};
+  const classes = new Set();
+  Object.keys(cats).forEach(id => (cats[id].items || []).forEach(i => classes.add(i)));
+  const presents = extraireItems(sousId).map(it => it.id);
+  const nClasses = presents.filter(i => classes.has(i)).length;
+  return '<div class="feuille-titre">' + esc(titre) + ' <small>' + esc(precision) + ' · ' + nClasses + ' classé' + (nClasses > 1 ? 's' : '') + ' sur ' + presents.length + '</small></div>' +
+    l.map(c => '<div class="synth-barre"><span class="nom" title="' + esc(c.nom) + '">' + esc(c.nom) + '</span>' +
+      '<span class="b"><i style="width:' + Math.round(c.n / l[0].n * 100) + '%"></i></span><span class="n">' + c.n + '</span></div>').join('');
+}
+// La carte des épisodes par moment de la journée (lignes, dans l'ordre des heures) et par jour de la semaine (colonnes).
+function chaleurMomentsJours(evts) {
+  const J = ['lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.', 'dim.'];
+  const lignes = {}, heures = {};
+  let max = 0, sansJour = 0;
+  evts.forEach(e => {
+    const j = jourSemaine(e);
+    if (j < 0) { sansJour++; return; }
+    const m = normaliseMoment(e.moment) || 'Moment non précisé';
+    if (!lignes[m]) lignes[m] = [0, 0, 0, 0, 0, 0, 0];
+    lignes[m][j]++;
+    max = Math.max(max, lignes[m][j]);
+    const h = /^(\d{1,2})\s*[:h]\s*(\d{2})?/.exec(e.heure || '');
+    if (h) (heures[m] = heures[m] || []).push(+h[1] * 60 + (+h[2] || 0));
+  });
+  const mediane = l => { if (!l || !l.length) return 99999; const t = l.slice().sort((a, b) => a - b); return t[Math.floor(t.length / 2)]; };
+  const ordre = Object.keys(lignes).sort((a, b) => mediane(heures[a]) - mediane(heures[b]) || a.localeCompare(b, 'fr'));
+  const cols = J.map((_, j) => j).filter(j => ordre.some(m => lignes[m][j] > 0));
+  if (!cols.length) return '';
+  const fond = n => n ? 'rgba(94,138,120,' + (0.14 + 0.76 * n / max).toFixed(2) + ')' : '#F3EEE5';
+  return '<table class="synth-chaleur"><thead><tr><th></th>' + cols.map(j => '<th>' + J[j] + '</th>').join('') + '<th class="tot">total</th></tr></thead><tbody>' +
+    ordre.map(m => '<tr><th class="m">' + esc(m) + '</th>' + cols.map(j => {
+      const n = lignes[m][j];
+      return '<td style="background:' + fond(n) + ';' + (n / max > 0.55 ? 'color:#fff;' : '') + '" title="' + esc(m) + ', ' + NOMS_JOURS_SYNTH[j] + ' : ' + n + ' épisode' + (n > 1 ? 's' : '') + '">' + (n || '') + '</td>';
+    }).join('') + '<td class="tot">' + lignes[m].reduce((a, b) => a + b, 0) + '</td></tr>').join('') +
+    '</tbody></table>' + (sansJour ? '<p class="discret">' + sansJour + ' épisode' + (sansJour > 1 ? 's' : '') + ' sans date ' + (sansJour > 1 ? 'ne figurent' : 'ne figure') + ' pas dans la carte.</p>' : '');
+}
+function renderSyntheseLecture() {
+  if (!document.getElementById('synth-phrase-essentiel')) return;
+  const evts = state.m2.evenements || [], n = evts.length, m1 = state.m1 || {};
+  const prenom = m1.prenom || 'la personne';
+  // Sans épisode, une seule phrase : le reste de la page attend le recueil.
+  document.getElementById('view-synthese').classList.toggle('synth-vide', !n);
+  const pose = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+  const dates = evts.map(e => e.date).filter(Boolean).sort();
+  pose('synth-qui', n ? esc((m1.prenom || 'Sans prénom') + (m1.age ? ', ' + m1.age + ' ans' : '') + ' · ' + n + ' épisode' + (n > 1 ? 's' : '') +
+    (dates.length ? ' · du ' + formatDate(dates[0]) + ' au ' + formatDate(dates[dates.length - 1]) : '')) : '');
+  // La confiance, en une pastille ; le détail dans un tiroir.
+  const ind = computeIndice();
+  const libelle = ind.pct >= 75 ? 'Recueil solide' : ind.pct >= 50 ? 'Recueil en cours de consolidation' : 'Recueil insuffisant pour conclure';
+  pose('synth-confiance', '<b class="' + (ind.pct >= 75 ? 'ok' : ind.pct >= 50 ? 'moyen' : 'faible') + '">' + ind.pct + ' %</b>' + esc(libelle) + ' <span class="discret">· le détail</span>');
+  const ante = comptesVolet('antecedents'), csq = comptesVolet('consequences');
+  const moments = {};
+  evts.forEach(e => { const m = normaliseMoment(e.moment); if (m) moments[m] = (moments[m] || 0) + 1; });
+  const momentTop = Object.keys(moments).sort((a, b) => moments[b] - moments[a])[0];
+  const freq = computeFrequence();
+  const jours = [0, 0, 0, 0, 0, 0, 0];
+  evts.forEach(e => { const j = jourSemaine(e); if (j >= 0) jours[j]++; });
+  const jTop = jours.indexOf(Math.max.apply(null, jours));
+  const listeCats = (l, k, lien) => l.slice(0, k).map(c => emSynth(guillemetsSynth(c.nom)) + ' (' + c.n + ')').join(lien);
+  const stG = statsGradation(evts, state.m3.categories);
+  const monte = Object.values(stG.effets).filter(e => e.n >= 3 && e.nAug > 0).sort((a, b) => (b.nAug / b.n) - (a.nAug / a.n) || b.n - a.n)[0];
+  // L'essentiel
+  pose('synth-phrase-essentiel', !n ? 'Aucun épisode pour l\'instant : la synthèse se remplira avec le recueil.'
+    : n + ' épisode' + (n > 1 ? 's' : '') + (freq.libelle && freq.libelle !== '—' ? ', ' + emSynth(freq.libelle) : '') +
+      (momentTop ? ', surtout ' + emSynth(guillemetsSynth(momentTop)) : '') + (ante[0] ? ', souvent après ' + emSynth(guillemetsSynth(ante[0].nom)) : '') + '.');
+  pose('synth-resume', !n ? '' :
+    (ante.length ? '<p style="margin:0">Ce qui précède le plus souvent : ' + listeCats(ante, 2, ' ou ') + '.' : '<p style="margin:0">') +
+    (csq.length ? ' Ce qui suit le plus souvent : ' + listeCats(csq, 2, ' ou ') + '.' : '') +
+    (monte ? ' Après ' + emSynth(guillemetsSynth(monte.nom)) + ', la tension monte ' + monte.nAug + ' fois sur ' + monte.n + '.' : '') + '</p>');
+  // Quand ?
+  const heuresTop = momentTop ? heuresPourMoment(momentTop) : '';
+  pose('synth-phrase-quand', !n ? 'Les moments et les jours apparaîtront avec les épisodes.' : momentTop
+    ? 'Le moment le plus chargé : ' + emSynth(guillemetsSynth(momentTop)) + (heuresTop ? ' (' + esc(heuresTop) + ')' : '') +
+      (n >= 7 && jours[jTop] / n >= 0.25 ? ', et le ' + emSynth(NOMS_JOURS_SYNTH[jTop]) + ' (' + jours[jTop] + ' sur ' + n + ')' : '') + '.'
+    : 'Le moment des épisodes n\'est pas renseigné.');
+  pose('synth-chaleur', chaleurMomentsJours(evts) || '<p class="discret">Pas encore d\'épisodes datés.</p>');
+  // Ce qui précède, ce que ça lui apporte
+  const vide = id => '<p class="discret">' + ({antecedents: 'Les antécédents', contexte: 'Le contexte', consequences: 'Les conséquences'})[id] + ' ne sont pas encore catégorisés (Analyser › Catégoriser).</p>';
+  pose('synth-phrase-avant', ante.length ? 'Ce qui précède le plus souvent : ' + listeCats(ante, 2, ' et ') + '.' : 'Catégorisez les antécédents (Analyser › Catégoriser) pour voir ce qui précède.');
+  pose('synth-histo-antecedents', barresSynth('antecedents', 'Antécédents', 'juste avant') || vide('antecedents'));
+  pose('synth-histo-contexte', barresSynth('contexte', 'Contexte', 'de plus loin') || vide('contexte'));
+  pose('synth-phrase-apres', csq.length ? 'Ce qui suit le plus souvent, pour ' + esc(prenom) + ' : ' + listeCats(csq, 2, ' ou ') + '.' : 'Catégorisez les conséquences (Analyser › Catégoriser) pour voir ce que ça lui apporte.');
+  pose('synth-histo-consequences', barresSynth('consequences', 'Conséquences pour ' + prenom, 'juste après') || vide('consequences'));
+  // La tension
+  const parties = partiesStatsGradation();
+  pose('synth-phrase-tension', monte ? 'Après ' + emSynth(guillemetsSynth(monte.nom)) + ', la tension monte ' + monte.nAug + ' fois sur ' + monte.n + '.'
+    : stG.nEffet ? 'Aucune intervention ne se détache par la montée de la tension.' : 'Notez l\'effet des interventions (Analyser › Découper) pour voir ce qui fait monter ou redescendre la tension.');
+  const chaines = parties.filter(p => p.indexOf('data-partie="chaines"') >= 0), montee = parties.filter(p => chaines.indexOf(p) < 0);
+  pose('synth-montee', montee.length ? montee.join('') : '<p class="discret">Pas encore assez d\'interventions catégorisées, avec leur effet, pour en dire quelque chose.</p>');
+  // Son titre est déjà celui du repli.
+  pose('synth-chaines', chaines.length ? chaines.join('').replace(/<div class="sg-titre">[^<]*<\/div>/, '') : '<p class="discret">Aucun comportement catégorisé n\'est encore apparu après une intervention.</p>');
+  // Les pistes, l'équipe
+  const carte = document.getElementById('synth-correlations-card');
+  const pistesVides = !carte || carte.style.display === 'none';
+  pose('synth-phrase-pistes', pistesVides ? 'Rien ne se détache pour l\'instant : il faut des épisodes catégorisés pour que des rapprochements apparaissent.'
+    : 'Les rapprochements que font apparaître les données, avec leurs effectifs : ' + emSynth('des co-occurrences, pas des causes') + '.');
+  ensureM4();
+  const nP = (state.m4.patterns || []).length, nG = (state.m4.gradations || []).length;
+  pose('synth-phrase-equipe', nP || nG ? (nP ? nP + ' pattern' + (nP > 1 ? 's' : '') + ' ABC' : '') + (nP && nG ? ' et ' : '') + (nG ? nG + ' séquence' + (nG > 1 ? 's' : '') + ' de montée' : '') + ' proposé' + (nP + nG > 1 ? 's' : '') + ' par l\'équipe, dans Interpréter.'
+    : 'L\'équipe n\'a encore rien proposé dans Interpréter : patterns, séquences de montée, vase.');
+  initSommaireSynthese();
+}
+// Après un clic, le sommaire reste sur la partie choisie le temps du défilement, même si d'autres parties passent.
+let sommaireSyntheseFige = 0;
+function marquerSommaireSynthese(id) {
+  document.querySelectorAll('#synth-sommaire button[data-cible]').forEach(b => b.classList.toggle('on', b.dataset.cible === id));
+}
+function allerPartieSynthese(id) {
+  const s = document.getElementById(id);
+  if (!s) return;
+  marquerSommaireSynthese(id);
+  sommaireSyntheseFige = Date.now() + 1000;
+  s.scrollIntoView({behavior: 'smooth', block: 'start'});
+}
+function initSommaireSynthese() {
+  const nav = document.getElementById('synth-sommaire');
+  if (!nav || nav.dataset.pret || typeof IntersectionObserver !== 'function') return;
+  nav.dataset.pret = '1';
+  const obs = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting && Date.now() > sommaireSyntheseFige) marquerSommaireSynthese(e.target.id);
+  }), {rootMargin: '-35% 0px -60% 0px'});
+  const parties = [...document.querySelectorAll('#view-synthese .synth-partie')];
+  parties.forEach(s => obs.observe(s));
+  // La dernière partie ne monte jamais jusqu'à la bande observée : en bas de page, c'est elle.
+  window.addEventListener('scroll', () => {
+    if (Date.now() <= sommaireSyntheseFige || !document.getElementById('view-synthese').classList.contains('show')) return;
+    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) marquerSommaireSynthese(parties[parties.length - 1].id);
+  }, {passive: true});
 }
 
 
@@ -10465,10 +10705,9 @@ function renderCorrelations() {
   const ante_cons = correl.ante_cons || [], cp_cons = correl.cp_cons || [], triplets = correl.triplets || [];
   const hasAny = ante_cons.length > 0 || cp_cons.length > 0 || triplets.length > 0;
 
-  // La montée en tension a ses propres seuils : la carte s'affiche dès qu'une lecture a quelque chose à dire.
-  const montee = sectionMonteeSynthese();
+  // La montée en tension a sa partie à elle (« La tension ») ; ici, ce qui se rapproche, et le contexte.
   const contexte = sectionContexteSynthese();
-  if ((evts.length < CORR_MIN || !hasAny) && !montee && !contexte) {
+  if ((evts.length < CORR_MIN || !hasAny) && !contexte) {
     card.style.display = 'none';
     return;
   }
@@ -10534,7 +10773,7 @@ function renderCorrelations() {
     </div>`;
   }
 
-  el.innerHTML = html + contexte + montee;
+  el.innerHTML = html + contexte;
   allegerSuggestions(el);
 }
 
@@ -10612,13 +10851,27 @@ function fermerExportModal(ev) {
 function preparerPourExport(racine) {
   ['.no-print','.accueil-actions','.multiposte-info','.mode-toggle-bar',
    '.mode-approfondi-panel','.m3-tabs','.m4-tabs','.actions-row',
-   '#btn-details-toggle','.abc-add-btn','.grad-add-btn','.vase-input-row',
+   '.abc-add-btn','.grad-add-btn','.vase-input-row',
    '.abc-pattern-del','.creneau-del','.creneau-add','.m3-cat-del','.col-del',
    'button','nav','.crumb','.semaine-toolbar','.semaine-tabs','.m3-cat-color',
    '.m3-item-cat-badge'
   ].forEach(sel => racine.querySelectorAll(sel).forEach(el => el.remove()));
 
   racine.querySelectorAll('.aide-repliable-corps[hidden]').forEach(el => el.removeAttribute('hidden'));
+  // Word ne connaît pas <details> : chaque repli devient un bloc ouvert, titré par son résumé ; un repli resté vide part.
+  racine.querySelectorAll('details').forEach(d => {
+    const resume = d.querySelector(':scope > summary');
+    const bloc = document.createElement('div');
+    [...d.childNodes].forEach(n => { if (n !== resume) bloc.appendChild(n); });
+    if (!bloc.textContent.trim() && !bloc.querySelector('img, svg, table')) { d.remove(); return; }
+    if (resume && !d.matches('.voir-plus, .comment-lire')) {
+      const t = document.createElement('div');
+      t.className = 'repli-titre';
+      t.textContent = resume.textContent.trim();
+      bloc.prepend(t);
+    }
+    d.replaceWith(bloc);
+  });
   racine.querySelectorAll('textarea').forEach(el => {
     const div = document.createElement('div');
     div.textContent = el.value || '';
@@ -10798,6 +11051,23 @@ function construireFichierWord(clone){
     .kpi .kpi-sub{font-size:8pt;color:#6B6152;font-style:italic;}
     .kpi-row{overflow:hidden;}
     .kpi-row:after{content:'';display:block;clear:both;}
+    .surtitre{font-size:8pt;font-weight:bold;letter-spacing:1pt;text-transform:uppercase;color:#A39A8A;margin:18pt 0 2pt;}
+    .phrase{font-family:Georgia,'Times New Roman',serif;font-size:13pt;font-weight:bold;color:#2C2416;margin:2pt 0 8pt;line-height:1.35;}
+    .phrase em{font-style:normal;background:#FFF3CC;}
+    .feuille{border:0.75pt solid #E6DFD2;background:#FFFDF8;padding:8pt 10pt;margin:0 0 9pt;}
+    .feuille-titre{font-size:9.5pt;font-weight:bold;color:#6B6152;margin:0 0 5pt;}
+    .lecture{font-family:Georgia,'Times New Roman',serif;font-size:10.5pt;line-height:1.5;}
+    .synth-avertir, .discret{font-size:8.5pt;color:#A39A8A;}
+    .synth-question{background:#FBF8F2;padding:6pt 9pt;margin:8pt 0 0;font-family:Georgia,'Times New Roman',serif;font-size:10.5pt;}
+    .synth-question b{display:block;font-family:'Segoe UI',Calibri,Arial,sans-serif;font-size:8pt;color:#A39A8A;text-transform:uppercase;}
+    .synth-chaleur{border-collapse:separate;width:auto;}
+    .synth-chaleur td{border:0.5pt solid #FFFFFF;width:34pt;height:16pt;text-align:center;font-size:9pt;}
+    .synth-chaleur th{border:0;background:#FFFFFF;font-size:8.5pt;color:#6B6152;}
+    .repli-titre{font-size:9.5pt;font-weight:bold;color:#6B6152;margin:8pt 0 4pt;}
+    .synth-barre{margin:0 0 2.5pt;}
+    .synth-barre .nom{display:inline-block;width:62%;font-size:9.5pt;}
+    .synth-barre .b{display:none;}
+    .synth-barre .n{display:inline-block;width:30%;font-size:9pt;color:#6B6152;}
     .legende-volets{border:0.75pt solid #D9D0C0;background:#F5F0E8;padding:5pt 8pt;margin:0 0 8pt;font-size:9pt;}
     .legende-volets .lv-item{margin-right:14pt;}
     .lv-pastille{display:inline-block;width:9pt;height:9pt;}
@@ -14578,6 +14848,24 @@ const _CONTROLES = [
     }
     return _bancEgal('CD à la suite ≤ total de la catégorie', [], anomalies);
   }},
+
+  {nom:'Synthèse : une page par questions — sommaire, phrases en tête, carte des moments, indice dans un tiroir, un seul export', test: () => {
+    refreshSynthese();
+    const evts = state.m2.evenements || [], n = evts.length;
+    const parties = [...document.querySelectorAll('#view-synthese .synth-partie')].map(s => s.id.replace('synth-', '')).join(',');
+    const sommaire = document.querySelectorAll('#synth-sommaire button[data-cible]').length;
+    const phrase = (document.getElementById('synth-phrase-essentiel').textContent || '').trim();
+    const phraseOk = n ? phrase.indexOf(String(n)) === 0 : /Aucun épisode/.test(phrase);
+    const dates = evts.filter(e => jourSemaine(e) >= 0).length;
+    const chaleur = dates ? !!document.querySelector('#synth-chaleur table.synth-chaleur') : true;
+    const somme = [...document.querySelectorAll('#synth-chaleur td:not(.tot)')].reduce((a, td) => a + (+td.textContent || 0), 0) === dates;
+    const confiance = /\d+ %/.test(document.getElementById('synth-confiance').textContent);
+    const indiceDansTiroir = !!document.querySelector('#tiroir-indice #synth-indice-global') && document.getElementById('synth-indice-global').textContent.trim() !== '';
+    const unSeulExport = !document.querySelector('#view-synthese .actions-row') && document.querySelectorAll('#view-synthese [onclick^="ouvrirExportModal"]').length === 1;
+    return _bancEgal('les parties | boutons du sommaire | la phrase de tête commence par le nombre d\'épisodes | carte des moments | chaque épisode daté compté une fois | pastille de confiance | indice dans un tiroir | un seul export',
+      'essentiel,quand,avant,apres,tension,pistes,equipe,tout | 8 | true | true | true | true | true | true',
+      [parties, sommaire, phraseOk, chaleur, somme, confiance, indiceDansTiroir, unSeulExport].join(' | '));
+  }},
 ];
 
 function verifierCalculs(silencieux) {
@@ -18344,7 +18632,7 @@ function partiesStatsGradation() {
 
   const chaines = Object.values(st.chaines).sort((a, b) => b.n - a.n);
   if (chaines.length) {
-    parties.push('<div class="sg-partie">' +
+    parties.push('<div class="sg-partie" data-partie="chaines">' +
       '<div class="sg-titre">Quand un nouveau comportement apparaît après une intervention</div>' +
       '<div class="sg-aide">Sur ' + ch(pluriel(st.nEvtPost, 'épisode')) + ' où un comportement catégorisé est apparu après une intervention : ' +
         'ce qu\'il y avait au départ, ce qui est venu ensuite, et après quelle intervention.</div>' +
@@ -18370,16 +18658,6 @@ function blocStatsGradation() {
   return '<div class="suggestions-patterns sg-bloc">' + entete +
     '<div class="sp-avert">Compté sur votre catégorisation et sur ce que les déclarants ont coté. Ce sont des <b>co-occurrences dans du déclaratif, pas des causes</b> ; ' +
     'chaque chiffre est donné avec son effectif.</div>' +
-    parties.join('') + '</div>';
-}
-
-function sectionMonteeSynthese() {
-  const parties = partiesStatsGradation();
-  if (!parties.length) return '';
-  return '<div class="corr-section">' +
-    '<div class="corr-section-title">📈 La montée en tension</div>' +
-    '<div class="corr-note">Compté sur la catégorisation et sur ce que les déclarants ont coté : l\'effet des interventions, le palier atteint au plus fort, ' +
-      'le comportement apparu après une intervention. Chaque chiffre est donné avec son effectif.</div>' +
     parties.join('') + '</div>';
 }
 
@@ -19260,16 +19538,8 @@ function countFrequencies(arr) {
     .sort((a, b) => b.count - a.count);
 }
 
+// Ouvert par le repli « Le détail » de la partie Quand ? : les graphiques ne se calculent qu'à ce moment-là.
 let detailsVisible = false;
-function toggleDetailsStats() {
-  detailsVisible = !detailsVisible;
-  const el = document.getElementById('synth-details');
-  const btn = document.getElementById('btn-details-toggle');
-  if (!el || !btn) return;
-  el.style.display = detailsVisible ? '' : 'none';
-  btn.textContent = detailsVisible ? '📊 Masquer les détails' : '📊 Afficher les détails';
-  if (detailsVisible) renderCharts();
-}
 
 /* ── Répartition temporelle, à quatre échelles ───────────────────────
    Les périodes sans aucun épisode sont affichées à zéro et non omises :
@@ -20504,7 +20774,8 @@ function blocVersSVG(bloc) {
 }
 
 function nomImageBloc(bloc, ext) {
-  const t = ((bloc.querySelector('h4') || {}).textContent || 'synthese').replace(/\s+/g, ' ').trim().slice(0, 40);
+  const titre = bloc.querySelector('h4, .feuille-titre, .volet-histo-titre') || (bloc.closest('.synth-partie') || bloc).querySelector('.surtitre');
+  const t = ((titre || {}).textContent || 'synthese').replace(/\s+/g, ' ').trim().slice(0, 40);
   return nomFichierGraphique(t, ext);
 }
 
@@ -22974,7 +23245,7 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
-const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":10580,"retrait":2260,"depots":69}]};
+const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":10625,"retrait":2261,"depots":70}]};
 
 function svgActiviteCode() {
   const mois = ACTIVITE_CODE.mois || [];
@@ -23013,6 +23284,24 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-09',
+    version: 'v2026.10.09',
+    titre: "La Synthèse, page par questions",
+    corps: `
+<p><b>La Synthèse, page par questions</b> (Arthur et Émilie — la charte appliquée à la Synthèse, première partie) :</p>
+<ul>
+<li><b>Elle répond à des questions</b> plutôt que d'empiler des calculs : l'essentiel, <b>quand ?</b>, <b>ce qui précède</b>, <b>ce que ça lui apporte</b>, <b>la tension</b> ; puis, pour la réunion, les pistes à discuter et ce que l'équipe a repéré ; enfin le détail. Un <b>sommaire fixe</b>, à gauche, permet de sauter d'une partie à l'autre.</li>
+<li><b>Chaque partie commence par une phrase en clair</b> — « Ce qui précède le plus souvent : … » —, puis un seul dessin. Ces phrases décrivent ce qui revient le plus souvent ; elles ne disent pas pourquoi, et la page le rappelle.</li>
+<li><b>Ce qui précède, ce que ça lui apporte</b> : des barres triées, de la plus longue à la plus courte, d'une seule couleur par volet. L'histogramme complet, aux couleurs des catégories, reste dans le détail.</li>
+<li><b>Quand ?</b> : une carte des épisodes par moment de la journée et par jour de la semaine, d'un coup d'œil ; les graphiques par mois, par jour et par heure sont repliés juste dessous.</li>
+<li><b>L'indice de confiance</b> passe en tête, en une pastille (« 95 % · Recueil solide ») : il conditionne la lecture. Son détail, critère par critère, s'ouvre dans un tiroir.</li>
+<li><b>Le détail reste, replié en bas</b> : les catégories volet par volet, et « quand un nouveau comportement apparaît après une intervention ». Sans aucun épisode, la page ne montre qu'une phrase. <b>Un seul bouton d'export</b>, « Exporter pour le bilan » (le fichier socle s'exporte toujours depuis la barre du dossier) ; « image du bloc » n'apparaît qu'au survol d'un dessin. Le document Word suit le même ordre.</li>
+<li><b>Pas encore fait</b> : les pistes à discuter elles-mêmes (seulement ce qui s'écarte nettement de l'ordinaire, triées par solidité, à épingler pour la réunion), et le lien entre les intuitions de l'équipe et les chiffres — c'est la passe suivante.</li>
+</ul>
+`
+  },
 
   {
     date: '2026-10-08',
