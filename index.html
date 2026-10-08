@@ -1720,6 +1720,12 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
   font-family:inherit;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;cursor:pointer;
 }
 .m3-evt-decouper:hover{background:var(--vol-comportement-pale);}
+.m3-evt-decouper.ctx{border-color:var(--vol-contexte);color:var(--vol-contexte-deep);}
+.m3-evt-decouper.ctx:hover{background:var(--vol-contexte-pale);}
+.dec-texte mark.dec-m-ctx{background:none;border-bottom:2px solid var(--vol-contexte-deep);}
+.dec-texte mark.dec-m-ctx::before{color:var(--vol-contexte-deep);}
+.dec-case-ctx{border-color:var(--vol-contexte);}
+.dec-case-titre .dec-vider{margin-left:auto;}
 .m3-evt-alerte{
   margin:0 0 6px 24px;font-size:11.5px;color:var(--rose-deep);background:var(--rose-pale, #FBEDEF);
   border-radius:6px;padding:4px 9px;
@@ -4246,6 +4252,15 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
     <div id="decoupe-contenu"></div>
     <!-- La bulle : elle ne prend pas le focus, pour ne pas effacer la sélection. -->
     <div id="decoupe-bulle" class="dec-bulle" role="toolbar" aria-label="Où ranger ce passage" hidden onmousedown="event.preventDefault()"></div>
+  </div>
+</div>
+
+<!-- Découper le contexte d'un évènement (Organiser, volet Contexte) : même principe que pour les CD,
+     chaque élément est une citation exacte du déclaratif. -->
+<div id="decoupe-volet-overlay" class="sim-modal-overlay" style="display:none;">
+  <div class="sim-modal decoupe-fenetre" role="dialog" aria-modal="true" aria-labelledby="decoupe-volet-titre">
+    <div id="decoupe-volet-contenu"></div>
+    <div id="decoupe-volet-bulle" class="dec-bulle" role="toolbar" aria-label="Ranger ce passage" hidden onmousedown="event.preventDefault()"></div>
   </div>
 </div>
 
@@ -8312,7 +8327,9 @@ function idCopiePour(slot, sousId, itemId) {
   if (!copie) return null;
   const item = extraireItems(sousId).find(it => it.id === itemId);
   if (!item) return itemId;
-  return idDansCopie(copie, (state.m2.evenements || [])[item.evtIdx], itemId, sousId === 'cp' || item.tag === 'charniere');
+  const evtCp = (state.m2.evenements || [])[item.evtIdx];
+  if (sousId === 'contexte') return idDansCopieVolet(copie, sousId, evtCp, itemId);
+  return idDansCopie(copie, evtCp, itemId, sousId === 'cp' || item.tag === 'charniere');
 }
 
 function resumeDecoupage(D, evt, n) {
@@ -10481,6 +10498,77 @@ const _CONTROLES = [
     return _bancEgal('statuts | classes cohérentes avec les badges | en-têtes repliés sur une ligne',
       'rien 0/2 # cours 1/2 # fait 2/2 # vide | true | true', v.join(' # ') + ' | ' + coherent + ' | ' + uneLigne);
   }},
+  {nom:'Contexte : on le découpe en passages, comme les CD ; un classement du texte entier se perd avec un avertissement', test: () => {
+    const sauveEvts = state.m2.evenements, sauveDV = JSON.stringify((state.m3 || {}).decoupagesVolets || null);
+    const sauveCtx = JSON.stringify(state.m3.categories.contexte);
+    const vraiPersist = persist; persist = () => {};
+    const vraiConfirm = window.confirm; let demandes = 0; window.confirm = () => { demandes++; return true; };
+    try {
+      const evt = {id: 'bancctx1', date: '2026-01-01', heure: '10:00', avantLoin: 'Nuit courte. Retour de week-end.', comportement: 'Il crie.', antecedents: [], interventions: []};
+      state.m2.evenements = [evt];
+      ensureM3();
+      delete state.m3.decoupagesVolets;
+      const catsC = state.m3.categories.contexte;
+      Object.keys(catsC).forEach(k => delete catsC[k]);
+      catsC.k = {nom: 'Sommeil', color: '#10B981', items: ['ebancctx1_0']};
+      const avant = elementsEvt('contexte', evt).map(e => e.id + ':' + e.texte).join('|');
+      ouvrirDecoupageVolet('contexte', 'bancctx1');
+      const bulleAuDepart = getComputedStyle(document.getElementById('decoupe-volet-bulle')).display;
+      decoupeVolet.sel = {champ: 'avantLoin', debut: 13, texte: 'Retour de week-end.'}; prendreSelectionVolet();
+      decoupeVolet.sel = {champ: 'avantLoin', debut: 0, texte: 'Nuit courte.'};
+      majBulleVolet(null);
+      const bulleOuverte = !document.getElementById('decoupe-volet-bulle').hidden;
+      prendreSelectionVolet();
+      decoupeVolet.sel = {champ: 'avantLoin', debut: 5, texte: 'courte'};   // chevauche « Nuit courte. »
+      majBulleVolet(null);
+      const chevauche = /chevauche/.test(document.getElementById('decoupe-volet-bulle').textContent);
+      decoupeVolet.sel = null; cacherBulleVolet();
+      const ordre = decoupeVolet.unites.map(u => u.texte).join(' / ');
+      enregistrerDecoupageVolet();
+      const apres = elementsEvt('contexte', evt);
+      const D = decoupageVolet('contexte', 'bancctx1');
+      const perdu = catsC.k.items.length === 0;
+      const etiq = Object.values(etiquettesContexte()).join(',');
+      // Revenir en arrière
+      ouvrirDecoupageVolet('contexte', 'bancctx1'); supprimerDecoupageVolet();
+      const revenu = elementsEvt('contexte', evt).map(e => e.id).join('|');
+      return _bancEgal('avant | bulle cachée | bulle ouverte | chevauchement | ordre du texte | après | classement perdu + 1 alerte | étiquettes | revenu',
+        'ebancctx1_0:(contexte) Nuit courte. Retour de week-end.|none|true|true|Nuit courte. / Retour de week-end.|' + 'ebancctx1_x' + D.unites[0].id + ':Nuit courte.,ebancctx1_x' + D.unites[1].id + ':Retour de week-end.' + '|true,1|Contexte 1.1,Contexte 1.2|ebancctx1_0',
+        [avant, bulleAuDepart, bulleOuverte, chevauche, ordre, apres.map(e => e.id + ':' + e.texte).join(','), perdu + ',' + demandes, etiq, revenu].join('|'));
+    } finally {
+      persist = vraiPersist; window.confirm = vraiConfirm; state.m2.evenements = sauveEvts;
+      const dv = JSON.parse(sauveDV); if (dv) state.m3.decoupagesVolets = dv; else delete state.m3.decoupagesVolets;
+      const catsC = state.m3.categories.contexte;
+      Object.keys(catsC).forEach(k => delete catsC[k]);
+      Object.assign(catsC, JSON.parse(sauveCtx));
+      fermerDecoupageVolet();
+      try { renderM3(); } catch (e) { /* vue masquée */ }
+    }
+  }},
+
+  {nom:'Contexte : le comparateur aligne deux découpages identiques, signale deux découpages différents', test: () => {
+    const sauveEvts = state.m2.evenements, sauveDV = JSON.stringify((state.m3 || {}).decoupagesVolets || null), sauveComp = state.comparaison;
+    try {
+      const evt = {id: 'bancctx2', avantLoin: 'Nuit courte. Retour de week-end.', comportement: 'x', antecedents: [], interventions: []};
+      state.m2.evenements = [evt];
+      ensureM3();
+      const U = (ids) => ({unites: [{id: ids[0], champ: 'avantLoin', debut: 0, texte: 'Nuit courte.'}, {id: ids[1], champ: 'avantLoin', debut: 13, texte: 'Retour de week-end.'}]});
+      state.m3.decoupagesVolets = {contexte: {bancctx2: U(['s1', 's2'])}};
+      state.comparaison = {
+        A: {categories: {}, decoupages: {}, decoupagesVolets: {contexte: {bancctx2: U(['a1', 'a2'])}}},
+        B: {categories: {}, decoupages: {}, decoupagesVolets: {contexte: {bancctx2: {unites: [{id: 'b1', champ: 'avantLoin', debut: 0, texte: 'Nuit courte. Retour de week-end.'}]}}}}};
+      const idA = idDansCopieVolet(state.comparaison.A, 'contexte', evt, 'ebancctx2_xs2');
+      const idB = idDansCopieVolet(state.comparaison.B, 'contexte', evt, 'ebancctx2_xs2');
+      const decs = evtsDecoupageVoletCmp('contexte').map(d => [d.desaccord, d.arbitre].join(',')).join('');
+      const lignes = lignesComparateur('contexte').map(x => x.item.id + ':' + x.l.autreA + '/' + x.l.autreB).join(';');
+      return _bancEgal('id dans A | id dans B | découpage : désaccord, arbitré | lignes (A découpe pareil, B autrement)',
+        'ebancctx2_xa2|null|true,true|ebancctx2_xs1:false/true;ebancctx2_xs2:false/true',
+        [idA, String(idB), decs, lignes].join('|'));
+    } finally {
+      state.m2.evenements = sauveEvts; state.comparaison = sauveComp;
+      const dv = JSON.parse(sauveDV); if (dv) state.m3.decoupagesVolets = dv; else delete state.m3.decoupagesVolets;
+    }
+  }},
   {nom:'Les couleurs des catégories se distinguent deux à deux', test: () => {
     /* Ce qui fait confondre deux catégories, c'est la teinte : les deux violets
        d'avant n'étaient séparés que de 10°, les deux rouges de 13°. Entre deux
@@ -11614,7 +11702,7 @@ const M3_SOUS = [
        forçait à inventer des catégories qui recouvraient les deux. */
     id: 'contexte',
     label: 'Contexte', icon: '🕰', couleur: 'contexte',
-    help: 'Ce qui précède de loin : la nuit, le week-end, un traitement modifié, un remplacement, une douleur signalée la veille. Ça ne déclenche rien tout seul, mais ça remplit le vase — et un même antécédent ne produit pas le même effet selon le contexte.',
+    help: 'Ce qui précède de loin : la nuit, le week-end, un traitement modifié, un remplacement, une douleur signalée la veille. Ça ne déclenche rien tout seul, mais ça remplit le vase — et un même antécédent ne produit pas le même effet selon le contexte. « ✂ Découper » permet d\'y repérer plusieurs éléments, chacun par une citation exacte du déclaratif.',
     placeholder: 'ex : Sommeil court, Retour de week-end, Absence d\'un référent, Douleur signalée…',
     extract: (evt) => {
       const parts = [];
@@ -11821,6 +11909,11 @@ function structureCD(evt, decoupages) {
 function elementsEvt(sousId, evt) {
   const sous = M3_SOUS.find(s => s.id === sousId);
   if (!sous || !evt) return [];
+  // Un contexte découpé : chaque passage cité est un élément (identifiant e{évènement}_x{passage}).
+  if (sousId === 'contexte') {
+    const dv = decoupageVolet('contexte', evt.id);
+    if (dv && (dv.unites || []).length) return dv.unites.map((u, k) => ({id: 'e' + evt.id + '_x' + u.id, texte: String(u.texte || '').trim(), tag: 'decoupe-volet', rang: k}));
+  }
   const st = structureCD(evt);
   const TAGS = {'§POST§': 'post-intervention', '§DECL§': 'presume-declencheur', '§RESU§': 'resume'};
   const base = (sousId === 'cp' && st.decoupe) ? [] : sous.extract(evt).map((texte, i) => {
@@ -11963,6 +12056,11 @@ function blocEvtM3(sousId, sous, groupe, cats, etiquettes) {
   const src = [evt.date ? formatDate(evt.date) : '', evt.heure, evt.moment, evt.declarant].filter(Boolean).join(' · ');
   const nCD = st.cds.length;
   const av = statutEvtM3(sousId, groupe.items);
+  const dvCtx = sousId === 'contexte' ? decoupageVolet('contexte', evt.id) : null;
+  const boutonCtx = sousId === 'contexte' && (dvCtx || av.n > 0)
+    ? '<button type="button" class="m3-evt-decouper ctx no-print" title="Repérer plusieurs éléments dans le contexte de cet évènement, chacun par une citation exacte du déclaratif" aria-label="' + (dvCtx ? 'Modifier le découpage' : 'Découper') + '" onclick="ouvrirDecoupageVolet(\'contexte\',\'' + esc(evt.id) + '\',event)">✂<span class="lib"> ' + (dvCtx ? 'Modifier le découpage' : 'Découper') + '</span></button>' : '';
+  const alerteCtx = dvCtx && !contexteAJour(evt)
+    ? '<div class="m3-evt-alerte">Le texte de cet évènement a changé depuis le découpage du contexte : un passage cité n\'y est plus. Ouvrez « Modifier le découpage ».</div>' : '';
   const pl = (k, mot) => k + ' ' + mot + (k > 1 ? 's' : '');
   const titreEtat = av.statut === 'fait' ? 'Tout est classé dans cet évènement : ' + pl(av.n, 'élément') + ' sur ' + av.n + '.'
     : av.statut === 'cours' ? av.c + ' élément' + (av.c > 1 ? 's classés' : ' classé') + ' sur ' + av.n + ' : il en reste ' + (av.n - av.c) + ' à classer.'
@@ -11978,7 +12076,9 @@ function blocEvtM3(sousId, sous, groupe, cats, etiquettes) {
       <span class="m3-evt-espace"></span>
       <button type="button" class="m3-item-detail" title="Revoir l'évènement complet" onclick="ouvrirDetailEvt(${groupe.evtIdx},'${sousId}',event)">détail</button>
       ${sousId === 'cp' ? `<button type="button" class="m3-evt-decouper no-print" title="Repérer plusieurs CD dans cet évènement, chacun par une citation exacte du déclaratif" onclick="ouvrirDecoupage('${esc(evt.id)}',event)" aria-label="${st.decoupe ? 'Modifier le découpage' : 'Découper'}">✂<span class="lib"> ${st.decoupe ? 'Modifier le découpage' : 'Découper'}</span></button>` : ''}
+      ${boutonCtx}
     </div>
+    ${alerteCtx}
     ${st.decoupe && !decoupageAJour(evt) ? `<div class="m3-evt-alerte">Le texte de cet évènement a changé depuis le découpage : un passage cité n'y est plus. ${sousId === 'cp' ? 'Ouvrez « Modifier le découpage ».' : 'Voir le volet Comportements.'}</div>` : ''}
     ${src ? `<div class="m3-evt-source">${esc(src)}</div>` : ''}
     <div class="m3-evt-items">${groupe.items.map(it => blocItemM3(sousId, sous, it, cats, etiquettes, st, n)).join('')}</div>
@@ -12007,6 +12107,8 @@ function blocItemM3(sousId, sous, item, cats, etiquettes, st, n) {
   let lien = '';
   if (sousId === 'cp' && etiquettes[item.id]) {
     lien = `<span class="m3-item-cd" title="Évènement ${n}, ${etiquettes[item.id]}${item.suite ? ', venu à la suite du précédent' : ''}.">${etiquettes[item.id]}</span>`;
+  } else if (item.tag === 'decoupe-volet' && etiquettes[item.id]) {
+    lien = '<span class="m3-item-cd" style="background:var(--vol-contexte-deep);" title="Passage du contexte, repéré dans le déclaratif de l\'évènement ' + n + '.">' + etiquettes[item.id] + '</span>';
   } else if (item.tag === 'charniere') {
     lien = `<span class="m3-item-lien" title="Ce qui s'est passé entre deux CD de l'évènement ${n}.">` +
       (sousId === 'antecedents' ? 'avant ' + cd(item.relie) : sousId === 'consequences' ? 'après ' + cd(item.relie) : 'entre ' + cd(item.relie) + ' et ' + cd(item.relie + 1)) + '</span>';
@@ -12678,6 +12780,298 @@ function deposerCD(ev, k) {
   if (de !== null && de !== k) deplacerCD(de, k);
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   DÉCOUPER LE CONTEXTE (Arthur, 08/10/2026)
+   ══════════════════════════════════════════════════════════════════════
+   Comme pour les CD : l'analyste repère, par citation exacte, plusieurs éléments dans le texte « avant » que le
+   déclarant a écrit (le déclaratif n'est jamais réécrit). Le découpage fait partie du codage : il vit dans
+   state.m3.decoupagesVolets.contexte[evtId] = {unites: [{id, champ, debut, texte}]}, chaque codeur fait le sien dans son
+   codage vierge, et la synthèse retient l'un des deux (comparateur). Sans découpage, le contexte d'un évènement est un
+   seul élément (tout le texte, identifiant e{évènement}_0 comme avant) ; découpé, chaque passage est un élément
+   (identifiant e{évènement}_x{passage}). */
+function decoupageVolet(sousId, evtId) {
+  return ((((state.m3 || {}).decoupagesVolets || {})[sousId]) || {})[evtId] || null;
+}
+// Le texte que le déclarant a écrit pour le contexte, comme le volet l'extrait : « RAS » n'est pas un contexte.
+function champsContexte(evt) {
+  const t = texteChamp(evt, 'avantLoin');
+  if (t && t.trim() && t.trim().toLowerCase() !== 'ras') return [{champ: 'avantLoin', titre: 'Contexte — ce qui s\'est passé avant', texte: t}];
+  const r = resumeEtape(evt, 'contexte');
+  return r && String(r).trim() ? [{champ: 'resumes.contexte', titre: 'Contexte — résumé rapide', texte: String(r)}] : [];
+}
+// « Contexte 3.1 » : le 1er passage du contexte du 3e évènement.
+function etiquettesContexte() {
+  const lab = {};
+  (state.m2.evenements || []).forEach((evt, idx) => {
+    const dv = evt && evt.id ? decoupageVolet('contexte', evt.id) : null;
+    if (dv) (dv.unites || []).forEach((u, k) => { lab['e' + evt.id + '_x' + u.id] = 'Contexte ' + (idx + 1) + '.' + (k + 1); });
+  });
+  return lab;
+}
+function contexteAJour(evt) {
+  const dv = decoupageVolet('contexte', evt.id);
+  return !dv || (dv.unites || []).every(u => citationTrouvee(evt, u));
+}
+
+let decoupeVolet = null;   // {sousId, evtId, unites: [{id, champ, debut, texte}], sel}
+
+function ouvrirDecoupageVolet(sousId, evtId, ev) {
+  if (ev) ev.stopPropagation();
+  fermerPopup();
+  ensureM3();
+  evtId = String(evtId);
+  const evt = (state.m2.evenements || []).find(e => String(e.id) === evtId);
+  if (!evt || sousId !== 'contexte') return;
+  const D = decoupageVolet(sousId, evtId);
+  decoupeVolet = {sousId, evtId, unites: D ? JSON.parse(JSON.stringify(D.unites || [])) : [], sel: null};
+  renderDecoupageVolet();
+  const o = document.getElementById('decoupe-volet-overlay');
+  if (o) o.style.display = 'flex';
+}
+function fermerDecoupageVolet() {
+  const o = document.getElementById('decoupe-volet-overlay');
+  if (o) o.style.display = 'none';
+  cacherBulleVolet();
+  decoupeVolet = null;
+}
+function trierUnitesVolet(evt, unites) {
+  const p = u => { const b = bornesCitation(evt, u); return b ? b.d : 1e9; };
+  return unites.slice().sort((x, y) => p(x) - p(y));
+}
+function renderDecoupageVolet() {
+  const b = decoupeVolet;
+  const el = document.getElementById('decoupe-volet-contenu');
+  if (!b || !el) return;
+  const evts = state.m2.evenements || [];
+  const idx = evts.findIndex(e => String(e.id) === String(b.evtId));
+  const evt = evts[idx];
+  const n = idx + 1;
+  b.unites = trierUnitesVolet(evt, b.unites);
+  // Les passages déjà pris sont soulignés dans le texte, avec leur numéro.
+  const surligner = (champ, texte) => {
+    const ms = b.unites.map((u, k) => {
+      if (u.champ !== champ) return null;
+      const d = texte.substr(u.debut || 0, u.texte.length) === u.texte ? (u.debut || 0) : texte.indexOf(u.texte);
+      return d < 0 ? null : {d, f: d + u.texte.length, et: n + '.' + (k + 1)};
+    }).filter(Boolean).sort((x, y) => x.d - y.d);
+    let html = '', pos = 0;
+    ms.forEach(m => {
+      if (m.d < pos) return;
+      html += esc(texte.slice(pos, m.d)) + '<mark class="dec-m-ctx" data-et="' + esc(m.et) + '">' + esc(texte.slice(m.d, m.f)) + '</mark>';
+      pos = m.f;
+    });
+    return html + esc(texte.slice(pos));
+  };
+  const champs = champsContexte(evt);
+  const texte = champs.length
+    ? champs.map(c => '<div class="dec-champ dec-champ-principal"><div class="dec-champ-titre">' + esc(c.titre) + '</div>' +
+        '<div class="dec-texte" data-champ="' + esc(c.champ) + '">' + surligner(c.champ, c.texte) + '</div></div>').join('')
+    : '<p class="dec-aucun">Cet évènement n\'a pas de contexte à découper.</p>';
+  const cartes = b.unites.length
+    ? b.unites.map((u, k) => {
+        const perdu = !citationTrouvee(evt, u);
+        return '<div class="dec-case dec-case-ctx"><div class="dec-case-titre">Contexte ' + n + '.' + (k + 1) +
+          '<button type="button" class="dec-vider" onclick="retirerUniteVolet(\'' + u.id + '\')" title="Retirer ce passage">✕ Retirer</button></div>' +
+          '<div class="dec-cit' + (perdu ? ' perdue' : '') + '">« ' + esc(u.texte) + ' »' +
+          (perdu ? '<div class="dec-perdue">Ce passage n\'est plus dans le texte de l\'évènement : à revoir.</div>' : '') + '</div></div>';
+      }).join('')
+    : '<div class="dec-cit vide"><span>Aucun passage pour l\'instant : sélectionnez-en un à gauche. Sans découpage, tout le contexte est un seul élément.</span></div>';
+  const dejaDecoupe = !!decoupageVolet(b.sousId, b.evtId);
+  el.innerHTML =
+    '<h3 id="decoupe-volet-titre">Découper le contexte de l\'évènement ' + n + '</h3>' +
+    '<p class="sim-modal-sub">' + esc([evt.date ? formatDate(evt.date) : '', evt.heure, evt.moment, evt.declarant].filter(Boolean).join(' · ')) + '</p>' +
+    '<ol class="dec-etapes">' +
+      '<li><b>Sélectionnez</b> à la souris un passage du texte, à gauche.</li>' +
+      '<li><b>Rangez-le</b> d\'un clic dans la bulle qui apparaît sous la sélection : chaque passage devient un élément du contexte, que l\'on classe ensuite.</li>' +
+    '</ol>' +
+    '<div class="dec-grille">' +
+      '<div class="dec-col">' +
+        '<div class="dec-col-titre">Le déclaratif <span>— lecture seule : sélectionnez-y les passages</span></div>' +
+        texte +
+      '</div>' +
+      '<div class="dec-col">' +
+        '<div class="dec-col-titre">Les éléments du contexte de cet évènement</div>' + cartes +
+      '</div>' +
+    '</div>' +
+    '<div class="dec-pied">' +
+      (dejaDecoupe ? '<button type="button" class="btn btn-ghost btn-sm" onclick="supprimerDecoupageVolet()">Revenir au contexte non découpé</button>' : '<span></span>') +
+      '<span class="dec-pied-droite">' +
+        '<button type="button" class="btn btn-ghost btn-sm" onclick="fermerDecoupageVolet()">Annuler</button>' +
+        '<button type="button" class="btn btn-primary btn-sm" onclick="enregistrerDecoupageVolet()">Enregistrer le découpage</button>' +
+      '</span>' +
+    '</div>';
+}
+function cacherBulleVolet() {
+  const bulle = document.getElementById('decoupe-volet-bulle');
+  if (bulle) bulle.hidden = true;
+}
+/* La sélection est relevée à chaque changement, comme pour les CD ; la bulle se place sous le passage. */
+function lireSelectionDecoupeVolet() {
+  const o = document.getElementById('decoupe-volet-overlay');
+  if (!o || o.style.display === 'none' || !decoupeVolet) return;
+  const sel = window.getSelection();
+  if (!sel || !sel.rangeCount || sel.isCollapsed) { cacherBulleVolet(); return; }
+  const r = sel.getRangeAt(0);
+  const noeud = r.commonAncestorContainer.nodeType === 1 ? r.commonAncestorContainer : r.commonAncestorContainer.parentElement;
+  const bloc = noeud && noeud.closest('.dec-texte');
+  if (!bloc || !o.contains(bloc)) { cacherBulleVolet(); return; }
+  const avant = document.createRange();
+  avant.selectNodeContents(bloc);
+  avant.setEnd(r.startContainer, r.startOffset);
+  const brut = r.toString();
+  const texte = brut.trim();
+  if (!texte) { cacherBulleVolet(); return; }
+  decoupeVolet.sel = {champ: bloc.dataset.champ, debut: avant.toString().length + (brut.length - brut.trimStart().length), texte};
+  majBulleVolet(r);
+}
+function majBulleVolet(range) {
+  const bulle = document.getElementById('decoupe-volet-bulle');
+  const b = decoupeVolet, s = b && b.sel;
+  if (!bulle || !s) { cacherBulleVolet(); return; }
+  const evt = (state.m2.evenements || []).find(e => String(e.id) === String(b.evtId));
+  const fin = s.debut + s.texte.length;
+  const chevauche = b.unites.some(u => {
+    const bo = bornesCitation(evt, u);
+    return u.champ === s.champ && bo && s.debut < bo.f && bo.d < fin;
+  });
+  bulle.innerHTML = chevauche
+    ? '<span class="dec-bulle-lib">Ce passage en chevauche un autre, déjà pris : retirez-le d\'abord.</span>'
+    : '<span class="dec-bulle-lib">Ranger ce passage :</span><button type="button" class="dec-bulle-bt plein" onclick="prendreSelectionVolet()">＋ élément de contexte</button>';
+  bulle.hidden = false;
+  const fenetre = bulle.parentElement;
+  const rf = fenetre.getBoundingClientRect();
+  const rs = (range && range.getBoundingClientRect) ? range.getBoundingClientRect() : null;
+  if (!rs || (!rs.width && !rs.height)) { bulle.style.top = (fenetre.scrollTop + 12) + 'px'; bulle.style.left = '24px'; return; }
+  const largeur = bulle.offsetWidth;
+  let gauche = rs.left - rf.left;
+  gauche = Math.max(12, Math.min(gauche, fenetre.clientWidth - largeur - 12));
+  bulle.style.left = gauche + 'px';
+  bulle.style.top = (rs.bottom - rf.top + fenetre.scrollTop + 8) + 'px';
+}
+document.addEventListener('selectionchange', lireSelectionDecoupeVolet);
+function prendreSelectionVolet() {
+  const b = decoupeVolet, s = b && b.sel;
+  if (!s) return;
+  b.unites.push({id: nouvelIdDecoupe(), champ: s.champ, debut: s.debut, texte: s.texte});
+  b.sel = null;
+  cacherBulleVolet();
+  const sl = window.getSelection();
+  if (sl) sl.removeAllRanges();
+  renderDecoupageVolet();
+}
+function retirerUniteVolet(id) {
+  if (!decoupeVolet) return;
+  decoupeVolet.unites = decoupeVolet.unites.filter(u => u.id !== id);
+  renderDecoupageVolet();
+}
+/* Applique un découpage du contexte (ou le retire, si D est null), après avoir dit quels classements se perdent. */
+function appliquerDecoupageVolet(evt, sousId, D) {
+  ensureM3();
+  if (!state.m3.decoupagesVolets) state.m3.decoupagesVolets = {};
+  const reg = state.m3.decoupagesVolets[sousId] || (state.m3.decoupagesVolets[sousId] = {});
+  const avant = clesElementsEvt(evt);
+  const ancien = reg[evt.id];
+  if (D) reg[evt.id] = D; else delete reg[evt.id];
+  const apres = clesElementsEvt(evt);
+  const touches = [];
+  [...avant].filter(k => !apres.has(k)).forEach(k => {
+    const [volet, id] = k.split('|');
+    Object.values(state.m3.categories[volet] || {}).forEach(cat => {
+      if ((cat.items || []).includes(id)) touches.push({cat, id});
+    });
+  });
+  if (touches.length) {
+    const noms = [...new Set(touches.map(t => '« ' + (t.cat.nom || 'sans nom') + ' »'))].slice(0, 6).join(', ');
+    if (!confirm(touches.length + ' classement' + (touches.length > 1 ? 's portaient' : ' portait') +
+        ' sur des éléments qui disparaissent avec ce découpage (' + noms + '). ' +
+        (touches.length > 1 ? 'Ils seront retirés' : 'Il sera retiré') + ' : il faudra classer les nouveaux éléments.\n\nContinuer ?')) {
+      if (ancien) reg[evt.id] = ancien; else delete reg[evt.id];
+      return false;
+    }
+    touches.forEach(t => { t.cat.items = t.cat.items.filter(x => x !== t.id); });
+  }
+  persist();
+  return true;
+}
+function enregistrerDecoupageVolet() {
+  const b = decoupeVolet;
+  if (!b) return;
+  const evt = (state.m2.evenements || []).find(e => String(e.id) === String(b.evtId));
+  if (!evt) return;
+  if (!b.unites.length) {
+    alert('Aucun passage n\'est repéré. Sélectionnez au moins un passage, ou annulez.');
+    return;
+  }
+  const unites = trierUnitesVolet(evt, b.unites).map(u => ({id: u.id, champ: u.champ, debut: u.debut, texte: u.texte}));
+  if (!appliquerDecoupageVolet(evt, b.sousId, {unites})) return;
+  fermerDecoupageVolet();
+  renderM3();
+  showToast('Contexte découpé : ' + unites.length + ' élément' + (unites.length > 1 ? 's' : '') + '.');
+}
+function supprimerDecoupageVolet() {
+  const b = decoupeVolet;
+  const evt = b && (state.m2.evenements || []).find(e => String(e.id) === String(b.evtId));
+  if (!evt) return;
+  if (!appliquerDecoupageVolet(evt, b.sousId, null)) return;
+  fermerDecoupageVolet();
+  renderM3();
+  showToast('Découpage retiré : le contexte revient tel que déclaré.');
+}
+
+/* ── Le comparateur : le découpage du contexte s'arbitre d'abord, comme celui des CD ──────────────
+   Deux découpages sont « les mêmes » s'ils citent les mêmes passages, quels que soient leurs identifiants. */
+function decoupageVoletDeCopie(copie, sousId, evtId) {
+  return ((((copie || {}).decoupagesVolets || {})[sousId]) || {})[evtId] || null;
+}
+function sigDecoupageVolet(D) {
+  if (!D || !(D.unites || []).length) return 'aucun';
+  return JSON.stringify(D.unites.map(u => [u.champ, u.texte]));
+}
+// L'identifiant, dans une copie, de l'élément de la synthèse ; null si la copie a découpé autrement.
+function idDansCopieVolet(copie, sousId, evt, itemId) {
+  if (!evt) return itemId;
+  const dS = decoupageVolet(sousId, evt.id), dC = decoupageVoletDeCopie(copie, sousId, evt.id);
+  if (sigDecoupageVolet(dS) !== sigDecoupageVolet(dC)) return null;
+  if (!dS) return itemId;
+  const pre = 'e' + evt.id + '_x';
+  for (let k = 0; k < dS.unites.length; k++) {
+    if (itemId === pre + dS.unites[k].id) return pre + dC.unites[k].id;
+  }
+  return itemId;
+}
+function evtsDecoupageVoletCmp(sousId) {
+  const comp = state.comparaison || {};
+  if (!comp.A && !comp.B) return [];
+  return (state.m2.evenements || []).map((evt, idx) => {
+    const sA = comp.A ? sigDecoupageVolet(decoupageVoletDeCopie(comp.A, sousId, evt.id)) : null;
+    const sB = comp.B ? sigDecoupageVolet(decoupageVoletDeCopie(comp.B, sousId, evt.id)) : null;
+    const sS = sigDecoupageVolet(decoupageVolet(sousId, evt.id));
+    if (![sA, sB, sS].some(s => s && s !== 'aucun')) return null;
+    return {evt, idx, sA, sB, sS, desaccord: !!(comp.A && comp.B) && sA !== sB, arbitre: sS === sA || sS === sB};
+  }).filter(x => x && (x.sA !== x.sS || x.sB !== x.sS || x.desaccord));
+}
+function cmpPrendreDecoupageVolet(slot, evtId, sousId) {
+  const evt = (state.m2.evenements || []).find(e => String(e.id) === String(evtId));
+  if (!evt) return;
+  let D = null;
+  if (slot === 'A' || slot === 'B') {
+    const dC = decoupageVoletDeCopie(state.comparaison && state.comparaison[slot], sousId, evtId);
+    D = dC ? JSON.parse(JSON.stringify(dC)) : null;
+  }
+  if (!appliquerDecoupageVolet(evt, sousId, D)) return;
+  renderComparateur();
+}
+function resumeDecoupageVolet(D, evt, n) {
+  const court = t => { t = String(t || ''); return esc(t.length > 70 ? t.slice(0, 69) + '…' : t); };
+  if (!D || !(D.unites || []).length) return '<div class="cmp-dec-titre">Non découpé · 1 élément</div>';
+  return '<div class="cmp-dec-titre">' + D.unites.length + ' élément' + (D.unites.length > 1 ? 's' : '') + '</div>' +
+    D.unites.map((u, k) => '<div class="cmp-dec-ligne"><b>Contexte ' + n + '.' + (k + 1) + '</b> « ' + court(u.texte) + ' »</div>').join('');
+}
+// Les découpages à arbitrer dans un volet du comparateur (CD pour Comportements, passages pour Contexte).
+function decsCmp(sousId) {
+  return sousId === 'cp' ? evtsDecoupageCmp() : sousId === 'contexte' ? evtsDecoupageVoletCmp('contexte') : [];
+}
+
 function viderCaseDecoupe(role, k) {
   (role === 'u' ? decoupeBrouillon.unites : decoupeBrouillon.charnieres)[k] = null;
   renderDecoupage();
@@ -12868,7 +13262,7 @@ function renderM3Sous(sousId) {
   if (items.length === 0) {
     listEl.innerHTML = '<div class="event-empty">Aucun élément extrait des évènements du module 1 pour ce sous-module.</div>';
   } else {
-    const etiquettes = etiquettesCD();
+    const etiquettes = Object.assign(etiquettesCD(), etiquettesContexte());
     listEl.innerHTML = groupes.map(gr => blocEvtM3(sousId, sous, gr, cats, etiquettes)).join('');
   }
   majBoutonRepliEvts();
@@ -12878,7 +13272,7 @@ function renderM3Sous(sousId) {
   if (sugEl) sugEl.innerHTML = blocSuggestionsCats(sousId);
   const catsEl = document.getElementById('m3-cats-list');
   const racines = catsRacines(sousId);
-  const etiqPuces = sousId === 'cp' ? etiquettesCD() : {};
+  const etiqPuces = sousId === 'cp' ? etiquettesCD() : sousId === 'contexte' ? etiquettesContexte() : {};
 
   if (Object.keys(cats).length === 0) {
     catsEl.innerHTML = `<div class="event-empty">Aucune catégorie créée. Cliquez sur "Ajouter une catégorie" pour commencer.</div>`;
@@ -17977,8 +18371,9 @@ function lignesComparateur(sousId) {
     .map(item => {
       const evt = evts[item.evtIdx];
       const dep = sousId === 'cp' || item.tag === 'charniere';
-      const idA = comp.A ? idDansCopie(comp.A, evt, item.id, dep) : null;
-      const idB = comp.B ? idDansCopie(comp.B, evt, item.id, dep) : null;
+      const idDe = copie => sousId === 'contexte' ? idDansCopieVolet(copie, sousId, evt, item.id) : idDansCopie(copie, evt, item.id, dep);
+      const idA = comp.A ? idDe(comp.A) : null;
+      const idB = comp.B ? idDe(comp.B) : null;
       const l = lectureLigneCodage(idA ? catsA : null, idB ? catsB : null, catsS, item.id, idA, idB);
       l.autreA = !!(comp.A && !idA);
       l.autreB = !!(comp.B && !idB);
@@ -18018,7 +18413,8 @@ function accueillirCopieCodage(slot, objet, nomFichier) {
     evenements: ((d.m2 && d.m2.evenements) || []).map(e => e && e.id).filter(Boolean),
     categories,
     // Le découpage fait partie du codage : chaque copie a le sien.
-    decoupages: JSON.parse(JSON.stringify((d.m3 && d.m3.decoupages) || {}))
+    decoupages: JSON.parse(JSON.stringify((d.m3 && d.m3.decoupages) || {})),
+    decoupagesVolets: JSON.parse(JSON.stringify((d.m3 && d.m3.decoupagesVolets) || {}))
   };
   return {ok:true};
 }
@@ -18232,7 +18628,7 @@ function renderComparateur() {
   const evts = state.m2.evenements || [];
 
   const onglets = '<div class="m3-tabs cmp-onglets">' + M3_SOUS.map(s => {
-    const n = deux ? lignesComparateur(s.id).filter(x => x.l.desaccord).length + (s.id === 'cp' ? evtsDecoupageCmp().filter(d => d.desaccord).length : 0) : 0;
+    const n = deux ? lignesComparateur(s.id).filter(x => x.l.desaccord).length + decsCmp(s.id).filter(d => d.desaccord).length : 0;
     const titre = deux ? n + ' désaccord' + (n > 1 ? 's' : '') + ' entre A et B' : '';
     return '<button class="m3-tab' + (s.id === sousId ? ' on' : '') + '" data-volet="' + esc(s.couleur || '') + '" ' +
       'onclick="cmpChangerSous(\'' + s.id + '\')"' + (titre ? ' title="' + esc(titre) + '"' : '') + '>' +
@@ -18242,7 +18638,7 @@ function renderComparateur() {
   }).join('') + '</div>';
 
   const toutes = lignesComparateur(sousId);
-  const decsCompte = sousId === 'cp' ? evtsDecoupageCmp() : [];
+  const decsCompte = decsCmp(sousId);
   const nDesaccords = toutes.filter(x => x.l.desaccord).length + decsCompte.filter(d => d.desaccord).length;
   const nAArbitrer = toutes.filter(x => ligneAArbitrer(x.l)).length + decsCompte.filter(d => !d.arbitre).length;
   if (['tous', 'desaccords', 'a-arbitrer'].indexOf(cmpFiltre) === -1) cmpFiltre = 'tous';
@@ -18309,23 +18705,27 @@ function renderComparateur() {
     '</td>';
   };
 
-  const etiqCmp = sousId === 'cp' ? etiquettesCD() : {};
+  const etiqCmp = sousId === 'cp' ? etiquettesCD() : sousId === 'contexte' ? etiquettesContexte() : {};
   // Les découpages s'arbitrent d'abord : ils décident quels CD existent dans la synthèse.
-  const decs = sousId === 'cp' ? evtsDecoupageCmp() : [];
+  const decs = decsCmp(sousId);
   const decsVus = cmpFiltre === 'desaccords' ? decs.filter(d => d.desaccord) : cmpFiltre === 'a-arbitrer' ? decs.filter(d => !d.arbitre) : decs;
   const lignesDecoupage = decsVus.map(d => {
     const n = d.idx + 1;
-    const bouton = (slot, lib) => '<button type="button" class="cmp-prendre" onclick="cmpPrendreDecoupage(\'' + slot + '\', \'' + esc(d.evt.id) + '\')">' + lib + '</button>';
+    const appel = slot => sousId === 'cp' ? 'cmpPrendreDecoupage(\'' + slot + '\', \'' + esc(d.evt.id) + '\')' : 'cmpPrendreDecoupageVolet(\'' + slot + '\', \'' + esc(d.evt.id) + '\', \'' + sousId + '\')';
+    const bouton = (slot, lib) => '<button type="button" class="cmp-prendre" onclick="' + appel(slot) + '">' + lib + '</button>';
+    const resume = D => sousId === 'cp' ? resumeDecoupage(D, d.evt, n) : resumeDecoupageVolet(D, d.evt, n);
+    const dCopie = c => sousId === 'cp' ? decoupageDeCopie(c, d.evt.id) : decoupageVoletDeCopie(c, sousId, d.evt.id);
+    const dSocle = sousId === 'cp' ? decoupageSocle(d.evt.id) : decoupageVolet(sousId, d.evt.id);
     const prendre = (comp.A && d.sA !== d.sS ? bouton('A', comp.B && d.sA === d.sB ? 'Prendre A = B' : 'Prendre A') : '') +
       (comp.B && d.sB !== d.sS && !(comp.A && d.sA === d.sB) ? bouton('B', 'Prendre B') : '') +
       (d.sS !== 'aucun' ? bouton('aucun', 'Ne pas découper') : '');
     return '<tr class="cmp-ligne cmp-ligne-dec' + (d.desaccord ? ' cmp-desaccord' : (comp.A && comp.B ? ' cmp-identique' : '')) + '">' +
       '<td class="cmp-cell cmp-el"><span class="cmp-tag">découpage</span><div class="cmp-el-texte">Évènement ' + n + '</div>' +
         '<div class="cmp-el-source">' + esc([d.evt.date ? formatDate(d.evt.date) : '', d.evt.moment].filter(Boolean).join(' · ')) + ' · ' +
-        '<button type="button" class="cmp-lien cmp-lien-seul" onclick="ouvrirDetailEvt(' + d.idx + ',\'cp\',event)">détail</button></div></td>' +
-      '<td class="cmp-cell cmp-copie">' + (comp.A ? resumeDecoupage(decoupageDeCopie(comp.A, d.evt.id), d.evt, n) : '') + '</td>' +
-      '<td class="cmp-cell cmp-copie">' + (comp.B ? resumeDecoupage(decoupageDeCopie(comp.B, d.evt.id), d.evt, n) : '') + '</td>' +
-      '<td class="cmp-cell cmp-synth">' + resumeDecoupage(decoupageSocle(d.evt.id), d.evt, n) +
+        '<button type="button" class="cmp-lien cmp-lien-seul" onclick="ouvrirDetailEvt(' + d.idx + ',\'' + sousId + '\',event)">détail</button></div></td>' +
+      '<td class="cmp-cell cmp-copie">' + (comp.A ? resume(dCopie(comp.A)) : '') + '</td>' +
+      '<td class="cmp-cell cmp-copie">' + (comp.B ? resume(dCopie(comp.B)) : '') + '</td>' +
+      '<td class="cmp-cell cmp-synth">' + resume(dSocle) +
         (prendre ? '<div class="cmp-arbitrer">' + prendre + '</div>' : '') + '</td>' +
     '</tr>';
   }).join('');
@@ -18352,7 +18752,7 @@ function renderComparateur() {
   }
 
   if (lignesDecoupage) {
-    corps = '<tr class="cmp-sous-titre"><td colspan="4">Découpages à arbitrer d\'abord : tant que la synthèse n\'a pas retenu le découpage d\'un primo codage, ses CD ne se comparent pas élément par élément.</td></tr>' +
+    corps = '<tr class="cmp-sous-titre"><td colspan="4">Découpages à arbitrer d\'abord : tant que la synthèse n\'a pas retenu le découpage d\'un primo codage, ' + (sousId === 'cp' ? 'ses CD' : 'ses passages') + ' ne se comparent pas élément par élément.</td></tr>' +
       lignesDecoupage + (lignes.length ? corps : '');
   }
 
@@ -18823,7 +19223,7 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
-const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":4610,"retrait":966,"depots":43}]};
+const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":4705,"retrait":970,"depots":44}]};
 
 function svgActiviteCode() {
   const mois = ACTIVITE_CODE.mois || [];
@@ -18862,6 +19262,22 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-08',
+    version: 'v2026.10.08-4',
+    titre: "Organiser : on peut découper le contexte, comme les comportements",
+    corps: `
+<p><b>Découper le contexte</b> (Arthur) : dans le volet Contexte, chaque évènement qui a un contexte porte maintenant un bouton <b>« ✂ Découper »</b>, comme les comportements.</p>
+<ul>
+<li>Même principe que pour les CD : on sélectionne à la souris un passage du texte « avant » du déclarant, et une bulle le range comme élément de contexte. Chaque passage est une <b>citation exacte</b> : le déclaratif n'est jamais réécrit.</li>
+<li>Chaque passage devient un élément à classer, avec sa propre catégorie, et porte un numéro : « Contexte 3.1 », « Contexte 3.2 »… Sans découpage, le contexte reste un seul élément, comme avant.</li>
+<li>Le découpage fait partie du codage : chacun fait le sien dans son codage vierge. À la synthèse, le comparateur le fait <b>arbitrer d'abord</b> (« Prendre A », « Prendre B », « Ne pas découper »), avant de comparer les catégories.</li>
+<li>Découper un contexte déjà classé retire le classement du texte entier, après un avertissement, puisque cet élément n'existe plus.</li>
+</ul>
+<p>Pour l'instant, seul le contexte se découpe ainsi. Les antécédents, conséquences et interventions gardent leurs éléments actuels.</p>
+`
+  },
 
   {
     date: '2026-10-08',
@@ -19915,7 +20331,7 @@ const LEXIQUE_BAF = {
   "antécédent": "Ce qui s'est passé juste avant le comportement, dans les secondes ou minutes précédentes. Il y en a souvent plusieurs. Le déclarant peut signaler celui qui lui semble avoir déclenché — c'est un avis, pas un verdict.",
   "conséquence": "Ce qui change pour la personne après le comportement : ce qu'elle obtient, ce qu'elle évite. C'est souvent là que la fonction du comportement se lit. À ne pas confondre avec l'intervention, qui est ce que l'entourage a fait.",
   "intervention": "Ce que l'entourage a fait en réponse au comportement, et avec quel effet sur la tension. Une intervention peut apaiser, ne rien changer, ou produire à son tour un nouveau comportement-défi.",
-  "découpage": "Dans Organiser, le geste par lequel l'analyste repère plusieurs CD dans un même évènement — en même temps, ou l'un après l'autre. Chaque CD est une citation exacte du déclaratif, qui n'est jamais réécrit. C'est aussi là qu'on peut juger qu'une scène ne contient que des comportements, et aucun CD : rien n'y est alors compté. Un CD déjà pris peut être découpé à son tour (CD 3.1.1, CD 3.1.2…), et les CD se glissent à la souris pour les remettre dans l'ordre des faits. Le découpage fait partie du codage : chaque codeur fait le sien, et la synthèse retient l'un des deux.",
+  "découpage": "Dans Organiser, le geste par lequel l'analyste repère plusieurs CD dans un même évènement — en même temps, ou l'un après l'autre. Chaque CD est une citation exacte du déclaratif, qui n'est jamais réécrit. C'est aussi là qu'on peut juger qu'une scène ne contient que des comportements, et aucun CD : rien n'y est alors compté. Un CD déjà pris peut être découpé à son tour (CD 3.1.1, CD 3.1.2…), et les CD se glissent à la souris pour les remettre dans l'ordre des faits. Le contexte se découpe aussi, en passages cités à l'identique. Le découpage fait partie du codage : chaque codeur fait le sien, et la synthèse retient l'un des deux.",
   "CD à la suite": "Un comportement-défi qui en suit un autre dans le même évènement : des cris, puis l'éducatrice demande de se calmer, puis des coups contre le mur. Ce qui s'est passé entre les deux est la conséquence du premier CD et l'antécédent du suivant.",
   "séquence": "Une suite antécédent → CD → conséquence. Un évènement en compte une ; quand ses CD se suivent, une par CD : ce qui s'est passé entre deux CD est la conséquence de l'un et l'antécédent du suivant. Les croisements d'Interpréter se comptent par séquence.",
   "crise": "Les comportements-défis repérés dans un même évènement. Ils sont numérotés CD 3.1, CD 3.2… : 3 pour le troisième évènement dans l'ordre chronologique, puis le rang du CD dans l'évènement. Un CD que l'on découpe en plusieurs devient CD 3.1.1, CD 3.1.2… et les autres gardent leur numéro.",
