@@ -87,6 +87,33 @@
   --vol-intervention-pale:  var(--prune-pale);
   --vol-intervention-texte: var(--prune-deep);
 
+  /* ── La charte (direction artistique, Arthur et Émilie, 08/10/2026) ─────────────────────────────────
+     Une seule couleur pour naviguer : l'ardoise. Les couleurs des volets ne servent qu'aux données (surligneur,
+     points, numéros, barres). Des feuilles plutôt que des cadres dans des cadres : trois fonds seulement — le
+     papier (la page), la feuille (ce qu'on lit), la surface (un fond à l'intérieur d'une feuille). Le texte qu'on
+     lit (déclaratif, phrases, notes) en serif ; l'interface en Space Grotesk. La page #charte montre chaque élément. */
+  --sheet: #FFFDF8;
+  --surface: #FBF8F2;
+  --ink-faint: #A39A8A;
+  --line-feuille: #EFE9DE;
+  --slate-pale: #E9EDF3;
+  --sel: #FFE08A;
+  --sel-deep: #D9A400;
+  --sel-pale: #FFF6D6;
+  --ombre-feuille: 0 1px 0 var(--line-soft), 0 10px 30px rgba(44,36,22,.05);
+  --ombre-legere: 0 1px 0 var(--line-soft), 0 4px 14px rgba(44,36,22,.05);
+  --ombre-flottante: 0 14px 40px rgba(44,36,22,.24);
+  --rayon-feuille: 16px;
+  --ease: cubic-bezier(.2,.7,.2,1);
+  --police-lecture: 'Source Serif 4', Georgia, serif;
+  --police-interface: 'Space Grotesk', system-ui, sans-serif;
+  /* le surligneur des volets, dans le texte */
+  --vol-contexte-hl: rgba(169,184,204,.42);
+  --vol-antecedent-hl: rgba(201,168,76,.32);
+  --vol-comportement-hl: rgba(154,181,168,.45);
+  --vol-intervention-hl: rgba(139,94,107,.22);
+  --vol-consequence-hl: rgba(232,180,160,.48);
+
   --radius: 16px;
   --radius-sm: 10px;
   --shadow-soft: 0 2px 14px rgba(44,36,22,.07);
@@ -395,6 +422,115 @@ header.top{
 .detailler-bt{background:none;border:0;padding:4px 0;font:inherit;font-size:13px;font-weight:600;color:var(--slate);cursor:pointer;}
 .detailler-bt:hover{text-decoration:underline;}
 .tension-finale-note{margin:0 0 16px;padding:12px 16px;background:var(--paper-deep);border-radius:10px;font-size:13.5px;line-height:1.6;}
+/* ═══ LA CHARTE — les éléments communs (Arthur et Émilie, 08/10/2026) ═══════════════════════════════════
+   Chaque écran se construit avec ces éléments, dans cet ordre de préférence : une feuille plutôt qu'une carte
+   bordée ; une phrase en clair avant un dessin ; le détail replié ; ce qui sert tout le temps dans une barre fixe,
+   ce qui sert parfois dans un tiroir. La page cachée #charte les montre tous. */
+.feuille{position:relative;background:var(--sheet);border-radius:var(--rayon-feuille);box-shadow:var(--ombre-feuille);padding:18px 22px;}
+.feuille + .feuille{margin-top:14px;}
+.deux-feuilles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;}
+.deux-feuilles > .feuille,.charte-grille > .feuille{margin-top:0;}
+.feuille-titre{display:flex;align-items:baseline;gap:8px;margin:0 0 12px;font-size:13.5px;font-weight:700;color:var(--ink);}
+.feuille-titre small{margin-left:auto;font-weight:500;font-size:12px;color:var(--ink-faint);}
+.feuille-sep{height:1px;margin:12px 0;background:var(--line-feuille);}
+.surtitre{display:flex;align-items:center;gap:8px;margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--c,var(--ink-faint));}
+.surtitre i{width:8px;height:8px;border-radius:50%;background:var(--c,var(--ink-faint));}
+.phrase{margin:0 0 16px;max-width:760px;font:600 23px/1.32 var(--police-lecture);letter-spacing:-.005em;color:var(--ink);}
+.phrase em{font-style:normal;padding:0 2px;background:linear-gradient(transparent 62%,var(--hl,rgba(217,164,0,.28)) 62%);}
+.lecture{font:400 16px/1.7 var(--police-lecture);color:var(--ink);}
+.discret{font-size:12.5px;color:var(--ink-soft);}
+
+/* le rail : les étapes d'un module ; la loupe couvre ce qu'on voit */
+.rail{position:relative;display:grid;grid-template-columns:repeat(var(--n,4),1fr);height:44px;padding:4px;border-radius:13px;background:var(--paper-deep);}
+.rail-loupe{position:absolute;top:4px;bottom:4px;left:4px;width:calc((100% - 8px) * var(--l,2) / var(--n,4));border-radius:10px;background:var(--slate);box-shadow:0 4px 14px rgba(45,59,82,.28);transform:translateX(calc(100% * var(--p,0) / var(--l,2)));transition:transform .5s var(--ease);}
+.rail-etape{position:relative;z-index:1;display:flex;flex-direction:column;justify-content:center;gap:3px;min-width:0;padding:0 14px;border:0;border-radius:10px;background:transparent;text-align:left;color:var(--ink-soft);transition:color .3s;}
+.rail-etape:hover{color:var(--ink);}
+.rail-etape.vue{color:#fff;}
+.rail-ligne{display:flex;align-items:baseline;gap:7px;white-space:nowrap;overflow:hidden;}
+.rail-num{font-size:11px;font-weight:700;opacity:.7;}
+.rail-nom{font-size:13.5px;font-weight:600;}
+.rail-chiffre{margin-left:auto;font-size:11.5px;opacity:.75;overflow:hidden;text-overflow:ellipsis;}
+.rail-trait{height:3px;border-radius:2px;background:rgba(44,36,22,.1);overflow:hidden;}
+.rail-trait i{display:block;height:100%;border-radius:2px;background:var(--slate);}
+.rail-etape.vue .rail-trait{background:rgba(255,255,255,.22);}
+.rail-etape.vue .rail-trait i{background:#fff;}
+
+/* le segment : un choix parmi quelques-uns (volets, onglets, effet) */
+.segment{display:inline-flex;align-items:center;gap:3px;padding:3px;border-radius:11px;background:var(--paper-deep);max-width:100%;overflow-x:auto;scrollbar-width:none;}
+.segment > button{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 11px;border:0;border-radius:8px;background:transparent;font:600 13px var(--police-interface);color:var(--ink-soft);white-space:nowrap;}
+.segment > button:hover{color:var(--ink);}
+.segment > button.on{background:var(--sheet);color:var(--ink);box-shadow:0 2px 8px rgba(44,36,22,.08);}
+.segment > button i{width:9px;height:9px;border-radius:50%;background:var(--c,var(--ink-faint));}
+.segment > button small{font-weight:500;font-size:11.5px;color:var(--ink-faint);}
+
+/* la barre fixe : ce qui sert tout le temps */
+.barre-fixe{display:flex;align-items:center;gap:14px;min-height:52px;padding:6px 10px;border-radius:14px;background:var(--sheet);box-shadow:var(--ombre-legere);}
+
+/* les boutons */
+.bt{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:34px;padding:0 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--sheet);font:600 13px var(--police-interface);color:var(--ink);white-space:nowrap;transition:border-color .15s,background .15s;}
+.bt:hover:not(:disabled){border-color:var(--slate);}
+.bt:disabled{opacity:.4;cursor:default;}
+.bt.plein{background:var(--slate);border-color:var(--slate);color:#fff;}
+.bt.plein:hover:not(:disabled){background:var(--slate-deep);}
+.bt.fait{background:var(--sauge-pale);border-color:var(--sauge-deep);color:var(--vol-comportement-texte);}
+.bt-rond{display:inline-grid;place-items:center;width:32px;height:32px;padding:0;border:0;border-radius:50%;background:var(--surface);color:var(--slate);font-size:16px;line-height:1;}
+.bt-rond:hover:not(:disabled){background:var(--slate-pale);}
+.bt-rond:disabled{opacity:.3;cursor:default;}
+.bt-lien{border:0;background:none;padding:0;font:600 12.5px var(--police-interface);color:var(--slate);text-decoration:underline;text-underline-offset:3px;}
+.compteur{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--sel-deep);color:#fff;font-size:10.5px;font-weight:700;}
+.cle{display:inline-block;padding:1px 5px;border-radius:4px;background:rgba(44,36,22,.08);font:600 10px var(--police-interface);color:var(--ink-soft);}
+
+/* l'onglet de bord : un voisin, net, au lieu du flou */
+.onglet-bord{display:flex;align-items:center;justify-content:center;width:30px;padding:0;border:0;background:transparent;}
+.onglet-bord span{display:flex;align-items:center;gap:8px;padding:14px 6px;border-radius:10px;background:var(--sheet);box-shadow:var(--ombre-legere);writing-mode:vertical-rl;font-size:12px;font-weight:600;color:var(--ink-soft);transition:transform .2s var(--ease),color .2s;}
+.onglet-bord.gauche span{transform:rotate(180deg);}
+.onglet-bord:hover span{color:var(--slate);}
+.onglet-bord.droite:hover span{transform:translateX(-3px);}
+.onglet-bord.gauche:hover span{transform:rotate(180deg) translateX(-3px);}
+
+/* le repli : le détail, pour qui veut vérifier */
+details.repli > summary{display:inline-flex;align-items:center;gap:6px;cursor:pointer;list-style:none;font-size:12.5px;font-weight:600;color:var(--slate);}
+details.repli > summary::-webkit-details-marker{display:none;}
+details.repli > summary::before{content:"›";display:inline-block;transition:transform .2s var(--ease);}
+details.repli[open] > summary::before{transform:rotate(90deg);}
+details.repli > .repli-corps{margin-top:10px;}
+
+/* le tiroir : ce qui sert parfois (notes, indice, réglages) */
+.tiroir{position:fixed;top:0;right:0;bottom:0;z-index:300;width:min(420px,92vw);display:flex;flex-direction:column;background:var(--sheet);box-shadow:-20px 0 60px rgba(44,36,22,.16);transform:translateX(105%);transition:transform .35s var(--ease),visibility 0s linear .35s;visibility:hidden;}
+.tiroir.ouvert{transform:none;visibility:visible;transition:transform .35s var(--ease),visibility 0s;}
+.tiroir-tete{display:flex;align-items:center;gap:10px;padding:18px 20px 10px;}
+.tiroir-tete h2{margin:0;font-size:17px;}
+.tiroir-tete .bt-rond{margin-left:auto;}
+.tiroir-corps{flex:1;overflow:auto;padding:0 20px 20px;}
+.voile-tiroir{position:fixed;inset:0;z-index:290;background:rgba(44,36,22,.12);opacity:0;pointer-events:none;transition:opacity .3s;}
+.voile-tiroir.on{opacity:1;pointer-events:auto;}
+
+/* la barre sombre : un geste sur une sélection */
+.barre-sombre{display:inline-flex;align-items:center;gap:2px;padding:5px;border-radius:13px;background:var(--ink);box-shadow:var(--ombre-flottante);}
+.barre-sombre button{display:flex;align-items:center;gap:7px;height:32px;padding:0 10px;border:0;border-radius:9px;background:transparent;font:600 12.5px var(--police-interface);color:#F5F0E8;white-space:nowrap;}
+.barre-sombre button:hover{background:rgba(255,255,255,.12);}
+.barre-sombre button i{width:9px;height:9px;border-radius:50%;background:var(--c,#fff);}
+.barre-sombre .cle{background:rgba(255,255,255,.14);color:rgba(245,240,232,.75);}
+.barre-sombre .sep{width:1px;height:20px;margin:0 4px;background:rgba(255,255,255,.16);}
+
+/* le menu flottant */
+.menu-flottant{min-width:220px;padding:6px;border-radius:12px;background:var(--sheet);box-shadow:0 0 0 1px var(--line-soft),0 14px 40px rgba(44,36,22,.18);}
+.menu-flottant h6{margin:4px 8px;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);}
+.menu-flottant button{display:flex;align-items:center;gap:8px;width:100%;padding:6px 8px;border:0;border-radius:8px;background:transparent;font:13px var(--police-interface);color:var(--ink);text-align:left;}
+.menu-flottant button:hover{background:var(--surface);}
+.menu-flottant button i{width:8px;height:8px;border-radius:50%;background:var(--c,var(--ink-faint));}
+@keyframes apparaitre{from{opacity:0;transform:translateY(-4px) scale(.98);}}
+@media (prefers-reduced-motion:reduce){.rail-loupe,.tiroir,.voile-tiroir,.onglet-bord span{transition:none;}}
+
+/* la page #charte */
+.charte-grille{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));grid-auto-flow:dense;gap:16px;}
+.charte-ex{margin:0 0 18px;}
+.charte-ex > .surtitre{margin-bottom:10px;}
+.charte-nuancier{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
+.charte-couleur{display:flex;align-items:center;gap:10px;font-size:12px;}
+.charte-couleur i{flex:none;width:34px;height:34px;border-radius:10px;box-shadow:inset 0 0 0 1px rgba(44,36,22,.08);}
+.charte-couleur small{display:block;color:var(--ink-faint);}
+
 .seq-chip-iv{flex-wrap:wrap;}
 .seq-chip-effet{flex:0 0 100%;display:flex;align-items:center;gap:6px;margin:1px 0 0 2px;font-size:11.5px;color:var(--ink-soft);}
 .seq-chip-effet select{font:inherit;font-size:11.5px;padding:1px 4px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);cursor:pointer;}
@@ -449,10 +585,10 @@ header.top{
 .recap-fige{margin:0 0 12px;padding:10px 12px;background:var(--paper-deep);border-radius:10px;font-size:12.5px;line-height:1.55;color:var(--ink-soft);}
 .seq-chip-lecture{cursor:pointer;align-items:center;}
 .seq-chip-lecture:hover{border-color:var(--slate);}
-.seq-chip-lecture.actif{box-shadow:0 0 0 2px #D9A400 inset;background:#FFF6D6;}
+.seq-chip-lecture.actif{box-shadow:0 0 0 2px var(--sel-deep) inset;background:var(--sel-pale);}
 .seq-chip-points{flex:none;display:inline-flex;gap:3px;}
 .seq-chip-points i{display:inline-block;width:10px;height:10px;border-radius:50%;border:1px solid rgba(0,0,0,.2);}
-.m3-item.flash-el{outline:3px solid #D9A400;background:#FFF6D6;transition:background .3s;}
+.m3-item.flash-el{outline:3px solid var(--sel-deep);background:var(--sel-pale);transition:background .3s;}
 .recap-volet{margin:0 0 12px;padding:8px 10px;border-left:5px solid var(--c,var(--slate));border-radius:8px;background:var(--card);border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);}
 .recap-volet-titre{display:flex;align-items:center;gap:6px;margin:0 0 4px;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--c,var(--slate));cursor:pointer;}
 .recap-volet-titre .recap-n{margin-left:auto;font-weight:600;letter-spacing:0;text-transform:none;color:var(--ink-soft);}
@@ -463,18 +599,18 @@ header.top{
 /* Notes d'analyse : une case libre par panneau (Arthur et Émilie, 08/10/2026) */
 .analyse-notes{margin:16px 0 0;padding:8px 12px;border:1px dashed var(--line);border-radius:10px;background:var(--paper);}
 .analyse-notes>summary{cursor:pointer;font-size:12.5px;font-weight:700;color:var(--ink-soft);}
-.analyse-notes-pastille{color:#D9A400;}
+.analyse-notes-pastille{color:var(--sel-deep);}
 .analyse-notes-champ{width:100%;min-height:90px;margin:8px 0 2px;font:inherit;font-size:13.5px;line-height:1.55;background:#fff;}
 /* Catégoriser a moins de largeur à côté de Découper : les volets se resserrent et passent à la ligne plutôt que d'être coupés. */
 #view-m3 .m3-tabs{flex-wrap:wrap;overflow:visible;justify-content:flex-start;gap:6px;}
 @media (min-width:721px){#view-m3 .m3-tab{padding:6px 11px;gap:5px;font-size:12.5px;}}
 .brut-legende{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin:0 0 12px;font-size:12px;color:var(--ink-soft);}
 .brut-legende .pastille{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:5px;}
-.brut-legende .p-sel{background:#FFE08A;border:1px solid #D9A400;}
+.brut-legende .p-sel{background:var(--sel);border:1px solid var(--sel-deep);}
 .brut-legende .p-range{background:var(--vol-comportement-pale);border:1px solid var(--vol-comportement);}
 .brut-legende .p-reste{background:#fff;border:1px dashed var(--ink-soft);}
 .brut-texte{white-space:pre-wrap;line-height:1.75;}
-.brut-texte::selection,.brut-texte *::selection{background:#FFE08A;color:var(--ink);}
+.brut-texte::selection,.brut-texte *::selection{background:var(--sel);color:var(--ink);}
 .seq-m{border-radius:3px;padding:1px 0;transition:background .2s;}
 .seq-m-contexte{background:var(--vol-contexte-pale);}
 .seq-m-antecedents{background:var(--vol-antecedent-pale);}
@@ -483,7 +619,7 @@ header.top{
 .seq-m-consequence{background:var(--vol-consequence-pale);}
 .seq-m-ecarte{background:repeating-linear-gradient(135deg,#ECE7DD,#ECE7DD 4px,#F5F1E8 4px,#F5F1E8 8px);}
 .seq-m-double{border-bottom:2px dotted var(--ink-soft);}
-.seq-m.flash{outline:2px solid #D9A400;background:#FFE08A;}
+.seq-m.flash{outline:2px solid var(--sel-deep);background:var(--sel);}
 .seq-tete{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 10px;}
 .seq-pct{font-size:13px;font-weight:700;}
 .seq-barre{flex:1 1 90px;height:8px;border-radius:999px;background:var(--paper-deep);overflow:hidden;min-width:70px;}
@@ -3571,6 +3707,16 @@ button.vase-palier-tete:hover .vase-palier-nom, button.vase-palier-tete:focus-vi
     <div id="parcours-contenu"></div>
   </section>
 
+  <section id="view-charte" class="view">
+    <div class="mod-header">
+      <div class="crumb"><button onclick="route('accueil')">← Accueil</button></div>
+      <span class="temps-tag tag-m4">Page de référence</span>
+      <h2>La charte de la BAF</h2>
+      <div class="sub">Les éléments avec lesquels chaque écran se construit. Une couleur pour naviguer, l'ardoise ; les couleurs des volets pour les données, et rien d'autre ; des feuilles plutôt que des cadres ; une phrase en clair avant un dessin ; le détail replié ; ce qui sert tout le temps dans une barre fixe, ce qui sert parfois dans un tiroir.</div>
+    </div>
+    <div id="charte-contenu"></div>
+  </section>
+
   <section id="view-notes" class="view">
     <div class="mod-header">
       <div class="crumb"><button onclick="route('accueil')">← Accueil</button></div>
@@ -6045,7 +6191,7 @@ function route(name, fromHistory){
   const entreeParticiper = name === 'declarant' && !modeDeclarantActif();
   const isBaf = ['baf-accueil','m1','m2','m2-form','analyser','comparer','synthese','declarant','reserve'].includes(name) && !entreeParticiper;
   const isIdc = ['idc-accueil','idc-main'].includes(name);
-  const isGlobal = ['accueil','reperes','ressources','apropos','notes','parcours'].includes(name);
+  const isGlobal = ['accueil','reperes','ressources','apropos','notes','parcours','charte'].includes(name);
   const bafNavGroup = document.getElementById('baf-nav-group');
   const idcNavGroup = document.getElementById('idc-nav-group');
   const globalNavGroup = document.getElementById('global-nav-group');
@@ -6054,6 +6200,7 @@ function route(name, fromHistory){
   if(globalNavGroup) globalNavGroup.style.display = isGlobal ? 'flex' : 'none';
   if(name === 'reperes') renderReperes();
   if(name === 'notes') renderNotes();
+  if(name === 'charte') renderCharte();
   if(name === 'declarant') renderDeclarant();
   if(name === 'parcours') renderParcours();
   if(name === 'comparer') {
@@ -6262,6 +6409,69 @@ function effacerDossierCourant() {
 
 /* Adresses lisibles. Les identifiants internes (m1, m3, baf-accueil) restent
    inchangés dans le code ; seule l'adresse affichée est traduite. */
+/* ── La charte : les tiroirs, et la page #charte ─────────────────────────────────────────────────────
+   Un tiroir s'ouvre à droite, par-dessus la page, avec un voile ; Échap ou un clic sur le voile le ferme. */
+let tiroirOuvert = null;
+function voileTiroir() {
+  let v = document.getElementById('voile-tiroir');
+  if (!v) {
+    v = document.createElement('div');
+    v.id = 'voile-tiroir'; v.className = 'voile-tiroir no-print';
+    v.addEventListener('click', () => fermerTiroir());
+    document.body.appendChild(v);
+  }
+  return v;
+}
+function ouvrirTiroir(id) {
+  const t = document.getElementById(id);
+  if (!t) return;
+  if (tiroirOuvert && tiroirOuvert !== id) fermerTiroir();
+  t.classList.add('ouvert');
+  t.setAttribute('aria-hidden', 'false');
+  voileTiroir().classList.add('on');
+  tiroirOuvert = id;
+  const champ = t.querySelector('textarea, input, button');
+  if (champ) setTimeout(() => { try { champ.focus(); } catch (er) { /* rien */ } }, 300);
+}
+function fermerTiroir(id) {
+  const cible = id || tiroirOuvert;
+  const t = cible && document.getElementById(cible);
+  if (t) { t.classList.remove('ouvert'); t.setAttribute('aria-hidden', 'true'); }
+  if (!id || id === tiroirOuvert) { tiroirOuvert = null; voileTiroir().classList.remove('on'); }
+}
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && tiroirOuvert) fermerTiroir(); });
+
+const CHARTE_COULEURS = [
+  ['Navigation', [['--slate', 'ardoise : naviguer, agir'], ['--slate-pale', 'ardoise pâle'], ['--ink', 'encre'], ['--ink-soft', 'encre douce'], ['--ink-faint', 'encre discrète']]],
+  ['Fonds', [['--paper', 'le papier (la page)'], ['--sheet', 'la feuille'], ['--surface', 'la surface (dans une feuille)'], ['--line-soft', 'trait'], ['--line-feuille', 'trait dans une feuille']]],
+  ['Les volets (données seulement)', [['--vol-contexte', 'contexte'], ['--vol-antecedent', 'antécédent'], ['--vol-comportement', 'comportement'], ['--vol-intervention', 'intervention'], ['--vol-consequence', 'conséquence']]],
+  ['Sélection, signal', [['--sel', 'sélection'], ['--sel-deep', 'signal'], ['--vase-monte', 'fait monter'], ['--vase-descend-deep', 'fait redescendre']]]
+];
+function renderCharte() {
+  const el = document.getElementById('charte-contenu');
+  if (!el) return;
+  const st = getComputedStyle(document.documentElement);
+  const nuancier = CHARTE_COULEURS.map(([titre, l]) => '<div class="charte-ex"><div class="surtitre">' + esc(titre) + '</div><div class="charte-nuancier">' +
+    l.map(([v, nom]) => '<div class="charte-couleur"><i style="background:var(' + v + ')"></i><span>' + esc(nom) + '<small>' + v + ' · ' + esc(st.getPropertyValue(v).trim()) + '</small></span></div>').join('') + '</div></div>').join('');
+  const ex = (titre, html) => '<div class="feuille charte-ex" data-charte="' + esc(titre) + '"' + (/^(Rail|Barre fixe)/.test(titre) ? ' style="grid-column:1 / -1"' : '') + '><div class="surtitre">' + esc(titre) + '</div>' + html + '</div>';
+  el.innerHTML = '<div class="feuille charte-ex">' + nuancier + '</div><div class="charte-grille">' +
+    ex('Phrase et surtitre', '<div class="surtitre" style="--c:var(--vol-consequence-deep)"><i></i>Ce que ça lui apporte</div><p class="phrase" style="font-size:19px;--hl:rgba(232,180,160,.5)">Le plus souvent, il <em>échappe à une demande</em>.</p><p class="discret">Une phrase en clair, puis un seul dessin.</p>') +
+    ex('Rail des étapes', '<div class="rail" style="--n:4;--l:2;--p:1"><div class="rail-loupe"></div>' +
+      [['Déclaratif brut', '52'], ['Découper', '6 / 52'], ['Catégoriser', '63 %'], ['Interpréter', '']].map((e, i) => '<button type="button" class="rail-etape' + (i === 1 || i === 2 ? ' vue' : '') + '"><span class="rail-ligne"><span class="rail-num">' + (i + 1) + '</span><span class="rail-nom">' + e[0] + '</span></span><span class="rail-trait"><i style="width:' + [100, 12, 63, 30][i] + '%"></i></span></button>').join('') + '</div>') +
+    ex('Segment', '<div class="segment"><button type="button" class="on" style="--c:var(--vol-comportement)"><i></i>Comportements <small>67</small></button><button type="button" style="--c:var(--vol-contexte)"><i></i>Contexte <small>25</small></button><button type="button" style="--c:var(--vol-antecedent)"><i></i>Antécédents</button></div>') +
+    ex('Barre fixe', '<div class="barre-fixe"><button type="button" class="bt-rond" aria-label="Précédent">‹</button><button type="button" class="bt-rond" aria-label="Suivant">›</button><b>Épisode 4</b><span class="discret">/ 52</span><button type="button" class="bt" style="margin-left:auto">Rangement terminé</button></div>') +
+    ex('Boutons', '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button type="button" class="bt plein">Exporter</button><button type="button" class="bt">Annuler</button><button type="button" class="bt fait">✓ Rangé</button><button type="button" class="bt-rond">›</button><button type="button" class="bt-lien">voir le détail</button><span class="compteur">2</span><span class="cle">Échap</span></div>') +
+    ex('Onglet de bord', '<div style="display:flex;gap:12px;height:120px"><button type="button" class="onglet-bord gauche"><span>‹ Déclaratif brut</span></button><button type="button" class="onglet-bord droite"><span>Catégoriser ›</span></button></div>') +
+    ex('Repli', '<details class="repli"><summary>Le détail des catégories</summary><div class="repli-corps discret">Ce qui sert à vérifier, sans encombrer.</div></details>') +
+    ex('Barre sombre', '<div class="barre-sombre"><button type="button" style="--c:var(--vol-contexte)"><i></i>Contexte <span class="cle">1</span></button><span class="sep"></span><button type="button" style="--c:var(--vol-comportement)"><i></i>CD <span class="cle">3</span></button></div>') +
+    ex('Menu flottant', '<div class="menu-flottant"><h6>Déplacer vers</h6><button type="button" style="--c:var(--vol-antecedent)"><i></i>Phase 2 · Antécédent</button><button type="button" style="--c:var(--vol-consequence)"><i></i>Conséquence</button></div>') +
+    ex('Tiroir', '<button type="button" class="bt" onclick="ouvrirTiroir(\'tiroir-charte\')">Ouvrir le tiroir</button><p class="discret">Pour ce qui sert parfois : les notes, l\'indice, les réglages.</p>') +
+    ex('Feuille et lecture', '<p class="lecture" style="margin:0">« S\'est mordu le dos de la main jusqu\'à laisser une marque. »</p><div class="feuille-sep"></div><p class="discret" style="margin:0">Le texte qu\'on lit en serif ; l\'interface en Space Grotesk.</p>') +
+    '</div>' +
+    '<aside class="tiroir" id="tiroir-charte" aria-hidden="true"><div class="tiroir-tete"><h2>Un tiroir</h2><button type="button" class="bt-rond" aria-label="Fermer" onclick="fermerTiroir(\'tiroir-charte\')">✕</button></div><div class="tiroir-corps"><p class="lecture">Il s\'ouvre à droite, par-dessus la page. Échap ou un clic à côté le referme.</p></div></aside>';
+}
+
+
 const ADRESSES_VUES = {
   'accueil':      'accueil',
   'reperes':      'reperes',
@@ -6269,6 +6479,7 @@ const ADRESSES_VUES = {
   'apropos':      'a-propos',
   'parcours':     'le-parcours',
   'notes':        'notes-de-version',
+  'charte':       'charte',
   'declarant':    'declarant',
   'reserve':      'reserve-a-l-equipe',
   'baf-accueil':  'recueil-des-donnees',
@@ -13119,6 +13330,25 @@ const _CONTROLES = [
         [effets, EFFET_INTERVENTION_OPTIONS.length, radios, courriel].join(' # '));
     } finally { state.m2.evenements = sauveEvts; }
   }},
+  {nom:'La charte : ses variables existent, la page cachée montre chaque élément, un tiroir s\'ouvre et se ferme', test: () => {
+    const st = getComputedStyle(document.documentElement);
+    const variables = ['--sheet', '--surface', '--ink-faint', '--sel', '--sel-deep', '--ombre-feuille', '--police-lecture', '--vol-comportement-hl', '--ease']
+      .filter(v => !st.getPropertyValue(v).trim());
+    renderCharte();
+    const vue = document.getElementById('view-charte');
+    const elements = ['.feuille', '.surtitre', '.phrase', '.rail', '.rail-loupe', '.segment', '.barre-fixe', '.bt', '.bt-rond', '.onglet-bord', 'details.repli', '.barre-sombre', '.menu-flottant', '.tiroir']
+      .filter(s => !vue.querySelector(s));
+    const cachee = !document.querySelector('.nav-btn[data-go="charte"]') && adresseDeVue('charte') === 'charte';
+    ouvrirTiroir('tiroir-charte');
+    const ouvert = document.getElementById('tiroir-charte').classList.contains('ouvert') && document.getElementById('voile-tiroir').classList.contains('on');
+    document.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape'}));
+    const ferme = !document.getElementById('tiroir-charte').classList.contains('ouvert') && !document.getElementById('voile-tiroir').classList.contains('on') && tiroirOuvert === null;
+    // Les couleurs de sélection passent par la charte
+    const enDur = [...document.querySelectorAll('style')].map(s => s.textContent).join('').replace(/--sel(-deep|-pale)?:\s*#[0-9A-F]{6};/gi, '').match(/#FFE08A|#D9A400|#FFF6D6/gi) || [];
+    return _bancEgal('variables manquantes | éléments absents de la page | page cachée, à son adresse | tiroir ouvert | Échap le ferme | jaunes de sélection en dur dans les styles',
+      '[] | [] | true | true | true | 0', [JSON.stringify(variables), JSON.stringify(elements), cachee, ouvert, ferme, enDur.length].join(' | '));
+  }},
+
   {nom:'Les couleurs des catégories se distinguent deux à deux', test: () => {
     /* Ce qui fait confondre deux catégories, c'est la teinte : les deux violets
        d'avant n'étaient séparés que de 10°, les deux rouges de 13°. Entre deux
@@ -22411,7 +22641,7 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
-const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":9669,"retrait":1946,"depots":65}]};
+const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":9685,"retrait":1948,"depots":66}]};
 
 function svgActiviteCode() {
   const mois = ACTIVITE_CODE.mois || [];
@@ -22450,6 +22680,22 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-08',
+    version: 'v2026.10.08-26',
+    titre: "La charte de la BAF : une direction artistique pour tout l'outil",
+    corps: `
+<p><b>La charte de la BAF</b> (Arthur et Émilie) — le socle de la nouvelle direction artistique, qui va gagner l'outil écran par écran :</p>
+<ul>
+<li><b>Une couleur pour naviguer, l'ardoise.</b> Les couleurs des volets (contexte, antécédent, comportement, intervention, conséquence) ne servent plus qu'aux données : le surligneur, les points, les numéros, les barres.</li>
+<li><b>Des feuilles plutôt que des cadres dans des cadres</b> : trois fonds seulement — le papier, la feuille, la surface. Le texte qu'on lit (déclaratif, phrases, notes) en serif ; l'interface en Space Grotesk.</li>
+<li><b>Une phrase en clair avant un dessin, le détail replié</b> ; ce qui sert tout le temps dans une barre fixe, ce qui sert parfois dans un tiroir qui s'ouvre à droite.</li>
+<li><b>Une page de référence</b>, cachée (adresse <code>#charte</code>), montre chaque élément : le rail des étapes, le segment, la barre fixe, les boutons, l'onglet de bord, le repli, la barre sombre, le menu flottant, le tiroir.</li>
+<li>Cette passe ne change presque rien à l'écran. Les suivantes appliquent la charte : Analyser d'abord, puis la Synthèse, puis le reste de l'outil.</li>
+</ul>
+`
+  },
 
   {
     date: '2026-10-08',
