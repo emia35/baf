@@ -3823,6 +3823,35 @@ body.seq-selection .seq-case .seq-vide{display:none;}
 .jf-bloc{position:absolute;top:22px;height:34px;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:0 6px;border-radius:8px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.7);font-size:11.5px;font-weight:600;color:var(--slate-deep);white-space:nowrap;}
 .jf-bloc.transition{background:repeating-linear-gradient(135deg,transparent 0 5px,var(--line-feuille) 5px 7px);font-style:italic;font-weight:500;color:var(--ink-faint);}
 @media(max-width:900px){.m1-page{grid-template-columns:minmax(0,1fr);}.m1-sommaire{display:none;}#m1-p-personne{grid-template-columns:minmax(0,1fr);}}
+/* ── Les pages autour (passe 192) : Repères avec sommaire et recherche, Ressources en grille, lecture en serif. ── */
+#view-reperes.show{display:grid;grid-template-columns:200px minmax(0,1fr);column-gap:28px;align-items:start;}
+#view-reperes > *{grid-column:2;min-width:0;}
+#view-reperes > .mod-header{grid-column:1 / -1;}
+#view-reperes > .reperes-sommaire{grid-column:1;grid-row:2 / span 5;position:sticky;top:calc(var(--header-h,60px) + var(--subbar-h,0px) + 18px);flex-direction:column;align-items:stretch;gap:2px;margin:0;}
+.reperes-sommaire button{display:block;padding:6px 10px;border:0;border-radius:9px;background:transparent;font:600 13px var(--police-interface);color:var(--ink-soft);text-align:left;}
+.reperes-sommaire button:hover{border:0;background:var(--sheet);color:var(--ink);}
+.reperes-cherche{height:34px;margin:0 0 4px;padding:0 10px;border:1.5px solid var(--line-soft);border-radius:9px;background:var(--sheet);font:13px var(--police-interface);color:var(--ink);}
+.reperes-compte{margin:0 10px 6px;font-size:11.5px;color:var(--ink-faint);}
+.reperes-compte:empty{display:none;}
+#view-reperes .res-cat-titre{margin-top:28px;}
+#view-reperes .res-cat-titre.premier{margin-top:0;}
+.repere-q summary{font-size:15px;}
+.repere-q summary::after,.repere-q summary:hover{color:var(--slate);}
+.repere-r{font-size:15.5px;line-height:1.7;color:var(--ink);text-align:left;}
+.repere-equation{border-left:0;border-radius:10px;background:var(--surface);}
+.res-docs{grid-template-columns:repeat(2,minmax(0,1fr));}
+.res-doc{display:flex;flex-direction:column;border:0;border-radius:var(--rayon-feuille);background:var(--sheet);box-shadow:var(--ombre-legere);}
+.res-doc > .btn,.res-doc > button{align-self:flex-start;margin-top:auto;}
+.res-doc-ico{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:10px;background:var(--surface);font-size:17px;}
+.res-doc-desc{font:400 14.5px/1.55 var(--police-lecture);}
+.res-cat-titre{color:var(--ink);}
+.res-cat-intro{font:400 15px/1.6 var(--police-lecture);text-align:left;}
+#view-apropos .card{max-width:820px;padding:24px 30px;}
+#view-apropos .card p{font:400 16px/1.7 var(--police-lecture);color:var(--ink);text-align:left;}
+#view-notes .nv-corps p,#view-notes .nv-corps li{font:400 15px/1.65 var(--police-lecture);}
+#view-notes .note-v summary:hover .nv-titre{color:var(--slate);}
+.parcours-ligne{font:400 15px/1.6 var(--police-lecture);}
+@media(max-width:900px){#view-reperes.show{display:block;}#view-reperes > .reperes-sommaire{position:static;flex-direction:row;flex-wrap:wrap;margin:0 0 16px;}.res-docs{grid-template-columns:minmax(0,1fr);}}
 #tiroir-notes .analyse-notes-champ{min-height:240px;margin:0;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font:400 14.5px/1.6 var(--police-lecture);resize:vertical;}
 .analyse-note{margin:0 0 14px;font-size:13px;color:var(--ink-soft);}
 .analyse-champ{margin:0 0 12px;padding:10px 14px;background:var(--card);border:1px solid var(--line);border-radius:10px;}
@@ -4018,6 +4047,8 @@ body.seq-selection .seq-case .seq-vide{display:none;}
       <div class="sub">Ce qu'il faut avoir en tête avant de se lancer, le vocabulaire qu'on emploie, et ce sur quoi la BAF s'appuie. À lire une fois, à revenir consulter au besoin.</div>
     </div>
     <div class="reperes-sommaire">
+      <input type="search" class="reperes-cherche" placeholder="Chercher une question, un mot…" aria-label="Chercher dans les questions et le lexique" oninput="chercherReperes(this.value)">
+      <span class="reperes-compte" id="reperes-compte" aria-live="polite"></span>
       <button type="button" onclick="allerAPartieReperes('reperes-faq')">FAQ</button>
       <button type="button" onclick="allerAPartieReperes('reperes-lexique')">Lexique</button>
       <button type="button" onclick="allerAPartieReperes('reperes-biblio')">Bibliographie</button>
@@ -15659,6 +15690,19 @@ const _CONTROLES = [
     } finally { state.m1 = JSON.parse(avant); renderCreneauList(); }
   }},
 
+  {nom:'Repères : une recherche dans les questions et le lexique', test: () => {
+    renderReperes();
+    const tous = document.querySelectorAll('#view-reperes .repere-q').length;
+    chercherReperes('zzzrienzzz');
+    const aucun = document.querySelectorAll('#view-reperes .repere-q:not([hidden])').length;
+    chercherReperes('vase');
+    const certains = document.querySelectorAll('#view-reperes .repere-q:not([hidden])').length;
+    const attendus = [...document.querySelectorAll('#view-reperes .repere-q')].filter(d => d.textContent.toLowerCase().indexOf('vase') >= 0).length;
+    chercherReperes('');
+    const revenus = document.querySelectorAll('#view-reperes .repere-q:not([hidden])').length;
+    return _bancEgal('rien trouvé | les bonnes réponses | tout revient', '0 | true | true', [aucun, certains === attendus && certains > 0 && certains < tous, revenus === tous].join(' | '));
+  }},
+
   {nom:'Synthèse, les pistes : au moins 5 épisodes et 1,4 fois l\'ordinaire (●●● à 10 et 2 fois), triées ; épinglées dans le fichier socle, pas dans un codage vierge', test: () => {
     const regle = [soliditePiste(10, .5, .25), soliditePiste(9, .5, .25), soliditePiste(10, .49, .25), soliditePiste(5, .42, .3), soliditePiste(5, .41, .3), soliditePiste(4, .9, .1)].join(',');
     refreshSynthese();
@@ -21964,7 +22008,7 @@ function renderParcours() {
       (gras ? ' font-weight="700"' : '') + ' fill="' + couleur + '">' + esc(t) + '</text>';
   const boite = (e) =>
     '<rect x="' + e.x + '" y="' + Y + '" width="' + (e.l || L) + '" height="' + H + '" rx="9" ' +
-      'fill="var(--card)" stroke="var(--slate)" stroke-width="1.6"/>' +
+      'fill="var(--sheet)" stroke="var(--line)" stroke-width="1.2"/>' +
     texte(e.x + (e.l || L) / 2, Y + 24, e.nom, 14, 'var(--ink)', true) +
     texte(e.x + (e.l || L) / 2, Y + 42, e.sous, 11.5, 'var(--ink-soft)');
   const fleche = (x1, x2, y, couleur) =>
@@ -21979,7 +22023,7 @@ function renderParcours() {
       'aria-label="Le parcours d\'une analyse fonctionnelle : construire un déclaratif de qualité, écrire l\'analyse fonctionnelle, l\'évaluer">' +
 
     // 1 · Construire un déclaratif de qualité
-    '<rect x="14" y="10" width="812" height="262" rx="14" fill="var(--paper)" stroke="var(--slate)" stroke-width="1.8"/>' +
+    '<rect x="14" y="10" width="812" height="262" rx="14" fill="var(--surface)" stroke="var(--line-feuille)" stroke-width="1.2"/>' +
     texte(34, 40, '1 · CONSTRUIRE UN DÉCLARATIF DE QUALITÉ', 13.5, 'var(--slate)', true, 'start') +
     texte(806, 40, 'le RDAF, dans la BAF', 11.5, 'var(--ink-soft)', false, 'end') +
     etapes.map(boite).join('') +
@@ -21997,7 +22041,7 @@ function renderParcours() {
 
     // 2 · Analyse fonctionnelle
     flecheBas(185, 272, 318, 'var(--slate)') +
-    '<rect x="40" y="318" width="290" height="80" rx="12" fill="var(--card)" stroke="var(--slate)" stroke-width="1.8"/>' +
+    '<rect x="40" y="318" width="290" height="80" rx="12" fill="var(--sheet)" stroke="var(--line)" stroke-width="1.2"/>' +
     texte(185, 344, '2 · Analyse fonctionnelle', 14, 'var(--ink)', true) +
     texte(185, 364, 'les hypothèses de fonction,', 11.5, 'var(--ink-soft)') +
     texte(185, 381, 'écrites à partir de la synthèse', 11.5, 'var(--ink-soft)') +
@@ -24152,6 +24196,21 @@ const NOTES_VERSION = [
 
   {
     date: '2026-10-09',
+    version: 'v2026.10.09-12',
+    titre: "Les pages autour : Repères avec une recherche, Ressources en grille",
+    corps: `
+<p><b>Les pages autour</b> (Arthur et Émilie — rafraîchir le reste de la BAF, passe 6 sur 10) :</p>
+<ul>
+<li><b>Repères</b> : le sommaire passe à gauche et reste visible ; au-dessus, <b>une recherche</b> dans les questions et dans le lexique (« vase », « primo codage »…) — ce qui ne contient pas le mot se masque, une réponse où il se trouve s'ouvre. Les réponses sont en texte de lecture.</li>
+<li><b>Ressources</b> : les documents en grille de deux, en feuilles, l'icône dans une pastille.</li>
+<li><b>À propos</b> et <b>les notes de version</b> : en texte de lecture, sur une largeur confortable.</li>
+<li><b>Le parcours</b> : le dessin garde sa forme, sans contours sombres.</li>
+</ul>
+`
+  },
+
+  {
+    date: '2026-10-09',
     version: 'v2026.10.09-11',
     titre: "Le Préambule en parties ; les heures au quart d'heure (correctif)",
     corps: `
@@ -25923,6 +25982,22 @@ function renderReperes() {
         "Ceux que l'outil emploie pour organiser son travail. Ils n'ont pas cours ailleurs, ou pas dans ce sens précis.")}
     </div>`;
   el.innerHTML = html;
+}
+
+/* Chercher dans les Repères (passe 192) : les questions et les mots qui contiennent ce qu'on tape restent ; une réponse
+   où le mot se trouve s'ouvre. */
+function chercherReperes(v) {
+  const q = String(v || '').trim().toLowerCase();
+  document.querySelectorAll('#view-reperes .repere-q').forEach(d => {
+    const ok = !q || d.textContent.toLowerCase().indexOf(q) >= 0;
+    d.hidden = !ok;
+    if (q && ok && d.querySelector('summary').textContent.toLowerCase().indexOf(q) < 0) d.open = true;
+  });
+  document.querySelectorAll('#reperes-contenu > .card, #reperes-contenu .lexique-groupe').forEach(b => { b.hidden = !!q && !b.querySelector('.repere-q:not([hidden])'); });
+  document.querySelectorAll('#view-reperes .repere-groupe').forEach(h => { h.hidden = !!q; });
+  const n = q ? document.querySelectorAll('#view-reperes .repere-q:not([hidden])').length : null;
+  const el = document.getElementById('reperes-compte');
+  if (el) el.textContent = n === null ? '' : (n ? n + ' réponse' + (n > 1 ? 's' : '') : 'Rien trouvé');
 }
 
 /* Les trois parties des Repères à un clic : en bas d'une longue page, la
