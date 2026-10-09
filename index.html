@@ -3439,7 +3439,8 @@ body.seq-selection .seq-ici:not(:disabled){display:block;}
 body.seq-selection .seq-case .seq-vide{display:none;}
 .seq-chip{position:relative;display:flex;align-items:flex-start;gap:8px;margin:0 -8px;padding:5px 8px;border-radius:9px;transition:background .15s,box-shadow .15s;}
 .seq-chip:hover{background:var(--surface);}
-.seq-chip.allume{background:var(--sel-pale);box-shadow:inset 0 0 0 1.5px var(--sel-deep);}
+.seq-chip.allume,.seq-chip.flash{background:var(--sel-pale);box-shadow:inset 0 0 0 1.5px var(--sel-deep);}
+#declaratif-brut mark.seq-m{cursor:pointer;}
 .seq-chip-num{flex:none;min-width:40px;margin-top:3px;font-size:10.5px;font-weight:700;color:var(--c);font-variant-numeric:tabular-nums;}
 .seq-chip-corps{flex:1;min-width:0;}
 .seq-chip-texte{display:block;font:400 14.5px/1.55 var(--police-lecture);color:var(--ink);cursor:pointer;overflow-wrap:anywhere;}
@@ -6143,7 +6144,7 @@ function chipSeq(evt, seq, cle, cit, noms) {
   }
   return '<div class="seq-chip' + (effet ? ' seq-chip-iv' : '') + '" data-cit="' + esc(cit.id) + '" style="--c:' + couleurCleSeq(cle) + ';">' +
     '<span class="seq-chip-num" title="' + esc(nom) + '">' + esc(numeroSeulSeq(nom)) + '</span>' +
-    '<div class="seq-chip-corps"><span class="seq-chip-texte" title="Voir ce passage dans le déclaratif" onclick="montrerCitSeq(\'' + esc(cit.id) + '\')">« ' + esc(texte.length > 220 ? texte.slice(0, 219) + '…' : texte) + ' »</span>' +
+    '<div class="seq-chip-corps"><span class="seq-chip-texte" title="Cliquer : voir ce passage dans le déclaratif" onclick="montrerCitSeq(\'' + esc(cit.id) + '\')">« ' + esc(texte.length > 220 ? texte.slice(0, 219) + '…' : texte) + ' »</span>' +
       (aussi.length ? '<span class="seq-chip-aussi" title="Le même passage est aussi rangé là">↺ aussi ' + esc(aussi.join(', ')) + '</span>' : '') + effet + '</div>' +
     '<span class="seq-chip-actions"><button type="button" class="seq-chip-deplacer" title="Déplacer, ou mettre aussi ailleurs" aria-label="Déplacer ou copier ce passage" onclick="ouvrirMenuCitSeq(\'' + esc(cit.id) + '\', this)">⇄</button>' +
       '<button type="button" class="seq-chip-x" title="Retirer ce passage (le texte redevient « pas encore traité »)" aria-label="Retirer" onclick="retirerCitSeq(\'' + esc(cit.id) + '\')">✕</button></span></div>';
@@ -6229,19 +6230,20 @@ function ouvrirMenuCitSeq(id, bouton) {
   m.style.top = Math.max(10, Math.min(r.bottom + 6, window.innerHeight - m.offsetHeight - 10)) + 'px';
   setTimeout(() => document.addEventListener('mousedown', fermerMenuCitDehors, true), 0);
 }
-/* Survoler un passage l'allume des deux côtés : dans le déclaratif et dans la frise. Si son double est hors de vue dans
-   l'autre panneau, ce panneau défile pour le montrer (Arthur, 09/10/2026) — après un court arrêt de la souris, pour que
-   rien ne bouge quand elle ne fait que passer, et seulement s'il le faut. */
+/* Un seul fonctionnement des deux côtés (Arthur, 09/10/2026) : survoler un passage l'allume dans l'autre panneau, sans rien
+   faire défiler ; cliquer un passage fait défiler l'autre panneau jusqu'à son double, s'il est hors de vue, et le fait
+   clignoter. Du déclaratif vers la frise comme de la frise vers le déclaratif. */
 function allumerCitSeq(ids, on) {
   if (!ids.length) return;
   document.querySelectorAll('#decouper-panneau .seq-chip[data-cit]').forEach(x => { if (ids.indexOf(x.dataset.cit) !== -1) x.classList.toggle('allume', on); });
   document.querySelectorAll('#declaratif-brut mark.seq-m').forEach(m => { if ((m.dataset.cit || '').split(' ').some(x => ids.indexOf(x) !== -1)) m.classList.toggle('allume', on); });
 }
-// Le double du passage survolé, dans l'autre panneau ; le panneau qui le contient défile jusqu'à lui s'il est hors de vue.
-function montrerDoubleCitSeq(ids, source) {
-  const doubles = source.matches('mark')
+// Le double du passage cliqué, dans l'autre panneau : il clignote, et le panneau qui le contient défile jusqu'à lui s'il est hors de vue.
+function montrerDoubleCitSeq(ids, versFrise) {
+  const doubles = versFrise
     ? [...document.querySelectorAll('#decouper-panneau .seq-chip[data-cit]')].filter(x => ids.indexOf(x.dataset.cit) !== -1)
     : [...document.querySelectorAll('#declaratif-brut mark.seq-m')].filter(m => (m.dataset.cit || '').split(' ').some(x => ids.indexOf(x) !== -1));
+  doubles.forEach(x => { x.classList.remove('flash'); void x.offsetWidth; x.classList.add('flash'); setTimeout(() => x.classList.remove('flash'), 1400); });
   const el = doubles.find(x => x.getClientRects().length);
   if (!el) return false;
   let boite = el.parentElement;
@@ -6254,15 +6256,19 @@ function montrerDoubleCitSeq(ids, source) {
   boite.scrollTo({top: Math.max(0, haut), behavior: doux ? 'smooth' : 'auto'});
   return true;
 }
-let defilementCitSeq = null;
 ['mouseover', 'mouseout'].forEach(type => document.addEventListener(type, ev => {
   const t = ev.target.closest && ev.target.closest('#declaratif-brut mark.seq-m, #decouper-panneau .seq-chip[data-cit]');
   if (!t || (ev.relatedTarget && t.contains(ev.relatedTarget))) return;
-  const ids = (t.dataset.cit || '').split(' ').filter(Boolean);
-  allumerCitSeq(ids, type === 'mouseover');
-  clearTimeout(defilementCitSeq);
-  if (type === 'mouseover' && ids.length) defilementCitSeq = setTimeout(() => montrerDoubleCitSeq(ids, t), 250);
+  allumerCitSeq((t.dataset.cit || '').split(' ').filter(Boolean), type === 'mouseover');
 }));
+// Cliquer un passage rangé du déclaratif le montre dans la frise. Un glisser qui sélectionne du texte n'est pas un clic pour voir.
+document.addEventListener('click', ev => {
+  const m = ev.target.closest && ev.target.closest('#declaratif-brut mark.seq-m');
+  if (!m) return;
+  const sel = window.getSelection();
+  if (sel && !sel.isCollapsed) return;
+  montrerDoubleCitSeq((m.dataset.cit || '').split(' ').filter(Boolean), true);
+});
 /* La barre de sélection au clavier : 1 à 6 rangent, Échap renonce. Le menu flottant se ferme aussi avec Échap. */
 document.addEventListener('keydown', ev => {
   if (ev.key === 'Escape' && document.getElementById('menu-cit-seq')) { fermerMenuCitSeq(); return; }
@@ -6354,12 +6360,8 @@ function recommencerSeq() {
   t.propose = false;
   renderDecouper(); renderDeclaratifBrut();
 }
-function montrerCitSeq(id) {
-  const marques = [...document.querySelectorAll('#declaratif-brut .seq-m')].filter(m => (m.dataset.cit || '').split(' ').indexOf(id) !== -1);
-  if (!marques.length) return;
-  marques[0].scrollIntoView({block: 'center', behavior: 'smooth'});
-  marques.forEach(m => { m.classList.add('flash'); setTimeout(() => m.classList.remove('flash'), 1400); });
-}
+// Cliquer un passage de la frise le montre dans le déclaratif (le même geste que dans l'autre sens).
+function montrerCitSeq(id) { montrerDoubleCitSeq([id], false); }
 function allerAuResteSeq() {
   const evt = analyseEpisodeCourant(); if (!evt) return;
   const r = couvertureSequence(evt, travailSeq(evt).seq).restes[0];
@@ -14172,7 +14174,7 @@ const _CONTROLES = [
         [p0, p2, p3].join(' # ') + ' # ' + [retour, defile, plusDeFlou, notesHorsPanneaux, tiroir, vueEnsemble].join(' | '));
     } finally { if (!etaitMontree) vue.classList.remove('show'); allerAnalyse(sauvePos, {sansDefilement: true}); }
   }},
-  {nom:'Déclaratif brut et Découper : une feuille, une barre sombre au clavier, une frise, le survol relie les deux', test: () => {
+  {nom:'Déclaratif brut et Découper : une feuille, une barre sombre au clavier, une frise ; le survol relie les deux, le clic montre le double', test: () => {
     const sauveEvts = state.m2.evenements, sauveM3 = JSON.stringify(state.m3), vraiPersist = persist, vraiConfirm = window.confirm;
     const sauveEp = analyseEtat().episode, sauvePos = analyseEtat().pos;
     const vue = document.getElementById('view-analyser'), etaitMontree = vue.classList.contains('show');
@@ -14204,6 +14206,12 @@ const _CONTROLES = [
       const allume = document.querySelectorAll('#decouper-panneau .seq-chip.allume').length > 0;
       marque.dispatchEvent(new MouseEvent('mouseout', {bubbles: true}));
       const eteint = document.querySelectorAll('#decouper-panneau .seq-chip.allume').length === 0;
+      // Un clic sur la marque montre son passage dans la frise ; un clic dans la frise montre la marque
+      const slc = getSelection(); if (slc) slc.removeAllRanges();
+      marque.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      const clicVersFrise = document.querySelectorAll('#decouper-panneau .seq-chip.flash').length > 0;
+      document.querySelector('#decouper-panneau .seq-chip[data-cit] .seq-chip-texte').click();
+      const clicVersTexte = document.querySelectorAll('#declaratif-brut mark.seq-m.flash').length > 0;
       // L'effet en un clic, recliquer l'efface
       const iv = sequenceActive(evt).phases[0].interventions[0];
       choisirEffetSeq(iv.id, 'descend');
@@ -14216,9 +14224,9 @@ const _CONTROLES = [
       const menu = document.querySelectorAll('#menu-cit-seq button[data-v]').length > 0;
       document.querySelector('#menu-cit-seq button[data-v="mv:consequence"]').click();
       const deplace = sequenceActive(evt).consequence.some(c => /Puis/.test(c.texte)) && !document.getElementById('menu-cit-seq');
-      return _bancEgal('groupes de la feuille | une feuille, sans cadres par case | contexte, une phase, conséquence | « ici » cachés sans sélection | barre sombre à six touches | « ici » visibles pendant la sélection | touche 3 : rangé en CD | barre refermée | survol : allumé | puis éteint | effet en un clic | recliquer l\'efface | menu flottant | déplacé',
-        'Le cadre,Pendant,Après | true | 3 | true | true | true | Il a crié. Puis il a tapé le mur. | Puis il a tapé le mur. | true | true | true | descend |  | true | true',
-        [groupes, feuille, frise, iciCaches, sombre, iciVisibles, range, fini, allume, eteint, effet1, effet2, menu, deplace].join(' | '));
+      return _bancEgal('groupes de la feuille | une feuille, sans cadres par case | contexte, une phase, conséquence | « ici » cachés sans sélection | barre sombre à six touches | « ici » visibles pendant la sélection | touche 3 : rangé en CD | barre refermée | survol : allumé | puis éteint | clic sur le texte : montré dans la frise | clic dans la frise : montré dans le texte | effet en un clic | recliquer l\'efface | menu flottant | déplacé',
+        'Le cadre,Pendant,Après | true | 3 | true | true | true | Il a crié. Puis il a tapé le mur. | Puis il a tapé le mur. | true | true | true | true | true | descend |  | true | true',
+        [groupes, feuille, frise, iciCaches, sombre, iciVisibles, range, fini, allume, eteint, clicVersFrise, clicVersTexte, effet1, effet2, menu, deplace].join(' | '));
     } finally {
       persist = vraiPersist; window.confirm = vraiConfirm; state.m2.evenements = sauveEvts; state.m3 = JSON.parse(sauveM3);
       analyseEtat().episode = sauveEp; analyseEtat().pos = sauvePos; oublierTravailSeq(); fermerMenuCitSeq();
@@ -23607,6 +23615,15 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-09',
+    version: 'v2026.10.09-5',
+    titre: "Découper : survoler allume, cliquer montre — des deux côtés",
+    corps: `
+<p><b>Découper</b> (Arthur et Émilie) : un seul fonctionnement, des deux côtés. <b>Survoler</b> un passage, dans le déclaratif brut ou dans la frise, l'allume de l'autre côté, sans rien faire défiler. <b>Cliquer</b> un passage fait défiler l'autre panneau jusqu'à son double, s'il est hors de vue, et le fait clignoter. Cela remplace le défilement au survol de la version précédente. Sélectionner du texte en glissant reste un geste à part : il ne déclenche rien.</p>
+`
+  },
 
   {
     date: '2026-10-09',
