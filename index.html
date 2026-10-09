@@ -3710,6 +3710,62 @@ body.seq-selection .seq-case .seq-vide{display:none;}
 .entree-card .entree-cta{border:0;background:var(--rose-pale);color:var(--prune-deep);}
 @media(max-width:900px){.parcours-outil{grid-template-columns:repeat(2,minmax(0,1fr));}.raccourcis-outil{grid-template-columns:minmax(0,1fr);}}
 @media(max-width:560px){.parcours-outil{grid-template-columns:minmax(0,1fr);}.po-etape{min-height:0;}}
+/* ── Recueillir (passe 188) : une liste en lignes qu'on parcourt d'un coup d'œil, des filtres, les mois sur le côté. ── */
+#m2-intro-card{display:flex;align-items:center;flex-wrap:wrap;gap:10px 16px;margin:0 0 6px;padding:14px 18px;border:0;border-radius:var(--rayon-feuille);background:var(--sheet);box-shadow:var(--ombre-legere);text-align:left;}
+#m2-intro-card > p{flex:1 1 300px;margin:0;font:400 15px/1.5 var(--police-lecture);color:var(--ink-soft);}
+#m2-intro-card .m2-contrib-compteur{flex-basis:100%;margin:0;text-align:right;}
+.recueil-page{display:grid;grid-template-columns:200px minmax(0,1fr);gap:24px;align-items:start;margin-top:18px;}
+.recueil-cote{position:sticky;top:calc(var(--header-h,60px) + var(--subbar-h,0px) + 16px);display:flex;flex-direction:column;gap:12px;}
+.recueil-mois{display:flex;flex-direction:column;gap:2px;}
+.recueil-titre-s{margin:0 10px 6px;font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-faint);}
+.recueil-mois button{display:grid;grid-template-columns:64px minmax(0,1fr) 24px;align-items:center;gap:8px;padding:6px 10px;border:0;border-radius:9px;background:transparent;font-size:13px;color:var(--ink-soft);text-align:left;}
+.recueil-mois button:hover{background:var(--sheet);color:var(--ink);}
+.recueil-mois button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-transform:capitalize;}
+.recueil-mois button i{height:6px;border-radius:3px;background:var(--sauge);}
+.recueil-mois button small{text-align:right;color:var(--ink-faint);font-size:11.5px;}
+.recueil-cote .m2-periode-ligne{display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin:0;padding:12px;border-radius:12px;background:var(--sheet);box-shadow:var(--ombre-legere);font-size:12.5px;text-align:left;}
+.recueil-cote .sources-liste{flex-direction:column;align-items:stretch;}
+.recueil-filtres{position:sticky;top:calc(var(--header-h,60px) + var(--subbar-h,0px) + 10px);z-index:5;flex-wrap:wrap;gap:10px;margin:0 0 6px;}
+.recueil-filtres[hidden]{display:none;}
+.recueil-filtres select,.recueil-filtres input{height:32px;padding:0 10px;border:1.5px solid var(--line-soft);border-radius:9px;background:var(--surface);font:13px var(--police-interface);color:var(--ink);}
+.recueil-filtres input{flex:1;min-width:150px;}
+.recueil-titre{margin:14px 0 0;font-size:15px;color:var(--ink);}
+.recueil-titre span{font-size:12.5px;font-weight:400;color:var(--ink-faint);}
+.recueil-liste .event-list{gap:0;margin-top:0;}
+.ev-groupe-mois{display:flex;align-items:baseline;gap:10px;margin:18px 0 8px;padding:0;border:0;scroll-margin-top:calc(var(--header-h,60px) + var(--subbar-h,0px) + 70px);font-size:15px;text-transform:none;letter-spacing:0;color:var(--ink);}
+.ev-groupe-mois small{font-size:12px;font-weight:500;color:var(--ink-faint);}
+.ev-feuille{border-radius:var(--rayon-feuille);background:var(--sheet);box-shadow:var(--ombre-feuille);overflow:hidden;}
+.ev-groupe-semaine{margin:0;padding:9px 16px 2px;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);}
+.event-item{display:grid;grid-template-columns:30px 146px minmax(0,1fr) auto auto 26px;align-items:center;gap:12px;margin:0;padding:9px 14px;border:0;border-top:1px solid var(--line-feuille);border-radius:0;background:transparent;box-shadow:none;cursor:pointer;}
+.ev-feuille > .event-item:first-child,.ev-groupe-semaine + .event-item{border-top:0;}
+.event-item:hover{border-color:var(--line-feuille);background:var(--surface);box-shadow:none;}
+.event-item .ev-num{width:auto;height:auto;border-radius:0;background:none;font-size:12px;font-weight:700;color:var(--ink-faint);text-align:right;}
+.ev-quand{min-width:0;}
+.ev-quand b{display:block;font-size:13px;white-space:nowrap;}
+.ev-quand span{display:block;font-size:12px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.event-item .ev-desc{min-width:0;margin:0;font:400 15px/1.45 var(--police-lecture);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ev-tags{display:flex;align-items:center;gap:5px;}
+.ev-pastille{display:inline-block;padding:1px 8px;border-radius:999px;background:var(--surface);font-size:11.5px;font-weight:600;color:var(--ink-soft);white-space:nowrap;}
+.event-item:hover .ev-pastille{background:var(--sheet);}
+.ev-etat{display:flex;align-items:center;justify-content:flex-end;gap:8px;}
+.ev-decouper{opacity:0;padding:0;border:0;background:none;font:600 12px var(--police-interface);color:var(--slate);transition:opacity .15s;}
+.event-item:hover .ev-decouper,.ev-decouper:focus-visible{opacity:1;}
+.ev-anneau{width:18px;height:18px;border-radius:50%;background:conic-gradient(var(--sauge-deep) var(--p,0%),var(--line) 0);-webkit-mask:radial-gradient(circle 5px,transparent 98%,#000 100%);mask:radial-gradient(circle 5px,transparent 98%,#000 100%);}
+.ev-suppr{opacity:0;padding:2px 4px;border:0;background:none;font-size:13px;color:var(--ink-faint);}
+.event-item:hover .ev-suppr,.ev-suppr:focus-visible{opacity:1;}
+.recueil-liste .event-empty{padding:18px;border-radius:var(--rayon-feuille);background:var(--sheet);text-align:center;}
+@media(max-width:900px){
+  .recueil-page{grid-template-columns:minmax(0,1fr);}
+  .recueil-cote{position:static;}
+  .recueil-filtres{position:static;}
+  .recueil-mois{display:none;}
+  .event-item{grid-template-columns:24px minmax(0,1fr) 22px;grid-template-areas:"n q e" "n d e";row-gap:2px;}
+  .event-item .ev-num{grid-area:n;align-self:start;}
+  .ev-quand{grid-area:q;}
+  .event-item .ev-desc{grid-area:d;white-space:normal;}
+  .ev-etat{grid-area:e;}
+  .ev-tags,.ev-suppr,.ev-decouper{display:none;}
+}
 #tiroir-notes .analyse-notes-champ{min-height:240px;margin:0;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font:400 14.5px/1.6 var(--police-lecture);resize:vertical;}
 .analyse-note{margin:0 0 14px;font-size:13px;color:var(--ink-soft);}
 .analyse-champ{margin:0 0 12px;padding:10px 14px;background:var(--card);border:1px solid var(--line);border-radius:10px;}
@@ -4378,8 +4434,8 @@ body.seq-selection .seq-case .seq-vide{display:none;}
 
     <div id="m2-rapide-content">
     <div id="m2-bandeau-provisoire"></div>
-    <div class="card" id="m2-intro-card" style="text-align:center;">
-      <p style="font-size:14px;color:var(--ink-soft);">On vous guide pas à pas, une question à la fois — un peu comme si l'équipe était face à vous.</p>
+    <div class="card" id="m2-intro-card">
+      <p>On vous guide pas à pas, une question à la fois — un peu comme si l'équipe était face à vous.</p>
       <div class="m2-intro-actions">
         <button class="btn btn-primary" onclick="ouvrirAjoutEpisodes()">+ Ajouter un ou des épisodes</button>
         <button class="btn btn-secondary analyste-seul" onclick="ouvrirFenetre('kit-overlay')">✉ Transmettre un fichier déclarant</button>
@@ -4387,18 +4443,23 @@ body.seq-selection .seq-case .seq-vide{display:none;}
       <div class="m2-contrib-compteur analyste-seul" id="m2-contrib-compteur"></div>
     </div>
 
-    <div id="m2-couverture"></div>
-
     <div class="card declarant-seul declarant-visibilite">
       Vous ne voyez ici que les épisodes que vous avez décrits. Seuls les référents de la démarche d'analyse fonctionnelle voient l'ensemble des épisodes.
     </div>
 
-    <div class="card">
-      <h4 style="font-size:16px;color:var(--ink);margin-bottom:4px;">Épisodes déjà décrits <span id="m2-compteur" style="color:var(--ink-soft);font-weight:400;font-size:13px;"></span></h4>
-      <div id="m2-brouillon-banner" class="ethique no-print" style="display:none;background:var(--rose-pale);border-left:3px solid var(--sauge-deep);padding:10px 14px;margin-bottom:14px;font-size:13px;"></div>
-      <div id="m2-sources" class="no-print"></div>
-      <div class="event-list" id="m2-event-list">
-        <div class="event-empty">Aucun épisode déclaré pour le moment.</div>
+    <div class="recueil-page">
+      <aside class="recueil-cote">
+        <nav class="recueil-mois no-print" id="m2-mois" aria-label="Aller à un mois"></nav>
+        <div id="m2-couverture"></div>
+        <div id="m2-sources" class="no-print"></div>
+      </aside>
+      <div class="recueil-liste">
+        <div class="barre-fixe recueil-filtres no-print" id="m2-filtres" hidden></div>
+        <div id="m2-brouillon-banner" class="ethique no-print" style="display:none;background:var(--rose-pale);border-left:3px solid var(--sauge-deep);padding:10px 14px;margin-bottom:14px;font-size:13px;"></div>
+        <h4 class="recueil-titre">Épisodes déjà décrits <span id="m2-compteur"></span></h4>
+        <div class="event-list" id="m2-event-list">
+          <div class="event-empty">Aucun épisode déclaré pour le moment.</div>
+        </div>
       </div>
     </div>
 
@@ -7757,25 +7818,6 @@ function loadM1FromState(){
   verifierCouvertureHoraire();
 }
 
-function refreshM2List(){
-  const list = document.getElementById('m2-event-list');
-  const evts = state.m2.evenements || [];
-  document.getElementById('m2-compteur').textContent = evts.length ? '('+evts.length+' / 100)' : '';
-  if(evts.length === 0){
-    list.innerHTML = '<div class="event-empty">Aucun épisode déclaré pour le moment.</div>';
-    return;
-  }
-  list.innerHTML = evts.map((e,i)=>`
-    <div class="event-item" onclick="ouvrirEpisode(${i})">
-      <div class="ev-num">${i+1}</div>
-      <div class="ev-info">
-        <div class="ev-date">${e.date || 'Date non précisée'}${e.heure ? ' — '+e.heure : ''}</div>
-        <div class="ev-desc">${(e.description || 'Pas encore de description').substring(0,90)}${(e.description||'').length>90?'…':''}</div>
-      </div>
-      <div class="ev-arrow">→</div>
-    </div>
-  `).join('');
-}
 
 
 /* ============================================================
@@ -9660,6 +9702,75 @@ function annulerFormulaireEvt() {
   route('m2');
 }
 
+/* ── Recueillir (passe 188) : des filtres, et les mois sur le côté ──────────────────────────────────────────────────
+   Les filtres ne changent que ce qu'on voit, jamais les épisodes ; ils ne sont pas enregistrés dans le fichier. */
+let filtresM2 = {etat: 'tous', declarant: '', moment: '', texte: ''};
+function texteDeEvt(e) {
+  const out = [];
+  const lire = v => { if (typeof v === 'string') out.push(v); else if (v && typeof v === 'object') Object.keys(v).forEach(k => { if (k !== 'id') lire(v[k]); }); };
+  lire(e);
+  return out.join(' ').toLowerCase();
+}
+function garderEvtM2(e) {
+  const f = filtresM2;
+  if (filtreSourceChrono && libelleSource(e) !== filtreSourceChrono) return false;
+  if (f.etat === 'adecouper' && episodeDecoupe(e)) return false;
+  if (f.declarant && cleDeclarant(e.declarant || '') !== f.declarant) return false;
+  if (f.moment && (normaliseMoment(e.moment) || '') !== f.moment) return false;
+  if (f.texte && texteDeEvt(e).indexOf(f.texte.toLowerCase()) < 0) return false;
+  return true;
+}
+function filtrerM2(cle, valeur) { filtresM2[cle] = valeur; refreshM2List(); }
+let minuterieRechercheM2 = null;
+function chercherM2(v) { clearTimeout(minuterieRechercheM2); minuterieRechercheM2 = setTimeout(() => filtrerM2('texte', String(v || '').trim()), 150); }
+function effacerFiltresM2() {
+  filtresM2 = {etat: 'tous', declarant: '', moment: '', texte: ''};
+  filtreSourceChrono = null;
+  const t = document.getElementById('m2-f-texte');
+  if (t) t.value = '';
+  refreshM2List();
+}
+function renderFiltresM2(evts) {
+  const el = document.getElementById('m2-filtres');
+  if (!el) return;
+  el.hidden = !evts.length;
+  if (!evts.length) return;
+  const f = filtresM2;
+  // Le champ de recherche n'est posé qu'une fois : on ne le redessine pas pendant qu'on tape.
+  if (!el.dataset.pret) {
+    el.dataset.pret = '1';
+    el.innerHTML = '<div class="segment" id="m2-f-etat"></div>' +
+      '<select id="m2-f-declarant" aria-label="Filtrer par déclarant" onchange="filtrerM2(\'declarant\', this.value)"></select>' +
+      '<select id="m2-f-moment" aria-label="Filtrer par moment de la journée" onchange="filtrerM2(\'moment\', this.value)"></select>' +
+      '<input type="search" id="m2-f-texte" placeholder="Chercher dans le texte…" aria-label="Chercher dans le texte des épisodes" oninput="chercherM2(this.value)">';
+  }
+  const aDecouper = evts.filter(e => !episodeDecoupe(e)).length;
+  document.getElementById('m2-f-etat').innerHTML = [['tous', 'Tous', evts.length], ['adecouper', 'À découper', aDecouper]].map(([k, l, c]) =>
+    '<button type="button" class="' + (f.etat === k ? 'on' : '') + (k === 'adecouper' ? ' analyste-seul' : '') + '" onclick="filtrerM2(\'etat\', \'' + k + '\')">' + l + ' <small>' + c + '</small></button>').join('');
+  const decl = {};
+  evts.forEach(e => { const d = (e.declarant || '').trim(); if (d) decl[cleDeclarant(d)] = d; });
+  const s1 = document.getElementById('m2-f-declarant');
+  s1.innerHTML = '<option value="">Tous les déclarants</option>' + Object.keys(decl).sort((a, b) => a.localeCompare(b, 'fr')).map(k => '<option value="' + esc(k) + '">' + esc(decl[k]) + '</option>').join('');
+  s1.value = f.declarant;
+  s1.classList.toggle('analyste-seul', true);
+  const moments = [...new Set(evts.map(e => normaliseMoment(e.moment)).filter(Boolean))];
+  const s2 = document.getElementById('m2-f-moment');
+  s2.innerHTML = '<option value="">Tous les moments</option>' + moments.map(m => '<option value="' + esc(m) + '">' + esc(m) + '</option>').join('');
+  s2.value = f.moment;
+}
+function renderMoisM2(groupes) {
+  const el = document.getElementById('m2-mois');
+  if (!el) return;
+  const parCle = [];
+  groupes.forEach(x => { const y = parCle.find(z => z.cle === x.cle); if (y) y.n += x.n; else parCle.push({cle: x.cle, libelle: x.libelle, n: x.n}); });
+  if (parCle.length < 2) { el.innerHTML = ''; return; }
+  const annees = new Set(parCle.map(x => x.cle.slice(0, 4)));
+  const max = Math.max.apply(null, parCle.map(x => x.n));
+  el.innerHTML = '<span class="recueil-titre-s">Les mois</span>' + parCle.map(x =>
+    '<button type="button" onclick="allerMoisM2(\'' + x.cle + '\')"><span>' + esc(annees.size > 1 ? x.libelle : x.libelle.replace(/ \d{4}$/, '')) + '</span>' +
+      '<i style="width:' + Math.round(x.n / max * 100) + '%"></i><small>' + x.n + '</small></button>').join('');
+}
+function allerMoisM2(cle) { const t = document.getElementById('m2-mois-' + cle); if (t) t.scrollIntoView({behavior: 'smooth', block: 'start'}); }
 function supprimerEvt(idx, event) {
   event.stopPropagation(); // ne pas ouvrir l\'épisode
   if (!confirm('Supprimer cet épisode ? Cette action est irréversible.')) return;
@@ -9702,6 +9813,8 @@ function refreshM2List(){
 
   if(evts.length === 0){
     list.innerHTML = '<div class="event-empty">Aucun épisode déclaré pour le moment.</div>';
+    renderFiltresM2(evts);
+    renderMoisM2([]);
     return;
   }
 
@@ -9711,30 +9824,35 @@ function refreshM2List(){
   const src = sourcesDuSocle();
   const pastilles = sourcesVisibles();
   renderSourcesChrono(src);
+  renderFiltresM2(evts);
 
-  // Regroupement par mois puis par semaine : au-delà de quelques dizaines
-  // d'épisodes, une liste plate n'est plus lisible.
-  let html = '';
-  let moisCourant = null, semaineCourante = null;
+  /* Une liste en lignes, groupée par mois (chaque mois dans sa feuille) puis par semaine (passe 188). Les filtres — l'état
+     du découpage, le déclarant, le moment, une recherche dans le texte, la source — ne changent que ce qu'on voit. */
+  const fige = decoupageFige(), analyste = !modeDeclarantActif();
+  const JOURS_COURTS = ['dim.', 'lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.'];
+  const groupes = [];
+  let g = null, semaineCourante = null;
   evts.forEach((e, i) => {
-    if (filtreSourceChrono && libelleSource(e) !== filtreSourceChrono) return;
-    const d = e.date ? new Date(e.date) : null;
+    if (!garderEvtM2(e)) return;
+    const d = e.date ? new Date(e.date + 'T12:00:00') : null;
     const dateValide = d && !isNaN(d);
-    const mois = dateValide ? d.toLocaleDateString('fr-FR', {month:'long', year:'numeric'}) : 'Date non précisée';
-    const semaine = dateValide ? libelleSemaine(d) : null;
-    if (mois !== moisCourant) {
-      moisCourant = mois; semaineCourante = null;
-      html += `<div class="ev-groupe-mois">${esc(mois)}</div>`;
+    const cle = dateValide ? e.date.slice(0, 7) : 'sans-date';
+    if (!g || g.cle !== cle) {
+      const lib = dateValide ? d.toLocaleDateString('fr-FR', {month: 'long', year: 'numeric'}) : 'Date non précisée';
+      g = {cle, libelle: lib.charAt(0).toUpperCase() + lib.slice(1), n: 0, html: ''};
+      groupes.push(g);
+      semaineCourante = null;
     }
+    g.n++;
+    const semaine = dateValide ? libelleSemaine(d) : null;
     if (semaine && semaine !== semaineCourante) {
       semaineCourante = semaine;
-      html += `<div class="ev-groupe-semaine">${esc(semaine)}</div>`;
+      g.html += '<div class="ev-groupe-semaine">' + esc(semaine) + '</div>';
     }
     const desc = e.comportement
       ? e.comportement.substring(0,80) + (e.comportement.length > 80 ? '…' : '')
       : (e.texteBrut ? e.texteBrut.substring(0,80) + (e.texteBrut.length > 80 ? '…' : '') : (e.description ? e.description.substring(0,80) : 'Épisode sans description'));
-    const dateStr = e.date ? formatDate(e.date) : (e.date || 'Date non précisée');
-    const heureStr = e.heure ? ' — ' + e.heure : '';
+    const quand = (dateValide ? JOURS_COURTS[d.getDay()] + ' ' + d.getDate() + ' ' + d.toLocaleDateString('fr-FR', {month: 'short'}) : 'Date non précisée') + (e.heure ? ' · ' + e.heure : '');
     const brouillonTag = idsAvecBrouillon.has(e.id) ? '<span class="event-brouillon-tag" title="Modifications non validées">brouillon</span>' : '';
     const indirectTag = (e.temoin && e.temoin !== 'Témoin direct') ? `<span class="event-indirect-tag" title="${esc(e.temoin)}">${e.temoin === 'Rapporté par un tiers' ? 'rapporté' : 'après coup'}</span>` : '';
     const niveau = niveauDetailEvt(e);
@@ -9745,18 +9863,29 @@ function refreshM2List(){
       : `<span class="event-niveau-ico ${niveau}" role="img" aria-label="${libNiveau}" title="${libNiveau}">${niveau === 'detaille' ? '🔬' : '⚡'}</span>`;
     const lib = libelleSource(e);
     const sourceTag = pastilles ? `<span class="event-source-tag" style="background:${src.couleur[lib]};" title="${e.source ? 'Déclaré depuis : ' : 'Saisi par '}${esc(lib)}">${esc(lib)}</span>` : '';
-    html += `<div class="event-item" onclick="ouvrirEpisode(${i})">
-      <div class="ev-num">${i+1}</div>
-      <div class="ev-info">
-        <div class="ev-date">${esc(dateStr)}${esc(heureStr)}${e.moment ? ' · '+esc(e.moment) : ''} ${brouillonTag}${indirectTag}${sourceTag}</div>
-        <div class="ev-desc">${esc(desc)}</div>
-      </div>
-      ${niveauTag}
-      <button class="btn btn-ghost btn-sm no-print" onclick="supprimerEvt(${i},event)" style="flex-shrink:0;padding:6px 10px;font-size:12px;border-color:transparent;" title="Supprimer">🗑</button>
-      <div class="ev-arrow">→</div>
-    </div>`;
+    // L'anneau : où en est le découpage de l'épisode.
+    const rang = sequenceActive(e);
+    const p = rang ? (rang.termine ? 100 : 50) : (episodeDecoupe(e) ? 100 : 0);
+    const titreAnneau = p === 100 ? 'Découpé' : p ? 'Découpage commencé' : 'Pas encore découpé';
+    g.html += '<div class="event-item" onclick="ouvrirEpisode(' + i + ')">' +
+      '<span class="ev-num">' + (i + 1) + '</span>' +
+      '<span class="ev-quand"><b>' + esc(quand) + '</b><span>' + esc(e.moment || '') + '</span></span>' +
+      '<span class="ev-desc" title="' + esc(desc) + '">' + esc(desc) + '</span>' +
+      '<span class="ev-tags">' + brouillonTag + indirectTag + sourceTag + (analyste && e.declarant ? '<span class="ev-pastille">' + esc(e.declarant) + '</span>' : '') + niveauTag + '</span>' +
+      '<span class="ev-etat analyste-seul">' + (fige ? '' : '<button type="button" class="ev-decouper no-print" onclick="event.stopPropagation(); continuerDecoupage(' + i + ')">Découper →</button>') +
+        '<span class="ev-anneau" style="--p:' + p + '%" title="' + titreAnneau + '" aria-label="' + titreAnneau + '"></span></span>' +
+      '<button type="button" class="ev-suppr no-print" onclick="supprimerEvt(' + i + ',event)" title="Supprimer cet épisode" aria-label="Supprimer cet épisode">🗑</button>' +
+    '</div>';
   });
-  list.innerHTML = html;
+  const dejaVu = new Set();
+  list.innerHTML = groupes.length
+    ? groupes.map(x => {
+        const id = dejaVu.has(x.cle) ? '' : ' id="m2-mois-' + x.cle + '"';
+        dejaVu.add(x.cle);
+        return '<div class="ev-groupe-mois"' + id + '><b>' + esc(x.libelle) + '</b><small>' + x.n + ' épisode' + (x.n > 1 ? 's' : '') + '</small></div><div class="ev-feuille">' + x.html + '</div>';
+      }).join('')
+    : '<div class="event-empty">Aucun épisode ne correspond à ces filtres. <button type="button" class="bt-lien" onclick="effacerFiltresM2()">Tout afficher</button></div>';
+  renderMoisM2(groupes);
   const bandeau = document.getElementById('m2-bandeau-provisoire');
   if (bandeau) bandeau.innerHTML = state.provisoire
     ? '<div class="bandeau-provisoire"><b>🧱 Fichier socle provisoire.</b> Il a été reconstitué à partir de fichiers déclarants, pour les lire : ' +
@@ -11443,6 +11572,15 @@ function construireFichierWord(clone){
     .synth-barre .nom{display:inline-block;width:62%;font-size:9.5pt;}
     .synth-barre .b{display:none;}
     .synth-barre .n{display:inline-block;width:30%;font-size:9pt;color:#6B6152;}
+    .event-item{margin:0 0 3pt;padding:3pt 0;border-top:0.5pt solid #E8E2D6;}
+    .ev-num{font-weight:bold;color:#A39A8A;padding-right:6pt;}
+    .ev-quand b{padding-right:6pt;}
+    .ev-quand span{color:#6B6152;padding-right:6pt;}
+    .ev-desc{font-family:Georgia,'Times New Roman',serif;}
+    .ev-pastille{font-size:8pt;color:#6B6152;padding-left:4pt;}
+    .ev-groupe-mois{font-weight:bold;font-size:11pt;margin:10pt 0 3pt;}
+    .ev-groupe-mois small{font-weight:normal;color:#A39A8A;padding-left:6pt;}
+    .ev-groupe-semaine{font-size:8pt;color:#A39A8A;text-transform:uppercase;margin:4pt 0 0;}
     .synth-piste{border:0.75pt solid #E6DFD2;background:#FFFDF8;padding:8pt 10pt;margin:0 0 8pt;}
     .synth-solidite{font-size:8.5pt;font-weight:bold;color:#9C7A00;text-transform:uppercase;}
     .piste-phrase{font-family:Georgia,'Times New Roman',serif;font-size:11pt;margin:2pt 0 3pt;}
@@ -15303,6 +15441,33 @@ const _CONTROLES = [
     if (!montree) v.classList.remove('show');
     return _bancEgal('la règle (préambule incomplet ; complet ; épisodes à découper ; à classer ; tout fait) | quatre étapes | une seule en cours | son « continuer »',
       'm1,m2,analyser,analyser,synthese | 4 | 1 | true', [regle, etapes, ici, suite].join(' | '));
+  }},
+
+  {nom:'Recueillir : une liste en lignes groupée par mois, des filtres (à découper, déclarant, moment, recherche), les mois sur le côté', test: () => {
+    const evts = state.m2.evenements || [];
+    const avant = JSON.stringify(filtresM2), sourceAvant = filtreSourceChrono;
+    try {
+      effacerFiltresM2();
+      const lignes = () => document.querySelectorAll('#m2-event-list .event-item').length;
+      const tout = lignes() === evts.length;
+      const cles = new Set(evts.map(e => e.date ? e.date.slice(0, 7) : 'sans-date'));
+      const nav = document.querySelectorAll('#m2-mois button').length === (cles.size >= 2 ? cles.size : 0);
+      filtrerM2('etat', 'adecouper');
+      const aDecouper = lignes() === evts.filter(e => !episodeDecoupe(e)).length;
+      filtrerM2('etat', 'tous');
+      const mot = evts.length ? (evts[0].comportement || evts[0].texteBrut || '').split(/\s+/).filter(w => w.length > 4)[0] || '' : '';
+      filtrerM2('texte', mot);
+      const recherche = !mot || lignes() === evts.filter(e => texteDeEvt(e).indexOf(mot.toLowerCase()) >= 0).length;
+      filtrerM2('texte', '');
+      const m = evts.length ? normaliseMoment(evts[0].moment) : '';
+      if (m) filtrerM2('moment', m);
+      const moment = !m || lignes() === evts.filter(e => normaliseMoment(e.moment) === m).length;
+      filtrerM2('moment', '');
+      filtrerM2('texte', 'zzzaucunzzz');
+      const vide = !evts.length || (lignes() === 0 && /Aucun épisode ne correspond/.test(document.getElementById('m2-event-list').textContent));
+      return _bancEgal('tout | les mois sur le côté | à découper | recherche | moment | aucun résultat dit',
+        'true | true | true | true | true | true', [tout, nav, aDecouper, recherche, moment, vide].join(' | '));
+    } finally { filtresM2 = JSON.parse(avant); filtreSourceChrono = sourceAvant; const t = document.getElementById('m2-f-texte'); if (t) t.value = filtresM2.texte; refreshM2List(); }
   }},
 
   {nom:'Synthèse, les pistes : au moins 5 épisodes et 1,4 fois l\'ordinaire (●●● à 10 et 2 fois), triées ; épinglées dans le fichier socle, pas dans un codage vierge', test: () => {
@@ -23795,6 +23960,22 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-09',
+    version: 'v2026.10.09-9',
+    titre: "Recueillir : la liste en lignes, des filtres, les mois",
+    corps: `
+<p><b>Recueillir</b> (Arthur et Émilie — rafraîchir le reste de la BAF, passe 3 sur 10) :</p>
+<ul>
+<li><b>Une liste en lignes</b>, sans boîtes dans une boîte : le numéro, le jour et le moment, le texte de l'épisode en texte de lecture, le déclarant, et un anneau qui dit où en est son découpage. On en voit une vingtaine par écran, au lieu de sept. Au survol, « Découper → » ouvre l'épisode dans Analyser ; la poubelle aussi n'apparaît qu'au survol.</li>
+<li><b>Chaque mois dans sa feuille</b>, les semaines en petits intertitres.</li>
+<li><b>Une barre de filtres</b> qui reste en haut : tous / à découper, le déclarant, le moment de la journée, une recherche dans le texte. Les filtres ne changent que ce qu'on voit.</li>
+<li><b>Sur le côté</b>, les mois et leur nombre d'épisodes (un clic y mène), la période couverte avec ses jours non renseignés, et les sources quand des fichiers déclarants ont été reçus.</li>
+<li>Les deux boutons du haut tiennent sur une ligne, à côté de la phrase d'accueil.</li>
+</ul>
+`
+  },
 
   {
     date: '2026-10-09',
