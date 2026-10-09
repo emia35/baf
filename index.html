@@ -4986,7 +4986,7 @@ body.seq-selection .seq-case .seq-vide{display:none;}
     <div style="text-align:left;margin:16px 0;display:flex;flex-direction:column;gap:10px;">
       <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;cursor:pointer;"><input type="checkbox" id="exp-m1" checked> Préambule</label>
       <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;cursor:pointer;"><input type="checkbox" id="exp-m2" checked> Recueil des épisodes</label>
-      <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;cursor:pointer;"><input type="checkbox" id="exp-m3" checked> Organisation des données</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;cursor:pointer;"><input type="checkbox" id="exp-m3" checked> Catégorisation des données</label>
       <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;cursor:pointer;"><input type="checkbox" id="exp-m4" checked> Interprétation</label>
       <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;cursor:pointer;"><input type="checkbox" id="exp-synthese" checked> Synthèse</label>
     </div>
@@ -5659,6 +5659,7 @@ const TYPES_FICHIER = {
   kit:            'un fichier déclarant vierge',
   contribution:   'un fichier déclarant',
   'codage-kit':   'un codage vierge (pour le primo codage)',
+  cotation:       'une cotation de l\'Indice de confiance (ICAF)',
   codage:         'le codage d\'un second codeur, selon l\'ancienne méthode que la BAF n\'utilise plus'
 };
 
@@ -5678,6 +5679,15 @@ function enveloppeBAF(type) {
 function lireFichierBAF(objet, typesAcceptes) {
   if (!objet || typeof objet !== 'object' || Array.isArray(objet)) {
     return {ok:false, raison:"Ce fichier n'est pas un export de la BAF."};
+  }
+  // Une cotation de l'ICAF porte aussi une clé « baf » — la copie du dossier coté — qui n'est pas l'enveloppe d'un
+  // fichier de la BAF. Prise pour un socle, elle effaçait le dossier ouvert (passe 195) : on la reconnaît d'abord.
+  if (Array.isArray(objet.raters)) {
+    const attendusC = typesAcceptes || ['dossier'];
+    if (attendusC.indexOf('cotation') === -1) {
+      return {ok:false, raison:'Ce fichier est ' + TYPES_FICHIER.cotation + '. Ici on attend ' + attendusC.map(t => TYPES_FICHIER[t] || t).join(' ou ') + '.'};
+    }
+    return {ok:true, type:'cotation', cotation:objet};
   }
   const env = objet.baf && typeof objet.baf === 'object' ? objet.baf : null;
   // Un fichier d'avant l'enveloppe : on le reconnaît à sa forme, et c'est
@@ -6829,6 +6839,8 @@ function route(name, fromHistory){
   const etaitSurM3 = analyseVisible() && analyseEtat().pos === 2;
   document.querySelectorAll('section.view').forEach(s=>s.classList.remove('show'));
   const target = document.getElementById('view-'+name);
+  // Une vue qui n'existe pas (un ancien lien, une faute de frappe dans le code) mène à l'accueil plutôt qu'à une page blanche (passe 195).
+  if(!target && name !== 'accueil') return route('accueil', fromHistory);
   if(target) target.classList.add('show');
   document.body.classList.toggle('vue-analyser', name === 'analyser');
   document.body.classList.toggle('vue-formulaire', name === 'm2-form');
@@ -11497,7 +11509,7 @@ function exporterJSON(){
   const blob = new Blob([JSON.stringify(fichier, null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  const prenom = state.m1.prenom ? state.m1.prenom.replace(/[^a-zA-Z0-9]/g,'_') : 'sans_nom';
+  const prenom = state.m1.prenom ? state.m1.prenom.replace(/[^\p{L}\p{N}]/gu,'_') : 'sans_nom';
   a.href = url;
   a.download = (state.codage && state.codage.actif ? 'RDAF-primo-codage_' : (state.provisoire ? 'RDAF-socle-provisoire_' : 'RDAF-socle_')) + prenom + '_' + horodatageFichier() + '.json';
   document.body.appendChild(a);
@@ -11541,6 +11553,21 @@ function preparerPourExport(racine) {
    '.m3-item-cat-badge'
   ].forEach(sel => racine.querySelectorAll(sel).forEach(el => el.remove()));
 
+  racine.querySelectorAll('[data-sans-export], #m1-journee-frise').forEach(el => el.remove());
+  // Les épisodes de Recueillir sont une grille à l'écran ; Word ne la connaît pas et collait tout (« 12mer. 8 avr. · 09:11AccueilA
+  // crié… »). Chacun devient une ligne lisible, sans les icônes ni l'anneau (passe 195).
+  racine.querySelectorAll('.event-item').forEach(ligne => {
+    const t = sel => { const e = ligne.querySelector(sel); return e ? e.textContent.replace(/\s+/g, ' ').trim() : ''; };
+    const marques = [...ligne.querySelectorAll('.ev-tags > span:not(.event-niveau-ico)')].map(e => e.textContent.trim()).filter(Boolean);
+    const p = document.createElement('p');
+    p.className = 'event-item';
+    p.innerHTML = '<b>' + esc(t('.ev-num')) + '.</b> ' + esc(t('.ev-quand > b')) + (t('.ev-quand > span') ? ' · ' + esc(t('.ev-quand > span')) : '') +
+      ' — <span class="ev-desc">' + esc(t('.ev-desc')) + '</span>' + (marques.length ? ' <span class="ev-pastille">(' + esc(marques.join(', ')) + ')</span>' : '');
+    ligne.replaceWith(p);
+  });
+  // La grille de la semaine : l'horaire et le nom du créneau, l'un sous l'autre (Word les collait : « 09h00 → 09h30Accueil »).
+  racine.querySelectorAll('.col-horaire > span:first-child + span').forEach(el => el.before(document.createElement('br')));
+  racine.querySelectorAll('.ev-groupe-mois > small, .periode-titre + .periode-plage').forEach(el => el.before(document.createTextNode(' · ')));
   racine.querySelectorAll('.aide-repliable-corps[hidden]').forEach(el => el.removeAttribute('hidden'));
   // Word ne connaît pas <details> : chaque repli devient un bloc ouvert, titré par son résumé ; un repli resté vide part.
   racine.querySelectorAll('details').forEach(d => {
@@ -11581,32 +11608,70 @@ function preparerPourExport(racine) {
   return racine;
 }
 
+/* Word ne reçoit pas les règles de style de la page : ce qu'elles cachent à l'écran (une aide repliée, l'encart réservé
+   au codage…) y apparaissait. On le relève sur la page vivante avant de copier, et la copie le laisse de côté (passe 195).
+   Restent exportés : ce qui est fait pour l'export (.export-seul), les aides dépliables, les tiroirs (l'indice). */
+function marquerCachesPourExport(racine) {
+  const marques = [];
+  racine.querySelectorAll('*').forEach(el => {
+    if (el.closest('.export-seul, .aide-repliable-corps, .tiroir')) return;
+    if (getComputedStyle(el).display === 'none') { el.setAttribute('data-sans-export', ''); marques.push(el); }
+  });
+  return () => marques.forEach(el => el.removeAttribute('data-sans-export'));
+}
+function copiePourExport(el) {
+  const defaire = marquerCachesPourExport(el);
+  try { return el.cloneNode(true); } finally { defaire(); }
+}
+
+/* Catégoriser dans le document Word (passe 195). Avant, il recopiait l'écran : la liste des éléments, sans leurs catégories
+   (la colonne des catégories et les étiquettes en sont retirées) — 43 pages pour Léo, et rien de la typologie ; et rien
+   du tout si Catégoriser n'avait pas été ouvert dans la séance. Désormais, volet par volet : chaque catégorie (et ses
+   sous-catégories), combien d'éléments elle range, lesquels ; puis ce qui reste à ranger. */
+function typologiePourExport() {
+  ensureM3();
+  const racine = document.createElement('div');
+  M3_SOUS.forEach(volet => {
+    const cats = state.m3.categories[volet.id] || {};
+    // Les mêmes éléments et les mêmes repères (CD 27.1, CD 27.2…) que la colonne des catégories à l'écran.
+    const elements = extraireItems(volet.id).filter(it => !it.vide && !(it.tag === 'plus-tot' && it.couvert) && !it.jumeau);
+    const etiq = volet.id === 'cp' ? etiquettesCD() : estVoletDecoupable(volet.id) ? etiquettesVolets() : {};
+    const parId = {};
+    elements.forEach(it => { parId[it.id] = it; });
+    const ids = Object.keys(cats).filter(id => cats[id] && cats[id].nom);
+    const ranges = new Set();
+    const bloc = (id, sous) => {
+      const c = cats[id];
+      const els = (c.items || []).map(i => parId[i]).filter(Boolean);
+      els.forEach(e => ranges.add(e.id));
+      let h = '<p class="typo-cat' + (sous ? ' sous' : '') + '"><b>' + esc(c.nom) + '</b> <span class="discret">· ' + els.length + ' élément' + (els.length > 1 ? 's' : '') + '</span></p>';
+      if (els.length) h += '<ul class="typo-elements">' + els.map(e => '<li><span class="discret">' + esc(etiq[e.id] || 'Ép. ' + (e.evtIdx + 1)) + '</span> ' + esc(e.texte || '') + '</li>').join('') + '</ul>';
+      ids.filter(k => cats[k].parent === id).forEach(k => { h += bloc(k, true); });
+      return h;
+    };
+    let html = '<h3>' + esc(volet.label) + '</h3>';
+    const racines = ids.filter(id => !cats[id].parent || ids.indexOf(cats[id].parent) < 0);
+    html += racines.length ? racines.map(id => bloc(id, false)).join('') : '<p class="discret">Aucune catégorie pour l\'instant.</p>';
+    const restants = elements.filter(it => !ranges.has(it.id)).length;
+    if (restants) html += '<p class="discret">' + restants + ' élément' + (restants > 1 ? 's' : '') + ' pas encore rangé' + (restants > 1 ? 's' : '') + '.</p>';
+    racine.insertAdjacentHTML('beforeend', html);
+  });
+  return racine;
+}
+
 // Organiser et Interpréter n'affichent qu'un onglet à la fois : sans ce
 // parcours, l'export ne contenait que l'onglet ouvert et perdait le reste
 // sans le signaler.
 function capturerTousLesOnglets(vueId) {
   const conteneur = document.createElement('div');
-  if (vueId === 'view-m3') {
-    const avant = state.m3.sous;
-    M3_SOUS.forEach(s => {
-      renderM3Sous(s.id);
-      const ws = document.getElementById('m3-workspace');
-      if (!ws) return;
-      const titre = document.createElement('h3');
-      titre.textContent = s.label;
-      conteneur.appendChild(titre);
-      conteneur.appendChild(ws.cloneNode(true));
-    });
-    renderM3Sous(avant);
-    return conteneur;
-  }
+  if (vueId === 'view-m3') return typologiePourExport();
   if (vueId === 'view-m4') {
     const avant = state.m4.sous || 'pattern';
     ['pattern','gradation','vase'].forEach(id => {
       changerSousM4(id);
       const bloc = document.getElementById('m4-sous-' + id);
       if (!bloc) return;
-      const c = bloc.cloneNode(true);
+      const c = copiePourExport(bloc);
       c.style.display = 'block';
       conteneur.appendChild(c);
     });
@@ -11679,7 +11744,7 @@ async function lancerExportWord(){
   choisies.forEach(s => {
     const vue = document.getElementById(s.vue);
     if (!vue) return;
-    const sec = vue.cloneNode(true);
+    const sec = copiePourExport(vue);
     sec.style.display = 'block';
     // Remplacer le contenu à onglets par la capture de tous les onglets
     const complet = capturerTousLesOnglets(s.vue);
@@ -11724,15 +11789,15 @@ function construireFichierWord(clone){
     .kpi .kpi-sub{font-size:8pt;color:#6B6152;font-style:italic;}
     .kpi-row{overflow:hidden;}
     .kpi-row:after{content:'';display:block;clear:both;}
-    .surtitre{font-size:8pt;font-weight:bold;letter-spacing:1pt;text-transform:uppercase;color:#A39A8A;margin:18pt 0 2pt;}
+    .surtitre{font-size:8pt;font-weight:bold;letter-spacing:1pt;text-transform:uppercase;color:#746B5B;margin:18pt 0 2pt;}
     .phrase{font-family:Georgia,'Times New Roman',serif;font-size:13pt;font-weight:bold;color:#2C2416;margin:2pt 0 8pt;line-height:1.35;}
     .phrase em{font-style:normal;background:#FFF3CC;}
     .feuille{border:0.75pt solid #E6DFD2;background:#FFFDF8;padding:8pt 10pt;margin:0 0 9pt;}
     .feuille-titre{font-size:9.5pt;font-weight:bold;color:#6B6152;margin:0 0 5pt;}
     .lecture{font-family:Georgia,'Times New Roman',serif;font-size:10.5pt;line-height:1.5;}
-    .synth-avertir, .discret{font-size:8.5pt;color:#A39A8A;}
+    .synth-avertir, .discret{font-size:8.5pt;color:#746B5B;}
     .synth-question{background:#FBF8F2;padding:6pt 9pt;margin:8pt 0 0;font-family:Georgia,'Times New Roman',serif;font-size:10.5pt;}
-    .synth-question b{display:block;font-family:'Segoe UI',Calibri,Arial,sans-serif;font-size:8pt;color:#A39A8A;text-transform:uppercase;}
+    .synth-question b{display:block;font-family:'Segoe UI',Calibri,Arial,sans-serif;font-size:8pt;color:#746B5B;text-transform:uppercase;}
     .synth-chaleur{border-collapse:separate;width:auto;}
     .synth-chaleur td{border:0.5pt solid #FFFFFF;width:34pt;height:16pt;text-align:center;font-size:9pt;}
     .synth-chaleur th{border:0;background:#FFFFFF;font-size:8.5pt;color:#6B6152;}
@@ -11742,14 +11807,18 @@ function construireFichierWord(clone){
     .synth-barre .b{display:none;}
     .synth-barre .n{display:inline-block;width:30%;font-size:9pt;color:#6B6152;}
     .event-item{margin:0 0 3pt;padding:3pt 0;border-top:0.5pt solid #E8E2D6;}
-    .ev-num{font-weight:bold;color:#A39A8A;padding-right:6pt;}
+    .typo-cat{margin:8pt 0 2pt;font-size:11pt;}
+    .typo-cat.sous{margin-left:14pt;font-size:10.5pt;}
+    .typo-elements{margin:0 0 4pt 14pt;}
+    .typo-elements li{font-size:9.5pt;margin:0 0 1pt;}
+    .ev-num{font-weight:bold;color:#746B5B;padding-right:6pt;}
     .ev-quand b{padding-right:6pt;}
     .ev-quand span{color:#6B6152;padding-right:6pt;}
     .ev-desc{font-family:Georgia,'Times New Roman',serif;}
     .ev-pastille{font-size:8pt;color:#6B6152;padding-left:4pt;}
     .ev-groupe-mois{font-weight:bold;font-size:11pt;margin:10pt 0 3pt;}
-    .ev-groupe-mois small{font-weight:normal;color:#A39A8A;padding-left:6pt;}
-    .ev-groupe-semaine{font-size:8pt;color:#A39A8A;text-transform:uppercase;margin:4pt 0 0;}
+    .ev-groupe-mois small{font-weight:normal;color:#746B5B;padding-left:6pt;}
+    .ev-groupe-semaine{font-size:8pt;color:#746B5B;text-transform:uppercase;margin:4pt 0 0;}
     .synth-piste{border:0.75pt solid #E6DFD2;background:#FFFDF8;padding:8pt 10pt;margin:0 0 8pt;}
     .synth-solidite{font-size:8.5pt;font-weight:bold;color:#9C7A00;text-transform:uppercase;}
     .piste-phrase{font-family:Georgia,'Times New Roman',serif;font-size:11pt;margin:2pt 0 3pt;}
@@ -11759,7 +11828,7 @@ function construireFichierWord(clone){
     .synth-tag{padding:0 4pt;font-size:9pt;}
     .synth-ligne{font-size:9.5pt;margin:0 0 3pt;}
     .synth-accord{font-size:9pt;font-weight:bold;color:#46685A;}
-    .note-eq-titre{font-size:8pt;font-weight:bold;color:#A39A8A;text-transform:uppercase;}
+    .note-eq-titre{font-size:8pt;font-weight:bold;color:#746B5B;text-transform:uppercase;}
     .synth-chaine{margin:3pt 0;}
     .synth-autres-table td, .synth-autres-table th{font-size:9pt;}
     .legende-volets{border:0.75pt solid #D9D0C0;background:#F5F0E8;padding:5pt 8pt;margin:0 0 8pt;font-size:9pt;}
@@ -11815,7 +11884,7 @@ ${resoudreVariablesCSS(clone.innerHTML)}
   const blob = new Blob(['﻿', html], {type:'application/msword'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  const prenomFile = state.m1.prenom ? state.m1.prenom.replace(/[^a-zA-Z0-9]/g,'_') : 'sans_nom';
+  const prenomFile = state.m1.prenom ? state.m1.prenom.replace(/[^\p{L}\p{N}]/gu,'_') : 'sans_nom';
   const dateFile = new Date().toISOString().slice(0,10);
   a.href = url;
   a.download = `RDAF-donnees_${prenomFile}_${dateFile}.doc`;
@@ -15714,6 +15783,65 @@ const _CONTROLES = [
     return _bancEgal('Entrée et Espace | couleurs sous 4,5 sur le papier', '2 | aucune', clics + ' | ' + (faibles.join(', ') || 'aucune'));
   }},
 
+  {nom:'Chasse aux bugs : une vue inconnue mène à l\'accueil ; « ¦ » ne vient pas d\'un nom ; les noms de fichiers gardent leurs accents', test: () => {
+    const vueAvant = (document.querySelector('section.view.show') || {}).id;
+    route('vue-qui-n-existe-pas');
+    const accueil = (document.querySelector('section.view.show') || {}).id === 'view-accueil';
+    if (vueAvant) route(vueAvant.replace(/^view-/, ''));
+    const cats = {a: {nom: 'Avec¦barre'}, b: {nom: 'Fille¦x', parent: 'a'}};
+    const chemin = cheminCatDans(cats, 'b');
+    const nom = 'Léo Zoë'.replace(/[^\p{L}\p{N}]/gu, '_');
+    return _bancEgal('accueil | chemin | nom de fichier', 'true | Avec|barre › Fille|x | Léo_Zoë', [accueil, chemin, nom].join(' | '));
+  }},
+
+  {nom:'Export Word : ce que l\'écran cache n\'y part pas ; les épisodes s\'y lisent en une ligne', test: () => {
+    const hote = document.createElement('div');
+    hote.innerHTML = '<div class="codage-seul">Réservé au codage</div><div class="export-seul">Pour Word</div><p>Visible</p>' +
+      '<div class="event-item"><span class="ev-num">12</span><span class="ev-quand"><b>mer. 8 avr. · 09:11</b><span>Accueil</span></span>' +
+      '<span class="ev-desc">A crié.</span><span class="ev-tags"><span class="ev-pastille">Nadia</span><span class="event-niveau-ico">🔬</span></span>' +
+      '<span class="ev-etat"><span class="ev-anneau"></span></span></div>';
+    document.body.appendChild(hote);
+    let copie;
+    try { copie = preparerPourExport(copiePourExport(hote)); } finally { hote.remove(); }
+    const marquesRestees = document.querySelectorAll('[data-sans-export]').length;
+    const txt = [...copie.children].map(c => c.textContent.replace(/\s+/g, ' ').trim()).join(' / ');
+    return _bancEgal('texte exporté | marques laissées sur la page', 'Pour Word / Visible / 12. mer. 8 avr. · 09:11 · Accueil — A crié. (Nadia) | 0',
+      (document.body.classList.contains('mode-codage') ? '(mode codage)' : txt) + ' | ' + marquesRestees);
+  }},
+
+  {nom:'ICAF : une cotation exportée se rouvre par « Importer », sans toucher au dossier ouvert ; ailleurs elle est refusée', test: () => {
+    const sauveRaters = JSON.stringify(S.raters), sauveTab = S.tab, sauveMode = S.mode, sauveBaf = S.baf, sauveMeta = S.bafMeta;
+    const vue = (document.querySelector('section.view.show') || {}).id;
+    const avantDossier = JSON.stringify(state.m2);
+    const conf = window.confirm; window.confirm = () => true;
+    try {
+      const fichier = {version: '5.0', mode: 'libre', baf: {m1: {prenom: 'X'}, m2: {evenements: []}}, raters: [{label: 'Cotation 1', meta: {id: 'X', rater: 'Banc', date: ''},
+        dims: DIMS.map(dm => ({code: dm.code, name: dm.name, items: dm.items.map(it => ({code: it.code, name: it.name, subItems: it.subItems.slice(), scores: it.subItems.map((_, k) => k === 0 ? 1 : null), comments: it.subItems.map(() => '')}))}))}]};
+      const lu = lireFichierBAF(fichier, ['dossier', 'kit', 'contribution', 'codage-kit', 'cotation']);
+      const refuse = lireFichierBAF(fichier, ['dossier']);
+      aiguillerImport([{nom: 'ICAF_X.json', lu}], true);
+      const rouverte = S.raters.length === 1 && S.raters[0].meta.rater === 'Banc' && S.raters[0].dims[0].items[0].scores[0] === 1;
+      return _bancEgal('type lu | refusée là où on attend un socle | rouverte | dossier intact',
+        'cotation | true | true | true', [lu.type, !refuse.ok && /cotation de l.Indice/.test(refuse.raison), rouverte, JSON.stringify(state.m2) === avantDossier].join(' | '));
+    } finally {
+      window.confirm = conf;
+      S.raters = JSON.parse(sauveRaters); S.tab = sauveTab; S.mode = sauveMode; S.baf = sauveBaf; S.bafMeta = sauveMeta;
+      if (vue) route(vue.replace(/^view-/, ''));
+    }
+  }},
+
+  {nom:'Export Word : Catégoriser y donne la typologie (catégories, combien, lesquels, ce qui reste)', test: () => {
+    const t = typologiePourExport();
+    const volets = t.querySelectorAll('h3').length;
+    let cats = 0, sansNom = 0;
+    M3_SOUS.forEach(v => Object.values(state.m3.categories[v.id] || {}).forEach(c => { if (c && c.nom) cats++; else if (c) sansNom++; }));
+    const lignes = t.querySelectorAll('.typo-cat').length;
+    const elementsCites = t.querySelectorAll('.typo-elements li').length;
+    let rangesAttendus = 0;
+    M3_SOUS.forEach(v => { const ids = new Set(extraireItems(v.id).filter(it => !it.vide && !(it.tag === 'plus-tot' && it.couvert) && !it.jumeau).map(it => it.id)); Object.values(state.m3.categories[v.id] || {}).forEach(c => { if (c && c.nom) (c.items || []).forEach(i => { if (ids.has(i)) rangesAttendus++; }); }); });
+    return _bancEgal('volets | une ligne par catégorie nommée | éléments cités', M3_SOUS.length + ' | ' + cats + ' | ' + rangesAttendus, volets + ' | ' + lignes + ' | ' + elementsCites);
+  }},
+
   {nom:'Synthèse, les pistes : au moins 5 épisodes et 1,4 fois l\'ordinaire (●●● à 10 et 2 fois), triées ; épinglées dans le fichier socle, pas dans un codage vierge', test: () => {
     const regle = [soliditePiste(10, .5, .25), soliditePiste(9, .5, .25), soliditePiste(10, .49, .25), soliditePiste(5, .42, .3), soliditePiste(5, .41, .3), soliditePiste(4, .9, .1)].join(',');
     refreshSynthese();
@@ -18017,7 +18145,8 @@ function cheminCat(sousId, catId) {
   const cat = cats[catId];
   if (!cat) return '';
   const parent = cat.parent && cats[cat.parent];
-  return parent ? `${parent.nom} › ${cat.nom}` : cat.nom;
+  // « ¦ » sépare les clés des croisements (pistes, séquences) : il ne doit pas venir d'un nom (passe 195).
+  return String(parent ? `${parent.nom} › ${cat.nom}` : cat.nom).replace(/¦/g, '|');
 }
 
 /* ── Changer l'ordre des catégories, les imbriquer (Arthur, 08/10/2026) ──────────
@@ -22125,7 +22254,7 @@ function fabriquerKitDeclarant() {
     baf: enveloppeBAF('kit'),
     m1: JSON.parse(JSON.stringify(state.m1 || {}))
   };
-  const prenom = (state.m1.prenom || 'sans_nom').replace(/[^a-zA-Z0-9]/g, '_');
+  const prenom = (state.m1.prenom || 'sans_nom').replace(/[^\p{L}\p{N}]/gu, '_');
   const horo = horodatageFichier();
   return {
     texte: JSON.stringify(kit, null, 2),
@@ -22477,8 +22606,8 @@ function sauvegarderFichierDeclarant() {
   if (!d.idContribution) d.idContribution = nouvelIdentifiant('ctr');
   state.declarant = d;
   const fichier = construireFichierDeclarant();
-  const prenom = ((state.m1 && state.m1.prenom) || 'sans_nom').replace(/[^a-zA-Z0-9]/g, '_');
-  const lieu = (d.provenance || 'declarant').replace(/[^a-zA-Z0-9]/g, '_').slice(0, 24) || 'declarant';
+  const prenom = ((state.m1 && state.m1.prenom) || 'sans_nom').replace(/[^\p{L}\p{N}]/gu, '_');
+  const lieu = (d.provenance || 'declarant').replace(/[^\p{L}\p{N}]/gu, '_').slice(0, 24) || 'declarant';
   telechargerTexte(JSON.stringify(fichier, null, 2),
     'RDAF-declarant_' + prenom + '_' + lieu + '_' + horodatageFichier() + '.json');
   d.sauvegarde = fichier.contribution.envoye;
@@ -23026,7 +23155,7 @@ function exporterKitCodage() {
   if (nonTermines && !confirm(nonTermines + ' épisode' + (nonTermines > 1 ? 's' : '') + ' sur ' + (state.m2.evenements || []).length + (nonTermines > 1 ? ' n\'ont' : ' n\'a') +
       ' pas son rangement terminé (Analyser › Découper). Les codeurs catégoriseront ce qui existe ; si le découpage change ensuite, leurs classements ne s\'appliqueront plus aux mêmes éléments.\n\nExporter quand même ?')) return;
   const kit = construireKitCodage();
-  const prenom = ((state.m1 && state.m1.prenom) || 'sans_nom').replace(/[^a-zA-Z0-9]/g, '_');
+  const prenom = ((state.m1 && state.m1.prenom) || 'sans_nom').replace(/[^\p{L}\p{N}]/gu, '_');
   telechargerTexte(JSON.stringify(kit, null, 2), 'RDAF-codage-vierge_' + prenom + '_' + horodatageFichier() + '.json');
   showToast('Codage vierge exporté : le découpage de la référente, aucune catégorie, rien dans Interpréter. Un par codeur.');
 }
@@ -23112,7 +23241,7 @@ function exporterCategorisationEnPrimoCodage() {
     alert("Ce fichier socle ne contient encore aucune catégorie : il n'y a rien à exporter en primo codage.");
     return;
   }
-  const prenom = ((state.m1 && state.m1.prenom) || 'sans_nom').replace(/[^a-zA-Z0-9]/g, '_');
+  const prenom = ((state.m1 && state.m1.prenom) || 'sans_nom').replace(/[^\p{L}\p{N}]/gu, '_');
   telechargerTexte(JSON.stringify(construirePrimoCodageDepuisSocle(), null, 2), 'RDAF-primo-codage_' + prenom + '_' + horodatageFichier() + '.json');
   showToast('Votre catégorisation est exportée en primo codage. Le fichier socle n\'a pas changé.');
 }
@@ -23236,7 +23365,7 @@ function cheminCatDans(cats, catId) {
   const cat = cats && cats[catId];
   if (!cat) return '';
   const parent = cat.parent && cats[cat.parent];
-  return parent ? parent.nom + ' › ' + cat.nom : cat.nom;
+  return String(parent ? parent.nom + ' › ' + cat.nom : cat.nom).replace(/¦/g, '|');
 }
 // Une sous-catégorie n'est pas la catégorie du même nom posée à la racine : on compare les chemins.
 function cleCodage(cats, itemId) {
@@ -23721,7 +23850,7 @@ function importerDepuisSubbar(ev) {
   if (ev.target) ev.target.value = '';
   if (!fichiers.length) return;
   const versOutil2 = (outilCourant === 'idc');
-  lireFichiersBAF(fichiers, ['dossier', 'kit', 'contribution', 'codage-kit'])
+  lireFichiersBAF(fichiers, ['dossier', 'kit', 'contribution', 'codage-kit', 'cotation'])
     .then(lus => aiguillerImport(lus, versOutil2));
 }
 
@@ -23764,6 +23893,7 @@ function aiguillerImport(lus, versOutil2) {
     return;
   }
   const {nom, lu} = bons[0];
+  if (lu.type === 'cotation') { ouvrirCotationSauvegardee(lu.cotation); return; }
   if (lu.type === 'kit') { ouvrirFichierDeclarant(lu); return; }
   if (lu.type === 'codage-kit') { ouvrirKitCodage(lu); return; }
   if (socleOuvert() && !confirm('Importer ce fichier socle remplacera celui qui est ouvert dans ce navigateur. ' +
@@ -24174,6 +24304,28 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-09',
+    version: 'v2026.10.09-15',
+    titre: "Chasse aux bugs : rouvrir une cotation, le document Word, les noms de fichiers",
+    corps: `
+<p><b>Chasse aux bugs</b> (Arthur et Émilie — rafraîchir le reste de la BAF, passe 9 sur 10 ; la dixième, le comparateur, attend d'être repensée ensemble). Les fichiers que produit la BAF ont été rouverts pour de vrai — dans Word, et dans la BAF elle-même. Ce qui ne marchait pas :</p>
+<ul>
+<li><b>Rouvrir une cotation de l'ICAF</b> ne marchait plus. Pire : « Importer » prenait le fichier de cotation pour un fichier socle, et remplaçait le dossier ouvert par un dossier vide. Une cotation exportée se rouvre maintenant par « Importer », sans toucher au dossier ; ailleurs, elle est refusée avec un mot clair.</li>
+<li><b>Le document Word « Exporter pour le bilan »</b> :
+<ul>
+<li>la catégorisation y manquait si Catégoriser n'avait pas été ouvert dans la séance ; sinon, elle n'en montrait que les éléments, sans leurs catégories (43 pages pour Léo). Elle donne maintenant <b>la typologie</b> : volet par volet, chaque catégorie, combien d'éléments elle range, lesquels (CD 27.1…), et ce qui reste à ranger ;</li>
+<li>ce que l'écran cache (l'encart réservé au primo codage, les aides repliées) n'y apparaît plus ;</li>
+<li>les épisodes de Recueillir y étaient collés (« 12mer. 8 avr. · 09:11AccueilA crié… ») : un épisode par ligne lisible ; de même « Mars 2026 · 7 épisodes » et « Période couverte · du… » ; la frise de la journée, illisible dans Word, reste à l'écran.</li>
+</ul></li>
+<li><b>Les noms de fichiers</b> perdaient leurs accents (« Léo » devenait « L_o »).</li>
+<li>La fenêtre d'export disait encore « Organisation des données » : « Catégorisation des données ».</li>
+<li>Deux sûretés : un nom de catégorie contenant « ¦ » ne brouille plus les croisements ; une page inconnue mène à l'accueil plutôt qu'à une page blanche.</li>
+</ul>
+<p>Vérifié sans souci : un fichier socle exporté puis rouvert revient identique (pistes épinglées comprises) ; les cinq documents Word s'ouvrent dans Word ; des noms de catégories avec apostrophes, guillemets ou balises ne cassent rien ; un dossier de 312 épisodes fonctionne (la Synthèse met environ une seconde à se calculer).</p>
+`
+  },
 
   {
     date: '2026-10-09',
@@ -27182,6 +27334,38 @@ function mkRadar(ds,sz){
 // ============================================================
 // SAVE / LOAD
 // ============================================================
+/* Rouvrir une cotation enregistrée par « Exporter » (passe 195 : sa lecture n'était plus reliée à rien). La cotation en
+   cours est remplacée — on le demande d'abord si elle contient quelque chose. Le dossier de la BAF ouvert n'est pas touché. */
+function ouvrirCotationSauvegardee(d) {
+  const valide = d && Array.isArray(d.raters) && d.raters.length && d.raters.every(r => r && Array.isArray(r.dims) && r.dims.every(dm => dm && Array.isArray(dm.items)));
+  if (!valide) { alert("Ce fichier de cotation est incomplet : il ne peut pas être rouvert."); return; }
+  const enCours = S.raters.some(r => r.dims.some(dm => dm.items.some(it => (it.scores || []).some(v => v !== null && v !== undefined) || (it.comments || []).some(c => c))));
+  if (enCours && !confirm('Rouvrir cette cotation remplacera celle qui est en cours dans l\'ICAF.\n\nContinuer ?')) return;
+  S.mode = d.mode || 'libre';
+  S.baf = d.baf || null;
+  S.bafMeta = S.baf ? computeBafMeta(S.baf) : {};
+  S.raters = d.raters.map((r, i) => ({
+    id: i + 1, label: r.label || 'Cotation ' + (i + 1),
+    meta: r.meta || {id: '', rater: '', date: ''},
+    dims: r.dims.map(dm => ({
+      code: dm.code, name: dm.name,
+      items: dm.items.map(it => ({
+        code: it.code, name: it.name, examples: it.examples || '',
+        subItems: it.subItems || [],
+        scores: it.scores || (it.subItems || []).map(() => null),
+        comments: it.comments || (it.subItems || []).map(() => ''),
+        collapsed: false,
+        bafRefs: (DIMS.find(x => x.code === dm.code) || {items: []}).items.find(di => di.code === it.code)?.bafRefs || {}
+      }))
+    })),
+    coll: r.dims.map(() => false)
+  }));
+  S.tab = 0;
+  updateBafBadge();
+  goMain();
+  showToast('Cotation rouverte.');
+}
+
 function saveJ(){
   const d={
     version:'5.0',
@@ -27204,7 +27388,7 @@ function saveJ(){
   const u=URL.createObjectURL(b);
   const a=document.createElement('a');
   let fn='ICAF';
-  if(S.raters[0]?.meta.id)fn+='_'+S.raters[0].meta.id.replace(/[^a-zA-Z0-9]/g,'_');
+  if(S.raters[0]?.meta.id)fn+='_'+S.raters[0].meta.id.replace(/[^\p{L}\p{N}]/gu,'_');
   fn+='_'+new Date().toISOString().slice(0,10)+'.json';
   a.href=u;a.download=fn;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);
 }
