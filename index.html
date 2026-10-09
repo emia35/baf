@@ -580,7 +580,7 @@ details.repli > .repli-corps{margin-top:10px;}
 .dc-bouton:hover{border-color:var(--slate);}
 .dc-bouton.copie{background:var(--ocre-pale);border-color:var(--ocre);color:var(--ocre-deep);}
 
-/* ── Comparer les deux primo codages ── */
+/* ── Mettre en commun les deux primo codages (le tableau des éléments) ── */
 section .cmp-petit-ecran{display:none;}
 .cmp-petit-ecran p, .cmp-message p{margin:0;font-size:14px;line-height:1.65;color:var(--ink-soft);}
 .cmp-onglets{margin-bottom:14px;}
@@ -3843,6 +3843,50 @@ body.seq-selection .seq-case .seq-vide{display:none;}
 }
 /* ── Le texte qu'on lit est justifié (passe 197, Arthur) : ce qui est apparu avec la charte aussi. ── */
 .lecture,.help,#view-notes .nv-corps p,#view-notes .nv-corps li,.parcours-ligne,.res-doc-desc{text-align:justify;text-justify:inter-word;}
+/* ── La mise en commun : la typologie commune (passe 191) ── */
+.tc-copies{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 14px;}
+.tc-copie{padding:12px 14px;border-radius:var(--rayon-feuille);background:var(--sheet);box-shadow:var(--ombre-legere);}
+.tc-vide{padding:18px 22px;}
+.tc-partie{margin:18px 0 26px;}
+.tc-typos{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr) minmax(0,1fr);gap:12px;align-items:start;}
+.tc-col{padding:12px 14px;border-radius:var(--rayon-feuille);background:var(--sheet);box-shadow:var(--ombre-feuille);}
+.tc-col-c{background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--slate-pale),var(--ombre-feuille);}
+.tc-col-tete{display:flex;align-items:center;gap:8px;margin:0 0 10px;font:700 14px var(--police-interface);color:var(--ink);}
+.tc-lettre-c{background:var(--sauge-deep);}
+.tc-cat{display:grid;grid-template-columns:10px minmax(0,1fr) auto;align-items:center;gap:4px 8px;padding:6px 0;border-top:1px solid var(--line-feuille);font-size:13px;color:var(--ink);}
+.tc-cat.sous{padding-left:16px;}
+.tc-cat .tc-vers{grid-column:2 / -1;justify-self:start;}
+.tc-cat.reprise .tc-vers{color:var(--sauge-deep);border-color:var(--sauge);}
+.tc-pastille{display:inline-block;flex:none;width:10px;height:10px;border-radius:50%;}
+.tc-n{min-width:22px;padding:0 6px;border-radius:999px;background:var(--paper-deep);font-size:11.5px;font-weight:700;text-align:center;color:var(--ink-soft);}
+.tc-vers{max-width:100%;padding:1px 4px;border:1px solid var(--line);border-radius:8px;background:transparent;font:inherit;font-size:11.5px;color:var(--slate);}
+.tc-catc{margin:0 0 8px;padding:8px 10px;border-radius:12px;background:var(--sheet);box-shadow:var(--ombre-legere);}
+.tc-catc.sous{margin-left:18px;}
+.tc-catc-tete{display:flex;align-items:center;gap:6px;}
+.tc-catc-nom{flex:1;min-width:0;padding:2px 6px;border:1px solid transparent;border-radius:6px;background:transparent;font:700 13.5px var(--police-interface);color:var(--ink);}
+.tc-catc-nom:hover,.tc-catc-nom:focus{border-color:var(--line);background:var(--surface);}
+.tc-def,.m3-cat-def{width:100%;margin:4px 0 0;padding:4px 6px;border:1px dashed var(--line);border-radius:8px;background:transparent;font:italic 13px/1.4 var(--police-lecture);color:var(--ink-soft);}
+.tc-def:focus,.m3-cat-def:focus{border-style:solid;background:var(--sheet);color:var(--ink);}
+.m3-cat-def{display:block;margin:2px 0 6px;border-color:transparent;}
+.m3-cat-def:hover{border-color:var(--line);}
+.tc-sources{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;}
+.tc-source{display:inline-flex;align-items:center;gap:2px;padding:1px 4px 1px 8px;border-radius:999px;background:var(--paper-deep);font-size:11px;color:var(--ink-soft);}
+.tc-x,.tc-bt{padding:2px 4px;border:0;background:transparent;font-size:13px;line-height:1;color:var(--ink-faint);cursor:pointer;}
+.tc-x:hover,.tc-bt:hover{color:var(--ink);}
+.tc-ajout{margin-top:4px;}
+.tc-grille{margin-top:14px;}
+.tc-grille-defile{max-height:60vh;overflow:auto;}
+.tc-grille table{border-collapse:separate;border-spacing:2px;font-size:12px;}
+.tc-grille th{max-width:140px;padding:3px 6px;overflow:hidden;font-weight:600;text-align:left;text-overflow:ellipsis;white-space:nowrap;color:var(--ink-soft);}
+.tc-grille thead th{position:sticky;top:0;background:var(--sheet);}
+.tc-grille .tc-coin{color:var(--ink-faint);}
+.tc-grille td{min-width:30px;height:26px;border-radius:6px;background:var(--surface);font-weight:700;text-align:center;color:var(--ink);}
+.cmp-chip.a-confirmer{opacity:.72;outline:2px dashed var(--ink-soft);outline-offset:1px;}
+.tc-legende-chip{margin:0 4px;background:var(--slate);color:#fff;}
+.tc-confirmer{margin:0 0 4px;}
+.tc-ab{font-size:10px;font-weight:600;color:var(--ink-faint);}
+.tc-accord .cmp-copie{background:var(--sauge-pale);}
+@media(max-width:1100px){.tc-typos{grid-template-columns:minmax(0,1fr);}}
 #tiroir-notes .analyse-notes-champ{min-height:240px;margin:0;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font:400 14.5px/1.6 var(--police-lecture);resize:vertical;}
 .analyse-note{margin:0 0 14px;font-size:13px;color:var(--ink-soft);}
 
@@ -4837,12 +4881,12 @@ body.seq-selection .seq-case .seq-vide{display:none;}
   <section id="view-comparer" class="view">
     <div class="mod-header">
       <span class="temps-tag tag-m2">Module 2 · Temps de comprendre</span>
-      <h2>Comparer les deux primo codages</h2>
-      <div class="sub">Chaque codeur a fait son primo codage de son côté. Ici, à deux, vous lisez les deux codages élément par élément et vous arbitrez la synthèse, qui s'écrit dans Catégoriser (Analyser).</div>
+      <h2>Mettre en commun les deux primo codages</h2>
+      <div class="sub">Chaque codeur a fait sa typologie de son côté. Ici, à deux, vous écrivez la typologie commune — chaque catégorie avec sa définition — puis vous rangez chaque élément dedans : c'est la catégorisation définitive, qui s'écrit dans Catégoriser (Analyser).</div>
     </div>
 
     <div class="card cmp-petit-ecran">
-      <p>Le comparateur s'utilise sur un ordinateur ou une tablette : trois colonnes de texte ne tiennent pas sur un téléphone.</p>
+      <p>La mise en commun se fait sur un ordinateur ou une tablette : trois colonnes ne tiennent pas sur un téléphone.</p>
     </div>
     <div class="cmp-ordi" id="cmp-zone"></div>
     <input type="file" id="cmp-fichier" accept=".json" style="display:none;" onchange="importerCopieCodage(event)">
@@ -10423,8 +10467,8 @@ function refreshSynthese(){
     encours.innerHTML = (comp.A || comp.B)
       ? '<div style="background:var(--ocre-pale);border-left:4px solid var(--ocre);border-radius:8px;padding:12px 16px;margin-bottom:18px;font-size:13.5px;line-height:1.6;color:var(--ink);">' +
           '<b>Le double codage n\'est pas terminé</b> : les deux primo codages sont encore dans ce fichier. ' +
-          'Les catégories, les chiffres et les suggestions ci-dessous reflètent une synthèse en cours.' +
-          ' <button type="button" class="btn btn-secondary btn-sm no-print" style="margin-left:6px;" onclick="route(\'comparer\')">⚖️ Ouvrir le comparateur</button>' +
+          'Les catégories, les chiffres et les suggestions ci-dessous reflètent une typologie commune en cours d\'écriture.' +
+          ' <button type="button" class="btn btn-secondary btn-sm no-print" style="margin-left:6px;" onclick="route(\'comparer\')">⚖️ Reprendre la mise en commun</button>' +
         '</div>'
       : '';
   }
@@ -11700,7 +11744,8 @@ function typologiePourExport() {
       const c = cats[id];
       const els = (c.items || []).map(i => parId[i]).filter(Boolean);
       els.forEach(e => ranges.add(e.id));
-      let h = '<p class="typo-cat' + (sous ? ' sous' : '') + '"><b>' + esc(c.nom) + '</b> <span class="discret">· ' + els.length + ' élément' + (els.length > 1 ? 's' : '') + '</span></p>';
+      let h = '<p class="typo-cat' + (sous ? ' sous' : '') + '"><b>' + esc(c.nom) + '</b> <span class="discret">· ' + els.length + ' élément' + (els.length > 1 ? 's' : '') + '</span>' +
+        (c.definition ? '<br><i>' + esc(c.definition) + '</i>' : '') + '</p>';
       if (els.length) h += '<ul class="typo-elements">' + els.map(e => '<li><span class="discret">' + esc(etiq[e.id] || 'Ép. ' + (e.evtIdx + 1)) + '</span> ' + esc(e.texte || '') + '</li>').join('') + '</ul>';
       ids.filter(k => cats[k].parent === id).forEach(k => { h += bloc(k, true); });
       return h;
@@ -12709,25 +12754,82 @@ const _CONTROLES = [
       'I,D,D,-,D,-', [lire(A, B, 'i1'), lire(A, B, 'i2'), lire(A, B, 'i3'), lire(A, B, 'i4'), lire(A, B, 'i5'), lire(A, null, 'i2')].join(','));
   }},
 
-  {nom:'Prendre A reprend son codage sous les mêmes noms, sans doublon', test: () => {
-    /* La synthèse a déjà « taper » et « Autre » ; A a rangé l'élément dans
-       « Taper » et dans sa sous-catégorie « Contre un pair ». Prendre A deux
-       fois : « taper » est réutilisée, la sous-catégorie créée une seule fois,
-       « Autre » perd l'élément. */
+  {nom:'Typologie commune : « → C » reprend une catégorie (et sa place), sans doublon ; une catégorie de A ne mène qu\'à une de C', test: () => {
     ensureM3();
-    const avantComp = state.comparaison;
-    const avantCats = JSON.parse(JSON.stringify(state.m3.categories));
-    state.comparaison = {A: {nom: 'A', evenements: [], categories: {cp: {
-      a1: {nom: 'Taper', items: ['it1']}, a2: {nom: 'Contre un pair', parent: 'a1', items: ['it1']}, a3: {nom: 'Crier', items: []}}}}};
-    state.m3.categories.cp = {s1: {nom: 'taper', color: '#3D4F6B', items: []}, s9: {nom: 'Autre', color: '#3D4F6B', items: ['it1']}};
-    reprendreCodage('A', 'cp', 'it1');
-    reprendreCodage('A', 'cp', 'it1');
-    const cats = state.m3.categories.cp;
-    const obtenu = catsDeItemDans(cats, 'it1').map(id => cheminCatDans(cats, id)).sort().join(' + ') +
-      ' · ' + Object.keys(cats).length + ' catégories';
-    state.m3.categories = avantCats;
-    if (avantComp === undefined) delete state.comparaison; else state.comparaison = avantComp;
-    return _bancEgal('Synthèse de l\'élément après deux « Prendre A »', 'taper + taper › Contre un pair · 3 catégories', obtenu);
+    const avantComp = state.comparaison, avantCats = JSON.parse(JSON.stringify(state.m3.categories));
+    try {
+      state.comparaison = {A: {nom: 'A', evenements: [], categories: {cp: {a1: {nom: 'Taper', items: []}, a2: {nom: 'Contre un pair', parent: 'a1', items: []}}}},
+                           B: {nom: 'B', evenements: [], categories: {cp: {b1: {nom: 'taper', items: []}, b2: {nom: 'Frapper', items: []}}}}};
+      state.m3.categories.cp = {};
+      const c1 = versCategorieC('A', 'cp', 'a1', '__nouvelle');
+      const c2 = versCategorieC('A', 'cp', 'a2', '__nouvelle');
+      const c3 = versCategorieC('B', 'cp', 'b1', '__nouvelle');
+      const c4 = versCategorieC('B', 'cp', 'b2', c1);
+      const c5 = versCategorieC('B', 'cp', 'b2', '__nouvelle');
+      const cats = state.m3.categories.cp;
+      return _bancEgal('même catégorie pour Taper et taper | sous-catégorie sous Taper | Frapper déplacé | catégories | sources de Taper',
+        'true | true | true | 3 | A·a1,B·b1',
+        [c1 === c3, cats[c2].parent === c1, c4 === c1 && versC('cp', 'B', 'b2')[0] === c5, Object.keys(cats).length, sourcesCat(cats[c1]).map(s => s.slot + '·' + s.id).join(',')].join(' | '));
+    } finally { state.m3.categories = avantCats; if (avantComp === undefined) delete state.comparaison; else state.comparaison = avantComp; }
+  }},
+
+  {nom:'Typologie commune : pré-ranger les accords (à confirmer), confirmer, retirer ; terminer ne garde que C et ses définitions', test: () => {
+    ensureM3();
+    const avantComp = state.comparaison, avantCats = JSON.parse(JSON.stringify(state.m3.categories)), vraiPersist = persist;
+    persist = () => {};
+    try {
+      const items = extraireItems('cp').filter(it => !it.vide && !it.jumeau).slice(0, 3);
+      if (items.length < 3) return _bancEgal('Sans trois éléments', true, true);
+      const [x, y, z] = items.map(it => it.id);
+      state.comparaison = {A: {nom: 'A', evenements: [], decoupages: JSON.parse(JSON.stringify(state.m3.decoupages || {})), decoupagesVolets: JSON.parse(JSON.stringify(state.m3.decoupagesVolets || {})), categories: {cp: {a1: {nom: 'Fuite', items: [x, y]}, a2: {nom: 'Cris', items: [z]}}}},
+                           B: {nom: 'B', evenements: [], decoupages: JSON.parse(JSON.stringify(state.m3.decoupages || {})), decoupagesVolets: JSON.parse(JSON.stringify(state.m3.decoupagesVolets || {})), categories: {cp: {b1: {nom: 'Évitement', items: [x]}, b2: {nom: 'Cris', items: [y, z]}}}}};
+      state.m3.categories.cp = {};
+      const cF = versCategorieC('A', 'cp', 'a1', '__nouvelle');
+      versCategorieC('B', 'cp', 'b1', cF);
+      const cC = versCategorieC('A', 'cp', 'a2', '__nouvelle');
+      versCategorieC('B', 'cp', 'b2', cC);
+      definirCat('cp', cF, 'Quitte le lieu sans y être autorisé.');
+      const n = preRangerAccords('cp', true);
+      const cats = state.m3.categories.cp, m = marquesC('cp');
+      const ranges = [x, y, z].map(id => catsDeItemDans(cats, id).map(c => cats[c].nom).join('+') || '—').join(',');
+      const marques = Object.keys(m).length;
+      rangerDansC('cp', x, cC, false);
+      const xConfirme = !m[x];
+      const sauveRender = renderComparateur; renderComparateur = () => {};
+      try { cmpRetirer('cp', z, cC); } finally { renderComparateur = sauveRender; }
+      const zDemarque = !m[z] && !catsDeItemDans(cats, z).length;
+      const fini = terminerSynthese(true);
+      const reste = state.m3.categories.cp[cF];
+      return _bancEgal('pré-rangés | rangements | marques | x rangé à la main : plus à confirmer | z retiré : plus marqué | terminé | A et B effacés | sources effacées | définition gardée',
+        '2 | Fuite,—,Cris | 2 | true | true | true | true | true | Quitte le lieu sans y être autorisé.',
+        [n, ranges, marques, xConfirme, zDemarque, fini, !state.comparaison, !reste.sources, reste.definition].join(' | '));
+    } finally { persist = vraiPersist; state.m3.categories = avantCats; if (avantComp === undefined) delete state.comparaison; else state.comparaison = avantComp; }
+  }},
+
+  {nom:'Mise en commun : trois colonnes (A, la typologie commune, B), la grille de recouvrement, le tableau des éléments', test: () => {
+    ensureM3();
+    const avantComp = state.comparaison, avantCats = JSON.parse(JSON.stringify(state.m3.categories)), sauveSous = cmpSous, sauveFiltre = cmpFiltre;
+    try {
+      const items = extraireItems('cp').filter(it => !it.vide && !it.jumeau).slice(0, 2);
+      if (items.length < 2) return _bancEgal('Sans deux éléments', true, true);
+      state.comparaison = {A: {nom: 'Arthur', evenements: [], decoupages: JSON.parse(JSON.stringify(state.m3.decoupages || {})), decoupagesVolets: JSON.parse(JSON.stringify(state.m3.decoupagesVolets || {})), categories: {cp: {a1: {nom: 'Fuite', items: [items[0].id, items[1].id]}}}},
+                           B: {nom: 'Émilie', evenements: [], decoupages: JSON.parse(JSON.stringify(state.m3.decoupages || {})), decoupagesVolets: JSON.parse(JSON.stringify(state.m3.decoupagesVolets || {})), categories: {cp: {b1: {nom: 'Évitement', items: [items[0].id]}, b2: {nom: 'Départ', items: [items[1].id]}}}}};
+      state.m3.categories.cp = {};
+      cmpSous = 'cp'; cmpFiltre = 'tous';
+      renderComparateur();
+      const z = document.getElementById('cmp-zone');
+      const cols = z.querySelectorAll('.tc-typos > .tc-col').length;
+      const grille = z.querySelectorAll('.tc-grille tbody td').length;
+      const forte = [...z.querySelectorAll('.tc-grille tbody td')].map(td => td.textContent).join(',');
+      const lignes = z.querySelectorAll('.cmp-table tbody tr.cmp-ligne').length >= 2;
+      const vers = z.querySelectorAll('.tc-vers').length;
+      return _bancEgal('colonnes | cases de la grille | valeurs | lignes d\'éléments | « → C » par catégorie de A et B', '3 | 2 | 1,1 | true | 3',
+        [cols, grille, forte, lignes, vers].join(' | '));
+    } finally {
+      state.m3.categories = avantCats; if (avantComp === undefined) delete state.comparaison; else state.comparaison = avantComp;
+      cmpSous = sauveSous; cmpFiltre = sauveFiltre;
+      try { renderComparateur(); } catch (er) { /* rien */ }
+    }
   }},
 
   {nom:'Statistiques de gradation : chaque effet reste attaché à son intervention', test: () => {
@@ -18179,6 +18281,7 @@ function renderM3Sous(sousId) {
           ${estEnfant || cat.ref ? '' : `<button class="m3-cat-del" onclick="ajouterSousCategorie('${sousId}','${catId}')" title="Ajouter une sous-catégorie" style="color:var(--sauge-deep);">＋</button>`}
           <button class="m3-cat-del" onclick="supprimerCat('${sousId}','${catId}')" title="Supprimer cette catégorie">✕</button>
         </div>
+        ${cat.definition ? '<input class="m3-cat-def" value="' + esc(cat.definition) + '" aria-label="Définition de la catégorie" title="Sa définition, écrite à la mise en commun : modifiable" onchange="definirCat(\'' + sousId + '\',\'' + catId + '\',this.value)">' : ''}
         <div class="m3-cat-items">
           ${catItems.length === 0
             ? `<div class="m3-cat-empty">Cliquez sur un élément à gauche pour l\'assigner ici.</div>`
@@ -21270,7 +21373,7 @@ function corpsGuide() {
    Pour remplacer le document : chiffrer le nouveau .docx au même format (sel
    16 octets, IV 12 octets, PBKDF2-SHA-256, AES-GCM 256 bits), en dehors du
    dépôt, et remplacer DOC_EMIA_CHIFFRE. */
-const DOC_EMIA_CHIFFRE = {"iterations":250000,"sel":"q69zLYXmL2Ln2OcbHMA8/w==","iv":"fcxJIM/LyZ1k9WiY","donnees":"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"};
+const DOC_EMIA_CHIFFRE = {"iterations":250000,"sel":"x3KHAUbnaCH3stJp0Fdv2g==","iv":"K8dmq5aHI/Cbl/sj","donnees":"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"};
 // Le journal de bord (À propos → le mot « BAF » du titre), chiffré avec le même code. Source en clair hors du dépôt.
 const JOURNAL_CHIFFRE = {"iterations":250000,"sel":"HomHMwXnJydw5XsXl6H38w==","iv":"upTVYcgE5JoRD8LM","donnees":"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"};
 
@@ -21468,7 +21571,7 @@ function corpsModeEmploiGeneral() {
 
     etape('2. Analyser les données', 'le binôme · dans la BAF : Analyser') +
     pf('Découper, puis primo codage : ', "le référent découpe d'abord les épisodes en citant le déclaratif (Analyser → Découper) ; puis le référent et le clinicien catégorisent chacun de leur côté, dans un codage vierge, à partir du seul déclaratif, sans catégorie de départ.") +
-    pf('Synthèse, à deux : ', "sur un seul poste, dans le fichier socle : le comparateur affiche les deux primo codages côte à côte, on arbitre les catégories, y compris les signes qui entrent dans le vase de tension. « Terminer la synthèse » efface les primo codages : seule la synthèse reste.") +
+    pf('Mise en commun, à deux : ', "sur un seul poste, dans le fichier socle : on lit la typologie de chacun, on écrit ensemble la typologie commune — chaque catégorie avec sa définition — et on y range chaque élément, y compris les signes qui entrent dans le vase de tension. « Terminer la mise en commun » efface les primo codages : seule la typologie commune reste.") +
     pf('Interpréter ', 'se fait ensuite dans le fichier socle, à deux.') +
 
     etape('3. Formuler les hypothèses fonctionnelles', "le binôme et l'équipe · hors de la BAF") +
@@ -21585,11 +21688,11 @@ function corpsModeEmploiGeneral() {
     puce('Interpréter : ', "chercher ce qui se répète, voir plus bas.") +
     texte("Les notes d'analyse s'ouvrent avec le bouton 💬 de la barre d'épisode : un tiroir, avec un onglet pour l'épisode, son rangement, le volet et l'interprétation. On s'y pose des questions, on note ce qu'il faudra creuser. Ces notes font partie du fichier socle ; elles ne partent pas dans un codage vierge, puisque ce sont celles de chacun.") +
 
-    sousPartie('Le double codage : catégoriser séparément, puis arbitrer') +
-    dansBaf('Analyser → Catégoriser → « Double codage » : « Exporter un codage vierge » (un par codeur), puis « Comparer les deux primo codages » ; « Effacer le codage » pour repartir d\'une page blanche') +
+    sousPartie('Le double codage : catégoriser séparément, puis écrire la typologie commune') +
+    dansBaf('Analyser → Catégoriser → « Double codage » : « Exporter un codage vierge » (un par codeur), puis « Mettre en commun les deux primo codages » ; « Effacer le codage » pour repartir d\'une page blanche') +
     texte("Le référent et le clinicien catégorisent d'abord chacun de leur côté, pour permettre la richesse d'un double codage. Le découpage, lui, se fait une seule fois, par le référent, avant : ainsi les deux catégorisent exactement les mêmes éléments.") +
-    puce('Primo codage, chacun de son côté, à partir du seul déclaratif et sans aucune catégorie de départ : ', "le référent découpe les épisodes (Analyser → Découper), puis exporte un codage vierge : le fichier socle avec les épisodes et leur découpage, sans aucune catégorie et sans rien dans Interpréter. Chacun ouvre son codage vierge — le découpage s'y lit, mais ne se modifie pas —, catégorise, et enregistre son codage de son côté avec « Exporter ». Le fichier socle, lui, reste vierge côté Catégoriser. Si le référent a déjà catégorisé dans le fichier socle, cette catégorisation peut devenir son codage : « Exporter ma catégorisation en primo codage » (fenêtre « Double codage »), ou « Prendre la catégorisation de ce fichier socle » dans le comparateur, qui la prend comme codage A ou B et laisse le fichier socle vierge pour la synthèse.") +
-    puce('Synthèse, à deux : ', "en réunion, sur un seul poste. Le référent ouvre le fichier socle, puis « Comparer les deux primo codages », et importe les deux primo codages. Chaque élément se lit sur une ligne : le codage A, le codage B, et la synthèse que vous arbitrez — prendre A, prendre B, ou une autre catégorie. Les signes qui entrent dans le vase de tension s'arbitrent aussi en synthèse. « Terminer la synthèse » efface les deux primo codages du fichier socle : la synthèse devient le seul codage. Supprimez aussi leurs fichiers.") +
+    puce('Primo codage, chacun de son côté, à partir du seul déclaratif et sans aucune catégorie de départ : ', "le référent découpe les épisodes (Analyser → Découper), puis exporte un codage vierge : le fichier socle avec les épisodes et leur découpage, sans aucune catégorie et sans rien dans Interpréter. Chacun ouvre son codage vierge — le découpage s'y lit, mais ne se modifie pas —, catégorise, et enregistre son codage de son côté avec « Exporter ». Le fichier socle, lui, reste vierge côté Catégoriser. Si le référent a déjà catégorisé dans le fichier socle, cette catégorisation peut devenir son codage : « Exporter ma catégorisation en primo codage » (fenêtre « Double codage »), ou « Prendre la catégorisation de ce fichier socle » dans la mise en commun, qui la prend comme codage A ou B et laisse le fichier socle vierge pour la typologie commune.") +
+    puce('Mise en commun, à deux : ', "en réunion, sur un seul poste. Le référent ouvre le fichier socle, puis « Mettre en commun les deux primo codages », et importe les deux primo codages. Pour chaque volet, la typologie de A et celle de B se lisent côte à côte, avec une grille qui dit combien d'éléments leurs catégories ont en commun. Ensemble, vous écrivez la typologie commune : chaque catégorie avec sa définition, des sous-catégories si besoin, en reprenant celles de A ou de B qui vous conviennent. Puis vous rangez chaque élément dedans ; ce que A et B disaient déjà ensemble se pré-range, à confirmer. Les signes qui entrent dans le vase de tension se rangent aussi à ce moment. « Terminer la mise en commun » efface les deux primo codages du fichier socle : la typologie commune devient la catégorisation définitive. Supprimez aussi leurs fichiers.") +
     aEviter("Catégoriser en pensant déjà à la fonction. On regroupe ce qui se ressemble ; l'hypothèse vient après, et pas avant.") +
 
     sousPartie('Interpréter : chercher ce qui se répète, en binôme') +
@@ -22318,8 +22421,8 @@ const VUES_RESERVEES = {
     qui: "C'est un travail clinique, mené par l'équipe de l'EMIA à partir de vos observations et de celles des autres personnes sollicitées."
   },
   comparer: {
-    titre: 'Comparer les deux primo codages',
-    quoi: "Lire côte à côte deux catégorisations faites séparément, et arbitrer à deux celle qui est retenue.",
+    titre: 'Mettre en commun les deux primo codages',
+    quoi: "Lire côte à côte deux catégorisations faites séparément, et écrire à deux la typologie commune, qui devient la catégorisation définitive.",
     qui: "C'est l'équipe de l'EMIA qui s'en charge, en réunion, une fois toutes les observations réunies."
   },
   synthese: {
@@ -23355,8 +23458,8 @@ function prendreCategorisationDuSocle(slot, sansDemande) {
     const cats = state.m3.categories || {};
     const n = Object.keys(cats).reduce((a, v) => a + Object.keys(cats[v] || {}).length, 0);
     if (!confirm('Prendre la catégorisation de ce fichier socle comme codage ' + slot + ' ?\n\n' +
-        '· Ce que vous avez catégorisé dans Catégoriser (' + n + ' catégorie' + (n > 1 ? 's' : '') + ') devient le codage ' + slot + ', gardé dans le comparateur. Le découpage reste dans le fichier socle : c\'est celui de la référente.\n' +
-        '· Le fichier socle repart vierge côté Catégoriser : la synthèse s\'y écrira, ligne par ligne, en arbitrant A et B.\n' +
+        '· Ce que vous avez catégorisé dans Catégoriser (' + n + ' catégorie' + (n > 1 ? 's' : '') + ') devient le codage ' + slot + ', gardé dans la mise en commun. Le découpage reste dans le fichier socle : c\'est celui de la référente.\n' +
+        '· Le fichier socle repart vierge côté Catégoriser : la typologie commune s\'y écrira.\n' +
         '· Interpréter n\'est pas touché.\n\n' +
         'Conseil : exportez-la d\'abord en primo codage (fenêtre « Double codage ») si vous voulez en garder un fichier.\n\nContinuer ?')) return false;
   }
@@ -23410,17 +23513,18 @@ function renderDoubleCodage() {
         '<li><b>Primo codage, séparément.</b> « Exporter un codage vierge » produit le fichier de départ : le préambule et les ' +
           'épisodes avec leur découpage (fait d\'abord, une fois, par la référente), aucune catégorie, rien dans Interpréter. Un par codeur ; chacun catégorise dans le sien, ' +
           'à partir du seul déclaratif. Vous avez déjà catégorisé dans ce fichier socle ? « Exporter ma catégorisation en primo codage » en fait un fichier ; ' +
-          'ou, dans le comparateur, « Prendre la catégorisation de ce fichier socle » en fait directement le codage A ou B.</li>' +
-        '<li><b>Synthèse, à deux.</b> En réunion, sur un seul poste : ouvrez le fichier socle, puis « Comparer les deux primo codages », ' +
-          'et importez-les. Chaque élément se lit sur une ligne, le codage A à côté du codage B, et vous arbitrez la synthèse, qui s\'écrit ici. ' +
-          'Les signes qui entrent dans le vase de tension s\'arbitrent aussi en synthèse, et Interpréter se fait directement en synthèse.</li>' +
-        '<li><b>La synthèse est le seul codage.</b> « Terminer la synthèse », dans le comparateur, efface les deux primo codages du fichier socle. ' +
+          'ou, dans la mise en commun, « Prendre la catégorisation de ce fichier socle » en fait directement le codage A ou B.</li>' +
+        '<li><b>Mise en commun, à deux.</b> En réunion, sur un seul poste : ouvrez le fichier socle, puis « Mettre en commun les deux primo codages », ' +
+          'et importez-les. Vous lisez la typologie de chacun ; ensemble, vous écrivez la typologie commune — chaque catégorie avec sa définition, ' +
+          'en reprenant celles de A ou de B qui vous conviennent — puis vous rangez chaque élément dedans. Ce que A et B disaient déjà ensemble se pré-range, à confirmer. ' +
+          'Les signes qui entrent dans le vase de tension se rangent aussi à ce moment ; Interpréter se fait ensuite dans le fichier socle.</li>' +
+        '<li><b>La typologie commune est la catégorisation définitive.</b> « Terminer la mise en commun » efface les deux primo codages du fichier socle. ' +
           'Supprimez aussi leurs fichiers, là où ils sont rangés.</li>' +
       '</ol>' +
       '<div class="dc-actions">' +
         '<button class="btn btn-secondary btn-sm" onclick="exporterKitCodage()">📄 Exporter un codage vierge</button>' +
         (socleACategorisation() ? '<button class="btn btn-secondary btn-sm" onclick="exporterCategorisationEnPrimoCodage()" title="Ce que vous avez déjà catégorisé dans ce fichier socle, enregistré comme un primo codage. Le fichier socle ne change pas.">💾 Exporter ma catégorisation en primo codage</button>' : '') +
-        '<button class="btn btn-primary btn-sm" onclick="fermerFenetre(\'dc-overlay\'); route(\'comparer\')">⚖️ Comparer les deux primo codages</button>' +
+        '<button class="btn btn-primary btn-sm" onclick="fermerFenetre(\'dc-overlay\'); route(\'comparer\')">⚖️ Mettre en commun les deux primo codages</button>' +
         effacer +
       '</div>';
     if (anciens) {
@@ -23602,52 +23706,46 @@ function puceCatCmp(cats, catId) {
     esc(cheminCatDans(cats, catId)) + '</span>';
 }
 
-function celluleSyntheseCmp(sousId, item, l) {
-  const cats = state.m3.categories[sousId] || {};
-  const comp = state.comparaison || {};
-  const idItem = esc(item.id);
-  const puces = l.s.map(id => {
-    const cat = cats[id];
-    const chemin = esc(cheminCatDans(cats, id));
-    return '<span class="cmp-chip" style="background:' + esc((cat && cat.color) || '#3D4F6B') + ';color:' + texteSurCouleur((cat && cat.color) || '#3D4F6B') + ';">' + chemin +
-      '<button type="button" class="cmp-chip-x" aria-label="Retirer de « ' + chemin + ' »" title="Retirer" ' +
-        'onclick="cmpRetirer(\'' + sousId + '\', \'' + idItem + '\', \'' + esc(id) + '\')">×</button></span>';
-  }).join('');
-  const bouton = (slot, libelle) =>
-    '<button type="button" class="cmp-prendre" onclick="cmpPrendre(\'' + slot + '\', \'' + sousId + '\', \'' + idItem + '\')">' + libelle + '</button>';
-  // On ne propose de prendre un codage que s'il existe et qu'il n'est pas déjà celui de la synthèse.
-  const offre = (slot, ids, cle) => (comp[slot] && ids && ids.length && cle !== l.cleS);
-  const prendre = l.identiques
-    ? (offre('A', l.a, l.cleA) ? bouton('A', 'Prendre A = B') : '')
-    : (offre('A', l.a, l.cleA) ? bouton('A', 'Prendre A') : '') + (offre('B', l.b, l.cleB) ? bouton('B', 'Prendre B') : '');
-  const options = Object.keys(cats).filter(id => l.s.indexOf(id) === -1)
-    .map(id => ({id, chemin: cheminCatDans(cats, id)}))
-    .sort((x, y) => x.chemin.localeCompare(y.chemin, 'fr'))
-    .map(o => '<option value="' + esc(o.id) + '">' + esc(o.chemin) + '</option>').join('');
-  const choix = '<select class="cmp-choix" aria-label="Ajouter une catégorie à la synthèse" ' +
-      'onchange="cmpAjouter(\'' + sousId + '\', \'' + idItem + '\', this)">' +
-    '<option value="">+ Autre catégorie…</option>' + options +
-    '<option value="__nouvelle">Nouvelle catégorie…</option></select>';
-  return '<td class="cmp-cell cmp-synth">' +
-    (puces || '<span class="cmp-rien">Pas encore arbitré</span>') +
-    '<div class="cmp-arbitrer">' + prendre + choix + '</div>' +
-  '</td>';
+/* ── La mise en commun : la typologie commune (Arthur et Émilie, 09/10/2026, passe 191) ──────────────────────────────
+   La synthèse d'un double codage ne choisit pas entre A et B : les deux analystes écrivent ensemble une nouvelle typologie
+   — la typologie commune, ou typologie C : l'ensemble des catégories de chaque volet, chacune avec sa définition, des
+   sous-catégories si besoin — puis rangent chaque élément dedans. C'est la catégorisation définitive ; elle s'écrit dans
+   Catégoriser (state.m3.categories). Ce qui aide, sans rien décider :
+   · une catégorie de A ou de B peut être reprise dans C (« → C ») : la catégorie de C garde la trace de ses sources ;
+   · la grille de recouvrement dit combien d'éléments chaque catégorie de A a en commun avec chaque catégorie de B ;
+   · un élément que A et B ont rangé dans des catégories reprises dans une même catégorie de C est un accord :
+     « Pré-ranger les accords » l'y range, marqué « à confirmer » (choix d'Arthur et Émilie).
+   « Terminer la mise en commun » efface A, B et ces traces : il ne reste que C (A et B ne sont pas gardés). */
+const jsArg = v => esc(JSON.stringify(String(v)));
+function catsCopie(slot, sousId) {
+  const c = state.comparaison && state.comparaison[slot];
+  return c ? ((c.categories || {})[sousId] || {}) : {};
+}
+function sourcesCat(cat) { return cat && Array.isArray(cat.sources) ? cat.sources : []; }
+// Les catégories de C où mène une catégorie de A (ou de B).
+function versC(sousId, slot, idCopie) {
+  const cats = (state.m3.categories || {})[sousId] || {};
+  return Object.keys(cats).filter(id => sourcesCat(cats[id]).some(s => s.slot === slot && s.id === idCopie));
+}
+// Un accord : les catégories de C où mènent à la fois les catégories de l'élément chez A et chez B.
+function accordC(sousId, l) {
+  if (!l || !l.a || !l.b || !l.a.length || !l.b.length) return [];
+  const cA = new Set(), cB = new Set();
+  l.a.forEach(id => versC(sousId, 'A', id).forEach(c => cA.add(c)));
+  l.b.forEach(id => versC(sousId, 'B', id).forEach(c => cB.add(c)));
+  return [...cA].filter(c => cB.has(c));
+}
+// Les éléments pré-rangés, pas encore confirmés : {itemId: true}, dans state.comparaison (ils partent avec A et B).
+function marquesC(sousId, creer) {
+  const comp = state.comparaison;
+  if (!comp) return {};
+  if (!comp.aConfirmer) { if (!creer) return {}; comp.aConfirmer = {}; }
+  if (!comp.aConfirmer[sousId]) { if (!creer) return {}; comp.aConfirmer[sousId] = {}; }
+  return comp.aConfirmer[sousId];
 }
 
-function actionsComparateur(sousId, lignes) {
-  const comp = state.comparaison || {};
-  if (!comp.A && !comp.B) return '';
-  const nIdentiques = (comp.A && comp.B) ? lignes.filter(x => x.l.identiques && !x.l.arbitre).length : 0;
-  return (nIdentiques
-      ? '<button type="button" class="btn btn-secondary btn-sm" onclick="reprendreIdentiques(\'' + sousId + '\')" ' +
-          'title="Les éléments que A et B ont codés à l\'identique, et que la synthèse n\'a pas encore arbitrés">' +
-          '✓ Reprendre les ' + nIdentiques + ' codage' + (nIdentiques > 1 ? 's' : '') + ' identique' + (nIdentiques > 1 ? 's' : '') + '</button>'
-      : '') +
-    '<button type="button" class="btn btn-ghost btn-sm" onclick="terminerSynthese()">🏁 Terminer la synthèse</button>';
-}
-
-/* Une catégorie de même nom (au même niveau) déjà présente dans la synthèse est
-   réutilisée : prendre A puis B ne doit pas créer « Fuite » et « fuite ». */
+/* Une catégorie de même nom (au même niveau) déjà présente dans C est réutilisée : reprendre « Fuite » de A puis « fuite »
+   de B ne crée pas deux catégories. */
 function trouverOuCreerCat(sousId, nom, parentId) {
   const cats = state.m3.categories[sousId];
   const cle = normNomCat(nom);
@@ -23656,8 +23754,9 @@ function trouverOuCreerCat(sousId, nom, parentId) {
   if (trouve) return trouve;
   const catId = 'cat_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
   const idx = Object.keys(cats).length;
+  const n = String(nom || '').trim() || 'Catégorie';
   cats[catId] = {
-    nom: String(nom || '').trim() || 'Catégorie',
+    nom: n.replace(/^(\p{Ll})/u, c => c.toUpperCase()),
     color: (parentId && cats[parentId] && cats[parentId].color) || catColorFor(idx),
     items: []
   };
@@ -23665,89 +23764,160 @@ function trouverOuCreerCat(sousId, nom, parentId) {
   return catId;
 }
 
-/* Prendre A, c'est remplacer : pour cet élément, la synthèse devient exactement
-   le codage de A. Sans enregistrer : le banc l'éprouve à blanc. */
-function reprendreCodage(slot, sousId, itemId) {
+/* « → C » : la catégorie de A (ou de B) est reprise dans C — dans une nouvelle catégorie du même nom, ou dans une catégorie
+   de C déjà écrite (deux noms pour une même idée). Une sous-catégorie de A reste une sous-catégorie, sous la catégorie de C
+   où mène sa catégorie mère. Une catégorie de A ne mène qu'à une catégorie de C. Sans enregistrer : le banc l'éprouve. */
+function versCategorieC(slot, sousId, idCopie, cible) {
   ensureM3();
-  const copie = state.comparaison && state.comparaison[slot];
-  if (!copie) return false;
-  const catsC = (copie.categories || {})[sousId] || {};
-  const idCopie = idCopiePour(slot, sousId, itemId);
-  if (!idCopie) return false;   // découpé autrement : on arbitre d'abord le découpage
   if (!state.m3.categories[sousId]) state.m3.categories[sousId] = {};
   const cats = state.m3.categories[sousId];
-  Object.keys(cats).forEach(id => { cats[id].items = (cats[id].items || []).filter(i => i !== itemId); });
-  catsDeItemDans(catsC, idCopie).forEach(idC => {
-    const c = catsC[idC];
-    const parent = c.parent && catsC[c.parent];
-    const id = trouverOuCreerCat(sousId, c.nom, parent ? trouverOuCreerCat(sousId, parent.nom, null) : null);
-    if (cats[id].items.indexOf(itemId) === -1) cats[id].items.push(itemId);
+  const source = catsCopie(slot, sousId)[idCopie];
+  if (!source) return null;
+  let catId = cible;
+  if (!cible || cible === '__nouvelle') {
+    const mere = source.parent ? versC(sousId, slot, source.parent)[0] : null;
+    catId = trouverOuCreerCat(sousId, source.nom, mere && !cats[mere].parent ? mere : null);
+  }
+  if (!cats[catId]) return null;
+  Object.keys(cats).forEach(id => {
+    if (cats[id].sources) cats[id].sources = cats[id].sources.filter(s => !(s.slot === slot && s.id === idCopie));
   });
+  cats[catId].sources = sourcesCat(cats[catId]).concat([{slot, id: idCopie}]);
+  return catId;
+}
+function cmpVersC(slot, sousId, idCopie, champ) {
+  const v = champ ? champ.value : '__nouvelle';
+  if (champ) champ.value = '';
+  if (!v) return;
+  if (versCategorieC(slot, sousId, idCopie, v)) { persist(); renderComparateur(); }
+}
+function cmpDelierSource(sousId, catId, slot, idCopie) {
+  const c = ((state.m3.categories || {})[sousId] || {})[catId];
+  if (!c || !c.sources) return;
+  c.sources = c.sources.filter(s => !(s.slot === slot && s.id === idCopie));
+  persist();
+  renderComparateur();
+}
+function cmpNouvelleCatC(sousId, parentId) {
+  const nom = prompt(parentId ? 'Nom de la sous-catégorie :' : 'Nom de la nouvelle catégorie :');
+  if (!nom || !nom.trim()) return;
+  ensureM3();
+  if (!state.m3.categories[sousId]) state.m3.categories[sousId] = {};
+  trouverOuCreerCat(sousId, nom, parentId || null);
+  persist();
+  renderComparateur();
+}
+function cmpRenommerC(sousId, catId, nom) {
+  if (!String(nom || '').trim()) { renderComparateur(); return; }
+  renommerCat(sousId, catId, String(nom).trim());
+  renderComparateur();
+}
+function cmpSupprimerC(sousId, catId) {
+  supprimerCat(sousId, catId);
+  renderComparateur();
+}
+// La définition d'une catégorie : une phrase, écrite à la mise en commun ; elle se relit et se reprend dans Catégoriser.
+function definirCat(sousId, catId, texte) {
+  const c = ((state.m3.categories || {})[sousId] || {})[catId];
+  if (!c) return;
+  const t = String(texte || '').trim();
+  if (t) c.definition = t; else delete c.definition;
+  persist();
+}
+
+// Ranger un élément dans une catégorie de C (pré-rangé : marqué « à confirmer »). Sans enregistrer.
+function rangerDansC(sousId, itemId, catId, aConfirmer) {
+  const c = ((state.m3.categories || {})[sousId] || {})[catId];
+  if (!c) return false;
+  if (!c.items) c.items = [];
+  if (c.items.indexOf(itemId) === -1) c.items.push(itemId);
+  if (aConfirmer) marquesC(sousId, true)[itemId] = true;
+  else delete marquesC(sousId, false)[itemId];
   return true;
 }
-
-function cmpPrendre(slot, sousId, itemId) {
-  if (!reprendreCodage(slot, sousId, itemId)) return;
-  persist();
-  renderComparateur();
+function cmpRanger(sousId, itemId, catId) {
+  if (rangerDansC(sousId, itemId, catId, false)) { persist(); renderComparateur(); }
 }
-
 function cmpRetirer(sousId, itemId, catId) {
-  const cat = (state.m3.categories[sousId] || {})[catId];
+  const cats = (state.m3.categories || {})[sousId] || {};
+  const cat = cats[catId];
   if (!cat) return;
   cat.items = (cat.items || []).filter(i => i !== itemId);
+  if (!catsDeItemDans(cats, itemId).length) delete marquesC(sousId, false)[itemId];
   persist();
   renderComparateur();
 }
-
 function cmpAjouter(sousId, itemId, champ) {
   const valeur = champ.value;
   champ.value = '';
   if (!valeur) return;
   ensureM3();
-  const cats = state.m3.categories[sousId];
+  if (!state.m3.categories[sousId]) state.m3.categories[sousId] = {};
   let catId = valeur;
   if (valeur === '__nouvelle') {
     const nom = prompt('Nom de la nouvelle catégorie :');
     if (!nom || !nom.trim()) return;
     catId = trouverOuCreerCat(sousId, nom, null);
   }
-  if (!cats[catId]) return;
-  if (!cats[catId].items) cats[catId].items = [];
-  if (cats[catId].items.indexOf(itemId) === -1) cats[catId].items.push(itemId);
+  cmpRanger(sousId, itemId, catId);
+}
+function cmpConfirmer(sousId, itemId) {
+  delete marquesC(sousId, false)[itemId];
   persist();
   renderComparateur();
 }
-
-function reprendreIdentiques(sousId) {
-  const lignes = lignesComparateur(sousId).filter(x => x.l.identiques && !x.l.arbitre);
-  if (!lignes.length) return;
-  const volet = ((M3_SOUS.find(s => s.id === sousId) || {}).label || '').toLowerCase();
-  if (!confirm('Reprendre tels quels les ' + lignes.length + ' éléments (' + volet + ') que A et B ont codés à l\'identique ?\n\n' +
-      'Ils entrent dans la synthèse avec leurs catégories communes. Vous pourrez toujours les reprendre ligne par ligne.')) return;
-  lignes.forEach(x => reprendreCodage('A', sousId, x.item.id));
+function cmpConfirmerTout(sousId) {
+  const m = marquesC(sousId, false);
+  const n = Object.keys(m).length;
+  if (!n || !confirm('Confirmer les ' + n + ' éléments pré-rangés de ce volet, tels qu\'ils sont rangés ?')) return;
+  Object.keys(m).forEach(k => delete m[k]);
   persist();
   renderComparateur();
-  showToast(lignes.length + ' codage' + (lignes.length > 1 ? 's identiques repris' : ' identique repris') + ' dans la synthèse.');
+}
+/* Pré-ranger les accords : chaque élément pas encore rangé dans C, que A et B ont rangé dans des catégories reprises dans
+   une même catégorie de C, y est rangé, à confirmer. Rend le nombre d'éléments pré-rangés. */
+function preRangerAccords(sousId, sansDemande) {
+  const lignes = lignesComparateur(sousId).filter(x => !x.l.s.length && accordC(sousId, x.l).length);
+  if (!lignes.length) return 0;
+  if (!sansDemande) {
+    const volet = ((M3_SOUS.find(s => s.id === sousId) || {}).label || '').toLowerCase();
+    if (!confirm('Pré-ranger ' + lignes.length + ' élément' + (lignes.length > 1 ? 's' : '') + ' (' + volet + ') où A et B sont d\'accord ?\n\n' +
+        'Chacun va dans la catégorie de la typologie commune où mènent ses catégories chez A et chez B. Ils restent « à confirmer » : ' +
+        'vous les relisez, vous les confirmez ou vous les rangez autrement.')) return 0;
+  }
+  lignes.forEach(x => accordC(sousId, x.l).forEach(c => rangerDansC(sousId, x.item.id, c, true)));
+  if (!sansDemande) {
+    persist();
+    renderComparateur();
+    showToast(lignes.length + ' élément' + (lignes.length > 1 ? 's pré-rangés' : ' pré-rangé') + ', à confirmer.');
+  }
+  return lignes.length;
 }
 
-/* Le bouton qu'Arthur voulait dès le départ : après la réunion, on ne garde
-   que la synthèse. */
-function terminerSynthese() {
+/* Le bouton qu'Arthur voulait dès le départ : après la réunion, on ne garde que la typologie commune. */
+function terminerSynthese(sansDemande) {
   const comp = state.comparaison || {};
-  if (!comp.A && !comp.B) return;
-  const restants = M3_SOUS.reduce((n, s) => n + lignesComparateur(s.id).filter(x => ligneAArbitrer(x.l)).length, 0);
-  const alerte = !restants ? ''
-    : restants === 1 ? 'Attention : 1 élément codé par A ou B n\'a encore aucune catégorie dans la synthèse.\n\n'
-    : 'Attention : ' + restants + ' éléments codés par A ou B n\'ont encore aucune catégorie dans la synthèse.\n\n';
-  if (!confirm('Terminer la synthèse ?\n\n' +
-      'Les deux primo codages sont effacés de ce fichier. La synthèse reste dans Catégoriser : c\'est désormais le seul codage.\n\n' +
-      alerte +
-      'Supprimez aussi les fichiers des deux primo codages, là où ils sont rangés.\n\nTerminer ?')) return;
+  if (!comp.A && !comp.B) return false;
+  if (!sansDemande) {
+    const restants = M3_SOUS.reduce((n, s) => n + lignesComparateur(s.id).filter(x => ligneAArbitrer(x.l)).length, 0);
+    const nConf = M3_SOUS.reduce((n, s) => n + Object.keys(marquesC(s.id, false)).length, 0);
+    const alerte = (restants ? 'Attention : ' + restants + ' élément' + (restants > 1 ? 's' : '') + ' que A ou B avaient rangé' + (restants > 1 ? 's' : '') +
+        ' n\'' + (restants > 1 ? 'ont' : 'a') + ' encore aucune catégorie dans la typologie commune.\n\n' : '') +
+      (nConf ? nConf + ' élément' + (nConf > 1 ? 's' : '') + ' pré-rangé' + (nConf > 1 ? 's' : '') + ' n\'' + (nConf > 1 ? 'ont' : 'a') +
+        ' pas été confirmé' + (nConf > 1 ? 's' : '') + ' : ' + (nConf > 1 ? 'ils restent rangés' : 'il reste rangé') + ' tel' + (nConf > 1 ? 's' : '') + ' quel' + (nConf > 1 ? 's' : '') + '.\n\n' : '');
+    if (!confirm('Terminer la mise en commun ?\n\n' +
+        'La typologie commune et ce qui y est rangé restent dans Catégoriser : c\'est désormais la catégorisation définitive. ' +
+        'Les deux primo codages (A et B) sont effacés de ce fichier.\n\n' + alerte +
+        'Supprimez aussi les fichiers des deux primo codages, là où ils sont rangés.\n\nTerminer ?')) return false;
+  }
+  Object.values(state.m3.categories || {}).forEach(v => Object.values(v || {}).forEach(c => { if (c) delete c.sources; }));
   delete state.comparaison;
-  persist();
-  renderComparateur();
-  showToast('Synthèse terminée : les deux primo codages sont effacés. Exportez le fichier socle pour la garder.');
+  if (!sansDemande) {
+    persist();
+    renderComparateur();
+    showToast('Mise en commun terminée : la typologie commune est la catégorisation définitive. Exportez le fichier socle pour la garder.');
+  }
+  return true;
 }
 
 function renderComparateur() {
@@ -23755,8 +23925,8 @@ function renderComparateur() {
   if (!zone) return;
   ensureM3();
   if (state.codage && state.codage.actif) {
-    zone.innerHTML = '<div class="card cmp-message"><p>Vous êtes dans un <b>primo codage</b>. ' +
-      'Le comparateur s\'ouvre dans le fichier socle : c\'est là qu\'on importe les deux primo codages et qu\'on écrit la synthèse.</p></div>';
+    zone.innerHTML = '<div class="feuille cmp-message"><p>Vous êtes dans un <b>primo codage</b>. ' +
+      'La mise en commun se fait dans le fichier socle : c\'est là qu\'on importe les deux primo codages et qu\'on écrit la typologie commune.</p></div>';
     return;
   }
   if (!M3_SOUS.some(s => s.id === cmpSous)) cmpSous = 'cp';
@@ -23764,58 +23934,154 @@ function renderComparateur() {
   const comp = state.comparaison || {};
   const deux = !!(comp.A && comp.B);
   const evts = state.m2.evenements || [];
+  const catsS = state.m3.categories[sousId] || {};
+  const aRanger = x => ligneAArbitrer(x.l);
+
+  // Les deux codeurs
+  const carteCopie = slot => {
+    const c = comp[slot];
+    if (!c) {
+      return '<div class="tc-copie"><div class="cmp-slot"><span class="cmp-slot-lettre">' + slot + '</span>' +
+        '<button type="button" class="btn btn-secondary btn-sm" onclick="choisirCopieCodage(\'' + slot + '\')">📂 Importer le primo codage ' + slot + '</button></div>' +
+        (socleACategorisation() ? '<button type="button" class="cmp-lien" onclick="prendreCategorisationDuSocle(\'' + slot + '\')" title="Ce que vous avez catégorisé dans ce fichier socle devient le codage ' + slot + ' ; le fichier socle repart vierge côté Catégoriser, pour la typologie commune.">Prendre la catégorisation de ce fichier socle</button>' : '') +
+      '</div>';
+    }
+    return '<div class="tc-copie"><div class="cmp-slot"><span class="cmp-slot-lettre">' + slot + '</span>' +
+        '<input class="cmp-nom" value="' + esc(c.nom) + '" aria-label="Nom du codeur ' + slot + '" title="Cliquez pour nommer le codeur" ' +
+          'onchange="renommerCopieCodage(\'' + slot + '\', this.value)"></div>' +
+      '<div class="cmp-fichier" title="' + esc(c.fichier) + '">' + esc(c.fichier || 'Primo codage importé') + '</div>' +
+      '<button type="button" class="cmp-lien" onclick="choisirCopieCodage(\'' + slot + '\')">Remplacer ce primo codage</button></div>';
+  };
+  const copies = '<div class="tc-copies">' + carteCopie('A') + carteCopie('B') + '</div>';
+  if (!comp.A && !comp.B) {
+    zone.innerHTML = copies + '<div class="feuille tc-vide"><p class="lecture">Importez les deux primo codages, celui de chaque codeur : leur nom commence par « RDAF-primo-codage_ ». ' +
+      'Puis, à deux : lisez la typologie de chacun, écrivez la typologie commune, et rangez chaque élément dedans.</p></div>';
+    zone.dataset.vue = '';
+    return;
+  }
 
   const onglets = '<div class="m3-tabs cmp-onglets">' + M3_SOUS.map(s => {
-    const n = deux ? lignesComparateur(s.id).filter(x => x.l.desaccord).length + decsCmp(s.id).filter(d => d.desaccord).length : 0;
-    const titre = deux ? n + ' désaccord' + (n > 1 ? 's' : '') + ' entre A et B' : '';
+    const ls = lignesComparateur(s.id), m = marquesC(s.id, false);
+    const n = ls.filter(x => aRanger(x) || (m[x.item.id] && x.l.s.length)).length;
     return '<button class="m3-tab' + (s.id === sousId ? ' on' : '') + '" data-volet="' + esc(s.couleur || '') + '" ' +
-      'onclick="cmpChangerSous(\'' + s.id + '\')"' + (titre ? ' title="' + esc(titre) + '"' : '') + '>' +
-      '<span class="m3-tab-ligne">' + s.icon + ' ' + esc(s.label) +
-        (n ? ' <span class="m3-tab-count">≠ ' + n + '</span>' : '') + '</span>' +
+      'onclick="cmpChangerSous(\'' + s.id + '\')"' + (n ? ' title="' + n + ' élément' + (n > 1 ? 's' : '') + ' à ranger ou à confirmer"' : '') + '>' +
+      '<span class="m3-tab-ligne">' + s.icon + ' ' + esc(s.label) + (n ? ' <span class="m3-tab-count">' + n + '</span>' : '') + '</span>' +
       '<span class="m3-tab-bulle" aria-hidden="true"></span></button>';
   }).join('') + '</div>';
 
   const toutes = lignesComparateur(sousId);
-  const decsCompte = decsCmp(sousId);
-  const nDesaccords = toutes.filter(x => x.l.desaccord).length + decsCompte.filter(d => d.desaccord).length;
-  const nAArbitrer = toutes.filter(x => ligneAArbitrer(x.l)).length + decsCompte.filter(d => !d.arbitre).length;
-  if (['tous', 'desaccords', 'a-arbitrer'].indexOf(cmpFiltre) === -1) cmpFiltre = 'tous';
-  const lignes = cmpFiltre === 'desaccords' ? toutes.filter(x => x.l.desaccord)
-    : cmpFiltre === 'a-arbitrer' ? toutes.filter(x => ligneAArbitrer(x.l))
-    : toutes;
+  const marques = marquesC(sousId, false);
+  const optionsC = exclus => Object.keys(catsS).filter(id => !exclus || exclus.indexOf(id) === -1)
+    .map(id => ({id, chemin: cheminCatDans(catsS, id)})).sort((x, y) => x.chemin.localeCompare(y.chemin, 'fr'));
 
+  // 1. Les typologies : A | la typologie commune | B
+  const listeCopie = slot => {
+    const c = comp[slot];
+    if (!c) return '<div class="tc-col"><div class="tc-col-tete"><span class="cmp-slot-lettre">' + slot + '</span>Pas encore importé</div></div>';
+    const cats = catsCopie(slot, sousId);
+    const n = {};
+    toutes.forEach(x => ((slot === 'A' ? x.l.a : x.l.b) || []).forEach(id => { n[id] = (n[id] || 0) + 1; }));
+    const ids = Object.keys(cats).filter(id => cats[id] && cats[id].nom);
+    const racines = ids.filter(id => !cats[id].parent || ids.indexOf(cats[id].parent) < 0);
+    const ligne = (id, sous) => {
+      const cat = cats[id], vers = versC(sousId, slot, id), cible = vers.length ? catsS[vers[0]] : null;
+      return '<div class="tc-cat' + (sous ? ' sous' : '') + (cible ? ' reprise' : '') + '">' +
+        '<span class="tc-pastille" style="background:' + esc(cat.color || '#3D4F6B') + '"></span>' +
+        '<span class="tc-nom">' + esc(cat.nom) + '</span><span class="tc-n" title="éléments rangés par ' + esc(c.nom) + '">' + (n[id] || 0) + '</span>' +
+        '<select class="tc-vers" aria-label="Reprendre « ' + esc(cat.nom) + ' » dans la typologie commune" onchange="cmpVersC(' + jsArg(slot) + ',' + jsArg(sousId) + ',' + jsArg(id) + ',this)">' +
+          '<option value="">' + (cible ? '→ ' + esc(cible.nom) : '→ C') + '</option>' +
+          '<option value="__nouvelle">Nouvelle catégorie « ' + esc(cat.nom) + ' »</option>' +
+          optionsC().map(o => '<option value="' + esc(o.id) + '">Dans « ' + esc(o.chemin) + ' »</option>').join('') +
+        '</select></div>' +
+        ids.filter(k => cats[k].parent === id).map(k => ligne(k, true)).join('');
+    };
+    return '<div class="tc-col"><div class="tc-col-tete"><span class="cmp-slot-lettre">' + slot + '</span>' + esc(c.nom) + '</div>' +
+      (racines.length ? racines.map(id => ligne(id, false)).join('') : '<p class="discret">Aucune catégorie dans ce volet.</p>') + '</div>';
+  };
+  const colonneC = () => {
+    const n = {};
+    toutes.forEach(x => x.l.s.forEach(id => { n[id] = (n[id] || 0) + 1; }));
+    const ids = Object.keys(catsS);
+    const racines = ids.filter(id => !catsS[id].parent || !catsS[catsS[id].parent]);
+    const bloc = (id, sous) => {
+      const c = catsS[id];
+      const sources = sourcesCat(c).filter(s => catsCopie(s.slot, sousId)[s.id]).map(s =>
+        '<span class="tc-source">' + s.slot + ' · ' + esc(catsCopie(s.slot, sousId)[s.id].nom) +
+        '<button type="button" class="tc-x" title="Ne plus relier" aria-label="Ne plus relier ' + s.slot + ' · ' + esc(catsCopie(s.slot, sousId)[s.id].nom) + '" ' +
+          'onclick="cmpDelierSource(' + jsArg(sousId) + ',' + jsArg(id) + ',' + jsArg(s.slot) + ',' + jsArg(s.id) + ')">×</button></span>').join('');
+      return '<div class="tc-catc' + (sous ? ' sous' : '') + '">' +
+        '<div class="tc-catc-tete"><span class="tc-pastille" style="background:' + esc(c.color || '#3D4F6B') + '"></span>' +
+          '<input class="tc-catc-nom" value="' + esc(c.nom) + '" aria-label="Nom de la catégorie" onchange="cmpRenommerC(' + jsArg(sousId) + ',' + jsArg(id) + ',this.value)">' +
+          '<span class="tc-n" title="éléments rangés dans la typologie commune">' + (n[id] || 0) + '</span>' +
+          (sous ? '' : '<button type="button" class="tc-bt" title="Ajouter une sous-catégorie" aria-label="Ajouter une sous-catégorie à « ' + esc(c.nom) + ' »" onclick="cmpNouvelleCatC(' + jsArg(sousId) + ',' + jsArg(id) + ')">＋</button>') +
+          '<button type="button" class="tc-bt" title="Supprimer cette catégorie" aria-label="Supprimer « ' + esc(c.nom) + ' »" onclick="cmpSupprimerC(' + jsArg(sousId) + ',' + jsArg(id) + ')">✕</button></div>' +
+        '<input class="tc-def" value="' + esc(c.definition || '') + '" placeholder="Sa définition, en une phrase" aria-label="Définition de « ' + esc(c.nom) + ' »" ' +
+          'onchange="definirCat(' + jsArg(sousId) + ',' + jsArg(id) + ',this.value)">' +
+        (sources ? '<div class="tc-sources">' + sources + '</div>' : '') +
+      '</div>' + (sous ? '' : ids.filter(k => catsS[k].parent === id).map(k => bloc(k, true)).join(''));
+    };
+    return '<div class="tc-col tc-col-c"><div class="tc-col-tete"><span class="cmp-slot-lettre tc-lettre-c">C</span>La typologie commune</div>' +
+      (racines.length ? racines.map(id => bloc(id, false)).join('')
+        : '<p class="discret">Vide pour l\'instant. Reprenez une catégorie de A ou de B (« → C »), ou écrivez-en une.</p>') +
+      '<button type="button" class="bt tc-ajout" onclick="cmpNouvelleCatC(' + jsArg(sousId) + ',null)">＋ Nouvelle catégorie</button></div>';
+  };
+  const grille = () => {
+    if (!deux) return '';
+    const cA = catsCopie('A', sousId), cB = catsCopie('B', sousId);
+    const n = {};
+    let max = 0;
+    toutes.forEach(x => (x.l.a || []).forEach(a => (x.l.b || []).forEach(b => {
+      const k = a + '\u0001' + b;
+      n[k] = (n[k] || 0) + 1;
+      if (n[k] > max) max = n[k];
+    })));
+    const lignesA = Object.keys(cA).filter(id => cA[id] && cA[id].nom && toutes.some(x => (x.l.a || []).indexOf(id) !== -1));
+    const colsB = Object.keys(cB).filter(id => cB[id] && cB[id].nom && toutes.some(x => (x.l.b || []).indexOf(id) !== -1));
+    if (!lignesA.length || !colsB.length) return '';
+    const tete = '<tr><th class="tc-coin">A ↓ · B →</th>' + colsB.map(b => '<th title="' + esc(cheminCatDans(cB, b)) + '">' + esc(cheminCatDans(cB, b)) + '</th>').join('') + '</tr>';
+    const corps = lignesA.map(a => '<tr><th title="' + esc(cheminCatDans(cA, a)) + '">' + esc(cheminCatDans(cA, a)) + '</th>' + colsB.map(b => {
+      const v = n[a + '\u0001' + b] || 0;
+      const fort = max ? v / max : 0;
+      return '<td' + (v ? ' style="background:rgba(61,79,107,' + (0.1 + fort * 0.75).toFixed(2) + ');color:' + (fort > 0.5 ? '#fff' : 'var(--ink)') + '"' : '') +
+        ' title="' + v + ' élément' + (v > 1 ? 's' : '') + ' : ' + esc(cheminCatDans(cA, a)) + ' (A) et ' + esc(cheminCatDans(cB, b)) + ' (B)">' + (v || '') + '</td>';
+    }).join('') + '</tr>').join('');
+    return '<details class="repli tc-grille" open><summary>Où A et B se recouvrent</summary>' +
+      '<p class="discret">Chaque case : combien d\'éléments A a rangés dans la ligne et B dans la colonne. Une case foncée, seule sur sa ligne : ' +
+      'la même idée sous deux noms. Une ligne étalée sur plusieurs colonnes : ce que B distingue, A le regroupe.</p>' +
+      '<div class="tc-grille-defile"><table><thead>' + tete + '</thead><tbody>' + corps + '</tbody></table></div></details>';
+  };
+
+  // 2. Ranger chaque élément dans la typologie commune
+  const nAccords = toutes.filter(x => !x.l.s.length && accordC(sousId, x.l).length).length;
+  const nARanger = toutes.filter(aRanger).length;
+  const nAConfirmer = toutes.filter(x => marques[x.item.id] && x.l.s.length).length;
+  if (['tous', 'a-ranger', 'a-confirmer'].indexOf(cmpFiltre) === -1) cmpFiltre = 'tous';
+  const lignes = cmpFiltre === 'a-ranger' ? toutes.filter(aRanger)
+    : cmpFiltre === 'a-confirmer' ? toutes.filter(x => marques[x.item.id] && x.l.s.length) : toutes;
   const filtre = (cle, libelle, n) =>
     '<button type="button" class="cmp-filtre' + (cmpFiltre === cle ? ' on' : '') + '" aria-pressed="' + (cmpFiltre === cle) + '" ' +
       'onclick="cmpChangerFiltre(\'' + cle + '\')">' + libelle + (n === null ? '' : ' <b>' + n + '</b>') + '</button>';
   const barre = '<div class="cmp-barre">' +
-    '<div class="cmp-filtres" role="group" aria-label="Lignes affichées">' +
-      filtre('tous', 'Toutes les lignes', null) +
-      filtre('desaccords', 'Désaccords', deux ? nDesaccords : null) +
-      filtre('a-arbitrer', 'Pas encore arbitrées', (comp.A || comp.B) ? nAArbitrer : null) +
+    '<div class="cmp-filtres" role="group" aria-label="Éléments affichés">' +
+      filtre('tous', 'Tous les éléments', null) + filtre('a-ranger', 'À ranger', nARanger) + filtre('a-confirmer', 'À confirmer', nAConfirmer) +
     '</div>' +
-    '<div class="cmp-actions">' + actionsComparateur(sousId, toutes) + '</div>' +
-  '</div>' +
-  (deux ? '<p class="cmp-legende"><i class="cmp-i-identique"></i> A et B ont codé à l\'identique' +
-    '<span class="cmp-sep">·</span><i class="cmp-i-desaccord"></i> A et B diffèrent</p>' : '');
+    '<div class="cmp-actions">' +
+      (nAccords ? '<button type="button" class="btn btn-secondary btn-sm" onclick="preRangerAccords(\'' + sousId + '\')" title="Les éléments que A et B ont rangés dans des catégories reprises dans une même catégorie de la typologie commune">✓ Pré-ranger les ' + nAccords + ' accord' + (nAccords > 1 ? 's' : '') + '</button>' : '') +
+      (nAConfirmer ? '<button type="button" class="btn btn-ghost btn-sm" onclick="cmpConfirmerTout(\'' + sousId + '\')">Confirmer les ' + nAConfirmer + ' pré-rangé' + (nAConfirmer > 1 ? 's' : '') + '</button>' : '') +
+      '<button type="button" class="btn btn-ghost btn-sm" onclick="terminerSynthese()">🏁 Terminer la mise en commun</button>' +
+    '</div></div>';
 
-  const enteteCopie = (slot) => {
-    const c = comp[slot];
-    if (!c) {
-      return '<th class="cmp-th cmp-th-copie"><div class="cmp-slot">' +
-        '<span class="cmp-slot-lettre">' + slot + '</span>' +
-        '<button type="button" class="btn btn-secondary btn-sm" onclick="choisirCopieCodage(\'' + slot + '\')">📂 Importer le primo codage ' + slot + '</button>' +
-      '</div>' +
-      (socleACategorisation() ? '<button type="button" class="cmp-lien" onclick="prendreCategorisationDuSocle(\'' + slot + '\')" title="Ce que vous avez catégorisé dans ce fichier socle devient le codage ' + slot + ' ; le fichier socle repart vierge côté Catégoriser">Prendre la catégorisation de ce fichier socle</button>' : '') +
-      '</th>';
-    }
-    return '<th class="cmp-th cmp-th-copie"><div class="cmp-slot">' +
-        '<span class="cmp-slot-lettre">' + slot + '</span>' +
-        '<input class="cmp-nom" value="' + esc(c.nom) + '" aria-label="Nom du codeur ' + slot + '" title="Cliquez pour nommer le codeur" ' +
-          'onchange="renommerCopieCodage(\'' + slot + '\', this.value)">' +
-      '</div>' +
-      '<div class="cmp-fichier" title="' + esc(c.fichier) + '">' + esc(c.fichier || 'Primo codage importé') + '</div>' +
-      '<button type="button" class="cmp-lien" onclick="choisirCopieCodage(\'' + slot + '\')">Remplacer ce primo codage</button>' +
-    '</th>';
+  const etiqCmp = sousId === 'cp' ? etiquettesCD() : estVoletDecoupable(sousId) ? etiquettesVolets() : {};
+  const celluleElement = item => {
+    const src = [item.date ? formatDate(item.date) : '', item.moment].filter(Boolean).join(' · ');
+    const tag = item.tag === 'plus-tot' ? 'plus tôt dans la journée' : item.vide ? 'non renseigné'
+      : ({'post-intervention': 'après une intervention', 'presume-declencheur': 'déclencheur présumé', 'resume': 'résumé rapide', 'charniere': 'entre deux CD'})[item.tag] || '';
+    return '<td class="cmp-cell cmp-el">' +
+      (etiqCmp[item.id] ? '<span class="cmp-tag cmp-tag-cd">' + etiqCmp[item.id] + '</span>' : '') +
+      (tag ? '<span class="cmp-tag">' + tag + '</span>' : '') +
+      '<div class="cmp-el-texte">' + esc(item.texte) + '</div>' +
+      '<div class="cmp-el-source">Évt. ' + (item.evtIdx + 1) + (src ? ' — ' + esc(src) : '') + ' · ' +
+        '<button type="button" class="cmp-lien cmp-lien-seul" onclick="ouvrirDetailEvt(' + item.evtIdx + ',\'' + sousId + '\',event)">détail</button></div></td>';
   };
   const celluleCopie = (slot, item, ids, autre) => {
     const c = comp[slot];
@@ -23825,90 +24091,54 @@ function renderComparateur() {
     if (c.evenements && c.evenements.length && evt && evt.id && c.evenements.indexOf(evt.id) === -1) {
       return '<td class="cmp-cell cmp-copie"><span class="cmp-rien">Épisode arrivé après ce primo codage</span></td>';
     }
-    if (autre) return '<td class="cmp-cell cmp-copie"><span class="cmp-rien">Découpé autrement : arbitrez d\'abord le découpage de l\'épisode, en haut du tableau</span></td>';
-    const cats = (c.categories || {})[sousId] || {};
-    return '<td class="cmp-cell cmp-copie">' +
-      (ids.length ? ids.map(id => puceCatCmp(cats, id)).join('') : '<span class="cmp-rien">Non catégorisé</span>') +
-    '</td>';
+    if (autre) return '<td class="cmp-cell cmp-copie"><span class="cmp-rien">Découpé autrement (ancienne méthode) : pas de correspondance</span></td>';
+    const cats = catsCopie(slot, sousId);
+    return '<td class="cmp-cell cmp-copie">' + (ids.length ? ids.map(id => puceCatCmp(cats, id)).join('') : '<span class="cmp-rien">Non catégorisé</span>') + '</td>';
   };
-  const celluleElement = (item) => {
-    const src = [item.date ? formatDate(item.date) : '', item.moment].filter(Boolean).join(' · ');
-    const tag = item.tag === 'plus-tot' ? 'plus tôt dans la journée' : item.vide ? 'non renseigné'
-      : ({'post-intervention': 'après une intervention', 'presume-declencheur': 'déclencheur présumé', 'resume': 'résumé rapide', 'charniere': 'entre deux CD'})[item.tag] || '';
-    return '<td class="cmp-cell cmp-el">' +
-      (etiqCmp[item.id] ? '<span class="cmp-tag cmp-tag-cd">' + etiqCmp[item.id] + '</span>' : '') +
-      (tag ? '<span class="cmp-tag">' + tag + '</span>' : '') +
-      '<div class="cmp-el-texte">' + esc(item.texte) + '</div>' +
-      '<div class="cmp-el-source">Évt. ' + (item.evtIdx + 1) + (src ? ' — ' + esc(src) : '') + ' · ' +
-        '<button type="button" class="cmp-lien cmp-lien-seul" onclick="ouvrirDetailEvt(' + item.evtIdx + ',\'' + sousId + '\',event)">détail</button>' +
-      '</div>' +
-    '</td>';
+  const celluleC = (item, l) => {
+    const conf = !!marques[item.id] && l.s.length;
+    const puces = l.s.map(id => {
+      const cat = catsS[id], chemin = esc(cheminCatDans(catsS, id)), coul = (cat && cat.color) || '#3D4F6B';
+      return '<span class="cmp-chip' + (conf ? ' a-confirmer' : '') + '" style="background:' + esc(coul) + ';color:' + texteSurCouleur(coul) + ';">' + chemin +
+        '<button type="button" class="cmp-chip-x" aria-label="Retirer de « ' + chemin + ' »" title="Retirer" ' +
+          'onclick="cmpRetirer(' + jsArg(sousId) + ',' + jsArg(item.id) + ',' + jsArg(id) + ')">×</button></span>';
+    }).join('');
+    const proposer = l.s.length ? '' : accordC(sousId, l).map(id =>
+      '<button type="button" class="cmp-prendre" onclick="cmpRanger(' + jsArg(sousId) + ',' + jsArg(item.id) + ',' + jsArg(id) + ')" title="A et B ont rangé cet élément dans des catégories reprises dans celle-ci">→ ' +
+        esc(cheminCatDans(catsS, id)) + ' <span class="tc-ab">A et B</span></button>').join('');
+    const choix = '<select class="cmp-choix" aria-label="Ranger dans la typologie commune" onchange="cmpAjouter(' + jsArg(sousId) + ',' + jsArg(item.id) + ',this)">' +
+      '<option value="">+ Ranger dans…</option>' + optionsC(l.s).map(o => '<option value="' + esc(o.id) + '">' + esc(o.chemin) + '</option>').join('') +
+      '<option value="__nouvelle">Nouvelle catégorie…</option></select>';
+    return '<td class="cmp-cell cmp-synth">' + (puces || '<span class="cmp-rien">Pas encore rangé</span>') +
+      (conf ? '<button type="button" class="cmp-prendre tc-confirmer" onclick="cmpConfirmer(' + jsArg(sousId) + ',' + jsArg(item.id) + ')">✓ Confirmer</button>' : '') +
+      '<div class="cmp-arbitrer">' + proposer + choix + '</div></td>';
   };
-
-  const etiqCmp = sousId === 'cp' ? etiquettesCD() : estVoletDecoupable(sousId) ? etiquettesVolets() : {};
-  // Les découpages s'arbitrent d'abord : ils décident quels CD existent dans la synthèse.
-  const decs = decsCmp(sousId);
-  const decsVus = cmpFiltre === 'desaccords' ? decs.filter(d => d.desaccord) : cmpFiltre === 'a-arbitrer' ? decs.filter(d => !d.arbitre) : decs;
-  const lignesDecoupage = decsVus.map(d => {
-    const n = d.idx + 1;
-    const appel = slot => sousId === 'cp' ? 'cmpPrendreDecoupage(\'' + slot + '\', \'' + esc(d.evt.id) + '\')' : 'cmpPrendreDecoupageVolet(\'' + slot + '\', \'' + esc(d.evt.id) + '\', \'' + sousId + '\')';
-    const bouton = (slot, lib) => '<button type="button" class="cmp-prendre" onclick="' + appel(slot) + '">' + lib + '</button>';
-    const resume = D => sousId === 'cp' ? resumeDecoupage(D, d.evt, n) : resumeDecoupageVolet(D, d.evt, n, sousId);
-    const dCopie = c => sousId === 'cp' ? decoupageDeCopie(c, d.evt.id) : decoupageVoletDeCopie(c, sousId, d.evt.id);
-    const dSocle = sousId === 'cp' ? decoupageSocle(d.evt.id) : decoupageVolet(sousId, d.evt.id);
-    const prendre = (comp.A && d.sA !== d.sS ? bouton('A', comp.B && d.sA === d.sB ? 'Prendre A = B' : 'Prendre A') : '') +
-      (comp.B && d.sB !== d.sS && !(comp.A && d.sA === d.sB) ? bouton('B', 'Prendre B') : '') +
-      (d.sS !== 'aucun' ? bouton('aucun', 'Ne pas découper') : '');
-    return '<tr class="cmp-ligne cmp-ligne-dec' + (d.desaccord ? ' cmp-desaccord' : (comp.A && comp.B ? ' cmp-identique' : '')) + '">' +
-      '<td class="cmp-cell cmp-el"><span class="cmp-tag">découpage</span><div class="cmp-el-texte">Épisode ' + n + '</div>' +
-        '<div class="cmp-el-source">' + esc([d.evt.date ? formatDate(d.evt.date) : '', d.evt.moment].filter(Boolean).join(' · ')) + ' · ' +
-        '<button type="button" class="cmp-lien cmp-lien-seul" onclick="ouvrirDetailEvt(' + d.idx + ',\'' + sousId + '\',event)">détail</button></div></td>' +
-      '<td class="cmp-cell cmp-copie">' + (comp.A ? resume(dCopie(comp.A)) : '') + '</td>' +
-      '<td class="cmp-cell cmp-copie">' + (comp.B ? resume(dCopie(comp.B)) : '') + '</td>' +
-      '<td class="cmp-cell cmp-synth">' + resume(dSocle) +
-        (prendre ? '<div class="cmp-arbitrer">' + prendre + '</div>' : '') + '</td>' +
-    '</tr>';
-  }).join('');
-
   let corps;
-  if (!comp.A && !comp.B) {
-    corps = '<tr><td colspan="4" class="cmp-vide">Importez les deux primo codages, celui de chaque codeur. ' +
-      'Leur nom commence par « RDAF-primo-codage_ ».</td></tr>';
-  } else if (!lignes.length) {
-    const pourquoi = {
-      tous: 'Aucun élément décrit pour ce volet.',
-      desaccords: deux ? 'Aucun désaccord sur ce volet.' : 'Importez le second primo codage pour voir les désaccords.',
-      'a-arbitrer': 'Rien à arbitrer sur ce volet.'
-    };
+  if (!lignes.length) {
+    const pourquoi = {tous: 'Aucun élément décrit pour ce volet.', 'a-ranger': 'Rien à ranger sur ce volet.', 'a-confirmer': 'Rien à confirmer sur ce volet.'};
     corps = '<tr><td colspan="4" class="cmp-vide">' + pourquoi[cmpFiltre] + '</td></tr>';
   } else {
     corps = lignes.map(({item, l}) =>
-      '<tr class="cmp-ligne' + (l.identiques ? ' cmp-identique' : '') + (l.desaccord ? ' cmp-desaccord' : '') + '" data-item-id="' + esc(item.id) + '">' +
-        celluleElement(item) +
-        celluleCopie('A', item, l.a || [], l.autreA) +
-        celluleCopie('B', item, l.b || [], l.autreB) +
-        celluleSyntheseCmp(sousId, item, l) +
+      '<tr class="cmp-ligne' + (accordC(sousId, l).length ? ' tc-accord' : '') + '" data-item-id="' + esc(item.id) + '">' +
+        celluleElement(item) + celluleCopie('A', item, l.a || [], l.autreA) + celluleCopie('B', item, l.b || [], l.autreB) + celluleC(item, l) +
       '</tr>').join('');
   }
+  const enteteCopie = slot => '<th class="cmp-th cmp-th-copie"><div class="cmp-slot"><span class="cmp-slot-lettre">' + slot + '</span>' + esc(comp[slot] ? comp[slot].nom : 'Pas encore importé') + '</div></th>';
 
-  if (lignesDecoupage) {
-    corps = '<tr class="cmp-sous-titre"><td colspan="4">Découpages à arbitrer d\'abord : tant que la synthèse n\'a pas retenu le découpage d\'un primo codage, ' + (sousId === 'cp' ? 'ses CD' : 'ses passages') + ' ne se comparent pas élément par élément.</td></tr>' +
-      lignesDecoupage + (lignes.length ? corps : '');
-  }
-
-  // Chaque arbitrage redessine le tableau : sans ça, on remonterait en haut à chaque clic.
+  // Chaque geste redessine la page : sans ça, le tableau remonterait en haut à chaque clic.
   const tableauAvant = zone.querySelector('.cmp-wrap');
   const hautAvant = tableauAvant && zone.dataset.vue === sousId + '|' + cmpFiltre ? tableauAvant.scrollTop : 0;
-  zone.innerHTML = onglets + barre +
-    '<div class="cmp-wrap"><table class="cmp-table">' +
-      '<thead><tr>' +
-        '<th class="cmp-th cmp-th-el">Élément décrit</th>' +
-        enteteCopie('A') + enteteCopie('B') +
-        '<th class="cmp-th cmp-th-synth"><div class="cmp-slot"><span class="cmp-slot-lettre cmp-lettre-s">✓</span>Synthèse</div>' +
-          '<div class="cmp-fichier">Le fichier socle : ce qui est retenu s\'écrit dans Catégoriser</div></th>' +
-      '</tr></thead>' +
-      '<tbody>' + corps + '</tbody>' +
-    '</table></div>';
+  zone.innerHTML = copies + onglets +
+    '<section class="tc-partie"><div class="surtitre">1 · Les typologies</div>' +
+      '<div class="tc-typos">' + listeCopie('A') + colonneC() + listeCopie('B') + '</div>' + grille() + '</section>' +
+    '<section class="tc-partie"><div class="surtitre">2 · Ranger chaque élément dans la typologie commune</div>' + barre +
+      '<p class="cmp-legende"><i class="cmp-i-identique"></i> A et B sont d\'accord : leurs catégories mènent à la même catégorie commune' +
+        '<span class="cmp-sep">·</span><span class="cmp-chip a-confirmer tc-legende-chip">pré-rangé</span> à confirmer</p>' +
+      '<div class="cmp-wrap"><table class="cmp-table"><thead><tr>' +
+        '<th class="cmp-th cmp-th-el">Élément décrit</th>' + enteteCopie('A') + enteteCopie('B') +
+        '<th class="cmp-th cmp-th-synth"><div class="cmp-slot"><span class="cmp-slot-lettre tc-lettre-c">C</span>Typologie commune</div>' +
+          '<div class="cmp-fichier">Ce qui est rangé ici s\'écrit dans Catégoriser</div></th>' +
+      '</tr></thead><tbody>' + corps + '</tbody></table></div></section>';
   zone.dataset.vue = sousId + '|' + cmpFiltre;
   const tableauApres = zone.querySelector('.cmp-wrap');
   if (tableauApres && hautAvant) tableauApres.scrollTop = hautAvant;
@@ -24403,6 +24633,22 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-09',
+    version: 'v2026.10.09-18',
+    titre: "La mise en commun du double codage : la typologie commune",
+    corps: `
+<p><b>La mise en commun du double codage : la typologie commune</b> (Arthur et Émilie). La synthèse d'un double codage ne choisit plus entre A et B : à deux, on écrit une nouvelle typologie, puis on y range chaque élément. « Comparer les deux primo codages » devient « Mettre en commun les deux primo codages » :</p>
+<ul>
+<li><b>Les typologies, côte à côte</b>, volet par volet : celle de A, celle de B, et au milieu <b>la typologie commune</b>, qu'on écrit — chaque catégorie avec <b>sa définition</b> (une phrase), des sous-catégories si besoin. Une catégorie de A ou de B se reprend d'un geste (« → C ») : dans une nouvelle catégorie du même nom, ou dans une catégorie commune déjà écrite (deux noms pour une même idée).</li>
+<li><b>Où A et B se recouvrent</b> : une grille dit combien d'éléments chaque catégorie de A a en commun avec chaque catégorie de B. Une case foncée seule sur sa ligne : la même idée sous deux noms ; une ligne étalée : ce que l'un distingue, l'autre le regroupe.</li>
+<li><b>Ranger chaque élément</b> dans la typologie commune. Quand A et B l'avaient rangé dans des catégories reprises dans la même catégorie commune, c'est un accord : « Pré-ranger les accords » l'y met, <b>à confirmer</b>.</li>
+<li>« Terminer la mise en commun » efface les deux primo codages : la typologie commune devient la catégorisation définitive. Les définitions restent, et se relisent dans Catégoriser et dans le document Word.</li>
+<li>La mise en commun n'arbitre plus les découpages : le découpage est celui de la référente, le même dans les deux codages.</li>
+</ul>
+`
+  },
 
   {
     date: '2026-10-09',
@@ -26105,7 +26351,7 @@ const REPERES = [
            <p class="repere-renvoi">Mode d'emploi, § 1.3 — c'est ce que dit le courriel.</p>`},
       {q: "Comment travailler à plusieurs sur la même analyse ?",
        r: `<p><b>Pour recueillir</b>, le référent envoie à chaque déclarant un <i>fichier déclarant</i> vierge, le même pour tous : le préambule, sans aucun épisode ni travail d'analyse. Chaque déclarant l'ouvre sur son propre appareil, depuis la page déclarant de la BAF — une personne, un fichier —, décrit ce qu'il observe et sauvegarde son fichier au fur et à mesure ; à la fin, il envoie le dernier. Le référent l'ajoute à son <i>fichier socle</i> : chaque épisode garde sa provenance, et les envois successifs ne se dupliquent pas. Ceux qui ne peuvent pas utiliser l'outil numérique remplissent une grille ABC papier, disponible dans Ressources.</p>
-           <p><b>Pour analyser</b>, le référent découpe d'abord les épisodes, une fois pour tous (Analyser → Découper). Référent et clinicien font ensuite un primo codage chacun de leur côté, chacun dans son <i>codage vierge</i>, à partir du seul déclaratif : ils catégorisent les mêmes éléments. Ils se réunissent et arbitrent ensemble, dans le fichier socle, la catégorisation de synthèse, qui devient le seul codage. Interpréter se fait ensuite dans le fichier socle.</p>
+           <p><b>Pour analyser</b>, le référent découpe d'abord les épisodes, une fois pour tous (Analyser → Découper). Référent et clinicien font ensuite un primo codage chacun de leur côté, chacun dans son <i>codage vierge</i>, à partir du seul déclaratif : ils catégorisent les mêmes éléments. Ils se réunissent et écrivent ensemble, dans le fichier socle, la typologie commune, qui devient la catégorisation définitive. Interpréter se fait ensuite dans le fichier socle.</p>
            <p>Le fichier socle, lui, ne circule pas : il reste chez le référent. Ce qui part vers l'extérieur, c'est le document d'analyse fonctionnelle.</p>`},
       {q: "Pourquoi déclarer les journées où il ne se passe rien ?",
        r: `<p>Parce qu'une journée sans comportement-défi est une donnée, pas un vide. Sans elle, l'outil ne peut pas distinguer « il ne s'est rien passé » de « personne n'a rempli » : la fréquence qu'il affiche mesure alors les signalements, pas les comportements.</p>
@@ -26122,7 +26368,7 @@ const REPERES = [
            <p class="repere-renvoi">Mode d'emploi, § 1.1 et § 1.4.</p>`},
       {groupe: "Analyser", q: "Qu'est-ce que le double codage ?",
        r: `<p>Catégoriser, c'est regrouper ce qui se ressemble, volet par volet : contexte, antécédent, comportement, conséquence, intervention. Or <b>catégoriser, c'est déjà mesurer</b> : c'est ce geste qui transforme un texte en une donnée qui sera comptée. Le référent et le clinicien catégorisent donc d'abord <b>chacun de leur côté</b>, à partir du seul déclaratif et sans catégorie de départ : c'est le <b>primo codage</b>, fait dans un codage vierge que le référent exporte du fichier socle — après avoir découpé les épisodes, une fois pour tous : les deux codeurs catégorisent les mêmes éléments. Une catégorisation déjà faite dans le fichier socle peut devenir l'un des deux codages : « Exporter ma catégorisation en primo codage », ou, dans le comparateur, « Prendre la catégorisation de ce fichier socle ».</p>
-           <p>Ils se réunissent ensuite, sur un seul poste, et ouvrent « Comparer les deux primo codages » : chaque élément se lit sur une ligne — le codage A, le codage B, la synthèse. « Terminer la synthèse » efface les deux primo codages : la synthèse devient le seul codage.</p>
+           <p>Ils se réunissent ensuite, sur un seul poste, et ouvrent « Mettre en commun les deux primo codages ». Il ne s'agit pas de choisir entre A et B : ils lisent la typologie de chacun, écrivent ensemble la <b>typologie commune</b> — chaque catégorie avec sa définition — puis y rangent chaque élément. « Terminer la mise en commun » efface les deux primo codages : la typologie commune devient la catégorisation définitive.</p>
            <p><b>À éviter :</b> catégoriser en pensant déjà à la fonction. On regroupe ce qui se ressemble ; l'hypothèse vient après.</p>
            <p class="repere-renvoi">Mode d'emploi, partie 2 — Le double codage.</p>`},
       {q: "Comment ranger ce que le déclarant a écrit ?",
@@ -26197,7 +26443,8 @@ const LEXIQUE_BAF = {
   "fichier déclarant": "Le fichier propre à chaque déclarant. Le référent en transmet un vierge, le même pour tous : le préambule, sans aucun épisode ni travail d'analyse. Chacun l'ouvre depuis la page déclarant de la BAF, y décrit ses épisodes et ses périodes observées, le sauvegarde à chaque séance, repart toujours du dernier, et envoie le dernier. Le référent l'ajoute à son fichier socle, chaque épisode gardant sa provenance. Une personne, un fichier : à deux sur le même fichier, on se marche dessus.",
   "période observée": "Une journée ou une plage de jours déclarée comme observée, avec ou sans comportement-défi. Sans elle, l'outil ne peut pas distinguer « il ne s'est rien passé » de « personne n'a rempli ».",
   "vase de tension": "L'image qu'emploie la BAF pour la tension qui s'accumule chez la personne, en cinq paliers. Le déclarant pose un palier et note les signes de tension qu'il a remarqués ; l'équipe en tire l'échelle décrite propre à la personne.",
-  "double codage": "La catégorisation faite d'abord séparément par deux personnes — le référent et le clinicien, par exemple —, chacune dans son codage vierge et à partir du seul déclaratif, puis saisie à deux, en synthèse, dans le fichier socle. La synthèse devient le seul codage. Le découpage des épisodes se fait une seule fois, par le référent, avant : les deux catégorisent les mêmes éléments.",
+  "double codage": "La catégorisation faite d'abord séparément par deux personnes — le référent et le clinicien, par exemple —, chacune dans son codage vierge et à partir du seul déclaratif, puis mise en commun à deux, dans le fichier socle : on y écrit la typologie commune, qui devient la catégorisation définitive. Le découpage des épisodes se fait une seule fois, par le référent, avant : les deux catégorisent les mêmes éléments.",
+  "typologie commune": "L'ensemble des catégories de chaque volet, chacune avec sa définition, que les deux codeurs écrivent ensemble à la mise en commun d'un double codage, avant d'y ranger chaque élément. Elle ne choisit pas entre les deux primo codages : elle en fait une troisième, qui devient la catégorisation définitive.",
   "codage vierge": "Le fichier socle sans aucun codage, pour le primo codage : le préambule et les épisodes avec leur découpage (celui du référent), aucune catégorie, rien dans Interpréter. Un par codeur.",
 };
 
@@ -26224,7 +26471,7 @@ const LEXIQUE_CLASSE = {
   "BAF": "outil", "RDAF": "outil", "ICAF": "outil", "préambule": "outil",
   "analyste": "outil", "référent": "outil", "cotateur": "outil",
   "fichier socle": "outil", "fichier déclarant": "outil", "période observée": "outil",
-  "vase de tension": "outil", "double codage": "outil", "codage vierge": "outil", "analyser": "outil", "phase": "outil",
+  "vase de tension": "outil", "double codage": "outil", "typologie commune": "outil", "codage vierge": "outil", "analyser": "outil", "phase": "outil",
 };
 
 function tousLesTermes() {
