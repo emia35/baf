@@ -4646,7 +4646,7 @@ body.seq-selection .seq-case .seq-vide{display:none;}
         <button type="button" data-cible="synth-tension" style="--c:var(--vase-monte)" onclick="allerPartieSynthese('synth-tension')"><i></i>La tension</button>
         <span class="synth-sommaire-titre">Pour la réunion</span>
         <button type="button" data-cible="synth-pistes" style="--c:var(--sel-deep)" onclick="allerPartieSynthese('synth-pistes')"><i></i>Les pistes à discuter</button>
-        <button type="button" data-cible="synth-equipe" style="--c:var(--vol-comportement)" onclick="allerPartieSynthese('synth-equipe')"><i></i>Ce que l'équipe a repéré</button>
+        <button type="button" data-cible="synth-equipe" style="--c:var(--vol-comportement)" onclick="allerPartieSynthese('synth-equipe')"><i></i>Ce que les analystes ont repéré</button>
         <span class="synth-sommaire-titre">Le détail</span>
         <button type="button" data-cible="synth-tout" onclick="allerPartieSynthese('synth-tout')"><i></i>Toutes les données</button>
         <div class="synth-epingles" id="synth-epingles-sommaire"></div>
@@ -4720,7 +4720,7 @@ body.seq-selection .seq-case .seq-vide{display:none;}
         </section>
 
         <section class="synth-partie" id="synth-equipe" style="--c:var(--vol-comportement-deep);--hl:var(--vol-comportement-hl)">
-          <div class="surtitre"><i></i>Ce que l'équipe a repéré</div>
+          <div class="surtitre"><i></i>Ce que les analystes ont repéré</div>
           <p class="phrase" id="synth-phrase-equipe"></p>
           <div id="synth-m4"></div>
         </section>
@@ -6186,9 +6186,6 @@ function renderDecouper() {
         vide: '<b>Rien à proposer</b> : sélectionnez un passage à gauche, une barre propose où le ranger.'
       })[t.origine] + '</span>' + (t.origine === 'vide' ? '' : '<button type="button" class="bt-lien" onclick="recommencerSeq()">Partir de zéro</button>') + '</div>'
     : '';
-  // Un primo codage d'avant la refonte : pas de rangement de la référente, chacun découpe dans le sien.
-  const codageLibre = state.codage && state.codage.actif && !decoupageFige()
-    ? '<div class="seq-info"><b>Primo codage d\'avant la refonte :</b> ce fichier ne porte pas de rangement de la référente. Vous découpez dans le vôtre, comme avant ; le comparateur arbitrera les découpages.</div>' : '';
   const noeud = (nom, aide, couleur, contenu) => '<div class="seq-noeud" style="--c:' + couleur + '"><span class="seq-noeud-pt"></span><div class="seq-noeud-tete"><span class="seq-noeud-nom">' + nom + '</span><span class="seq-noeud-aide">' + aide + '</span></div>' + contenu + '</div>';
   const phases = seq.phases.map((p, i) =>
     '<div class="seq-noeud" style="--c:var(--slate)"><span class="seq-noeud-pt"></span><div class="seq-phase' + (i === act ? ' active' : '') + '">' +
@@ -6201,7 +6198,7 @@ function renderDecouper() {
         '</span></div>' +
       ['antecedents', 'cds', 'interventions'].map(s => caseSeq(evt, seq, 'p' + i + '.' + s, noms)).join('') + '</div></div>').join('');
   const ecarte = (seq.ecarte || []).length;
-  el.innerHTML = codageLibre + info +
+  el.innerHTML = info +
     '<div class="seq-frise">' +
       noeud('Contexte', 'ce qui précède de loin', 'var(--vol-contexte-deep)', '<div class="seq-phase simple">' + caseSeq(evt, seq, 'contexte', noms, {seule: true}) + '</div>') +
       phases +
@@ -6442,12 +6439,15 @@ window.addEventListener('scroll', () => { const b = document.getElementById('seq
 
 /* ── Le rappel de l'étape d'avant ── */
 const SLOT_VERS_VOLET = {contexte: 'contexte', antecedents: 'antecedents', cds: 'cp', interventions: 'interventions', consequence: 'consequences'};
-/* Le découpage d'un primo codage est celui de la référente : on le lit, on ne le modifie pas, pour que tout le monde catégorise
-   les mêmes éléments. Mais seulement quand le codage vierge porte son rangement (drapeau decoupageReferente, posé à l'ouverture).
-   Un primo codage d'avant la refonte n'en porte pas : chacun découpe alors dans le sien, comme avant, et le comparateur
-   arbitre les découpages. Sans cela, rien ne se sélectionnerait et le panneau resterait vide. */
-function decoupageFige() { return !!(state.codage && state.codage.actif && state.codage.decoupageReferente); }
-// Un primo codage ouvert avant ce drapeau : il est figé s'il porte déjà un rangement, libre sinon. Appelé au chargement d'un dossier.
+/* Le découpage d'un primo codage est celui de la référente : on le lit, on ne le modifie jamais, pour que tout le monde catégorise
+   les mêmes éléments (Arthur, 09/10/2026 : plus d'exception). Un épisode qu'elle n'a pas rangé se catégorise sur ses cases de
+   formulaire, pareil pour chaque codeur et dans le fichier socle : le comparateur n'a donc jamais de découpage à arbitrer.
+   Le drapeau decoupageReferente ne sert plus qu'à reconnaître un primo codage fait avec l'ancienne méthode (avant le 8 octobre,
+   chaque codeur découpait dans sa copie) pour le dire. */
+const METHODE_CODAGE = 'decoupage-referente';
+function decoupageFige() { return !!(state.codage && state.codage.actif); }
+function codageAncienneMethode() { return !!(state.codage && state.codage.actif && state.codage.decoupageReferente === false); }
+// Un primo codage ouvert avant ce drapeau : de la méthode actuelle s'il porte déjà un rangement. Appelé au chargement d'un dossier.
 function fixerDecoupageCodage() {
   const c = state.codage;
   if (c && c.actif && c.decoupageReferente === undefined) c.decoupageReferente = Object.keys((state.m3 && state.m3.sequences) || {}).length > 0;
@@ -6468,7 +6468,9 @@ function chipLectureSeq(evt, slot, cit, noms) {
 function renderDecouperRecap(el, evt) {
   const e = analyseEtat(), n = e.episode + 1;
   const sq = sequenceActive(evt);
-  const fige = decoupageFige() ? '<div class="recap-fige"><b>Primo codage :</b> le découpage est celui de la référente. On le lit, on ne le modifie pas : tout le monde catégorise les mêmes éléments.</div>' : '';
+  const fige = codageAncienneMethode()
+    ? '<div class="recap-fige"><b>Primo codage fait avec l\'ancienne méthode</b> (avant le 8 octobre 2026), quand chaque codeur découpait dans sa copie. Aujourd\'hui, la référente découpe seule et le codage vierge emporte son découpage : on ne découpe plus dans un primo codage. Pour suivre la méthode, demandez-lui un nouveau codage vierge, exporté du fichier socle après son découpage.</div>'
+    : decoupageFige() ? '<div class="recap-fige"><b>Primo codage :</b> le découpage est celui de la référente. On le lit, on ne le modifie pas : tout le monde catégorise les mêmes éléments.</div>' : '';
   if (!sq) {
     el.innerHTML = fige + '<div class="recap-fige">Cet épisode n\'est pas encore rangé : Catégoriser lit ses cases de formulaire telles quelles.' +
       (decoupageFige() ? '' : '<br><button type="button" class="bt" style="margin-top:8px;" onclick="allerDecouper(\'' + esc(evt.id) + '\')">→ Ranger cet épisode</button>') + '</div>';
@@ -10386,7 +10388,7 @@ function voirEpisodeSynthese(id) {
   e.pos = 0;
   route('analyser');
 }
-// L'équipe et les chiffres se répondent : pour chaque intuition d'Interpréter, la BAF dit si les chiffres vont dans le même sens.
+// Les analystes et les chiffres se répondent : pour chaque intuition d'Interpréter, la BAF dit si les chiffres vont dans le même sens.
 function renderEquipeSynthese(r) {
   const el = document.getElementById('synth-m4');
   if (!el) return;
@@ -10450,9 +10452,9 @@ function renderEquipeSynthese(r) {
     (cartes.length ? '<div class="synth-equipe">' + cartes.join('') + '</div>' : '') +
     (blocVase ? '<div class="feuille synth-block synth-vase">' + blocVase + '</div>' : '');
   const nI = patterns.length + grads.length;
-  poserSynth('synth-phrase-equipe', !saisi && !blocVase ? 'L\'équipe n\'a encore rien proposé dans Interpréter : patterns, séquences de montée, vase.'
-    : !nI ? (saisi ? 'Le vase de tension, tel que l\'équipe le décrit.' : 'Rien n\'est encore proposé dans Interpréter ; le vase se dessine déjà à partir des épisodes cotés.')
-    : (nI > 1 ? nI + ' intuitions' : 'Une intuition') + ' de l\'équipe' +
+  poserSynth('synth-phrase-equipe', !saisi && !blocVase ? 'Les analystes n\'ont encore rien proposé dans Interpréter : patterns, séquences de montée, vase.'
+    : !nI ? (saisi ? 'Le vase de tension, tel que les analystes le décrivent.' : 'Rien n\'est encore proposé dans Interpréter ; le vase se dessine déjà à partir des épisodes cotés.')
+    : (nI > 1 ? nI + ' intuitions' : 'Une intuition') + ' des analystes' +
       (nAccord ? ', dont ' + emSynth((nAccord > 1 ? nAccord + ' qui se voient' : 'une qui se voit') + ' aussi dans les chiffres') : ', ' + emSynth('pas encore visible' + (nI > 1 ? 's' : '') + ' dans les chiffres')) + '.');
 }
 // « Toutes les données » : les séquences complètes qui reviennent, et le contexte qui change l'effet d'un antécédent.
@@ -14077,7 +14079,7 @@ const _CONTROLES = [
     const analyser = /Analyser/.test(sources['mode d\'emploi pour tous']) && /Analyser/.test(sources.FAQ) && LEXIQUE_BAF['analyser'] !== undefined && LEXIQUE_CLASSE['analyser'] === 'outil' && LEXIQUE_CLASSE['phase'] === 'outil';
     return _bancEgal('aucun vieux terme dans le mode d\'emploi, la FAQ, le lexique | « Analyser » présent, avec « analyser » et « phase » au lexique', '[] | true', JSON.stringify(reste) + ' | ' + analyser);
   }},
-  {nom:'Primo codage d\'avant la refonte : le découpage reste libre ; avec le rangement de la référente, il est figé', test: () => {
+  {nom:'Primo codage : le découpage est toujours figé ; un primo codage de l\'ancienne méthode le dit ; un codage vierge porte la méthode', test: () => {
     const sauveEvts = state.m2.evenements, sauveM3 = JSON.stringify(state.m3), sauveCodage = state.codage, vraiPersist = persist, vraiConfirm = window.confirm;
     const sauveEp = analyseEtat().episode, sauvePos = analyseEtat().pos;
     const vue = document.getElementById('view-analyser'), etaitMontree = vue.classList.contains('show');
@@ -14085,14 +14087,14 @@ const _CONTROLES = [
     try {
       const evt = {id: 'cl1', date: '2026-03-02', heure: '09:10', comportement: 'Il crie. Puis il tape.', obtenu: 'Du temps.'};
       state.m2.evenements = [evt]; ensureM3(); state.m3.decoupages = {}; state.m3.decoupagesVolets = {}; state.m3.sequences = {};
-      // Un primo codage ouvert avant le drapeau, sans aucun rangement : libre
+      // Un primo codage de l'ancienne méthode (ni drapeau, ni rangement) : figé lui aussi, et il le dit
       state.codage = {actif: true};
       fixerDecoupageCodage();
       const sansRangement = state.codage.decoupageReferente + ',' + decoupageFige();
       vue.classList.add('show'); oublierTravailSeq(); analyseEtat().episode = 0;
       allerAnalyse(0, {sansDefilement: true});
-      const libre = !!document.querySelector('#declaratif-brut .brut-texte') && !!document.querySelector('#decouper-panneau .seq-ici') &&
-        /d'avant la refonte/.test(document.getElementById('decouper-panneau').textContent);
+      const libre = !document.querySelector('#declaratif-brut .brut-texte') && !document.querySelector('#decouper-panneau .seq-ici') &&
+        /ancienne méthode/.test(document.getElementById('decouper-panneau').textContent);
       // Le même codage, qui porte un rangement de la référente : figé
       state.m3.sequences.cl1 = sequenceVide();
       state.codage = {actif: true};
@@ -14102,10 +14104,13 @@ const _CONTROLES = [
       state.m3.sequences = {};
       fixerDecoupageCodage();
       const stable = state.codage.decoupageReferente;
-      // Hors primo codage : jamais figé
+      // Un codage vierge exporté aujourd'hui porte la méthode, même si la référente n'a encore rien rangé
       delete state.codage;
-      return _bancEgal('sans rangement : libre | panneaux utilisables et mot d\'explication | avec rangement : figé | drapeau stable | socle : libre',
-        'false,false | true | true,true | true | false', [sansRangement, libre, avecRangement, stable, decoupageFige()].join(' | '));
+      const kit = construireKitCodage();
+      const methode = kit.methodeCodage === METHODE_CODAGE && !kit.m3.sequences.cl1;
+      // Hors primo codage : jamais figé
+      return _bancEgal('ancienne méthode : reconnue, et figée | figée et le dit | avec rangement : figé | drapeau stable | le codage vierge porte la méthode | socle : libre',
+        'false,true | true | true,true | true | true | false', [sansRangement, libre, avecRangement, stable, methode, decoupageFige()].join(' | '));
     } finally {
       persist = vraiPersist; window.confirm = vraiConfirm; state.m2.evenements = sauveEvts; state.m3 = JSON.parse(sauveM3);
       if (sauveCodage) state.codage = sauveCodage; else delete state.codage;
@@ -22458,7 +22463,9 @@ function construireKitCodage() {
     m2: JSON.parse(JSON.stringify(state.m2 || {evenements: []})),
     contributions: JSON.parse(JSON.stringify(state.contributions || {})),
     m3: vierge.m3,
-    m4: vierge.m4
+    m4: vierge.m4,
+    // La méthode actuelle : le découpage est celui de la référente, même si elle n'a encore rien rangé.
+    methodeCodage: METHODE_CODAGE
   };
 }
 
@@ -22487,7 +22494,7 @@ function ouvrirKitCodage(lu) {
   state.schema = SCHEMA_DOSSIER;
   state.fichierDossier = null;
   state.origineDossier = 'codage';
-  state.codage = {actif: true, ouvert: new Date().toISOString(), decoupageReferente: Object.keys(state.m3.sequences || {}).length > 0};
+  state.codage = {actif: true, ouvert: new Date().toISOString(), decoupageReferente: kit.methodeCodage === METHODE_CODAGE || Object.keys(state.m3.sequences || {}).length > 0};
   persist();
   loadM1FromState();
   refreshM2List();
@@ -22544,7 +22551,7 @@ function construirePrimoCodageDepuisSocle() {
   migrerIdentiteDossier();
   const fichier = Object.assign(JSON.parse(JSON.stringify(state)), {baf: enveloppeBAF('dossier')});
   ['derniereSauvegarde', 'comparaison', 'provisoire', 'fichierDossier'].forEach(k => delete fichier[k]);
-  fichier.codage = {actif: true, ouvert: new Date().toISOString(), depuisSocle: true, decoupageReferente: Object.keys((fichier.m3 && fichier.m3.sequences) || {}).length > 0};
+  fichier.codage = {actif: true, ouvert: new Date().toISOString(), depuisSocle: true, decoupageReferente: true};
   return fichier;
 }
 function exporterCategorisationEnPrimoCodage() {
@@ -23615,6 +23622,20 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-09',
+    version: 'v2026.10.09-6',
+    titre: "Le découpage est toujours celui de la référente ; « les analystes » dans la Synthèse",
+    corps: `
+<p><b>Double codage, plus d'exception</b> (Arthur et Émilie) :</p>
+<ul>
+<li><b>Dans un primo codage, Découper se lit et ne se modifie jamais.</b> Le découpage est celui de la référente ; un épisode qu'elle n'a pas rangé se catégorise sur ses cases de formulaire, de la même façon pour chaque codeur et dans le fichier socle. Le comparateur n'a donc jamais de découpage à arbitrer : seulement des catégories.</li>
+<li>Jusqu'ici, un primo codage qui ne portait aucun rangement laissait découper, avec un mot disant que le comparateur arbitrerait les découpages. C'était le cas des primo codages faits avant le 8 octobre, mais aussi, par erreur, d'un codage vierge exporté avant que la référente ait rangé un seul épisode. C'est fini : un codage vierge porte désormais la méthode, et un primo codage de l'ancienne méthode le dit, en indiquant quoi faire (demander à la référente un nouveau codage vierge).</li>
+</ul>
+<p><b>Synthèse</b> : « Ce que l'équipe a repéré » devient <b>« Ce que les analystes ont repéré »</b>, dans le sommaire, en titre de la partie et dans ses phrases.</p>
+`
+  },
 
   {
     date: '2026-10-09',
