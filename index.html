@@ -3611,6 +3611,57 @@ body.seq-selection .seq-case .seq-vide{display:none;}
 @media (max-width:900px){.synth-equipe{grid-template-columns:minmax(0,1fr);}}
 @media (max-width:700px){.synth-piste{grid-template-columns:minmax(0,1fr);gap:8px;}}
 @media print{.export-seul{display:block;}}
+/* ── Le cadre commun (passe 186) : la tête de page, les boutons, les fenêtres, les aides, l'en-tête sur téléphone.
+   Tout le reste de la BAF s'appuie dessus ; la page #charte les montre. ── */
+/* La tête de page : un surtitre, le titre et sa boussole, une phrase. */
+.mod-header{padding:22px 0 16px;margin-bottom:22px;border-bottom:0;}
+.mod-header .temps-tag{display:flex;align-items:center;gap:8px;margin:0 0 6px;padding:0;border-radius:0;background:none;color:var(--ink-faint);font-size:11px;letter-spacing:.09em;}
+.mod-header .temps-tag::before{content:"";flex:none;width:8px;height:8px;border-radius:50%;background:var(--slate);}
+.mod-header h2{margin:0 0 6px;font-size:26px;letter-spacing:-.01em;}
+.mod-header .sub{max-width:780px;font:400 15.5px/1.6 var(--police-lecture);color:var(--ink-soft);text-align:left;}
+/* Les boutons : ceux de la charte, partout. */
+.btn{min-height:36px;padding:8px 16px;border:1.5px solid var(--line);border-radius:10px;background:var(--sheet);box-shadow:none;font-size:13.5px;font-weight:600;line-height:1.3;color:var(--ink);transition:border-color .15s,background .15s;}
+.btn:hover{transform:none;border-color:var(--slate);}
+.btn-primary,.btn-gold{background:var(--slate);border-color:var(--slate);color:#fff;box-shadow:none;}
+.btn-primary:hover,.btn-gold:hover{background:var(--slate-deep);border-color:var(--slate-deep);}
+.btn-secondary{background:var(--sheet);border-color:var(--line);color:var(--ink);}
+.btn-ghost{background:transparent;border-color:var(--line-soft);color:var(--ink-soft);}
+.btn-sm{min-height:30px;padding:5px 12px;font-size:12.5px;}
+.btn:disabled{opacity:.4;}
+/* Les fenêtres : une feuille, le titre et ✕ en haut, les choix en lignes, « Fermer » en bas à droite. */
+.sim-modal-overlay{background:rgba(44,36,22,.32);}
+.sim-modal{position:relative;padding:20px 22px 18px;border-radius:18px;background:var(--sheet);box-shadow:0 30px 70px rgba(44,36,22,.28);animation:apparaitre .18s var(--ease);}
+.sim-modal h3{margin:0 44px 8px 0;font-size:18px;letter-spacing:-.005em;}
+.sim-modal .sim-modal-sub,.fenetre-texte{font:400 15px/1.55 var(--police-lecture);color:var(--ink-soft);}
+.fenetre-x{position:absolute;top:14px;right:14px;z-index:1;}
+.sim-modal-close{display:block;width:fit-content;height:34px;margin:16px 0 0 auto;padding:0 14px;border:1.5px solid var(--line);border-radius:10px;background:var(--sheet);font:600 13px/31px var(--police-interface);color:var(--ink);text-align:center;}
+.sim-modal-close:hover{border-color:var(--slate);color:var(--ink);}
+.ajout-choix,.sim-profil-list{gap:0;border-radius:14px;background:var(--surface);overflow:hidden;}
+.ajout-choix-bt,.sim-profil-card{border:0;border-top:1px solid var(--line-feuille);border-radius:0;background:transparent;}
+.ajout-choix-bt:first-child,.sim-profil-card:first-child{border-top:0;}
+.ajout-choix-bt:hover,.ajout-choix-bt:focus-visible,.sim-profil-card:hover{background:var(--sheet);border-color:var(--line-feuille);}
+.ajout-ico{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:var(--sheet);box-shadow:var(--ombre-legere);font-size:16px;}
+/* Les aides : un « ? » à côté du libellé, qui déplie une bulle de lecture. */
+.help-toggle{width:17px;height:17px;margin:0 0 2px 6px;border:0;border-radius:50%;background:var(--slate-pale);color:var(--slate);font:700 10.5px var(--police-interface);transform:none;}
+.help-toggle:hover,.help-toggle.open{transform:none;background:var(--slate);color:#fff;}
+.help{font:400 14px/1.55 var(--police-lecture);font-style:normal;color:var(--ink-soft);}
+.field .help{margin:0 0 10px;padding:9px 12px;border-radius:10px;background:var(--surface);font-size:14px;font-style:normal;}
+/* L'en-tête sur téléphone : une ligne — la boussole, « BAF », les onglets qui défilent, la marque de l'EMIA. */
+.marque-courte{display:none;}
+@media(max-width:680px){
+  .top-inner{flex-wrap:nowrap;gap:10px;padding:8px 12px;}
+  .brand{gap:8px;}
+  .brand svg.rose{width:26px;height:26px;}
+  .marque-longue{display:none;}
+  .marque-courte{display:inline;}
+  .top-inner > nav.main{flex:1 1 auto;min-width:0;margin-left:2px;overflow-x:auto;scrollbar-width:none;}
+  nav.main::-webkit-scrollbar{display:none;}
+  nav.main button,.nav-btn-ressource{padding:6px 9px;font-size:13px;}
+  .top-actions{flex-wrap:nowrap;}
+  .top-actions button.emia-mark,.emia-mark{margin-left:4px;}
+  .emia-mark .by{display:none;}
+  .emia-mark img{height:15px;}
+}
 #tiroir-notes .analyse-notes-champ{min-height:240px;margin:0;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font:400 14.5px/1.6 var(--police-lecture);resize:vertical;}
 .analyse-note{margin:0 0 14px;font-size:13px;color:var(--ink-soft);}
 .analyse-champ{margin:0 0 12px;padding:10px 14px;background:var(--card);border:1px solid var(--line);border-radius:10px;}
@@ -3657,7 +3708,7 @@ body.seq-selection .seq-case .seq-vide{display:none;}
 <path d="M24 10 L24 38" stroke="var(--hdr-text)" stroke-width=".8" opacity=".4"/>
 <circle cx="24" cy="24" r="2.6" fill="var(--hdr-bg)" stroke="var(--hdr-text)" stroke-width="1"/>
 </svg>
-      <b>Boussole pour une <i>Analyse Fonctionnelle</i></b>
+      <b><span class="marque-longue">Boussole pour une <i>Analyse Fonctionnelle</i></span><span class="marque-courte">BAF</span></b>
     </div>
     <nav class="main" id="nav">
       <span id="baf-nav-group" style="display:none;">
@@ -4750,7 +4801,7 @@ body.seq-selection .seq-case .seq-vide{display:none;}
 <!-- Modale de choix des sections à exporter -->
 <div id="export-modal-overlay" class="sim-modal-overlay" style="display:none;" onclick="fermerExportModal(event)">
   <div class="sim-modal" role="dialog" aria-modal="true" aria-label="Choisir les sections à exporter">
-    <h3>📄 Exporter pour le bilan</h3>
+    <h3>Exporter pour le bilan</h3>
     <p class="sim-modal-sub">Choisissez ce qui doit figurer dans le document Word. Les onglets de Catégoriser et d'Interpréter sont tous repris, pas seulement celui affiché à l'écran.</p>
     <div style="text-align:left;margin:16px 0;display:flex;flex-direction:column;gap:10px;">
       <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;cursor:pointer;"><input type="checkbox" id="exp-m1" checked> Préambule</label>
@@ -4934,7 +4985,7 @@ body.seq-selection .seq-case .seq-vide{display:none;}
 
 <div id="sim-modal-overlay" class="sim-modal-overlay" style="display:none;" onclick="fermerSimModal(event)">
   <div class="sim-modal" role="dialog" aria-modal="true" aria-label="Choisir un profil de simulation">
-    <h3>🧪 Choisir un profil de simulation</h3>
+    <h3>Choisir un profil de simulation</h3>
     <p class="sim-modal-sub">L'outil sera pré-rempli avec des données fictives. Vous pourrez les explorer et les effacer ensuite.</p>
     <div class="sim-profil-list" id="sim-profil-list">
       <!-- Rempli dynamiquement -->
@@ -6883,6 +6934,9 @@ function renderCharte() {
     ex('Repli', '<details class="repli"><summary>Le détail des catégories</summary><div class="repli-corps discret">Ce qui sert à vérifier, sans encombrer.</div></details>') +
     ex('Barre sombre', '<div class="barre-sombre"><button type="button" style="--c:var(--vol-contexte)"><i></i>Contexte <span class="cle">1</span></button><span class="sep"></span><button type="button" style="--c:var(--vol-comportement)"><i></i>CD <span class="cle">3</span></button></div>') +
     ex('Menu flottant', '<div class="menu-flottant"><h6>Déplacer vers</h6><button type="button" style="--c:var(--vol-antecedent)"><i></i>Phase 2 · Antécédent</button><button type="button" style="--c:var(--vol-consequence)"><i></i>Conséquence</button></div>') +
+    ex('Tête de page', '<div class="mod-header" style="padding:0;margin:0"><span class="temps-tag">Module 1 · Instant de voir</span><h2 style="font-size:22px">Recueillir les données</h2><div class="sub">Une phrase, pas un paragraphe : ce qu\'on fait ici.</div></div>') +
+    ex('Fenêtre', '<div class="sim-modal" style="max-width:none;box-shadow:var(--ombre-legere);animation:none"><button type="button" class="bt-rond fenetre-x" aria-label="Fermer">✕</button><h3>Ajouter un ou des épisodes</h3><p class="fenetre-texte" style="margin:0 0 10px">Une phrase pour dire de quoi il s\'agit.</p><div class="ajout-choix"><button type="button" class="ajout-choix-bt"><span class="ajout-ico">✍️</span><span class="ajout-nom">Compléter un épisode</span><span class="ajout-desc">Le formulaire, pas à pas.</span></button><button type="button" class="ajout-choix-bt"><span class="ajout-ico">📄</span><span class="ajout-nom">Texte brut</span><span class="ajout-desc">Tel quel.</span></button></div><button type="button" class="sim-modal-close">Annuler</button></div>') +
+    ex('Aide', '<div class="field" style="margin:0"><label>Un libellé de champ<button type="button" class="help-toggle open">?</button></label><div class="help">L\'aide se déplie sous le libellé, comme une bulle de lecture ; un second clic la replie.</div></div>') +
     ex('Tiroir', '<button type="button" class="bt" onclick="ouvrirTiroir(\'tiroir-charte\')">Ouvrir le tiroir</button><p class="discret">Pour ce qui sert parfois : les notes, l\'indice, les réglages.</p>') +
     ex('Feuille et lecture', '<p class="lecture" style="margin:0">« S\'est mordu le dos de la main jusqu\'à laisser une marque. »</p><div class="feuille-sep"></div><p class="discret" style="margin:0">Le texte qu\'on lit en serif ; l\'interface en Space Grotesk.</p>') +
     '</div>' +
@@ -15162,6 +15216,33 @@ const _CONTROLES = [
       [parties, sommaire, phraseOk, chaleur, somme, confiance, indiceDansTiroir, unSeulExport].join(' | '));
   }},
 
+  {nom:'Le cadre commun : chaque fenêtre a son ✕ ; Échap ferme celles qui se ferment d\'un clic à côté ; les aides sont des « ? » dans leur libellé ; l\'en-tête a sa forme courte', test: () => {
+    equiperFenetres();
+    const fenetres = [...document.querySelectorAll('.sim-modal')].filter(m => m.querySelector(':scope > .sim-modal-close'));
+    const toutesX = fenetres.length > 10 && fenetres.every(m => m.querySelector(':scope > .fenetre-x'));
+    // Échap ferme « Ajouter un ou des épisodes », pas le texte brut (un texte en cours s'y perdrait)
+    const ajout = document.getElementById('ajout-overlay'), texte = document.getElementById('texte-overlay');
+    ajout.style.display = 'flex';
+    document.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape', bubbles: true, cancelable: true}));
+    const ajoutFerme = ajout.style.display === 'none';
+    texte.style.display = 'flex';
+    document.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape', bubbles: true, cancelable: true}));
+    const texteReste = texte.style.display === 'flex';
+    texte.style.display = 'none';
+    // Le ✕ fait ce que fait « Fermer »
+    const kit = document.getElementById('kit-overlay');
+    kit.style.display = 'flex';
+    kit.querySelector('.fenetre-x').click();
+    const xFerme = kit.style.display === 'none';
+    setupHelpToggles();
+    const aides = [...document.querySelectorAll('.help-toggle')];
+    const aidesOk = aides.length > 0 && aides.every(b => b.textContent === '?');
+    const dansLibelle = aides.filter(b => b.closest('.field') && b.closest('.field').querySelector(':scope > label')).every(b => b.parentNode.tagName === 'LABEL');
+    const marque = !!document.querySelector('header.top .marque-courte') && !!document.querySelector('header.top .marque-longue');
+    return _bancEgal('un ✕ par fenêtre | Échap ferme Ajouter | Échap laisse le texte brut | le ✕ ferme | aides « ? » | dans leur libellé | en-tête court',
+      'true | true | true | true | true | true | true', [toutesX, ajoutFerme, texteReste, xFerme, aidesOk, dansLibelle, marque].join(' | '));
+  }},
+
   {nom:'Synthèse, les pistes : au moins 5 épisodes et 1,4 fois l\'ordinaire (●●● à 10 et 2 fois), triées ; épinglées dans le fichier socle, pas dans un codage vierge', test: () => {
     const regle = [soliditePiste(10, .5, .25), soliditePiste(9, .5, .25), soliditePiste(10, .49, .25), soliditePiste(5, .42, .3), soliditePiste(5, .41, .3), soliditePiste(4, .9, .1)].join(',');
     refreshSynthese();
@@ -22389,6 +22470,36 @@ function majFenetreTrous() {
   corps.innerHTML = html;
 }
 
+/* ── Le cadre commun (passe 186) : toutes les fenêtres ont le même gabarit ──────────────────────────────────────────
+   Un ✕ en haut à droite de chacune, qui fait ce que fait son bouton « Fermer » ou « Annuler » ; Échap ferme la fenêtre
+   du dessus — sauf celles qui ne se ferment pas non plus d'un clic à côté (un texte en cours de saisie s'y perdrait). */
+function equiperFenetres() {
+  document.querySelectorAll('.sim-modal').forEach(m => {
+    if (m.querySelector(':scope > .fenetre-x')) return;
+    const fermer = m.querySelector(':scope > .sim-modal-close');
+    if (!fermer) return;
+    const x = document.createElement('button');
+    x.type = 'button';
+    x.className = 'bt-rond fenetre-x';
+    x.setAttribute('aria-label', fermer.textContent.trim() || 'Fermer');
+    x.title = fermer.textContent.trim() || 'Fermer';
+    x.textContent = '✕';
+    x.addEventListener('click', () => fermer.click());
+    m.prepend(x);
+  });
+}
+function fenetreDuDessus() {
+  const ouvertes = [...document.querySelectorAll('.sim-modal-overlay')].filter(o => o.style.display && o.style.display !== 'none');
+  return ouvertes[ouvertes.length - 1] || null;
+}
+document.addEventListener('keydown', ev => {
+  if (ev.key !== 'Escape' || ev.defaultPrevented) return;
+  const o = fenetreDuDessus();
+  if (!o || !o.hasAttribute('onclick')) return;
+  const fermer = o.querySelector('.sim-modal > .sim-modal-close');
+  if (fermer) { ev.preventDefault(); fermer.click(); }
+});
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', equiperFenetres); else equiperFenetres();
 function ouvrirFenetre(id) {
   const o = document.getElementById(id);
   if (!o) return;
@@ -23583,7 +23694,7 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
-const ACTIVITE_CODE = {"jusqua":"2026-10-09","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":11531,"retrait":2555,"depots":73}]};
+const ACTIVITE_CODE = {"jusqua":"2026-10-09","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":11673,"retrait":2624,"depots":77}]};
 
 function svgActiviteCode() {
   const mois = ACTIVITE_CODE.mois || [];
@@ -23622,6 +23733,22 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-09',
+    version: 'v2026.10.09-7',
+    titre: "Le cadre commun : têtes de page, boutons, fenêtres, aides, en-tête sur téléphone",
+    corps: `
+<p><b>Le cadre commun</b> (Arthur et Émilie — rafraîchir le reste de la BAF, passe 1 sur 10) :</p>
+<ul>
+<li><b>La tête de chaque page</b> prend l'allure d'Analyser et de la Synthèse : un petit surtitre au lieu de la pastille colorée, le titre et sa boussole, une phrase en texte de lecture. Plus de trait sous la tête.</li>
+<li><b>Les boutons</b> sont partout ceux de la charte : un seul bouton plein, en ardoise ; les autres sur fond de feuille.</li>
+<li><b>Les seize fenêtres</b> ont le même gabarit : une feuille, un ✕ en haut à droite, les choix en lignes (« Ajouter un ou des épisodes », la simulation), « Fermer » ou « Annuler » en bas à droite. <b>Échap</b> ferme la fenêtre du dessus — sauf celles qui ne se ferment pas non plus d'un clic à côté, où un texte en cours se perdrait (texte brut, grille Word).</li>
+<li><b>Les aides</b> : un petit « ? » à côté du libellé, au lieu des ronds « ▾ » qui flottaient parfois sous les champs ; l'aide se déplie en bulle de lecture.</li>
+<li><b>Sur téléphone</b>, l'en-tête tient sur une ligne : la boussole, « BAF », les onglets qui défilent, la marque de l'EMIA. Il prenait près d'un quart de l'écran.</li>
+</ul>
+`
+  },
 
   {
     date: '2026-10-09',
@@ -26569,7 +26696,7 @@ function setupHelpToggles(){
     btn.type = 'button';
     btn.className = 'help-toggle';
     btn.title = "Afficher / masquer l'aide";
-    btn.textContent = '▾';
+    btn.textContent = '?';
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -26578,11 +26705,11 @@ function setupHelpToggles(){
       btn.classList.toggle('open', show);
     });
     const prev = helpEl.previousElementSibling;
-    if (prev && prev.tagName === 'LABEL') {
-      prev.appendChild(btn);
-    } else {
-      helpEl.parentNode.insertBefore(btn, helpEl);
-    }
+    // Le « ? » va dans le libellé du champ, même quand l'aide n'est pas juste dessous (passe 186).
+    const champ = helpEl.closest('.field');
+    const libelle = prev && prev.tagName === 'LABEL' ? prev : (champ && champ.querySelector(':scope > label'));
+    if (libelle) libelle.appendChild(btn);
+    else helpEl.parentNode.insertBefore(btn, helpEl);
   });
 }
 let helpObserverScheduled = false;
