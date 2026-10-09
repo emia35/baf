@@ -6060,22 +6060,74 @@ function interventionsParSens() {
 }
 
 // Le déclaratif d'un épisode, dans l'ordre où on le lit (de ce qui précède à ce qui suit), avec ce que l'analyste peut citer.
+/* Tout ce que le formulaire a recueilli, dans l'ordre du formulaire (passe 196) : ce qui se range — le texte du déclarant —
+   et, en repères qu'on ne range pas (fixe), qui déclare, quand, la durée, l'intensité et les mesures du vase avec leurs
+   notes. Chaque groupe d'un seul tenant (voir groupeChampBrut). */
 function champsBrut(evt) {
-  const liste = [];
-  const ajoute = (champ, titre, texte, fixe) => { if (texte && String(texte).trim()) liste.push({champ, titre, texte: String(texte), fixe: !!fixe}); };
+  const liste = [], pris = new Set();
+  const ajoute = (champ, titre, texte, fixe) => {
+    if (texte && String(texte).trim()) { liste.push({champ, titre, texte: String(texte), fixe: !!fixe}); pris.add(champ); }
+  };
+  const cit = {};
+  champsCitables(evt).forEach(c => { cit[c.champ] = c; });
+  const deCit = (champ, titre) => { const c = cit[champ]; if (c) ajoute(c.champ, titre || c.titre, c.texte); };
+  const vase = (champ, titre, m) => {
+    if (!m || (m.v === null && !m.note)) return;
+    const palier = m.v !== null ? nomPalier(m.v) : null;
+    ajoute(champ, titre, (m.v !== null ? m.v + ' sur 100' + (palier ? ' (' + palier + ')' : '') : '') + (m.note ? (m.v !== null ? ' · ' : '') + m.note : ''), true);
+  };
+  const nombre = v => { const n = (v === null || v === undefined || v === '') ? null : Number(v); return n === null || isNaN(n) ? null : n; };
+  // Le cadre : quand, qui déclare, où, avec qui.
+  const d = evt.date ? new Date(evt.date + 'T12:00:00') : null;
+  const date = d && !isNaN(d) ? d.toLocaleDateString('fr-FR', {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'}) : '';
+  ajoute('quand', 'Quand', [date, evt.heure ? String(evt.heure).replace(':', 'h') : '', evt.moment || ''].filter(Boolean).join(' · ') +
+    (evt.momentPrecision ? ' (' + evt.momentPrecision + ')' : ''), true);
+  const role = evt.role === 'Professionnel·le' ? [evt.role, evt.rolePro === 'Autre fonction' ? evt.roleProAutre : evt.rolePro]
+    : evt.role === 'Famille / proche' ? [evt.role, evt.roleFamille] : evt.role === 'Autre' ? [evt.roleAutre || 'Autre'] : [];
+  const roles = role.filter(Boolean);
+  const roleTexte = roles.length > 1 ? roles[0] + ' (' + roles.slice(1).join(', ') + ')' : (roles[0] || '');
+  const temoin = evt.temoin ? evt.temoin.charAt(0).toLowerCase() + evt.temoin.slice(1) : '';
+  ajoute('qui', 'Qui déclare', [evt.declarant || '', roleTexte, temoin].filter(Boolean).join(' · '), true);
   ajoute('quandQui', 'Quand · Qui (tel qu\'écrit dans la grille)', evt.quandQui, true);
   ajoute('lieu', 'Où se passe l\'épisode', evt.lieu);
   ajoute('presences', 'Qui était présent', evt.presences);
+  // Récit libre (texte brut, grille Word)
+  deCit('texteBrut');
+  // Avant, de plus loin
   champsContexte(evt).forEach(c => ajoute(c.champ, c.titre, c.texte));
-  const rang = c => /^texteBrut$/.test(c) ? 0 : /^antecedents\./.test(c) ? 10 : c === 'etatAvant' ? 11 : c === 'resumes.antecedent' ? 12
-    : c === 'comportement' ? 20 : c === 'resumes.comportement' ? 21 : c === 'gradation' ? 22
-    : /^interventions\./.test(c) ? 30 : c === 'resumes.intervention' ? 32 : c === 'obtenu' ? 40 : c === 'evite' ? 41 : c === 'finPersonne' ? 42
-    : c === 'resumes.consequence' ? 43 : 50;
-  champsCitables(evt).map((c, i) => ({c, i})).sort((a, b) => (rang(a.c.champ) - rang(b.c.champ)) || (a.i - b.i)).forEach(x => ajoute(x.c.champ, x.c.titre, x.c.texte));
-  (evt.interventions || []).forEach((iv, i) => ajoute('interventions.' + cleObjDecoupe(iv, i) + '.precision', 'Précision sur l\'effet de l\'intervention', iv && iv.precision));
+  vase('vase.contexte', 'Le vase au moment du contexte', mesureTension(evt, 'contexte'));
+  // Juste avant
+  (evt.antecedents || []).forEach((a, i) => deCit('antecedents.' + cleObjDecoupe(a, i) + '.texte', a && a.declencheurPresume ? 'Juste avant (déclencheur présumé)' : null));
+  deCit('etatAvant');
+  deCit('resumes.antecedent');
+  vase('vase.antecedent', 'Le vase juste avant le comportement', mesureTension(evt, 'antecedent'));
+  // Pendant
+  deCit('comportement');
+  deCit('resumes.comportement');
+  deCit('gradation');
+  ajoute('intensite', 'Intensité', evt.intensite, true);
+  ajoute('duree', 'Durée', evt.duree, true);
+  vase('vase.pic', 'Le vase au plus fort du comportement', mesureTension(evt, 'pic'));
+  (evt.interventions || []).forEach((iv, i) => {
+    const k = 'interventions.' + cleObjDecoupe(iv, i);
+    deCit(k + '.texte');
+    deCit(k + '.cdPostIntervention');
+    ajoute(k + '.precision', 'Précision sur l\'effet de l\'intervention', iv && iv.precision);
+    if (iv && iv.tension) vase(k + '.tension', 'Le vase après cette intervention', {v: nombre(iv.tension.v), note: iv.tension.note || ''});
+  });
+  deCit('resumes.intervention');
   ajoute('interAutre', 'Autres observations sur la réponse de l\'entourage', evt.interAutre);
+  // Après
+  deCit('obtenu');
+  deCit('evite');
+  deCit('finPersonne');
+  deCit('resumes.consequence');
+  vase('vase.apres', 'Le vase à la fin de l\'épisode', mesureTension(evt, 'apres'));
+  // En plus
   ajoute('commentaire', 'Commentaire libre du déclarant', evt.commentaire);
   ajoute('entourage', 'Pour l\'entourage (case libre, non rangée)', evt.entourage, true);
+  // Un champ citable que cette liste ne connaîtrait pas encore ne disparaît pas : il vient à la fin.
+  Object.keys(cit).forEach(k => { if (!pris.has(k)) ajoute(k, cit[k].titre, cit[k].texte); });
   return liste;
 }
 // Ce qu'il faut avoir traité : le déclaratif cité. Un résumé rapide ne compte que si le détail de son étape n'est pas rempli.
@@ -6331,10 +6383,11 @@ function htmlTexteMarque(texte, marques) {
 // Les groupes de la feuille : dans l'ordre où on lit une scène.
 function groupeChampBrut(champ) {
   if (champ === 'texteBrut') return 'Récit libre';
-  if (champ === 'quandQui' || champ === 'lieu' || champ === 'presences') return 'Le cadre';
-  if (/^antecedents\./.test(champ) || champ === 'etatAvant' || champ === 'resumes.antecedent') return 'Juste avant';
-  if (champ === 'comportement' || champ === 'resumes.comportement' || champ === 'gradation' || /^interventions\./.test(champ) || champ === 'resumes.intervention' || champ === 'interAutre') return 'Pendant';
-  if (champ === 'obtenu' || champ === 'evite' || champ === 'finPersonne' || champ === 'resumes.consequence') return 'Après';
+  if (champ === 'quand' || champ === 'qui' || champ === 'quandQui' || champ === 'lieu' || champ === 'presences') return 'Le cadre';
+  if (/^antecedents\./.test(champ) || champ === 'etatAvant' || champ === 'resumes.antecedent' || champ === 'vase.antecedent') return 'Juste avant';
+  if (champ === 'comportement' || champ === 'resumes.comportement' || champ === 'gradation' || champ === 'intensite' || champ === 'duree' || champ === 'vase.pic' ||
+      /^interventions\./.test(champ) || champ === 'resumes.intervention' || champ === 'interAutre') return 'Pendant';
+  if (champ === 'obtenu' || champ === 'evite' || champ === 'finPersonne' || champ === 'resumes.consequence' || champ === 'vase.apres') return 'Après';
   if (champ === 'commentaire' || champ === 'entourage') return 'En plus';
   return 'Avant, de plus loin';
 }
@@ -6352,7 +6405,8 @@ function renderDeclaratifBrut() {
   champs.forEach(c => {
     const g = groupeChampBrut(c.champ);
     if (g !== groupe) { html += (groupe === null ? '' : '</div>') + '<div class="brut-groupe"><div class="brut-groupe-nom">' + esc(g) + '</div>'; groupe = g; }
-    const morceaux = String(c.titre).split(' — ');
+    // « — effet » ne se lit comme un effet déclaré que dans le titre d'une intervention (passe 196).
+    const morceaux = /^interventions\.[^.]+\.texte$/.test(c.champ) ? String(c.titre).split(' — ') : [String(c.titre)];
     html += '<div class="brut-nom">' + esc(morceaux[0]) + (morceaux[1] ? '<em>effet déclaré : ' + esc(morceaux[1].toLowerCase()) + '</em>' : '') + '</div>' +
       (c.fixe ? '<div class="analyse-champ-texte fixe">' + esc(c.texte) + '</div>'
               : '<div class="analyse-champ-texte' + (fige ? '' : ' brut-texte') + '"' + (fige ? '' : ' data-champ="' + esc(c.champ) + '"') + '>' + htmlTexteMarque(c.texte, marquesChamp(evt, seq, c.champ)) + '</div>');
@@ -15830,6 +15884,38 @@ const _CONTROLES = [
     }
   }},
 
+  {nom:'Déclaratif brut : tout le formulaire — qui, quand, durée, déclencheur présumé, les mesures du vase — en groupes d\'un seul tenant', test: () => {
+    const sauveEvts = state.m2.evenements, sauveM3 = JSON.stringify(state.m3), vraiPersist = persist;
+    const sauveEp = analyseEtat().episode, sauvePos = analyseEtat().pos;
+    const vue = document.getElementById('view-analyser'), etaitMontree = vue.classList.contains('show');
+    persist = () => {};
+    try {
+      const evt = {id: 'db196', date: '2026-04-08', heure: '09:11', moment: 'Accueil', momentPrecision: 'en arrivant', declarant: 'Nadia', role: 'Professionnel·le', rolePro: 'Psychologue', temoin: 'Témoin direct',
+        lieu: 'Couloir', avantLoin: 'Nuit agitée.', duree: '< 1 min', antecedents: [{id: 'a1', texte: 'Refus du goûter.', declencheurPresume: true}], comportement: 'A crié.',
+        interventions: [{id: 'i1', texte: 'Préavis.', effet: 'Aucun effet visible', precision: 'Il a continué.', tension: {v: 40, note: 'un peu calmé'}}], obtenu: 'Du temps.',
+        tension: {contexte: {v: 20, note: 'calme'}, antecedent: {v: 50, note: ''}, pic: {v: 80, note: 'fort'}, apres: {v: 30, note: ''}}};
+      state.m2.evenements = [evt]; ensureM3(); state.m3.decoupages = {}; state.m3.decoupagesVolets = {}; state.m3.sequences = {};
+      vue.classList.add('show'); analyseEtat().episode = 0; oublierTravailSeq();
+      allerAnalyse(0, {sansDefilement: true});
+      const el = document.getElementById('declaratif-brut'), t = el.textContent;
+      const groupes = [...el.querySelectorAll('.brut-groupe-nom')].map(x => x.textContent).join(',');
+      const quand = /mercredi 8 avril 2026 · 09h11 · Accueil \(en arrivant\)/.test(t);
+      const qui = /Nadia · Professionnel·le \(Psychologue\) · témoin direct/.test(t);
+      const decl = /Juste avant \(déclencheur présumé\)/.test(t), duree = /< 1 min/.test(t);
+      const vases = (t.match(/ sur 100/g) || []).length;
+      const effets = [...el.querySelectorAll('.brut-nom em')].map(e => e.textContent).join(',');
+      const aRanger = champsARanger(evt).map(c => c.champ).filter(c => /^(quand|qui|duree|vase\.)/.test(c)).length;
+      return _bancEgal('groupes | quand | qui | déclencheur | durée | mesures du vase | effets déclarés | repères comptés comme à ranger',
+        'Le cadre,Avant, de plus loin,Juste avant,Pendant,Après | true | true | true | true | 5 | effet déclaré : aucun effet visible | 0',
+        [groupes, quand, qui, decl, duree, vases, effets, aRanger].join(' | '));
+    } finally {
+      persist = vraiPersist; state.m2.evenements = sauveEvts; state.m3 = JSON.parse(sauveM3);
+      analyseEtat().episode = sauveEp; analyseEtat().pos = sauvePos; oublierTravailSeq();
+      if (!etaitMontree) vue.classList.remove('show');
+      try { allerAnalyse(sauvePos, {sansDefilement: true}); } catch (er) { /* vue masquée */ }
+    }
+  }},
+
   {nom:'Export Word : Catégoriser y donne la typologie (catégories, combien, lesquels, ce qui reste)', test: () => {
     const t = typologiePourExport();
     const volets = t.querySelectorAll('h3').length;
@@ -24304,6 +24390,21 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-09',
+    version: 'v2026.10.09-16',
+    titre: "Le déclaratif brut montre tout le formulaire",
+    corps: `
+<p><b>Le déclaratif brut montre tout le formulaire</b> (Arthur et Émilie) :</p>
+<ul>
+<li>S'ajoutent, en repères qu'on ne range pas : <b>quand</b> (jour, heure, moment, précision), <b>qui déclare</b> (prénom, rôle, fonction, témoin direct ou non), la <b>durée</b>, l'intensité (anciens épisodes), et <b>les mesures du vase</b> avec leurs notes — au moment du contexte, juste avant, au plus fort, après chaque intervention, à la fin.</li>
+<li>Un antécédent noté comme déclencheur présumé le dit : « Juste avant (déclencheur présumé) ».</li>
+<li>Chaque groupe reste d'un seul tenant : la précision sur l'effet d'une intervention suit son intervention (elle ouvrait un second « Pendant » après « Après »).</li>
+<li>Seule une intervention porte un « effet déclaré » : le contexte s'affichait « effet déclaré : ce qui s'est passé avant ».</li>
+</ul>
+`
+  },
 
   {
     date: '2026-10-09',
