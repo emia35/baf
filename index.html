@@ -3794,6 +3794,35 @@ body.seq-selection .seq-case .seq-vide{display:none;}
   #form-nav .btn-secondary{order:2;flex:1 1 110px;}
   #form-nav .btn-primary,#form-nav .btn-gold{order:3;flex:1 1 140px;}
 }
+/* ── Le Préambule (passe 190) : des parties en feuilles, un sommaire, la journée type dessinée, les choix en ardoise. ── */
+.m1-page{display:grid;grid-template-columns:190px minmax(0,1fr);gap:26px;align-items:start;}
+.m1-sommaire{position:sticky;top:calc(var(--header-h,60px) + var(--subbar-h,0px) + 18px);display:flex;flex-direction:column;gap:2px;}
+.m1-sommaire-titre{margin:0 10px 6px;font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-faint);}
+.m1-sommaire button{display:flex;align-items:center;gap:9px;padding:6px 10px;border:0;border-radius:9px;background:transparent;font:13px var(--police-interface);color:var(--ink-soft);text-align:left;}
+.m1-sommaire button:hover{background:var(--sheet);color:var(--ink);}
+.m1-sommaire button.on{background:var(--sheet);box-shadow:0 1px 0 var(--line-soft);font-weight:600;color:var(--ink);}
+.m1-sommaire .ok{margin-left:auto;display:grid;place-items:center;flex:none;width:16px;height:16px;border-radius:50%;background:var(--sauge-pale);color:var(--vol-comportement-texte);font-size:9.5px;font-weight:700;}
+.m1-sommaire .vide{margin-left:auto;flex:none;width:16px;height:16px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--line);}
+.m1-colonne{min-width:0;}
+.card.m1-partie{scroll-margin-top:calc(var(--header-h,60px) + var(--subbar-h,0px) + 16px);margin-bottom:14px;padding:20px 24px;}
+.m1-partie > .surtitre{margin:0 0 14px;}
+#m1-p-personne{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:16px;}
+#m1-p-personne > *{grid-column:1 / -1;}
+#m1-p-personne > .field:nth-of-type(n+3):nth-of-type(-n+5){grid-column:auto;}
+.soma-bloc{margin:0;padding:0;border:0;background:none;}
+.soma-note{margin:4px 0 0;font:400 14px/1.55 var(--police-lecture);}
+.choice-row label:has(input:checked){border-color:var(--slate);background:var(--slate-pale);color:var(--slate);}
+.mode-toggle-bar{padding:0 0 14px;margin-bottom:16px;border-bottom:0;}
+.mode-toggle-btns{border:0;border-radius:11px;}
+.mode-toggle-btns button{height:30px;padding:0 12px;border-radius:8px;}
+.mode-toggle-btns button.active{background:var(--sheet);box-shadow:0 2px 8px rgba(44,36,22,.08);}
+.journee-frise{margin:4px 14px 12px;}
+.jf-axe{position:relative;height:66px;}
+.jf-h{position:absolute;top:0;transform:translateX(-50%);font-size:10.5px;color:var(--ink-faint);white-space:nowrap;}
+.jf-h::after{content:"";position:absolute;left:50%;top:15px;width:1px;height:44px;background:var(--line-feuille);}
+.jf-bloc{position:absolute;top:22px;height:34px;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:0 6px;border-radius:8px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.7);font-size:11.5px;font-weight:600;color:var(--slate-deep);white-space:nowrap;}
+.jf-bloc.transition{background:repeating-linear-gradient(135deg,transparent 0 5px,var(--line-feuille) 5px 7px);font-style:italic;font-weight:500;color:var(--ink-faint);}
+@media(max-width:900px){.m1-page{grid-template-columns:minmax(0,1fr);}.m1-sommaire{display:none;}#m1-p-personne{grid-template-columns:minmax(0,1fr);}}
 #tiroir-notes .analyse-notes-champ{min-height:240px;margin:0;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font:400 14.5px/1.6 var(--police-lecture);resize:vertical;}
 .analyse-note{margin:0 0 14px;font-size:13px;color:var(--ink-soft);}
 .analyse-champ{margin:0 0 12px;padding:10px 14px;background:var(--card);border:1px solid var(--line);border-radius:10px;}
@@ -4266,9 +4295,12 @@ body.seq-selection .seq-case .seq-vide{display:none;}
         </div>
       </div>
     </div>
-    <div id="m1-rapide-content">
-    <div class="card">
-      <div class="ethique" style="background:var(--sauge-pale);border-left:3px solid var(--sauge);padding:14px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;text-align:justify;text-justify:inter-word;">
+    <div id="m1-rapide-content" class="m1-page">
+    <nav class="m1-sommaire no-print" id="m1-sommaire" aria-label="Les parties du préambule"></nav>
+    <div class="m1-colonne">
+    <div class="card m1-partie" id="m1-p-personne">
+      <div class="surtitre">La personne</div>
+      <div class="ethique" style="background:var(--sauge-pale);padding:12px 16px;border-radius:12px;margin-bottom:18px;font:400 15px/1.55 var(--police-lecture);">
         Pas de nom de famille, pas de ville, pas de structure nommée. Un prénom seul suffit — fictif si besoin.
       </div>
 
@@ -4306,6 +4338,9 @@ body.seq-selection .seq-case .seq-vide{display:none;}
         </div>
       </div>
 
+    </div>
+    <div class="card m1-partie" id="m1-p-rythme">
+      <div class="surtitre">Le rythme</div>
       <!-- Un seul lieu : présentation inchangée. Deux lieux ou plus : un bloc
            jours/heures par lieu, rendu dans #m1-jours-heures-multi. -->
       <div id="m1-jours-heures-simple">
@@ -4346,14 +4381,21 @@ body.seq-selection .seq-case .seq-vide{display:none;}
         </div>
       </div>
 
+    </div>
+    <div class="card m1-partie" id="m1-p-journee">
+      <div class="surtitre">La journée type</div>
       <div class="field">
         <label>La journée type <span style="font-weight:400;color:var(--ink-soft);">(créneaux)</span></label>
         <div class="help">Ajoutez autant de créneaux que nécessaire. Ce n'est pas un emploi du temps rigide — c'est pour faire apparaître les transitions, souvent déterminantes dans l'analyse.</div>
+        <div class="journee-frise" id="m1-journee-frise" aria-hidden="true"></div>
         <div class="creneau-list" id="m1-creneau-list"></div>
         <button type="button" class="creneau-add" onclick="ajouterCreneau()">＋ Ajouter un créneau</button>
-        <div id="m1-couverture-alerte" class="ethique" style="display:none;background:var(--rose-pale);border-left:3px solid var(--sauge-deep);margin-top:10px;padding:10px 14px;font-size:13px;"></div>
+        <div id="m1-couverture-alerte" class="ethique" style="display:none;background:var(--rose-pale);margin-top:10px;padding:10px 14px;border-radius:10px;font-size:13px;"></div>
       </div>
 
+    </div>
+    <div class="card m1-partie" id="m1-p-trajets">
+      <div class="surtitre">Les trajets</div>
       <div class="field">
         <label>Temps de trajet</label>
         <div class="help">Le temps de trajet a des conséquences (fatigue, anticipation, retour au calme...) — précisez-le si pertinent.</div>
@@ -4381,6 +4423,9 @@ body.seq-selection .seq-case .seq-vide{display:none;}
         </div>
       </div>
 
+    </div>
+    <div class="card m1-partie" id="m1-p-vase">
+      <div class="surtitre">Le vase, ce qu'on en sait</div>
       <div class="field">
         <label>💧 Son vase de tension, ce qu'on en sait déjà</label>
         <div class="help">Avant même de regarder les épisodes : d'après ce que vous connaissez de cette personne, qu'est-ce qui fait monter la tension, qu'est-ce qui la fait redescendre ? Ce sont des hypothèses de départ — le module Interpréter les remettra plus tard face à ce que les données auront montré.</div>
@@ -4413,6 +4458,9 @@ body.seq-selection .seq-case .seq-vide{display:none;}
         </div>
       </div>
 
+    </div>
+    <div class="card m1-partie" id="m1-p-soma">
+      <div class="surtitre">La piste somatique</div>
       <div class="soma-bloc">
         <div class="soma-tete">🩺 Avant l'analyse fonctionnelle : la piste somatique</div>
         <div class="ethique" style="margin:0 0 14px;">
@@ -4430,18 +4478,22 @@ body.seq-selection .seq-case .seq-vide{display:none;}
           <div class="help">Douleur, sommeil, transit, sphère dentaire et ORL, épilepsie, traitement modifié récemment, cycle menstruel. Ce qui est su, ce qui est suspecté, ce qui n'a jamais été exploré.</div>
           <textarea id="m1-soma-points" placeholder="ex : constipation chronique, réveils nocturnes depuis janvier, traitement modifié en février, jamais vu de dentiste..." oninput="saveM1()"></textarea>
         </div>
-        <div class="help" style="margin-top:-4px;">
+        <div class="discret soma-note">
           Chez une personne qui ne dit pas sa douleur avec des mots, l'évaluation passe par une hétéro-évaluation.
           Deux échelles utilisables ici : <b>ESDDA</b>, conçue pour les personnes dyscommunicantes avec troubles du spectre de l'autisme,
           et <b>GED-DI</b>, pour la déficience intellectuelle. Elles s'utilisent avec un professionnel de santé — la BAF ne les remplace pas et n'évalue rien.
         </div>
       </div>
 
+    </div>
+    <div class="card m1-partie" id="m1-p-libre">
+      <div class="surtitre">Autre chose</div>
       <div class="field">
         <label for="m1-libre">Autre chose qui pourrait nous être utile par la suite ?</label>
         <textarea id="m1-libre" placeholder="Tout élément de contexte qui vous semble pertinent..." oninput="saveM1()"></textarea>
       </div>
     </div>
+    </div><!-- fin m1-colonne -->
 
     </div><!-- fin m1-rapide-content -->
 
@@ -7111,13 +7163,76 @@ document.querySelectorAll('.nav-btn').forEach(btn=>{
 });
 
 
-const HEURES_OPTIONS = ["00h00", "00h30", "01h00", "01h30", "02h00", "02h30", "03h00", "03h30", "04h00", "04h30", "05h00", "05h30", "06h00", "06h30", "07h00", "07h30", "08h00", "08h30", "09h00", "09h30", "10h00", "10h30", "11h00", "11h30", "12h00", "12h30", "13h00", "13h30", "14h00", "14h30", "15h00", "15h30", "16h00", "16h30", "17h00", "17h30", "18h00", "18h30", "19h00", "19h30", "20h00", "20h30", "21h00", "21h30", "22h00", "22h30", "23h00", "23h30"];
+// Au quart d'heure (passe 190). Les heures se comparent en minutes (minutesHeure), jamais par leur rang dans cette liste.
+const HEURES_OPTIONS = (() => { const l = []; for (let m = 0; m < 24 * 60; m += 15) l.push(String(Math.floor(m / 60)).padStart(2, '0') + 'h' + String(m % 60).padStart(2, '0')); return l; })();
 
+function minutesHeure(h) {
+  const v = heureOptionToMin(h);
+  return v !== null ? v : parseHeureLibre(h);
+}
+function formatMinutes(m) { return String(Math.floor(m / 60)).padStart(2, '0') + 'h' + String(m % 60).padStart(2, '0'); }
 function makeHeureSelect(val, onchange) {
-  const sel = `<select onchange="${onchange}" style="min-width:75px;">` +
-    HEURES_OPTIONS.map(h => `<option value="${h}"${h===val?' selected':''}>${h}</option>`).join('') +
+  // Une heure qui n'est pas dans la liste (13h40, 9h) y est ajoutée, à sa place : elle ne s'affiche plus « 00h00 ».
+  const liste = val && HEURES_OPTIONS.indexOf(val) < 0 && minutesHeure(val) !== null
+    ? HEURES_OPTIONS.concat([val]).sort((a, b) => minutesHeure(a) - minutesHeure(b)) : HEURES_OPTIONS;
+  return `<select onchange="${onchange}" style="min-width:75px;">` +
+    liste.map(h => `<option value="${esc(h)}"${h===val?' selected':''}>${esc(h)}</option>`).join('') +
     '</select>';
-  return sel;
+}
+
+/* ── Le Préambule (passe 190) : la journée type dessinée, le sommaire des parties ─────────────────────────────────── */
+function renderFriseJournee() {
+  const el = document.getElementById('m1-journee-frise');
+  if (!el) return;
+  const cr = (state.m1.journeeCreneaux || []).map(c => ({nom: c.nom || (c.transition ? 'Temps de transition' : ''), d: minutesHeure(c.debut), f: minutesHeure(c.fin), transition: !!c.transition}))
+    .filter(c => c.d !== null && c.f !== null && c.f > c.d);
+  if (!cr.length) { el.innerHTML = ''; return; }
+  const debut = Math.floor(Math.min.apply(null, cr.map(c => c.d)) / 60) * 60;
+  const fin = Math.ceil(Math.max.apply(null, cr.map(c => c.f)) / 60) * 60;
+  const duree = Math.max(fin - debut, 60);
+  const pc = m => ((m - debut) / duree * 100).toFixed(2) + '%';
+  const pas = duree > 12 * 60 ? 180 : duree > 6 * 60 ? 120 : 60;
+  let reperes = '';
+  for (let m = debut; m <= fin; m += pas) reperes += '<span class="jf-h" style="left:' + pc(m) + '">' + Math.floor(m / 60) + ' h</span>';
+  const teintes = ['var(--slate-pale)', 'var(--sauge-pale)', 'var(--paper-deep)'];
+  let k = 0;
+  el.innerHTML = '<div class="jf-axe">' + reperes + cr.map(c => {
+    const fond = c.transition ? '' : 'background:' + teintes[k++ % teintes.length] + ';';
+    return '<span class="jf-bloc' + (c.transition ? ' transition' : '') + '" style="left:' + pc(c.d) + ';width:calc(' + pc(c.f) + ' - ' + pc(c.d) + ' - 2px);' + fond + '" title="' +
+      esc(c.nom + ' · ' + formatMinutes(c.d) + ' – ' + formatMinutes(c.f)) + '">' + (c.f - c.d >= duree / 9 ? esc(c.nom) : '') + '</span>';
+  }).join('') + '</div>';
+}
+const PARTIES_M1 = [['m1-p-personne', 'La personne'], ['m1-p-rythme', 'Le rythme'], ['m1-p-journee', 'La journée type'], ['m1-p-trajets', 'Les trajets'],
+  ['m1-p-vase', 'Le vase, ce qu\'on en sait'], ['m1-p-soma', 'La piste somatique'], ['m1-p-libre', 'Autre chose']];
+let partieM1Courante = 'm1-p-personne', observateurM1 = null;
+function partieM1Remplie(el) {
+  return [...el.querySelectorAll('input, textarea, select')].some(x => x.type === 'checkbox' || x.type === 'radio' ? x.checked : String(x.value || '').trim() !== '');
+}
+function renderSommaireM1() {
+  const nav = document.getElementById('m1-sommaire');
+  if (!nav) return;
+  nav.innerHTML = '<span class="m1-sommaire-titre">Le préambule</span>' + PARTIES_M1.map(([id, nom]) => {
+    const el = document.getElementById(id);
+    if (!el) return '';
+    const plein = partieM1Remplie(el);
+    return '<button type="button" data-cible="' + id + '" class="' + (id === partieM1Courante ? 'on' : '') + '" onclick="allerPartieM1(\'' + id + '\')">' + esc(nom) +
+      (plein ? '<span class="ok" title="Rempli">✓</span>' : '<span class="vide" title="À remplir"></span>') + '</button>';
+  }).join('');
+  if (!observateurM1 && typeof IntersectionObserver === 'function') {
+    observateurM1 = new IntersectionObserver(es => es.forEach(e => {
+      if (!e.isIntersecting) return;
+      partieM1Courante = e.target.id;
+      document.querySelectorAll('#m1-sommaire button').forEach(b => b.classList.toggle('on', b.dataset.cible === partieM1Courante));
+    }), {rootMargin: '-30% 0px -65% 0px'});
+    PARTIES_M1.forEach(([id]) => { const el = document.getElementById(id); if (el) observateurM1.observe(el); });
+  }
+}
+function allerPartieM1(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  partieM1Courante = id;
+  document.querySelectorAll('#m1-sommaire button').forEach(b => b.classList.toggle('on', b.dataset.cible === id));
+  el.scrollIntoView({behavior: 'smooth', block: 'start'});
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -7129,10 +7244,12 @@ function renderCreneauList() {
   const creneaux = state.m1.journeeCreneaux || [];
   if (creneaux.length === 0) {
     list.innerHTML = '<div style="color:var(--ink-soft);font-size:13px;font-style:italic;padding:4px 0;">Aucun créneau — cliquez sur « Ajouter un créneau ».</div>';
+    renderFriseJournee();
     verifierCouvertureHoraire();
     refreshM1Progress();
     return;
   }
+  renderFriseJournee();
   list.innerHTML = creneaux.map((c, i) => `
     <div class="creneau-row${c.transition?' transition':''}">
       <input type="text" value="${esc(c.nom||'')}" placeholder="${c.transition?'Temps de transition':'Nom du temps (ex : Atelier cuisine)'}"
@@ -7159,12 +7276,13 @@ function renderCreneauList() {
 function trierEtComblerCreneaux() {
   // Retirer les anciennes transitions générées (elles seront recalculées)
   let creneaux = (state.m1.journeeCreneaux || []).filter(c => !c.transition);
-  creneaux.sort((a, b) => HEURES_OPTIONS.indexOf(a.debut || '00h00') - HEURES_OPTIONS.indexOf(b.debut || '00h00'));
+  const mn = h => { const v = minutesHeure(h || '00h00'); return v === null ? 0 : v; };
+  creneaux.sort((a, b) => mn(a.debut) - mn(b.debut));
   const comble = [];
   for (let i = 0; i < creneaux.length; i++) {
     comble.push(creneaux[i]);
     const next = creneaux[i + 1];
-    if (next && HEURES_OPTIONS.indexOf(creneaux[i].fin) < HEURES_OPTIONS.indexOf(next.debut)) {
+    if (next && mn(creneaux[i].fin) < mn(next.debut)) {
       comble.push({ debut: creneaux[i].fin, fin: next.debut, nom: 'Temps de transition', transition: true });
     }
   }
@@ -7216,8 +7334,8 @@ function updateCreneau(idx, champ, val) {
 }
 
 function avancerHeure(h) {
-  const idx = HEURES_OPTIONS.indexOf(h);
-  return idx >= 0 && idx < HEURES_OPTIONS.length - 1 ? HEURES_OPTIONS[idx + 1] : h;
+  const m = minutesHeure(h);
+  return m === null ? h : formatMinutes(Math.min(m + 30, 23 * 60 + 45));
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -7783,6 +7901,7 @@ function refreshM1Progress() {
   const pct = computeM1Pct();
   fill.style.width = pct + '%';
   label.textContent = pct + '% complété';
+  renderSommaireM1();
 }
 
 // Vérifie si le premier créneau de la journée type couvre bien l\'heure de
@@ -7806,8 +7925,8 @@ function verifierCouvertureHoraire() {
   const declStart = parseHeureLibre(state.m1.heures);
   const reels = (state.m1.journeeCreneaux||[]).filter(c=>!c.transition);
   if (declStart === null || reels.length === 0) { box.style.display = 'none'; return; }
-  const sorted = reels.slice().sort((a,b)=>HEURES_OPTIONS.indexOf(a.debut)-HEURES_OPTIONS.indexOf(b.debut));
-  const premierDebut = heureOptionToMin(sorted[0].debut);
+  const sorted = reels.slice().sort((a,b)=>(minutesHeure(a.debut) || 0) - (minutesHeure(b.debut) || 0));
+  const premierDebut = minutesHeure(sorted[0].debut);
   if (premierDebut !== null && premierDebut - declStart > 15) {
     box.style.display = '';
     box.innerHTML = `⚠ Vous indiquez que la journée démarre vers <b>${esc(state.m1.heures)}</b>, mais votre premier temps de la journée type commence à <b>${sorted[0].debut}</b>. Avez-vous bien pensé au trajet ou à l'accueil avant ce premier temps ?`;
@@ -8483,7 +8602,7 @@ const ETAPES_DETAIL = [
               `<label><input type="radio" name="fmoment" value="${esc(m)}" ${d.moment===m?'checked':''}> ${esc(m)}</label>`
             ).join('')}
           </div>
-          <div id="f-moment-alerte" class="ethique" style="display:none;background:var(--rose-pale);border-left:3px solid var(--sauge-deep);margin-top:10px;padding:10px 14px;font-size:13px;"></div>
+          <div id="f-moment-alerte" class="ethique" style="display:none;background:var(--rose-pale);margin-top:10px;padding:10px 14px;border-radius:10px;font-size:13px;"></div>
           <div class="field" style="margin-top:8px;">
             <label for="f-moment-precision">Précision sur le moment (facultatif)</label>
             <input type="text" id="f-moment-precision" value="${esc(d.momentPrecision||'')}" placeholder="ex : tout début de l'activité, juste avant le brossage de dents...">
@@ -15517,6 +15636,27 @@ const _CONTROLES = [
       const feuille = !carte || getComputedStyle(carte).borderTopWidth === '0px';
       return _bancEgal('un trait par étape | la courante et les faites | l\'intro ne redit pas l\'encadré | cartes sans bordure', 'true | true | true | true', [traits, ici, pasDeRedite, feuille].join(' | '));
     } finally { formDraft = sauve.d; modeForceEtape = sauve.m; formEditIdx = sauve.e; currentEtapeIdx = sauve.i; }
+  }},
+
+  {nom:'Préambule : sept parties et leur sommaire ; les heures se comparent en minutes (13h45 n\'est plus « 00h00 », ni triée en tête) ; la journée type dessinée', test: () => {
+    const avant = JSON.stringify(state.m1);
+    try {
+      const quart = HEURES_OPTIONS.length === 96 && HEURES_OPTIONS.indexOf('13h45') >= 0;
+      state.m1.journeeCreneaux = [{nom: 'B', debut: '13h45', fin: '16h00'}, {nom: 'A', debut: '09h00', fin: '09h30'}];
+      trierEtComblerCreneaux();
+      const ordre = state.m1.journeeCreneaux.map(c => (c.transition ? '~' : c.nom) + ' ' + c.debut + '-' + c.fin).join(', ');
+      const absente = /<option value="13h40" selected>/.test(makeHeureSelect('13h40', ''));
+      state.m1.heures = '9h-17h';
+      renderCreneauList();
+      const alerte = document.getElementById('m1-couverture-alerte');
+      const pasDAlerte = !alerte || alerte.style.display === 'none';
+      const frise = document.querySelectorAll('#m1-journee-frise .jf-bloc').length === state.m1.journeeCreneaux.length;
+      const parties = PARTIES_M1.every(([id]) => document.getElementById(id)) && document.querySelectorAll('#view-m1 .m1-partie').length === 7;
+      renderSommaireM1();
+      const sommaire = document.querySelectorAll('#m1-sommaire button').length === 7;
+      return _bancEgal('au quart d\'heure | triés en minutes, le trou comblé | heure absente affichée | pas d\'alerte : le premier créneau est à 9 h | frise | sept parties | sommaire',
+        'true | A 09h00-09h30, ~ 09h30-13h45, B 13h45-16h00 | true | true | true | true | true', [quart, ordre, absente, pasDAlerte, frise, parties, sommaire].join(' | '));
+    } finally { state.m1 = JSON.parse(avant); renderCreneauList(); }
   }},
 
   {nom:'Synthèse, les pistes : au moins 5 épisodes et 1,4 fois l\'ordinaire (●●● à 10 et 2 fois), triées ; épinglées dans le fichier socle, pas dans un codage vierge', test: () => {
@@ -24009,6 +24149,22 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-09',
+    version: 'v2026.10.09-11',
+    titre: "Le Préambule en parties ; les heures au quart d'heure (correctif)",
+    corps: `
+<p><b>Le Préambule</b> (Arthur et Émilie — rafraîchir le reste de la BAF, passe 5 sur 10) :</p>
+<ul>
+<li><b>Sept parties, chacune dans sa feuille</b> : la personne, le rythme, la journée type, les trajets, le vase (ce qu'on en sait), la piste somatique, autre chose. <b>Un sommaire, à gauche</b>, y mène et coche ce qui est rempli.</li>
+<li><b>La journée type est dessinée</b> au-dessus de sa liste : chaque créneau à sa place, de la première heure à la dernière ; les temps de transition ajoutés par la BAF sont hachurés.</li>
+<li><b>Les heures se choisissent au quart d'heure.</b></li>
+<li><b>Correctif</b> : une heure qui n'était pas dans la liste (13 h 45) s'affichait « 00h00 », se rangeait en tête de la journée, faisait apparaître un faux « temps de transition » et un avertissement faux (« votre premier temps commence à 13h45 »). Les heures se comparent désormais en minutes ; une heure hors de la liste reste affichée telle quelle.</li>
+<li>Les choix cochés (lieux, jours…) passent en ardoise pâle, ici comme dans le formulaire : le jaune ocre est la couleur de l'antécédent. « Rapide / Détaillé » prend l'allure des autres segments ; l'encadré du prénom et l'alerte de la journée perdent leur liseré ; la note sur les échelles de douleur reste visible.</li>
+</ul>
+`
+  },
 
   {
     date: '2026-10-09',
