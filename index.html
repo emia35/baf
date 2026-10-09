@@ -3852,6 +3852,33 @@ body.seq-selection .seq-case .seq-vide{display:none;}
 #view-notes .note-v summary:hover .nv-titre{color:var(--slate);}
 .parcours-ligne{font:400 15px/1.6 var(--police-lecture);}
 @media(max-width:900px){#view-reperes.show{display:block;}#view-reperes > .reperes-sommaire{position:static;flex-direction:row;flex-wrap:wrap;margin:0 0 16px;}.res-docs{grid-template-columns:minmax(0,1fr);}}
+/* ── L'ICAF (passe 193) : dans sa couleur ; un rail des six dimensions, des feuilles au lieu des bandeaux pleins. ── */
+.cot-tabs{display:inline-flex;max-width:100%;gap:3px;margin-bottom:18px;padding:3px;border:0;border-radius:11px;background:var(--paper-deep);overflow-y:hidden;}
+.cot-tabs button{height:30px;margin:0;padding:0 12px;border:0;border-radius:8px;line-height:30px;}
+.cot-tabs button.act,.cot-tabs .synth-btn.act{border-bottom:0;background:var(--sheet);color:var(--ink);box-shadow:0 2px 8px rgba(44,36,22,.08);}
+.cot-tabs .synth-btn{margin-left:8px;}
+.global-row{padding:18px 22px;border-radius:var(--rayon-feuille);background:var(--sheet);box-shadow:var(--ombre-feuille);}
+.perimetre{border:0;border-radius:var(--rayon-feuille);background:var(--rose-pale);}
+.perim-equation{border-top-color:rgba(139,94,107,.25);}
+.dim-rail{position:sticky;top:calc(var(--header-h,60px) + var(--subbar-h,0px) + 8px);z-index:6;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;margin:6px 0 14px;padding:4px;border-radius:13px;background:var(--paper-deep);box-shadow:0 -10px 0 var(--paper);}
+.dim-rail button{display:flex;flex-direction:column;gap:3px;min-width:0;padding:7px 10px;border:0;border-radius:10px;background:transparent;font:600 12.5px var(--police-interface);color:var(--ink-soft);text-align:left;}
+.dim-rail button:hover{background:rgba(255,255,255,.5);color:var(--ink);}
+.dim-rail button.on{background:var(--prune);color:#fff;}
+.dim-rail .dr-l{display:flex;align-items:center;gap:6px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+.dim-rail .dr-l i{flex:none;width:8px;height:8px;border-radius:50%;background:var(--c);}
+.dim-rail small{font-size:11px;font-weight:500;opacity:.8;}
+.dim-rail .dr-trait{height:3px;border-radius:2px;background:rgba(44,36,22,.1);overflow:hidden;}
+.dim-rail .dr-trait i{display:block;height:100%;background:var(--c);}
+.dim-rail button.on .dr-trait{background:rgba(255,255,255,.25);}
+.dim-rail button.on .dr-trait i{background:#fff;}
+.dim-block{margin-bottom:12px;border:0;border-radius:var(--rayon-feuille);background:var(--sheet);box-shadow:var(--ombre-feuille);scroll-margin-top:calc(var(--header-h,60px) + var(--subbar-h,0px) + 90px);}
+.dim-header{border-radius:var(--rayon-feuille) var(--rayon-feuille) 0 0;background:transparent;color:var(--ink);}
+.dim-header.closed{border-radius:var(--rayon-feuille);}
+.dim-header:hover{opacity:1;background:var(--surface);}
+.dim-header .dh-la::before{content:"";display:inline-block;width:10px;height:10px;margin-right:8px;border-radius:50%;background:var(--c,var(--prune));}
+.dim-header .dh-couv{color:var(--ink-faint);opacity:1;}
+.dim-header .dh-bdg{background:var(--surface);color:var(--ink);}
+@media(max-width:900px){.dim-rail{position:static;grid-template-columns:repeat(3,minmax(0,1fr));}}
 #tiroir-notes .analyse-notes-champ{min-height:240px;margin:0;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font:400 14.5px/1.6 var(--police-lecture);resize:vertical;}
 .analyse-note{margin:0 0 14px;font-size:13px;color:var(--ink-soft);}
 .analyse-champ{margin:0 0 12px;padding:10px 14px;background:var(--card);border:1px solid var(--line);border-radius:10px;}
@@ -15703,6 +15730,24 @@ const _CONTROLES = [
     return _bancEgal('rien trouvé | les bonnes réponses | tout revient', '0 | true | true', [aucun, certains === attendus && certains > 0 && certains < tous, revenus === tous].join(' | '));
   }},
 
+  {nom:'ICAF : un rail des six dimensions (un clic ouvre la dimension seule) ; sans cotation commencée, la page le dit', test: () => {
+    const sauve = JSON.stringify(S.raters), sauveTab = S.tab;
+    try {
+      S.raters = []; S.tab = 0;
+      renderMain('cotation');
+      const vide = /Aucune cotation n.est commencée/.test(document.getElementById('idc-main-content').textContent);
+      S.raters = [{id: 1, label: 'Cotation 1', dims: initDims(), meta: {id: '', rater: '', date: ''}, coll: DIMS.map(() => false)}];
+      renderMain('cotation');
+      const rail = document.querySelectorAll('#idc-main-content .dim-rail button');
+      const six = rail.length === DIMS.length;
+      rail[2].click();
+      const seule = S.raters[0].coll.filter(c => !c).length === 1 && S.raters[0].coll[2] === false;
+      const unBloc = document.querySelectorAll('#idc-main-content .dim-body').length === 1;
+      const allume = !!document.querySelector('#idc-main-content .dim-rail button.on');
+      return _bancEgal('page vide dite | six dimensions | une seule ouverte | un seul bloc déplié | le rail l\'allume', 'true | true | true | true | true', [vide, six, seule, unBloc, allume].join(' | '));
+    } finally { S.raters = JSON.parse(sauve); S.tab = sauveTab; renderMain('cotation'); }
+  }},
+
   {nom:'Synthèse, les pistes : au moins 5 épisodes et 1,4 fois l\'ordinaire (●●● à 10 et 2 fois), triées ; épinglées dans le fichier socle, pas dans un codage vierge', test: () => {
     const regle = [soliditePiste(10, .5, .25), soliditePiste(9, .5, .25), soliditePiste(10, .49, .25), soliditePiste(5, .42, .3), soliditePiste(5, .41, .3), soliditePiste(4, .9, .1)].join(',');
     refreshSynthese();
@@ -24196,6 +24241,20 @@ const NOTES_VERSION = [
 
   {
     date: '2026-10-09',
+    version: 'v2026.10.09-13',
+    titre: "L'ICAF : un rail des six dimensions",
+    corps: `
+<p><b>L'ICAF</b> (Arthur et Émilie — rafraîchir le reste de la BAF, passe 7 sur 10) :</p>
+<ul>
+<li><b>Un rail des six dimensions</b>, qui reste en haut pendant qu'on cote : pour chacune, combien de sous-items sont cotés et le score ; un clic ouvre cette dimension seule et y mène. « Tout déplier » reste là.</li>
+<li><b>Des feuilles au lieu des bandeaux de couleur pleine</b> : chaque dimension garde sa couleur, en pastille. Les onglets des cotateurs prennent l'allure d'un segment ; le score global et l'avertissement « vous cotez un recueil » sont en feuilles. L'ICAF garde son rosé.</li>
+<li><b>Correctif</b> : la page de cotation, ouverte par son adresse ou par le bouton retour, restait vide. Elle dit maintenant qu'aucune cotation n'est commencée, et propose de la commencer.</li>
+</ul>
+`
+  },
+
+  {
+    date: '2026-10-09',
     version: 'v2026.10.09-12',
     titre: "Les pages autour : Repères avec une recherche, Ressources en grille",
     corps: `
@@ -26834,7 +26893,17 @@ function mkCotation(){
   f.appendChild(tabs);
 
   const rater=S.raters[S.tab];
-  if(!rater) return f;
+  if(!rater){
+    // Aucune cotation commencée (page ouverte par son adresse, bouton retour) : le dire, et proposer de commencer (passe 193).
+    tabs.remove();
+    const v=document.createElement('div');v.className='feuille cot-vide';
+    v.innerHTML='<p class="phrase" style="font-size:20px;margin:0 0 6px">Aucune cotation n\'est commencée.</p>'+
+      '<p class="discret" style="margin:0">On la commence depuis l\'accueil de l\'ICAF : avec le dossier ouvert, ou pour une analyse fonctionnelle produite sans le recueil de la BAF.</p>'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"><button type="button" class="btn btn-primary" onclick="demarrerDepuisDossierOuvert()">Coter le dossier ouvert</button>'+
+      '<button type="button" class="btn btn-secondary" onclick="demarrerSansBAF()">Coter une AF sans Recueil des données</button></div>';
+    f.appendChild(v);
+    return f;
+  }
 
   // Meta
   const mg=document.createElement('div');mg.className='meta-grid';
@@ -26879,12 +26948,34 @@ function mkCotation(){
   };
   f.appendChild(toggleAll);
 
+  // Le rail des six dimensions (passe 193) : où l'on en est ; un clic ouvre cette dimension seule, et y mène.
+  const rail=document.createElement('div');rail.className='dim-rail np';
+  const ouvertes=rater.coll.filter(c=>!c).length;
+  rater.dims.forEach((dim,di)=>{
+    const couv=couvertureDim(dim);
+    const b=document.createElement('button');b.type='button';
+    b.style.setProperty('--c',DC[di%DC.length]);
+    if(ouvertes===1&&!rater.coll[di])b.className='on';
+    b.title=dim.code+'. '+dim.name;
+    b.innerHTML='<span class="dr-l"><i></i>'+esc(dim.code+'. '+dim.name)+'</span>'+
+      '<small>'+couv.cotes+' / '+couv.total+(couv.cotes?' · '+Math.round(sc.dims[di].score*100)+' %':'')+'</small>'+
+      '<span class="dr-trait"><i style="width:'+(couv.total?Math.round(couv.cotes/couv.total*100):0)+'%"></i></span>';
+    b.onclick=()=>{
+      rater.coll=rater.dims.map((_,k)=>k!==di);
+      renderMain('cotation');
+      const cible=document.querySelector('#idc-main-content .dim-block[data-di="'+di+'"]');
+      if(cible)cible.scrollIntoView({behavior:'smooth',block:'start'});
+    };
+    rail.appendChild(b);
+  });
+  f.appendChild(rail);
+
   // Dimensions
   rater.dims.forEach((dim,di)=>{
     const blk=document.createElement('div');blk.className='dim-block';blk.setAttribute('data-di',di);
     const hd=document.createElement('div');
     hd.className='dim-header'+(rater.coll[di]?' closed':'');
-    hd.style.background=DC[di%DC.length];
+    hd.style.setProperty('--c',DC[di%DC.length]);
     /* Le pourcentage d'une dimension est la moyenne de ses sous-items COTÉS.
        Cinq sous-items pré-cotés à 1 sur trente affichent donc 100 %, ce qui est
        exact et se lit à l'envers. La couverture est donnée à côté : c'est elle
