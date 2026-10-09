@@ -3766,6 +3766,34 @@ body.seq-selection .seq-case .seq-vide{display:none;}
   .ev-etat{grid-area:e;}
   .ev-tags,.ev-suppr,.ev-decouper{display:none;}
 }
+/* ── Le formulaire d'épisode et la page déclarant (passe 189), téléphone d'abord ── */
+.card{border:0;border-radius:var(--rayon-feuille);background:var(--sheet);box-shadow:var(--ombre-feuille);}
+.declarant-visibilite,#declarant-contenu .declarant-rgpd{border-left:0;background:var(--surface);box-shadow:none;text-align:left;}
+.intro-card .ethique{border-left:0;text-align:left;}
+#view-m2-form > *{max-width:860px;margin-left:auto;margin-right:auto;}
+#view-m2-form .etape-intro{font:400 15.5px/1.6 var(--police-lecture);color:var(--ink-soft);}
+#view-m2-form .field > label{font-size:14.5px;}
+.step-label{color:var(--ink-faint);font-size:11px;letter-spacing:.09em;}
+.step-mini{display:none;}
+#form-nav{align-items:center;}
+@media(max-width:760px){
+  #view-m2-form .mod-header{padding:12px 0 6px;margin-bottom:6px;}
+  #view-m2-form .mod-header h2{font-size:21px;}
+  #view-m2-form .mod-header .sub{display:none;}
+  .stepper{display:none;}
+  .step-mini{display:flex;gap:4px;margin:2px 0 8px;}
+  .step-mini i{flex:1;height:4px;border-radius:2px;background:var(--line);}
+  .step-mini i.fait{background:var(--sauge-deep);}
+  .step-mini i.ici{background:var(--slate);}
+  .step-label{margin-bottom:12px;}
+  body.vue-formulaire footer.bottom{display:none;}
+  body.vue-formulaire main{padding-bottom:0;}
+  #form-nav{position:sticky;bottom:0;z-index:20;flex-wrap:wrap;gap:8px;margin:18px 0 0;padding:10px 12px calc(10px + env(safe-area-inset-bottom, 0px));border-radius:14px 14px 0 0;background:var(--sheet);box-shadow:0 -1px 0 var(--line-soft),0 -8px 20px rgba(44,36,22,.06);}
+  #form-nav .btn{min-height:44px;justify-content:center;}
+  #form-nav .btn-ghost{order:1;min-height:36px;}
+  #form-nav .btn-secondary{order:2;flex:1 1 110px;}
+  #form-nav .btn-primary,#form-nav .btn-gold{order:3;flex:1 1 140px;}
+}
 #tiroir-notes .analyse-notes-champ{min-height:240px;margin:0;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font:400 14.5px/1.6 var(--police-lecture);resize:vertical;}
 .analyse-note{margin:0 0 14px;font-size:13px;color:var(--ink-soft);}
 .analyse-champ{margin:0 0 12px;padding:10px 14px;background:var(--card);border:1px solid var(--line);border-radius:10px;}
@@ -4482,6 +4510,7 @@ body.seq-selection .seq-case .seq-vide{display:none;}
     <!-- STEPPER VISUEL -->
     <div style="margin-bottom:6px;">
       <div class="stepper" id="form-stepper"></div>
+      <div class="step-mini" id="form-step-mini" aria-hidden="true"></div>
       <div class="step-label" id="form-step-label"></div>
     </div>
 
@@ -6730,6 +6759,7 @@ function route(name, fromHistory){
   const target = document.getElementById('view-'+name);
   if(target) target.classList.add('show');
   document.body.classList.toggle('vue-analyser', name === 'analyser');
+  document.body.classList.toggle('vue-formulaire', name === 'm2-form');
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('on'));
   const navBtn = document.querySelector('.nav-btn[data-go="'+name+'"]');
   if(navBtn) navBtn.classList.add('on');
@@ -8479,7 +8509,7 @@ const ETAPES_DETAIL = [
     label: 'Contexte', court: 'Contexte',
     render: (d) => `
       <div class="card">
-        <div style="background:var(--vol-contexte-pale);border-left:3px solid var(--vol-contexte);padding:13px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;" title="Bleu ardoise : le contexte, ce qui pèse de loin.">
+        <div style="background:var(--vol-contexte-pale);padding:13px 16px;border-radius:12px;margin-bottom:20px;font:400 15px/1.55 var(--police-lecture);" title="Bleu ardoise : le contexte, ce qui pèse de loin.">
           <b>Contexte (setting events)</b> — Ce qui précède de loin, pas juste la seconde d'avant. C'est souvent là que les clés se cachent.
         </div>
         <div class="field">
@@ -8509,7 +8539,7 @@ const ETAPES_DETAIL = [
     label: "Ce qui s'est passé (B)", court: "Ce qui s'est passé",
     render: (d) => `
       <div class="card">
-        <div style="background:var(--vol-comportement-pale);border-left:3px solid var(--vol-comportement);padding:13px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;" title="Vert sauge : le comportement.">
+        <div style="background:var(--vol-comportement-pale);padding:13px 16px;border-radius:12px;margin-bottom:20px;font:400 15px/1.55 var(--police-lecture);" title="Vert sauge : le comportement.">
           <b>Imaginez qu'une caméra filmait la scène.</b> Qu'est-ce qu'elle aurait enregistré exactement ? Pas "il a fait sa crise habituelle", pas "il a été difficile" — mais quels gestes, quels sons, dans quel ordre, pendant combien de temps ?
           <br><b>Racontez toute la scène ici, du début à la fin</b>, même si plusieurs choses se sont enchaînées. Vous n'avez rien à découper : c'est l'équipe qui y repérera ensuite le ou les comportements à analyser.
         </div>
@@ -8542,7 +8572,7 @@ const ETAPES_DETAIL = [
         : [{id:'ant_'+Date.now(), texte:'', declencheurPresume:false}];
       return `
       <div class="card">
-        <div style="background:var(--vol-antecedent-pale);border-left:3px solid var(--vol-antecedent);padding:13px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;" title="Jaune ocre : l'antécédent, ce qui précède directement le comportement.">
+        <div style="background:var(--vol-antecedent-pale);padding:13px 16px;border-radius:12px;margin-bottom:20px;font:400 15px/1.55 var(--police-lecture);" title="Jaune ocre : l'antécédent, ce qui précède directement le comportement.">
           <b>Ce qui s'est passé juste avant le comportement.</b> Pas une interprétation ("il était énervé"), pas un résumé ("RAS") — mais ce qui s'est concrètement passé dans les secondes ou minutes précédentes. Il y en a souvent <b>plusieurs</b> : ajoutez-en autant que nécessaire.
         </div>
         <div class="field">
@@ -8572,7 +8602,7 @@ const ETAPES_DETAIL = [
       const interventions = (d.interventions && d.interventions.length) ? d.interventions : [{id:'iv_'+Date.now(), texte:'', effet:'', precision:'', cdPostIntervention:''}];
       return `
       <div class="card">
-        <div style="background:var(--vol-intervention-pale);border-left:3px solid var(--vol-intervention);padding:13px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;" title="Prune : l'intervention de l'entourage.">
+        <div style="background:var(--vol-intervention-pale);padding:13px 16px;border-radius:12px;margin-bottom:20px;font:400 15px/1.55 var(--police-lecture);" title="Prune : l'intervention de l'entourage.">
           <b>Ce que vous ou l'entourage avez fait en réponse.</b> Y compris "on n'a rien fait" — les moments où le comportement cesse sans intervention sont des données précieuses qu'on perd souvent.
         </div>
         <div id="inter-list">
@@ -8609,7 +8639,7 @@ const ETAPES_DETAIL = [
     label: 'Conséquence pour la personne (C)', court: 'Conséquence',
     render: (d) => `
       <div class="card">
-        <div style="background:var(--vol-consequence-pale);border-left:3px solid var(--vol-consequence);padding:13px 16px;border-radius:8px;margin-bottom:20px;font-size:13.5px;" title="Rosé : la conséquence pour la personne.">
+        <div style="background:var(--vol-consequence-pale);padding:13px 16px;border-radius:12px;margin-bottom:20px;font:400 15px/1.55 var(--police-lecture);" title="Rosé : la conséquence pour la personne.">
           <b>Ce n'est pas la même chose que ce que vous avez fait.</b> La conséquence, c'est ce qui a changé <em>pour la personne</em> après le comportement — ce qu'elle a obtenu, ce qu'elle a évité. C'est ce qui nous dit pourquoi le comportement "marche" pour elle.
         </div>
         <div class="field">
@@ -8707,7 +8737,7 @@ const ETAPES = [
   },
   {
     id: 'pendant', numero: 2, label: "Pendant l'épisode", court: 'Pendant',
-    render: d => '<p class="etape-intro">Ce qui s\'est passé, comme si une caméra l\'avait filmé, <b>et</b> ce que vous ou l\'entourage avez fait. Vous n\'avez rien à découper : c\'est l\'équipe qui y repérera ensuite les comportements à analyser.</p>' +
+    render: d => '<p class="etape-intro">Ce qui s\'est passé, <b>et</b> ce que vous ou l\'entourage avez fait.</p>' +
       rendreEtape(sousEtape('comportement'), d) + rendreEtape(sousEtape('intervention'), d),
     collect: () => collecterSousEtapes(['comportement', 'intervention'])
   },
@@ -9319,6 +9349,10 @@ function renderEtape(idx) {
       <div class="step-dot"></div>
     </div>`;
   }).join('');
+
+  // Sur téléphone, des petits traits à la place de la barre des étapes (passe 189)
+  const mini = document.getElementById('form-step-mini');
+  if (mini) mini.innerHTML = ETAPES.map((e, i) => '<i class="' + (i < idx ? 'fait' : i === idx ? 'ici' : '') + '"></i>').join('');
 
   // Label d\'étape
   document.getElementById('form-step-label').textContent =
@@ -15468,6 +15502,21 @@ const _CONTROLES = [
       return _bancEgal('tout | les mois sur le côté | à découper | recherche | moment | aucun résultat dit',
         'true | true | true | true | true | true', [tout, nav, aDecouper, recherche, moment, vide].join(' | '));
     } finally { filtresM2 = JSON.parse(avant); filtreSourceChrono = sourceAvant; const t = document.getElementById('m2-f-texte'); if (t) t.value = filtresM2.texte; refreshM2List(); }
+  }},
+
+  {nom:'Le formulaire : sur téléphone, des petits traits pour les étapes ; l\'intro de « Pendant » ne redit pas l\'encadré ; les cartes sont des feuilles', test: () => {
+    const sauve = {d: formDraft, m: modeForceEtape, e: formEditIdx, i: currentEtapeIdx};
+    try {
+      formDraft = {}; modeForceEtape = {}; formEditIdx = null;
+      renderEtape(2);
+      const traits = document.querySelectorAll('#form-step-mini i').length === ETAPES.length;
+      const ici = document.querySelectorAll('#form-step-mini i.ici').length === 1 && document.querySelectorAll('#form-step-mini i.fait').length === 2;
+      const intro = (document.querySelector('#form-etapes .etape-intro') || {}).textContent || '';
+      const pasDeRedite = intro.length > 0 && !/caméra|rien à découper/.test(intro);
+      const carte = document.querySelector('.card');
+      const feuille = !carte || getComputedStyle(carte).borderTopWidth === '0px';
+      return _bancEgal('un trait par étape | la courante et les faites | l\'intro ne redit pas l\'encadré | cartes sans bordure', 'true | true | true | true', [traits, ici, pasDeRedite, feuille].join(' | '));
+    } finally { formDraft = sauve.d; modeForceEtape = sauve.m; formEditIdx = sauve.e; currentEtapeIdx = sauve.i; }
   }},
 
   {nom:'Synthèse, les pistes : au moins 5 épisodes et 1,4 fois l\'ordinaire (●●● à 10 et 2 fois), triées ; épinglées dans le fichier socle, pas dans un codage vierge', test: () => {
@@ -23960,6 +24009,21 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-09',
+    version: 'v2026.10.09-10',
+    titre: "Le formulaire et la page déclarant, téléphone d'abord",
+    corps: `
+<p><b>Le formulaire d'épisode et la page déclarant</b> (Arthur et Émilie — rafraîchir le reste de la BAF, passe 4 sur 10) :</p>
+<ul>
+<li><b>Sur téléphone</b>, là où les déclarants écrivent souvent : « Étape 2 / 4 » et une rangée de petits traits remplacent la barre des étapes, qui débordait sans qu'on le voie ; l'en-tête du formulaire se resserre ; <b>« Précédent » et « Suivant » restent collés en bas de l'écran</b>, sous le pouce, quoi qu'on fasse défiler.</li>
+<li><b>Sur ordinateur</b>, le formulaire tient dans une colonne de lecture, centrée ; l'introduction de chaque étape est en texte de lecture.</li>
+<li>L'introduction de l'étape « Pendant » ne redit plus l'encadré juste dessous (la caméra, « rien à découper ») : elle dit seulement ce qu'on y décrit.</li>
+<li><b>Les cartes deviennent des feuilles, partout</b> : plus de bordure, une ombre légère. Les encadrés de la page déclarant (ce que voit le déclarant, la protection des données) perdent leur liseré.</li>
+</ul>
+`
+  },
 
   {
     date: '2026-10-09',
