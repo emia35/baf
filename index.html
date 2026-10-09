@@ -91,7 +91,7 @@
      Une seule couleur pour naviguer : l'ardoise. Les couleurs des volets ne servent qu'aux données (surligneur,
      points, numéros, barres). Des feuilles plutôt que des cadres dans des cadres : trois fonds seulement — le
      papier (la page), la feuille (ce qu'on lit), la surface (un fond à l'intérieur d'une feuille). Le texte qu'on
-     lit (déclaratif, phrases, notes) en serif ; l'interface en Space Grotesk. La page #charte montre chaque élément.
+     lit (déclaratif, phrases, notes) en serif, justifié quand c'est un paragraphe ; l'interface en Space Grotesk. La page #charte montre chaque élément.
      Toute couleur de texte tient le contraste AA (4,5 pour 1 sur le papier) : passe 194, --ink-faint, --sauge-deep,
      --ocre-deep, --vase-descend-deep et --vol-contexte-deep assombris, de même teinte. */
   --sheet: #FFFDF8;
@@ -3556,7 +3556,7 @@ body.seq-selection .seq-case .seq-vide{display:none;}
 .mod-header .temps-tag{display:flex;align-items:center;gap:8px;margin:0 0 6px;padding:0;border-radius:0;background:none;color:var(--ink-faint);font-size:11px;letter-spacing:.09em;}
 .mod-header .temps-tag::before{content:"";flex:none;width:8px;height:8px;border-radius:50%;background:var(--slate);}
 .mod-header h2{margin:0 0 6px;font-size:26px;letter-spacing:-.01em;}
-.mod-header .sub{max-width:780px;font:400 15.5px/1.6 var(--police-lecture);color:var(--ink-soft);text-align:left;}
+.mod-header .sub{max-width:780px;font:400 15.5px/1.6 var(--police-lecture);color:var(--ink-soft);text-align:justify;text-justify:inter-word;}
 /* Les boutons : ceux de la charte, partout. */
 .btn{min-height:36px;padding:8px 16px;border:1.5px solid var(--line);border-radius:10px;background:var(--sheet);box-shadow:none;font-size:13.5px;font-weight:600;line-height:1.3;color:var(--ink);transition:border-color .15s,background .15s;}
 .btn:hover{transform:none;border-color:var(--slate);}
@@ -3603,7 +3603,7 @@ body.seq-selection .seq-case .seq-vide{display:none;}
 /* ── Les accueils (passe 187) : le parcours de l'outil en une feuille, l'étape en cours en ardoise avec son « continuer » ;
    l'accueil général et celui de l'ICAF en feuilles sobres, la couleur de l'outil en petite touche. ── */
 .intro-card{border:0;border-radius:var(--rayon-feuille);background:var(--sheet);box-shadow:var(--ombre-feuille);}
-.intro-card p,.intro-card.accueil-texte p{text-align:left;}
+.intro-card p,.intro-card.accueil-texte p{text-align:justify;text-justify:inter-word;}
 #view-baf-accueil .hero,#view-idc-accueil .hero{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:16px;align-items:center;justify-items:start;padding:24px 0 8px;text-align:left;}
 #view-baf-accueil .hero svg.bigrose,#view-idc-accueil .hero svg.bigrose{grid-row:1 / 3;width:46px;height:46px;margin:0;}
 #view-baf-accueil .hero .kicker,#view-idc-accueil .hero .kicker{margin:0 0 2px;}
@@ -3706,8 +3706,8 @@ body.seq-selection .seq-case .seq-vide{display:none;}
 }
 /* ── Le formulaire d'épisode et la page déclarant (passe 189), téléphone d'abord ── */
 .card{border:0;border-radius:var(--rayon-feuille);background:var(--sheet);box-shadow:var(--ombre-feuille);}
-.declarant-visibilite,#declarant-contenu .declarant-rgpd{border-left:0;background:var(--surface);box-shadow:none;text-align:left;}
-.intro-card .ethique{border-left:0;text-align:left;}
+.declarant-visibilite,#declarant-contenu .declarant-rgpd{border-left:0;background:var(--surface);box-shadow:none;text-align:justify;text-justify:inter-word;}
+.intro-card .ethique{border-left:0;text-align:justify;text-justify:inter-word;}
 #view-m2-form > *{max-width:860px;margin-left:auto;margin-right:auto;}
 #view-m2-form .etape-intro{font:400 15.5px/1.6 var(--police-lecture);color:var(--ink-soft);}
 #view-m2-form .field > label{font-size:14.5px;}
@@ -3775,7 +3775,7 @@ body.seq-selection .seq-case .seq-vide{display:none;}
 #view-reperes .res-cat-titre.premier{margin-top:0;}
 .repere-q summary{font-size:15px;}
 .repere-q summary::after,.repere-q summary:hover{color:var(--slate);}
-.repere-r{font-size:15.5px;line-height:1.7;color:var(--ink);text-align:left;}
+.repere-r{font-size:15.5px;line-height:1.7;color:var(--ink);text-align:justify;text-justify:inter-word;}
 .repere-equation{border-left:0;border-radius:10px;background:var(--surface);}
 .res-docs{grid-template-columns:repeat(2,minmax(0,1fr));}
 .res-doc{display:flex;flex-direction:column;border:0;border-radius:var(--rayon-feuille);background:var(--sheet);box-shadow:var(--ombre-legere);}
@@ -3783,9 +3783,9 @@ body.seq-selection .seq-case .seq-vide{display:none;}
 .res-doc-ico{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:10px;background:var(--surface);font-size:17px;}
 .res-doc-desc{font:400 14.5px/1.55 var(--police-lecture);}
 .res-cat-titre{color:var(--ink);}
-.res-cat-intro{font:400 15px/1.6 var(--police-lecture);text-align:left;}
+.res-cat-intro{font:400 15px/1.6 var(--police-lecture);text-align:justify;text-justify:inter-word;}
 #view-apropos .card{max-width:820px;padding:24px 30px;}
-#view-apropos .card p{font:400 16px/1.7 var(--police-lecture);color:var(--ink);text-align:left;}
+#view-apropos .card p{font:400 16px/1.7 var(--police-lecture);color:var(--ink);text-align:justify;text-justify:inter-word;}
 #view-notes .nv-corps p,#view-notes .nv-corps li{font:400 15px/1.65 var(--police-lecture);}
 #view-notes .note-v summary:hover .nv-titre{color:var(--slate);}
 .parcours-ligne{font:400 15px/1.6 var(--police-lecture);}
@@ -3841,6 +3841,8 @@ body.seq-selection .seq-case .seq-vide{display:none;}
   .si-table td{display:block;width:auto !important;padding:0;border:0;}
   .si-table .si-text{grid-column:1 / -1;}
 }
+/* ── Le texte qu'on lit est justifié (passe 197, Arthur) : ce qui est apparu avec la charte aussi. ── */
+.lecture,.help,#view-notes .nv-corps p,#view-notes .nv-corps li,.parcours-ligne,.res-doc-desc{text-align:justify;text-justify:inter-word;}
 #tiroir-notes .analyse-notes-champ{min-height:240px;margin:0;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font:400 14.5px/1.6 var(--police-lecture);resize:vertical;}
 .analyse-note{margin:0 0 14px;font-size:13px;color:var(--ink-soft);}
 
@@ -7196,7 +7198,7 @@ function renderCharte() {
     ex('Fenêtre', '<div class="sim-modal" style="max-width:none;box-shadow:var(--ombre-legere);animation:none"><button type="button" class="bt-rond fenetre-x" aria-label="Fermer">✕</button><h3>Ajouter un ou des épisodes</h3><p class="fenetre-texte" style="margin:0 0 10px">Une phrase pour dire de quoi il s\'agit.</p><div class="ajout-choix"><button type="button" class="ajout-choix-bt"><span class="ajout-ico">✍️</span><span class="ajout-nom">Compléter un épisode</span><span class="ajout-desc">Le formulaire, pas à pas.</span></button><button type="button" class="ajout-choix-bt"><span class="ajout-ico">📄</span><span class="ajout-nom">Texte brut</span><span class="ajout-desc">Tel quel.</span></button></div><button type="button" class="sim-modal-close">Annuler</button></div>') +
     ex('Aide', '<div class="field" style="margin:0"><label>Un libellé de champ<button type="button" class="help-toggle open">?</button></label><div class="help">L\'aide se déplie sous le libellé, comme une bulle de lecture ; un second clic la replie.</div></div>') +
     ex('Tiroir', '<button type="button" class="bt" onclick="ouvrirTiroir(\'tiroir-charte\')">Ouvrir le tiroir</button><p class="discret">Pour ce qui sert parfois : les notes, l\'indice, les réglages.</p>') +
-    ex('Feuille et lecture', '<p class="lecture" style="margin:0">« S\'est mordu le dos de la main jusqu\'à laisser une marque. »</p><div class="feuille-sep"></div><p class="discret" style="margin:0">Le texte qu\'on lit en serif ; l\'interface en Space Grotesk.</p>') +
+    ex('Feuille et lecture', '<p class="lecture" style="margin:0">« S\'est mordu le dos de la main jusqu\'à laisser une marque. »</p><div class="feuille-sep"></div><p class="discret" style="margin:0">Le texte qu\'on lit en serif, justifié ; l\'interface en Space Grotesk.</p>') +
     '</div>' +
     '<aside class="tiroir" id="tiroir-charte" aria-hidden="true"><div class="tiroir-tete"><h2>Un tiroir</h2><button type="button" class="bt-rond" aria-label="Fermer" onclick="fermerTiroir(\'tiroir-charte\')">✕</button></div><div class="tiroir-corps"><p class="lecture">Il s\'ouvre à droite, par-dessus la page. Échap ou un clic à côté le referme.</p></div></aside>';
 }
@@ -15916,6 +15918,17 @@ const _CONTROLES = [
     }
   }},
 
+  {nom:'Le texte qu\'on lit est justifié : accueils, sous-titres de page, aides, Repères, lecture', test: () => {
+    const vue = (document.querySelector('section.view.show') || {}).id;
+    const aligne = (sel, page) => { route(page); const e = document.querySelector(sel); return e ? getComputedStyle(e).textAlign : 'absent'; };
+    try {
+      const r = [aligne('#view-accueil .intro-card p', 'accueil'), aligne('#view-baf-accueil .intro-card p', 'baf-accueil'), aligne('#view-m2 .mod-header .sub', 'm2')];
+      const t = document.createElement('div'); t.innerHTML = '<p class="lecture">x</p><div class="help">y</div>'; document.body.appendChild(t);
+      r.push(getComputedStyle(t.firstChild).textAlign, getComputedStyle(t.lastChild).textAlign); t.remove();
+      return _bancEgal('accueil | accueil du recueil | sous-titre | lecture | aide', 'justify | justify | justify | justify | justify', r.join(' | '));
+    } finally { if (vue) route(vue.replace(/^view-/, '')); }
+  }},
+
   {nom:'Export Word : Catégoriser y donne la typologie (catégories, combien, lesquels, ce qui reste)', test: () => {
     const t = typologiePourExport();
     const volets = t.querySelectorAll('h3').length;
@@ -24390,6 +24403,15 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-09',
+    version: 'v2026.10.09-17',
+    titre: "Le texte qu'on lit est justifié",
+    corps: `
+<p><b>Le texte qu'on lit est justifié</b> (Arthur et Émilie) : les accueils, les sous-titres de page, les encarts, les Repères, les Ressources, À propos, les aides « ? », les notes de version. Le rafraîchissement l'avait remis à gauche. Restent à gauche les phrases-titres de la Synthèse et l'interface (boutons, sommaires, tableaux).</p>
+`
+  },
 
   {
     date: '2026-10-09',
