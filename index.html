@@ -388,9 +388,9 @@ header.top{
 .fdecl-aide{font-size:12px;color:var(--ink-soft);line-height:1.5;margin:0 0 10px;text-align:center;}
 .pastille-provisoire{display:inline-block;background:var(--ocre-pale);color:var(--ocre-deep);border:1px solid var(--ocre);border-radius:999px;padding:0 8px;font-size:11.5px;font-weight:700;}
 .bandeau-provisoire{background:var(--ocre-pale);border-left:4px solid var(--ocre);border-radius:8px;padding:11px 15px;margin:0 0 14px;font-size:13.5px;line-height:1.55;color:var(--ink);}
-.m2-partage{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin:0 0 16px;}
-.m2-partage-droite{display:flex;flex-direction:column;align-items:flex-end;gap:3px;}
-.m2-contrib-compteur{font-size:12px;color:var(--ink-soft);}
+.m2-intro-actions{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:10px;}
+.m2-contrib-compteur{margin-top:8px;font-size:12px;color:var(--ink-soft);}
+.m2-contrib-compteur:empty{display:none;}
 .fenetre-texte{font-size:14px;color:var(--ink-soft);line-height:1.65;margin:0 0 14px;}
 .fenetre-texte b{color:var(--ink);}
 .fenetre-actions{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px;}
@@ -781,7 +781,6 @@ input.contrib-prov:hover, input.contrib-prov:focus{border-color:var(--line);back
 .declarant-seul{display:none;}
 body.mode-declarant .declarant-seul{display:block;}
 body.mode-declarant .analyste-seul,
-body.mode-declarant #m2-partage,
 body.mode-declarant .situer-boussole,
 body.mode-declarant .situer-coin{display:none !important;}
 .declarant-visibilite{font-size:14px;line-height:1.6;border-left:3px solid var(--sauge-deep);}
@@ -4311,17 +4310,14 @@ body.seq-selection .seq-case .seq-vide{display:none;}
     <div id="m2-bandeau-provisoire"></div>
     <div class="card" id="m2-intro-card" style="text-align:center;">
       <p style="font-size:14px;color:var(--ink-soft);">On vous guide pas à pas, une question à la fois — un peu comme si l'équipe était face à vous.</p>
-      <button class="btn btn-primary" onclick="ouvrirAjoutEpisodes()">+ Ajouter un ou des épisodes</button>
+      <div class="m2-intro-actions">
+        <button class="btn btn-primary" onclick="ouvrirAjoutEpisodes()">+ Ajouter un ou des épisodes</button>
+        <button class="btn btn-secondary analyste-seul" onclick="ouvrirFenetre('kit-overlay')">✉ Transmettre un fichier déclarant</button>
+      </div>
+      <div class="m2-contrib-compteur analyste-seul" id="m2-contrib-compteur"></div>
     </div>
 
     <div id="m2-couverture"></div>
-
-    <div class="m2-partage analyste-seul" id="m2-partage">
-      <button class="btn btn-secondary" onclick="ouvrirFenetre('kit-overlay')">✉ Transmettre un fichier déclarant</button>
-      <div class="m2-partage-droite">
-        <span class="m2-contrib-compteur" id="m2-contrib-compteur"></span>
-      </div>
-    </div>
 
     <div class="card declarant-seul declarant-visibilite">
       Vous ne voyez ici que les épisodes que vous avez décrits. Seuls les référents de la démarche d'analyse fonctionnelle voient l'ensemble des épisodes.
@@ -13395,7 +13391,7 @@ const _CONTROLES = [
   {nom:'Transmettre un fichier déclarant : un seul libellé (Recueillir, préambule, fenêtre), deux gestes', test: () => {
     const textes = sel => [...document.querySelectorAll(sel)].map(b => b.textContent.replace(/\s+/g, ' ').trim());
     const pre = textes('#view-m1 .actions-row button');
-    const recueillir = textes('#m2-partage button').find(t => /fichier déclarant$/.test(t) && !/Ajouter/.test(t)) || '-';
+    const recueillir = textes('#m2-intro-card button').find(t => /fichier déclarant$/.test(t) && !/Ajouter/.test(t)) || '-';
     const fenetre = textes('#kit-overlay .fenetre-actions button');
     const titre = (document.getElementById('kit-titre') || {}).textContent;
     return _bancEgal('préambule : Transmettre puis Commencer, plus de synthèse | Recueillir | titre | deux gestes',
@@ -13527,7 +13523,7 @@ const _CONTROLES = [
       const ouvert = o.style.display === 'flex';
       const choix = [...o.querySelectorAll('.ajout-nom')].map(x => x.textContent).join(' | ');
       fermerFenetre('ajout-overlay');
-      const boutons = [...document.querySelectorAll('#m2-partage button')].map(b => b.textContent.replace(/\s+/g, ' ').trim());
+      const boutons = [...document.querySelectorAll('#m2-intro-card button')].map(b => b.textContent.replace(/\s+/g, ' ').trim());
       const ancien = boutons.some(t => /Ajouter des fichiers déclarants/.test(t));
       const titreFichier = document.getElementById('contrib-titre').textContent;
       const principal = document.querySelector('#m2-intro-card button').textContent.trim();
@@ -22140,8 +22136,6 @@ function renderReserve(nomVue) {
 function appliquerModeDeclarant() {
   const actif = modeDeclarantActif();
   appliquerModeDeclarantSurM1();
-  const carte = document.getElementById('m2-partage');
-  if (carte) carte.style.display = actif ? 'none' : '';
   document.body.classList.toggle('mode-declarant', actif);
 }
 
@@ -23551,7 +23545,7 @@ function renderContributions() {
    Le texte s'adresse à quelqu'un qui n'était pas là : pas d'allusion à nos
    arbitrages internes, et ce qui n'est pas stabilisé est dit comme tel. */
 
-const ACTIVITE_CODE = {"jusqua":"2026-10-08","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":10625,"retrait":2261,"depots":70}]};
+const ACTIVITE_CODE = {"jusqua":"2026-10-09","mois":[{"mois":"2025-12","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"le questionnement, sans code"},{"mois":"2026-01","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-02","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":"ÉQAF v1 et v2 : des classeurs Excel"},{"mois":"2026-03","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":1149,"detail":"ÉQAF v3 : page HTML (639 lignes) et version interactive (510)"},{"mois":"2026-04","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":0,"detail":""},{"mois":"2026-05","ajout":0,"retrait":0,"depots":0,"avantDepot":true,"avant":425,"detail":"ÉQAF v4 (425 lignes) ; le tableur d'AF n'a que des formules"},{"mois":"2026-06","ajout":2909,"retrait":614,"depots":31,"avant":5768,"detail":"BAF (4 523 lignes) et ICAF (1 245) écrites avant le premier dépôt"},{"mois":"2026-07","ajout":0,"retrait":0,"depots":0},{"mois":"2026-08","ajout":0,"retrait":0,"depots":0},{"mois":"2026-09","ajout":14364,"retrait":3316,"depots":109},{"mois":"2026-10","ajout":11531,"retrait":2555,"depots":73}]};
 
 function svgActiviteCode() {
   const mois = ACTIVITE_CODE.mois || [];
@@ -23590,6 +23584,15 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-09',
+    version: 'v2026.10.09-3',
+    titre: "Recueillir : les deux boutons côte à côte",
+    corps: `
+<p><b>Recueillir</b> (Arthur et Émilie) : « Transmettre un fichier déclarant » n'est plus seul sur sa ligne. Il est maintenant à droite de « Ajouter un ou des épisodes », dans la carte du haut ; le nombre de fichiers déclarants reçus s'affiche juste dessous. En mode déclarant, le bouton reste caché.</p>
+`
+  },
 
   {
     date: '2026-10-09',
