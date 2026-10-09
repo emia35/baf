@@ -6229,16 +6229,39 @@ function ouvrirMenuCitSeq(id, bouton) {
   m.style.top = Math.max(10, Math.min(r.bottom + 6, window.innerHeight - m.offsetHeight - 10)) + 'px';
   setTimeout(() => document.addEventListener('mousedown', fermerMenuCitDehors, true), 0);
 }
-/* Survoler un passage l'allume des deux côtés : dans le déclaratif et dans la frise. */
+/* Survoler un passage l'allume des deux côtés : dans le déclaratif et dans la frise. Si son double est hors de vue dans
+   l'autre panneau, ce panneau défile pour le montrer (Arthur, 09/10/2026) — après un court arrêt de la souris, pour que
+   rien ne bouge quand elle ne fait que passer, et seulement s'il le faut. */
 function allumerCitSeq(ids, on) {
   if (!ids.length) return;
   document.querySelectorAll('#decouper-panneau .seq-chip[data-cit]').forEach(x => { if (ids.indexOf(x.dataset.cit) !== -1) x.classList.toggle('allume', on); });
   document.querySelectorAll('#declaratif-brut mark.seq-m').forEach(m => { if ((m.dataset.cit || '').split(' ').some(x => ids.indexOf(x) !== -1)) m.classList.toggle('allume', on); });
 }
+// Le double du passage survolé, dans l'autre panneau ; le panneau qui le contient défile jusqu'à lui s'il est hors de vue.
+function montrerDoubleCitSeq(ids, source) {
+  const doubles = source.matches('mark')
+    ? [...document.querySelectorAll('#decouper-panneau .seq-chip[data-cit]')].filter(x => ids.indexOf(x.dataset.cit) !== -1)
+    : [...document.querySelectorAll('#declaratif-brut mark.seq-m')].filter(m => (m.dataset.cit || '').split(' ').some(x => ids.indexOf(x) !== -1));
+  const el = doubles.find(x => x.getClientRects().length);
+  if (!el) return false;
+  let boite = el.parentElement;
+  while (boite && boite !== document.body && !(/(auto|scroll)/.test(getComputedStyle(boite).overflowY) && boite.scrollHeight > boite.clientHeight)) boite = boite.parentElement;
+  if (!boite || boite === document.body) return false;
+  const r = el.getBoundingClientRect(), b = boite.getBoundingClientRect(), marge = 12;
+  if (r.top >= b.top + marge && r.bottom <= b.bottom - marge) return false;
+  const haut = boite.scrollTop + (r.top - b.top) - Math.max(marge, (b.height - r.height) / 2);
+  const doux = !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  boite.scrollTo({top: Math.max(0, haut), behavior: doux ? 'smooth' : 'auto'});
+  return true;
+}
+let defilementCitSeq = null;
 ['mouseover', 'mouseout'].forEach(type => document.addEventListener(type, ev => {
   const t = ev.target.closest && ev.target.closest('#declaratif-brut mark.seq-m, #decouper-panneau .seq-chip[data-cit]');
   if (!t || (ev.relatedTarget && t.contains(ev.relatedTarget))) return;
-  allumerCitSeq((t.dataset.cit || '').split(' ').filter(Boolean), type === 'mouseover');
+  const ids = (t.dataset.cit || '').split(' ').filter(Boolean);
+  allumerCitSeq(ids, type === 'mouseover');
+  clearTimeout(defilementCitSeq);
+  if (type === 'mouseover' && ids.length) defilementCitSeq = setTimeout(() => montrerDoubleCitSeq(ids, t), 250);
 }));
 /* La barre de sélection au clavier : 1 à 6 rangent, Échap renonce. Le menu flottant se ferme aussi avec Échap. */
 document.addEventListener('keydown', ev => {
@@ -23584,6 +23607,15 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-09',
+    version: 'v2026.10.09-4',
+    titre: "Découper : le survol fait défiler l'autre panneau",
+    corps: `
+<p><b>Découper</b> (Arthur et Émilie) : survoler un passage du déclaratif brut l'allumait dans la frise, mais seulement s'il y était visible. Désormais, quand la souris s'arrête un instant sur un passage, le panneau d'en face défile pour montrer son double, s'il était hors de vue. Cela marche dans les deux sens : du texte vers la frise, et de la frise vers le texte. Quand la souris ne fait que passer, rien ne bouge.</p>
+`
+  },
 
   {
     date: '2026-10-09',
