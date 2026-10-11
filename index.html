@@ -5475,7 +5475,7 @@ body:not(.mode-admin) .admin-seul{display:none !important;}
 <footer class="bottom no-print">
   <div class="footer-inner">
     <div class="footer-line footer-left">Outil créé par Émilie Musard, éducatrice spécialisée et Arthur Guillieux, psychologue clinicien — <a href="mailto:emia35@adapei35.asso.fr">emia35@adapei35.asso.fr</a></div>
-    <div class="footer-line footer-right"><button type="button" class="footer-version" id="footer-version" onclick="route('notes')"></button> · ⚠ Outil toujours en cours de construction · <button type="button" class="footer-version" id="theme-bouton" onclick="basculerTheme()" title="Passer en mode sombre">☾ Mode sombre</button></div>
+    <div class="footer-line footer-right"><button type="button" class="footer-version" id="footer-version" onclick="route('notes')"></button> · <button type="button" class="footer-version" id="theme-bouton" onclick="basculerTheme()" title="Passer en mode sombre">☾ Mode sombre</button></div>
   </div>
 </footer>
 
@@ -24171,6 +24171,15 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-11',
+    version: 'v2026.10.11-21',
+    titre: "Le pied de page s'allège",
+    corps: `
+<p><b>Le pied de page s'allège</b> (Arthur et Émilie) : la mention « Outil toujours en cours de construction » est retirée. Restent la version, les notes de version et le mode sombre.</p>
+`
+  },
 
   {
     date: '2026-10-11',
