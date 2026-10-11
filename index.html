@@ -3968,7 +3968,10 @@ body:not(.mode-admin) .admin-seul{display:none !important;}
 .banc-capture.banc-tel{align-self:center;width:100%;max-width:390px;}
 .banc-maquette{width:100%;height:520px;border:1px solid var(--line);border-radius:10px;background:#fff;}
 .banc-option > .bt{align-self:flex-start;}
-.banc-avis textarea{width:100%;margin:4px 0 6px;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;font:14px var(--police-lecture);resize:vertical;}
+.banc-trancher{margin:12px 0 0;}
+.banc-decision{margin:14px 0 0;padding:12px 16px;border-radius:12px;background:var(--sauge-pale);}
+.banc-decision .surtitre{color:var(--sauge-deep);}
+.banc-decision p{margin:0 0 4px;text-align:justify;}
 @media (max-width:760px){.banc-options{grid-template-columns:1fr;}}
 .apercu-bandeau{position:fixed;left:50%;bottom:14px;z-index:400;transform:translateX(-50%);display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:999px;background:var(--ocre-deep);color:#fff;font:600 13px var(--police-interface);box-shadow:0 8px 24px rgba(0,0,0,.2);}
 .apercu-bandeau button{border:0;border-radius:999px;padding:4px 12px;background:#fff;color:var(--ocre-deep);font:700 12.5px var(--police-interface);cursor:pointer;}
@@ -4273,7 +4276,7 @@ body:not(.mode-admin) .admin-seul{display:none !important;}
       <div class="crumb"><button onclick="route('accueil')">← Accueil</button></div>
       <span class="temps-tag tag-m4">Mode administrateur</span>
       <h2>Banc d'essai</h2>
-      <div class="sub">Quand un choix se discute, les options côte à côte. Chaque arbitrage a un numéro, pour en parler entre vous ; chacun note sa préférence et un mot, gardés dans son navigateur. Pour trancher, dites à Claude le numéro et la lettre retenue.</div>
+      <div class="sub">Quand un choix se discute, les options côte à côte. Chaque arbitrage a un numéro, pour en parler entre vous ; après en avoir parlé, dites à Claude le numéro, l'option retenue et pourquoi. L'arbitrage passe alors dans les arbitrages tranchés, avec sa décision, pour trace.</div>
     </div>
     <div id="banc-contenu"></div>
   </section>
@@ -7311,8 +7314,8 @@ function quitterAdmin() {
 }
 
 /* Le banc d'essai (passe 206, Arthur et Émilie) : quand un choix se discute, plusieurs options côte à côte. Chaque
-   arbitrage porte un numéro, jamais réutilisé, pour en parler (« l'arbitrage n° 12 ») ; chacun note sa préférence et un
-   mot dans son navigateur ; Claude applique l'option retenue. Les arbitrages et leurs captures sont dans le dossier
+   arbitrage porte un numéro, jamais réutilisé, pour en parler (« l'arbitrage n° 12 »)  ; Arthur et Émilie en parlent,
+   Claude applique l'option retenue et garde la décision (date, raison, version) pour trace. Les arbitrages et leurs captures sont dans le dossier
    banc/ du dépôt, chargés seulement en mode administrateur : la BAF des équipes n'en porte rien. Une option « direct »
    s'essaie dans la BAF elle-même : « if (optionEssai(12) === 'B') … » là où elle s'affiche. */
 let BANC = null, bancErreur = '', bancChoisi = null;
@@ -7353,7 +7356,7 @@ function bancHtml(liste, choisi, prefs, reg, erreur) {
     const p = (prefs[x.n] || {}).pref;
     return '<button type="button" class="banc-carte' + (x === a ? ' on' : '') + '" onclick="bancChoisi = ' + x.n + '; bancReglages.lettre = null; renderBanc()">' +
       '<span class="banc-num">n° ' + x.n + '</span><b>' + esc(x.titre) + '</b><span class="discret">' + x.options.length + ' options · ' +
-      (x.statut === 'tranché' ? 'retenue : ' + esc(x.retenue || '') : p ? 'ma préférence : ' + esc(p) : 'à regarder') + '</span></button>';
+      (x.statut === 'tranché' ? 'retenue : ' + esc(x.retenue || '') + (x.dateTranche ? ' le ' + esc(new Date(x.dateTranche + 'T12:00:00').toLocaleDateString('fr-FR')) : '') : p ? 'ma préférence : ' + esc(p) : 'à regarder') + '</span></button>';
   };
   return (ouverts.length ? '<div class="banc-liste">' + ouverts.map(carte).join('') + '</div>' : '') +
     (tranches.length ? '<details class="repli banc-tranches"' + (a.statut === 'tranché' ? ' open' : '') + '><summary>Arbitrages tranchés · ' + tranches.length + '</summary><div class="banc-liste">' + tranches.map(carte).join('') + '</div></details>' : '') +
@@ -7379,20 +7382,26 @@ function arbitrageHtml(a, pref, reg) {
     '</div>';
   return '<div class="feuille banc-arbitrage">' +
       '<div class="surtitre">Arbitrage n° ' + a.n + (isNaN(jour) ? '' : ' · ' + esc(jour.toLocaleDateString('fr-FR', {day: 'numeric', month: 'long', year: 'numeric'}))) +
-        (a.statut === 'tranché' ? ' · tranché : ' + esc(a.retenue || '') : '') + '</div>' +
+        '</div>' +
       '<h3>' + esc(a.titre) + '</h3><p class="banc-question">' + esc(a.question) + '</p>' +
+      (a.statut === 'tranché' ? decisionHtml(a)
+        : '<p class="discret banc-trancher">Pour trancher, après en avoir parlé ensemble : dites à Claude « arbitrage n° ' + a.n + ' : B », et pourquoi. La décision restera ici, pour trace.</p>') +
       '<div class="banc-reglages">' +
         (formats.length > 1 ? seg(formats, format, 'bancFormat') : '') +
         (a.options.length > 1 ? seg([['cote', 'Côte à côte'], ['une', 'Une à la fois']], uneSeule ? 'une' : 'cote', 'bancVue') : '') +
         (uneSeule ? seg(a.options.map(o => [o.lettre, 'Option ' + o.lettre]), montree, 'bancLettre') : '') +
       '</div></div>' +
-    '<div class="banc-options" style="--n:' + (uneSeule ? 1 : a.options.length) + '">' + a.options.filter(o => !uneSeule || o.lettre === montree).map(option).join('') + '</div>' +
-    (a.statut === 'tranché' ? '' : '<div class="feuille banc-avis"><label class="surtitre" for="banc-note">Mon avis sur l\'arbitrage n° ' + a.n + '</label>' +
-      '<textarea id="banc-note" rows="3" placeholder="Ce qui vous fait pencher d\'un côté ou de l\'autre… (gardé dans ce navigateur)" oninput="noterBanc(' + a.n + ', this.value)">' + esc(pref.note || '') + '</textarea>' +
-      '<p class="discret">Pour trancher, dites à Claude : « arbitrage n° ' + a.n + ' : ' + esc(pref.pref || a.options[0].lettre) + ' ».</p></div>');
+    '<div class="banc-options" style="--n:' + (uneSeule ? 1 : a.options.length) + '">' + a.options.filter(o => !uneSeule || o.lettre === montree).map(option).join('') + '</div>';
 }
 function preferer(n, lettre) { const p = prefsBanc(); p[n] = Object.assign({}, p[n], {pref: lettre}); ecrirePrefsBanc(p); renderBanc(); }
-function noterBanc(n, texte) { const p = prefsBanc(); p[n] = Object.assign({}, p[n], {note: texte}); ecrirePrefsBanc(p); }
+// La trace d'un arbitrage tranché (passe 207) : l'option retenue, quand, pourquoi (l'arbitrage oral d'Arthur et Émilie),
+// et la version de la BAF où elle a été appliquée.
+function decisionHtml(a) {
+  const jour = a.dateTranche ? new Date(a.dateTranche + 'T12:00:00') : null;
+  return '<div class="banc-decision"><div class="surtitre">Décision' + (jour && !isNaN(jour) ? ' du ' + esc(jour.toLocaleDateString('fr-FR', {day: 'numeric', month: 'long', year: 'numeric'})) : '') + '</div>' +
+    '<p><b>Option ' + esc(a.retenue || '?') + ' retenue.</b>' + (a.raison ? ' ' + esc(a.raison) : '') + '</p>' +
+    (a.version ? '<p class="discret">Appliquée dans la version <a href="#notes-de-version" onclick="route(\'notes\'); return false">' + esc(a.version) + '</a>.</p>' : '') + '</div>';
+}
 function bancFormat(f) { bancReglages.format = f; renderBanc(); }
 function bancVue(v) { bancReglages.vue = v; renderBanc(); }
 function bancLettre(l) { bancReglages.lettre = l; renderBanc(); }
@@ -13501,7 +13510,7 @@ const _CONTROLES = [
           {lettre: 'A', titre: 'Un', texte: 'x', captures: [{src: '07/A-ordi.jpg', format: 'ordi'}, {src: '07/A-tel.jpg', format: 'tel'}]},
           {lettre: 'B', titre: 'Deux', texte: 'y', captures: [{src: '07/B-ordi.jpg', format: 'ordi'}]},
           {lettre: 'C', titre: 'Trois', direct: true}]},
-        {n: 3, date: '2026-10-01', titre: 'Ancien', question: '?', statut: 'tranché', retenue: 'B', options: [{lettre: 'A', titre: 'a'}, {lettre: 'B', titre: 'b'}]}];
+        {n: 3, date: '2026-10-01', titre: 'Ancien', question: '?', statut: 'tranché', retenue: 'B', dateTranche: '2026-10-12', raison: 'Plus aéré.', version: 'v2026.10.12-1', options: [{lettre: 'A', titre: 'a'}, {lettre: 'B', titre: 'b'}]}];
       const d = document.createElement('div');
       d.innerHTML = bancHtml(liste, null, {7: {pref: 'B'}}, {format: 'ordi', vue: 'cote'}, '');
       const options = d.querySelectorAll('.banc-option').length;
@@ -13511,14 +13520,17 @@ const _CONTROLES = [
       const tranches = d.querySelectorAll('.banc-tranches .banc-carte').length;
       d.innerHTML = bancHtml(liste, null, {}, {format: 'ordi', vue: 'une', lettre: 'B'}, '');
       const uneSeule = [...d.querySelectorAll('.banc-option .banc-lettre')].map(e => e.textContent).join('');
+      d.innerHTML = bancHtml(liste, 3, {}, {format: 'ordi', vue: 'cote'}, '');
+      const decision = d.querySelector('.banc-decision').textContent.replace(/\s+/g, ' ');
+      const trace = /12 octobre 2026/.test(decision) && /Option B retenue\. Plus aéré\./.test(decision) && /v2026\.10\.12-1/.test(decision) && !d.querySelector('textarea');
       localStorage.setItem('baf-banc', JSON.stringify({7: {pref: 'C'}}));
       sessionStorage.removeItem('baf-admin');
       const horsAdmin = optionEssai(7);
       sessionStorage.setItem('baf-admin', '1');
       const enAdmin = optionEssai(7);
       const cachee = !document.querySelector('.nav-btn[data-go="banc"]') && adresseDeVue('banc') === 'banc-d-essai';
-      return _bancEgal('options | numéro | captures ordinateur | préférée | tranchés repliés | une à la fois | essai hors admin | essai en admin | page cachée',
-        '3 | true | 2 | B | 1 | B | null | C | true', [options, numero, ordi, preferee, tranches, uneSeule, String(horsAdmin), enAdmin, cachee].join(' | '));
+      return _bancEgal('options | numéro | captures ordinateur | préférée | tranchés repliés | une à la fois | essai hors admin | essai en admin | page cachée | décision gardée',
+        '3 | true | 2 | B | 1 | B | null | C | true | true', [options, numero, ordi, preferee, tranches, uneSeule, String(horsAdmin), enAdmin, cachee, trace].join(' | '));
     } finally {
       if (sauve === null) localStorage.removeItem('baf-banc'); else localStorage.setItem('baf-banc', sauve);
       if (admin === null) sessionStorage.removeItem('baf-admin'); else sessionStorage.setItem('baf-admin', admin);
@@ -23755,6 +23767,15 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-11',
+    version: 'v2026.10.11-10',
+    titre: "Le banc d'essai garde la trace des décisions",
+    corps: `
+<p><b>Le banc d'essai garde la trace des décisions</b> (Arthur et Émilie) : un arbitrage tranché passe dans « Arbitrages tranchés » avec l'option retenue, la date, la raison — l'arbitrage oral qu'on aura fait ensemble — et la version de la BAF où elle a été appliquée. La case « Mon avis » est retirée : on en parle de vive voix.</p>
+`
+  },
 
   {
     date: '2026-10-11',
