@@ -3995,7 +3995,7 @@ details.avant-commencer p{margin:10px 0 0;font:400 15px/1.65 var(--police-lectur
 .po-etape:hover{background:inherit;filter:brightness(1.04);}
 .po-etape.po-ardoise:hover{background:var(--slate);}
 .po-etape.po-sauge:hover{background:var(--sauge);}
-.po-etape.ici{box-shadow:0 0 0 3px var(--paper),0 0 0 5.5px var(--ocre),0 8px 24px rgba(45,59,82,.18);}
+/* Plus de cerclage sur l'étape en cours (passe 217, Arthur) : la jauge et le bouton « … → » disent déjà où l'on en est. */
 .po-titre{position:relative;font-size:17px;line-height:1.25;}
 .po-etat{margin-top:0;font-weight:600;opacity:.92;}
 .po-ardoise .po-jauge{background:rgba(255,255,255,.22);}
@@ -24171,6 +24171,15 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-11',
+    version: 'v2026.10.11-20',
+    titre: "Accueil du recueil : sans cerclage",
+    corps: `
+<p><b>Accueil du recueil</b> (Arthur et Émilie) : plus de cercle jaune autour de l'étape en cours. Les jauges et le bouton « Découper l'épisode 1 → » disent déjà où l'on en est.</p>
+`
+  },
 
   {
     date: '2026-10-11',
