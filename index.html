@@ -4115,6 +4115,32 @@ body:not(.mode-admin) .admin-seul{display:none !important;}
 }
 @media (prefers-reduced-motion:reduce){.analyse-panneau{transition:none !important;}}
 
+/* ── Analyser sur téléphone (passe 220) : une étape à la fois (Découper garde le déclaratif au-dessus, on y
+   sélectionne), un rail sur deux lignes aux noms entiers, le texte en pleine largeur, les listes de patterns empilées. ── */
+@media (max-width:760px){
+  .analyse-piste.m-1 #pan-decouper, .analyse-piste.m-2 #pan-categoriser{display:none !important;}
+  .analyse-tete .rail{grid-template-columns:repeat(2,minmax(0,1fr));height:auto;gap:4px;}
+  .analyse-tete .rail-loupe{display:none;}
+  .analyse-tete .rail-etape{min-height:42px;padding:4px 10px;}
+  .analyse-tete .rail-etape.vue{color:var(--ink-soft);}
+  .analyse-tete .rail-etape.vue .rail-trait{background:rgba(44,36,22,.1);}
+  .analyse-tete .rail-etape.vue .rail-trait i{background:var(--slate);}
+  .analyse-tete .rail-etape.tel-vue{background:var(--slate);color:#fff;}
+  .analyse-tete .rail-etape.tel-vue .rail-trait{background:rgba(255,255,255,.22);}
+  .analyse-tete .rail-etape.tel-vue .rail-trait i{background:#fff;}
+  .brut-groupe{grid-template-columns:minmax(0,1fr);row-gap:2px;}
+  .brut-nom{padding:6px 0 0;text-align:left;font-weight:600;}
+  .abc-multi-ligne{width:100%;}
+  .seq-case{grid-template-columns:minmax(0,1fr);gap:4px;}
+  .seq-chip{flex-wrap:wrap;}
+  .seq-chip-corps{flex:1 1 180px;min-width:0;}
+  .abc-sequence{flex-direction:column;align-items:stretch;}
+  .abc-slot{min-width:0;width:100%;}
+  .abc-arrow{margin:0;align-self:center;transform:rotate(90deg);}
+}
+html[data-theme="sombre"] .analyse-tete .rail-etape.tel-vue{color:#141A22;}
+/* Sur un écran tactile, pas de survol : les boutons d'un passage (déplacer, retirer) et d'une phase restent visibles. */
+@media (hover:none){.seq-phase-outils,.seq-chip-actions{opacity:1;}}
 /* ── GLOSSAIRE TOOLTIP ── */
 .gw{position:relative;display:inline;cursor:help;border-bottom:1px dotted var(--sauge-deep);color:var(--slate);font-weight:600;}
 .gw::after{content:"🔍";font-size:8px;margin-left:1px;vertical-align:super;}
@@ -6079,7 +6105,8 @@ function renderAnalyseEtapes() {
   el.querySelectorAll('.rail-etape').forEach(b => b.remove());
   el.insertAdjacentHTML('beforeend', analyseEtapes().map((et, i) => {
     const vue = actifs.indexOf(i) !== -1;
-    return '<button type="button" class="rail-etape analyse-etape' + (vue ? ' vue on' : '') + '" role="tab" aria-selected="' + vue + '" onclick="allerAnalyse(' + i + ')">' +
+    const telVue = actifs[0] === 0 ? vue : i === actifs[actifs.length - 1];
+    return '<button type="button" class="rail-etape analyse-etape' + (vue ? ' vue on' : '') + (telVue ? ' tel-vue' : '') + '" role="tab" aria-selected="' + vue + '" onclick="allerAnalyse(' + i + ')">' +
       '<span class="rail-ligne"><span class="rail-num">' + (i + 1) + '</span><span class="rail-nom analyse-etape-nom">' + esc(et.libelle) + '</span>' +
       (bulles[i] ? '<span class="rail-chiffre">' + esc(bulles[i]) + '</span>' : '') + '</span>' +
       '<span class="rail-trait"><i style="width:' + traits[i] + '%"></i></span></button>';
@@ -14238,6 +14265,15 @@ const _CONTROLES = [
       const avant = typeof mettreEnCommunAvecCeDossier === 'function';
       return _bancEgal('noms proposés | fonction directe', 'Arthur,,Emilie | true', noms + ' | ' + avant);
     } finally { state.m1.prenom = prenom0; }
+  }},
+  {nom:'Analyser sur téléphone (passe 220) : le rail sait quelle étape montrer ; Découper garde le déclaratif ; les boutons restent visibles au toucher', test: () => {
+    const e = analyseEtat(), pos0 = e.pos;
+    try {
+      const tel = pos => { allerAnalyse(pos, {sansDefilement: true}); return [...document.querySelectorAll('#analyse-etapes .rail-etape.tel-vue, .rail .rail-etape.tel-vue')].map(b => b.querySelector('.rail-num').textContent).join('+'); };
+      const r = [tel(0), tel(2), tel(3)].join(' | ');
+      const toucher = [...document.styleSheets].some(f => { try { return [...f.cssRules].some(x => x.media && /hover:\s*none/.test(x.media.mediaText)); } catch (er) { return false; } });
+      return _bancEgal('montré sur téléphone (Découper | Catégoriser | Interpréter) | règle tactile', '1+2 | 3 | 4 | true', r + ' | ' + toucher);
+    } finally { allerAnalyse(pos0 || 0, {sansDefilement: true}); }
   }},
   {nom:'Mode sombre (passe 213) : le bouton bascule et se souvient ; les feuilles deviennent sombres ; ce qui sort de la BAF (Word, images) se compose en clair', test: () => {
     const html = document.documentElement, avant = html.getAttribute('data-theme');
@@ -24182,6 +24218,22 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-11',
+    version: 'v2026.10.11-23',
+    titre: "Analyser sur téléphone",
+    corps: `
+<p><b>Analyser sur téléphone</b> (Arthur et Émilie) — ce n'est pas l'écran idéal pour analyser, mais il s'y lit maintenant correctement :</p>
+<ul>
+<li><b>Une étape à la fois</b> : sur téléphone, l'étape d'avant ne s'empile plus au-dessus (sauf dans Découper, où le déclaratif reste au-dessus : c'est là qu'on sélectionne).</li>
+<li><b>Le rail sur deux lignes</b>, avec les noms entiers (« Déclaratif brut », « Catégoriser »…) au lieu de « Déclara », « Catégo ».</li>
+<li><b>Le texte en pleine largeur</b> : dans Découper, le rôle d'un passage (antécédent, CD…) passe au-dessus du passage, qui n'est plus réduit à deux mots par ligne ; même chose dans le déclaratif brut.</li>
+<li><b>Les patterns d'Interpréter s'empilent</b> : contexte, A, B, C l'un sous l'autre, les listes entières.</li>
+<li><b>Sur un écran tactile (téléphone, tablette)</b>, les boutons pour déplacer ou retirer un passage dans Découper restent visibles : ils n'apparaissaient qu'au survol de la souris.</li>
+</ul>
+`
+  },
 
   {
     date: '2026-10-11',
