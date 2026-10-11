@@ -243,9 +243,6 @@
   /* Les images et les captures gardent leur fond. */
   html[data-theme="sombre"] img{background:transparent;}
 }
-/* Le bouton ☾ / ☀, dans le bandeau */
-.theme-bouton{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;margin-right:6px;padding:0;border:1px solid var(--hdr-outline);border-radius:50%;background:var(--hdr-fill);color:var(--hdr-text);font:16px/1 var(--police-interface);cursor:pointer;}
-.theme-bouton:hover{background:rgba(255,255,255,.14);}
 body.tool-baf{
   --hdr-bg: var(--sauge);
   --hdr-text: var(--slate);
@@ -4150,7 +4147,6 @@ body:not(.mode-admin) .admin-seul{display:none !important;}
       </span>
     </nav>
     <div class="top-actions">
-      <button type="button" class="theme-bouton no-print" id="theme-bouton" onclick="basculerTheme()" aria-label="Passer en mode sombre" title="Passer en mode sombre">☾</button>
       <button type="button" class="admin-badge admin-seul" onclick="ouvrirPanneauAdmin()" title="Le panneau du mode administrateur">⚙ Admin</button>
       <!-- Repères et Ressources vivent à droite, juste avant la marque EMIA :
            ce sont des ressources de consultation, pas des étapes du parcours. -->
@@ -5480,7 +5476,7 @@ body:not(.mode-admin) .admin-seul{display:none !important;}
 <footer class="bottom no-print">
   <div class="footer-inner">
     <div class="footer-line footer-left">Outil créé par Émilie Musard, éducatrice spécialisée et Arthur Guillieux, psychologue clinicien — <a href="mailto:emia35@adapei35.asso.fr">emia35@adapei35.asso.fr</a></div>
-    <div class="footer-line footer-right"><button type="button" class="footer-version" id="footer-version" onclick="route('notes')"></button> · ⚠ Outil toujours en cours de construction</div>
+    <div class="footer-line footer-right"><button type="button" class="footer-version" id="footer-version" onclick="route('notes')"></button> · ⚠ Outil toujours en cours de construction · <button type="button" class="footer-version" id="theme-bouton" onclick="basculerTheme()" title="Passer en mode sombre">☾ Mode sombre</button></div>
   </div>
 </footer>
 
@@ -7441,7 +7437,7 @@ function majBoutonTheme() {
   const b = document.getElementById('theme-bouton');
   if (!b) return;
   const sombre = themeSombre(), t = sombre ? 'Passer en mode clair' : 'Passer en mode sombre';
-  b.textContent = sombre ? '☀' : '☾'; b.title = t; b.setAttribute('aria-label', t);
+  b.textContent = sombre ? '☀ Mode clair' : '☾ Mode sombre'; b.title = t;
 }
 function appliquerTheme(sombre) {
   document.documentElement.setAttribute('data-theme', sombre ? 'sombre' : 'clair');
@@ -14247,7 +14243,7 @@ const _CONTROLES = [
       const bouton = document.getElementById('theme-bouton').textContent;
       const horsBac = clesBafDuNavigateur().indexOf('baf-theme') < 0;
       return _bancEgal('feuille en clair | bascule | retenu | feuille en sombre | export en clair | revient en sombre | bouton | le thème n\'est pas mis de côté',
-        '#FFFDF8 | true | true | #1E2631 | clair #FFFDF8 | sombre | ☀ | true', [clair, sombre, retenu, feuille, pendant, apres, bouton, horsBac].join(' | '));
+        '#FFFDF8 | true | true | #1E2631 | clair #FFFDF8 | sombre | ☀ Mode clair | true', [clair, sombre, retenu, feuille, pendant, apres, bouton, horsBac].join(' | '));
     } finally {
       try { if (choix0 === null) localStorage.removeItem('baf-theme'); else localStorage.setItem('baf-theme', choix0); } catch (e) { /* rien */ }
       appliquerTheme(avant === 'sombre');
@@ -24175,6 +24171,15 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-11',
+    version: 'v2026.10.11-18',
+    titre: "Le mode sombre, depuis le pied de page",
+    corps: `
+<p><b>Le bouton du mode sombre passe dans le pied de page</b>, à droite (Arthur et Émilie) : « ☾ Mode sombre », ou « ☀ Mode clair » pour revenir.</p>
+`
+  },
 
   {
     date: '2026-10-11',
