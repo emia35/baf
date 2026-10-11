@@ -1862,20 +1862,19 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
 /* Replié, un épisode tient sur une seule ligne : l'étiquette des CD se raccourcit, les boutons ne gardent que leur icône. */
 .m3-evt-titre{white-space:nowrap;}
 .m3-evt-nbcd{white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis;flex-shrink:1;}
-.m3-evt-tete .m3-item-detail, .m3-evt-decouper{flex-shrink:0;white-space:nowrap;}
+.m3-evt-tete .m3-item-detail{flex-shrink:0;white-space:nowrap;}
 .m3-evt.replie > .m3-evt-tete{flex-wrap:nowrap;}
-.m3-evt.replie .m3-evt-decouper .lib{display:none;}
 .m3-item-cd{
   display:inline-block;margin:0 4px 4px 0;background:var(--vol-comportement-deep);color:#fff;
   font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:999px;
 }
-.m3-evt-decouper{
-  background:var(--card);border:1px solid var(--vol-comportement);color:var(--vol-comportement-deep);
-  font-family:inherit;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;cursor:pointer;
-}
-.m3-evt-decouper:hover{background:var(--vol-comportement-pale);}
-.m3-evt-decouper.ctx{border-color:var(--vol-contexte);color:var(--vol-contexte-deep);}
-.m3-evt-decouper.ctx:hover{background:var(--vol-contexte-pale);}
+/* « C'est ce que dit » (passe 211) : le passage du déclaratif en entier, pour juger qu'il dit la même chose et rien de plus. */
+.m3-cqd{margin:8px 0 0;padding:8px 10px;border-radius:10px;background:var(--vol-contexte-pale);}
+.m3-cqd-titre{margin:0 0 6px;font-size:11.5px;font-weight:700;color:var(--vol-contexte-deep);}
+.m3-cqd-ligne{display:flex;flex-wrap:wrap;align-items:flex-start;gap:6px 10px;margin:0 0 6px;}
+.m3-cqd-ligne:last-child{margin-bottom:0;}
+.m3-cqd-texte{flex:1 1 260px;font:13.5px/1.45 var(--police-lecture);color:var(--ink);text-align:justify;}
+.m3-cqd .m3-retenir{margin-left:0;}
 .m3-retenir{margin-left:8px;font:inherit;font-size:11.5px;font-weight:700;color:var(--vol-contexte-deep);background:var(--card);border:1px solid var(--vol-contexte);border-radius:999px;padding:2px 10px;cursor:pointer;}
 .m3-retenir:hover{background:var(--vol-contexte-pale);}
 .m3-cat-lien{flex-shrink:0;color:var(--vol-contexte-deep);font-weight:700;cursor:help;}
@@ -1889,14 +1888,6 @@ select.m3-retenir{max-width:230px;}
 .m3-assign-plustot{margin:0 0 8px;border-bottom:1px solid var(--line-soft);padding-bottom:6px;}
 .m3-assign-plustot summary{font-size:12px;font-weight:700;color:var(--vol-contexte-deep);cursor:pointer;margin-bottom:4px;}
 
-.m3-evt-decouper.vol-contexte{border-color:var(--vol-contexte);color:var(--vol-contexte-deep);}
-.m3-evt-decouper.vol-contexte:hover{background:var(--vol-contexte-pale);}
-.m3-evt-decouper.vol-antecedents{border-color:var(--vol-antecedent);color:var(--vol-antecedent-deep);}
-.m3-evt-decouper.vol-antecedents:hover{background:var(--vol-antecedent-pale);}
-.m3-evt-decouper.vol-consequences{border-color:var(--vol-consequence);color:var(--vol-consequence-deep);}
-.m3-evt-decouper.vol-consequences:hover{background:var(--vol-consequence-pale);}
-.m3-evt-decouper.vol-interventions{border-color:var(--vol-intervention);color:var(--vol-intervention-deep);}
-.m3-evt-decouper.vol-interventions:hover{background:var(--vol-intervention-pale);}
 
 
 
@@ -2314,10 +2305,10 @@ details.voir-plus{margin-top:4px;}
 .palette-cat button{width:22px;height:22px;border-radius:50%;border:2px solid var(--card);box-shadow:0 0 0 1px var(--line);cursor:pointer;padding:0;}
 .palette-cat button.on, .palette-cat button:hover{box-shadow:0 0 0 2px var(--ink);}
 /* Sur ordinateur, la colonne des catégories reste en vue quand on fait défiler
-   les éléments à gauche (Émilie, 01/10/2026), sans barre de défilement à elle
-   (Arthur, 01/10/2026) : son point d'accroche est calculé par ajusterColonneCats(). */
+   les éléments à gauche (Émilie, 01/10/2026), et défile pour son propre compte (passe 211, Arthur) : sa hauteur
+   et son point d'accroche sont calculés par ajusterColonneCats(). */
 @media (min-width:721px){
-  .m3-col-cats{position:sticky;top:calc(var(--header-h,60px) + var(--subbar-h,0px) + var(--onglets-h,0px) + 12px);}
+  .m3-col-cats{position:sticky;top:calc(var(--header-h,60px) + var(--subbar-h,0px) + var(--onglets-h,0px) + 12px);overflow-y:auto;overscroll-behavior:contain;}
 }
 .m3-cat-name{
   flex:1;font-size:13.5px;font-weight:700;color:var(--ink);
@@ -14058,6 +14049,22 @@ const _CONTROLES = [
       try { renderM3(); } catch (er) { /* vue masquée */ }
     }
   }},
+  {nom:'Catégoriser (passe 211) : pas de bouton « Découper » ; la colonne des catégories défile seule ; changer de volet remonte en haut', test: () => {
+    const sauve = state.m3.sous;
+    try {
+      const html = (typeof blocEvtM3 === 'function' ? String(blocEvtM3) : '') + document.getElementById('view-m3').innerHTML;
+      const bouton = /m3-evt-decouper/.test(html);
+      const col = document.querySelector('.m3-col-cats');
+      const ordi = window.innerWidth >= 721;
+      const defile = !ordi || getComputedStyle(col).overflowY === 'auto';
+      const autre = state.m3.sous === 'contexte' ? 'antecedents' : 'contexte';
+      const panneau = col.closest('.analyse-corps');
+      if (panneau) panneau.scrollTop = 50;
+      changerSous(autre);
+      const enHaut = !panneau || panneau.offsetParent === null || panneau.scrollTop === 0;
+      return _bancEgal('bouton Découper | défilement propre | en haut', 'false | true | true', [bouton, defile, enHaut].join(' | '));
+    } finally { changerSous(sauve || 'cp'); }
+  }},
   {nom:'Contexte : la suggestion de la BAF ne fait pas doublon avec ce que le pro a écrit', test: () => {
     const sauveEvts = state.m2.evenements, sauveCp = JSON.stringify(state.m3.categories.cp), sauveCx = JSON.stringify(state.m3.categories.contexte);
     const vraiPersist = persist; persist = () => {};
@@ -14073,7 +14080,7 @@ const _CONTROLES = [
       const avantCouvert = !sugg().couvert;
       renderM3Sous('contexte');
       const ligneAvant = (document.querySelector('.m3-item[data-item-id="' + sugg().id + '"]') || {}).textContent || '';
-      const libelle = /suggéré à partir des données déjà remplies/.test(ligneAvant) && /C'est ce que dit/.test(ligneAvant);
+      const libelle = /suggéré à partir des données déjà remplies/.test(ligneAvant) && /C'est ce que dit/.test(ligneAvant) && ligneAvant.indexOf('Hétéro-agressif dès le matin.') >= 0;
       // « C'est ce que dit » : le texte du pro prend la place de la suggestion
       confirmerPlusTot(sugg().id, 'cc1', 'edd2_0');
       const lie = catLieeDe('cc1');
@@ -16526,7 +16533,7 @@ const M3_SOUS = [
        forçait à inventer des catégories qui recouvraient les deux. */
     id: 'contexte',
     label: 'Contexte', icon: '🕰', couleur: 'contexte',
-    help: 'Ce qui précède de loin : la nuit, le week-end, un traitement modifié, un remplacement, une douleur signalée la veille. Ça ne déclenche rien tout seul, mais ça remplit le vase — et un même antécédent ne produit pas le même effet selon le contexte. « ✂ Découper » permet d\'y repérer plusieurs éléments, chacun par une citation exacte du déclaratif. Les CD déjà catégorisés plus tôt le même jour sont proposés (« plus tôt dans la journée »), et tout élément peut se ranger dans « Précédé de… » une catégorie de comportement, sans créer de catégorie.',
+    help: 'Ce qui précède de loin : la nuit, le week-end, un traitement modifié, un remplacement, une douleur signalée la veille. Ça ne déclenche rien tout seul, mais ça remplit le vase — et un même antécédent ne produit pas le même effet selon le contexte. Chaque passage rangé dans Découper devient ici un élément, cité tel quel du déclaratif. Les CD déjà catégorisés plus tôt le même jour sont proposés (« plus tôt dans la journée »), et tout élément peut se ranger dans « Précédé de… » une catégorie de comportement, sans créer de catégorie.',
     placeholder: 'ex : Sommeil court, Retour de week-end, Absence d\'un référent, Douleur signalée…',
     extract: (evt) => {
       const parts = [];
@@ -16538,7 +16545,7 @@ const M3_SOUS = [
   {
     id: 'antecedents',
     label: 'Antécédents', icon: '⏮', couleur: 'antecedent',
-    help: 'Ce qui s\'est passé juste avant le comportement, dans les secondes ou les minutes. Le badge « présumé déclencheur » signale ce que le déclarant a coché — c\'est son avis, vous restez libre d\'en juger autrement. Quand les CD d\'un épisode se suivent, ce qui s\'est passé entre deux CD apparaît aussi ici, comme antécédent du suivant (badge « avant CD 3.2 »). Un antécédent écrit deux fois à l\'identique ne se classe qu\'une fois (le second est grisé). Le contexte, lui, a son propre volet. « ✂ Découper » permet d\'y repérer plusieurs éléments, chacun par une citation exacte du déclaratif.',
+    help: 'Ce qui s\'est passé juste avant le comportement, dans les secondes ou les minutes. Le badge « présumé déclencheur » signale ce que le déclarant a coché — c\'est son avis, vous restez libre d\'en juger autrement. Quand les CD d\'un épisode se suivent, ce qui s\'est passé entre deux CD apparaît aussi ici, comme antécédent du suivant (badge « avant CD 3.2 »). Un antécédent écrit deux fois à l\'identique ne se classe qu\'une fois (le second est grisé). Le contexte, lui, a son propre volet. Chaque passage rangé dans Découper devient ici un élément, cité tel quel du déclaratif.',
     placeholder: 'ex : Transition, Fin d\'activité appréciée, Consigne, Attente…',
     extract: (evt) => {
       const parts = [];
@@ -16553,7 +16560,7 @@ const M3_SOUS = [
   {
     id: 'consequences',
     label: 'Conséquences', icon: '⏭', couleur: 'consequence',
-    help: 'Ce que la personne a obtenu ou évité suite au comportement. C\'est souvent là que la fonction du comportement se lit. Quand les CD d\'un épisode se suivent, ce qui s\'est passé entre deux CD apparaît aussi ici, comme conséquence du premier (badge « après CD 3.1 »). « ✂ Découper » permet d\'y repérer plusieurs éléments, chacun par une citation exacte du déclaratif.',
+    help: 'Ce que la personne a obtenu ou évité suite au comportement. C\'est souvent là que la fonction du comportement se lit. Quand les CD d\'un épisode se suivent, ce qui s\'est passé entre deux CD apparaît aussi ici, comme conséquence du premier (badge « après CD 3.1 »). Chaque passage rangé dans Découper devient ici un élément, cité tel quel du déclaratif.',
     placeholder: 'ex : Obtient attention, Évite consigne, Accès à un objet, Sortie de la situation…',
     extract: (evt) => {
       const parts = [];
@@ -16567,7 +16574,7 @@ const M3_SOUS = [
   {
     id: 'interventions',
     label: 'Interventions', icon: '🙌', couleur: 'intervention',
-    help: 'Ce que l\'entourage a fait en réponse, et avec quel effet. Utile pour repérer ce qui apaise, ce qui aggrave, et les angles morts. « ✂ Découper » permet d\'y repérer plusieurs éléments, chacun par une citation exacte du déclaratif.',
+    help: 'Ce que l\'entourage a fait en réponse, et avec quel effet. Utile pour repérer ce qui apaise, ce qui aggrave, et les angles morts. Chaque passage rangé dans Découper devient ici un élément, cité tel quel du déclaratif.',
     placeholder: 'ex : Contenance physique, Verbalisation, Retrait, Relais de pro, Ne rien faire…',
     extract: (evt) => {
       const parts = [];
@@ -17066,7 +17073,6 @@ function blocEvtM3(sousId, sous, groupe, cats, etiquettes) {
       ${nCD > 1 ? `<span class="m3-evt-nbcd" title="${st.mode === 'sequence' ? 'Les CD se suivent : ce qui s\'est passé entre deux CD est la conséquence du premier et l\'antécédent du suivant.' : 'Plusieurs CD en même temps.'}">${nCD} CD ${st.mode === 'sequence' ? 'à la suite' : 'en même temps'}</span>` : ''}
       <span class="m3-evt-espace"></span>
       <button type="button" class="m3-item-detail" title="Revoir l'épisode complet" onclick="ouvrirDetailEvt(${groupe.evtIdx},'${sousId}',event)">détail</button>
-      <button type="button" class="m3-evt-decouper no-print" title="Ranger le déclaratif de cet épisode dans sa séquence (contexte, phases, conséquence)" aria-label="Découper" onclick="allerDecouper('${esc(evt.id)}',event)">→<span class="lib"> Découper</span></button>
     </div>
     ${alerteCtx}
     ${st.decoupe && !decoupageAJour(evt) ? `<div class="m3-evt-alerte">Le texte de cet épisode a changé depuis le découpage : un passage cité n'y est plus. ${sousId === 'cp' ? 'Revoyez le rangement dans Découper.' : 'Voir le volet Comportements.'}</div>` : ''}
@@ -17110,18 +17116,18 @@ function blocItemM3(sousId, sous, item, cats, etiquettes, st, n) {
   const dejaRetenu = item.tag === 'plus-tot' && catIds.some(cid => cats[cid] && cats[cid].ref && cats[cid].ref.cat === item.suggestion);
   let boutonRetenir = '';
   if (item.tag === 'plus-tot' && item.couvert) {
-    boutonRetenir = '<span class="m3-couvert">↔ Déjà rangé via « ' + esc((t => t.length > 70 ? t.slice(0, 69) + '…' : t)(item.couvertPar.replace(/^\(contexte\)\s*/, ''))) + ' » : inutile de le ranger aussi.</span>';
+    boutonRetenir = '<span class="m3-couvert">↔ Déjà rangé via « ' + esc(item.couvertPar.replace(/^\(contexte\)\s*/, '')) + ' » : inutile de le ranger aussi.</span>';
   } else if (item.tag === 'plus-tot') {
     const evtP = (state.m2.evenements || [])[n - 1];
     const declares = evtP ? elementsEvt('contexte', evtP).filter(e => e.tag !== 'plus-tot' && !e.vide) : [];
-    const court = t => { t = t.replace(/^\(contexte\)\s*/, ''); return esc(t.length > 45 ? t.slice(0, 44) + '…' : t); };
+    // Le passage en entier, jamais coupé : on vérifie qu'il dit bien la même chose, et pas davantage (passe 211, Arthur).
+    const entier = t => esc(t.replace(/^\(contexte\)\s*/, ''));
     const nomCp = esc(cheminCat('cp', item.suggestion));
     boutonRetenir = dejaRetenu ? '' : '<button type="button" class="m3-retenir no-print" title="Ajouter ce CD au contexte de cet épisode : une catégorie de contexte liée « Précédé de ' + nomCp + ' » est créée au besoin" onclick="retenirPlusTot(\'' + item.id + '\',\'' + item.suggestion + '\',event)">＋ Retenir comme contexte</button>';
-    if (declares.length === 1) {
-      boutonRetenir += '<button type="button" class="m3-retenir no-print" title="Le pro l\'a déjà écrit. On range son texte dans « Précédé de ' + nomCp + ' » et cette suggestion se grise : elle ne fait pas doublon." onclick="confirmerPlusTot(\'' + item.id + '\',\'' + item.suggestion + '\',\'' + declares[0].id + '\',event)">↔ C\'est ce que dit « ' + court(declares[0].texte) + ' »</button>';
-    } else if (declares.length > 1) {
-      boutonRetenir += '<select class="m3-retenir no-print" title="Le pro l\'a déjà écrit : choisissez où. On range son texte dans « Précédé de ' + nomCp + ' » et cette suggestion se grise." onclick="event.stopPropagation()" onchange="confirmerPlusTot(\'' + item.id + '\',\'' + item.suggestion + '\',this.value,event)"><option value="">↔ C\'est ce que dit…</option>' +
-        declares.map(e => '<option value="' + esc(e.id) + '">' + court(e.texte) + '</option>').join('') + '</select>';
+    if (declares.length) {
+      boutonRetenir += '<div class="m3-cqd"><div class="m3-cqd-titre">Le déclarant a déjà écrit, dans le contexte de cet épisode' + (declares.length > 1 ? ' (lisez chaque passage en entier)' : '') + ' :</div>' +
+        declares.map(e => '<div class="m3-cqd-ligne"><q class="m3-cqd-texte">' + entier(e.texte) + '</q>' +
+          '<button type="button" class="m3-retenir no-print" title="Si ce passage dit la même chose que le CD suggéré — et rien de plus —, on range ce texte dans « Précédé de ' + nomCp + ' » et la suggestion se grise : elle ne fait pas doublon. S\'il dit davantage, rangez-le aussi ailleurs." onclick="confirmerPlusTot(\'' + item.id + '\',\'' + item.suggestion + '\',\'' + e.id + '\',event)">↔ C\'est ce que dit ce passage</button></div>').join('') + '</div>';
     }
   }
   return `<div class="m3-item${catIds.length>0?' categorise':''}${item.vide?' item-vide':''}${item.couvert ? ' item-couvert' : ''}${item.jumeau ? ' item-jumeau' : ''}" data-volet="${sous.couleur || ''}" data-item-id="${esc(item.id)}"${item.jumeau ? '' : ` onclick="ouvrirAssign('${sousId}','${item.id}',event)"`}>
@@ -17386,9 +17392,16 @@ function changerSous(sousId) {
   ensureM3();
   // L'aide ouverte dans un volet ne doit pas s'afficher dans le suivant (Émilie, 01/10/2026).
   if (sousId !== state.m3.sous) aideCatsOuverte = false;
+  const autre = sousId !== state.m3.sous;
   state.m3.sous = sousId;
   persist();
   renderM3();
+  // Un autre volet se lit depuis le début (passe 211, Arthur).
+  if (autre) {
+    const col = document.querySelector('.m3-col-cats'), panneau = col && col.closest('.analyse-corps');
+    if (panneau && getComputedStyle(panneau).overflowY !== 'visible') panneau.scrollTop = 0; else window.scrollTo(0, 0);
+    if (col) col.scrollTop = 0;
+  }
 }
 
 function renderM3Sous(sousId) {
@@ -17987,18 +18000,20 @@ function ajusterColonneCats() {
   syncOngletsHeight();
   const col = document.querySelector('.m3-col-cats');
   if (!col) return;
-  if (window.innerWidth < 721) { col.style.top = ''; return; }
+  if (window.innerWidth < 721) { col.style.top = ''; col.style.maxHeight = ''; return; }
   // Dans Analyser, Catégoriser défile dans son panneau : la colonne colle sous les volets, dans le panneau.
   const panneau = col.closest('.analyse-corps');
   if (panneau && getComputedStyle(panneau).overflowY !== 'visible') {
     const h = (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--onglets-h')) || 0) + 8;
-    col.style.top = (col.offsetHeight <= panneau.clientHeight - h - 8 ? h : panneau.clientHeight - col.offsetHeight - 8) + 'px';
+    col.style.top = h + 'px';
+    col.style.maxHeight = Math.max(200, panneau.clientHeight - h - 8) + 'px';
     return;
   }
   const racine = getComputedStyle(document.documentElement);
   const haut = (parseFloat(racine.getPropertyValue('--header-h')) || 60) + (parseFloat(racine.getPropertyValue('--subbar-h')) || 0) + (parseFloat(racine.getPropertyValue('--onglets-h')) || 0) + 12;
   const dispo = window.innerHeight - haut - 12;
-  col.style.top = (col.offsetHeight <= dispo ? haut : window.innerHeight - col.offsetHeight - 12) + 'px';
+  col.style.top = haut + 'px';
+  col.style.maxHeight = Math.max(200, dispo) + 'px';
 }
 if (typeof ResizeObserver === 'function') {
   const colCats = document.querySelector('.m3-col-cats');
@@ -23879,6 +23894,21 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-11',
+    version: 'v2026.10.11-14',
+    titre: "Catégoriser : sans « Découper », le passage en entier, deux défilements",
+    corps: `
+<p><b>Catégoriser</b> (Arthur et Émilie, en finissant le dossier de Ryan) :</p>
+<ul>
+<li><b>Plus de bouton « Découper »</b> sur chaque épisode : Catégoriser n'est pas une phase de découpage. Le rail permet toujours de revenir à Découper, pour qui en a la main.</li>
+<li><b>« C'est ce que dit » montre le passage du déclaratif en entier</b>, jamais coupé : on vérifie qu'il dit bien la même chose que le CD suggéré, et pas davantage. Avant, seul le début de la phrase s'affichait, et on pouvait confirmer trop vite.</li>
+<li><b>Changer de volet remonte en haut de la page.</b></li>
+<li><b>Deux colonnes, deux défilements</b> : la colonne des catégories défile pour son propre compte, sans entraîner les éléments à gauche.</li>
+</ul>
+`
+  },
 
   {
     date: '2026-10-11',
