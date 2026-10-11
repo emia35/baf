@@ -1875,6 +1875,12 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
 .m3-cqd-ligne:last-child{margin-bottom:0;}
 .m3-cqd-texte{flex:1 1 260px;font:13.5px/1.45 var(--police-lecture);color:var(--ink);text-align:justify;}
 .m3-cqd .m3-retenir{margin-left:0;}
+/* « Seulement ce qui reste à catégoriser » (passe 212) */
+.m3-filtre-a-faire.on{background:var(--sauge-pale) !important;border-color:var(--sauge-deep) !important;color:var(--sauge-deep) !important;}
+.m3-tout-fait{display:none;}
+#m3-items-list.a-faire .m3-evt:not(.etat-cours):not(.etat-rien){display:none;}
+#m3-items-list.a-faire .m3-item.categorise,#m3-items-list.a-faire .m3-item.item-vide,#m3-items-list.a-faire .m3-item.item-couvert,#m3-items-list.a-faire .m3-item.item-jumeau{display:none;}
+#m3-items-list.a-faire:not(:has(.m3-evt.etat-cours, .m3-evt.etat-rien)) .m3-tout-fait{display:block;}
 .m3-retenir{margin-left:8px;font:inherit;font-size:11.5px;font-weight:700;color:var(--vol-contexte-deep);background:var(--card);border:1px solid var(--vol-contexte);border-radius:999px;padding:2px 10px;cursor:pointer;}
 .m3-retenir:hover{background:var(--vol-contexte-pale);}
 .m3-cat-lien{flex-shrink:0;color:var(--vol-contexte-deep);font-weight:700;cursor:help;}
@@ -2341,15 +2347,17 @@ details.voir-plus{margin-top:4px;}
 }
 .m3-cats-plier button:hover{background:var(--paper-deep);color:var(--ink);}
 .m3-cat-item-chip{
-  display:inline-flex;align-items:center;gap:5px;
+  display:inline-flex;align-items:baseline;gap:5px;max-width:100%;
   background:var(--ocre-pale);
   border:1px solid var(--ocre);
   color:var(--ocre-deep);
-  border-radius:999px;
+  border-radius:12px;
   font-size:12px;font-weight:600;
   padding:3px 10px;
   margin:3px 4px 3px 0;
 }
+/* Le passage entier, sur plusieurs lignes s'il le faut (passe 212) : on ne coupe jamais un verbatim là où l'on décide. */
+.m3-puce-texte{min-width:0;white-space:normal;overflow-wrap:anywhere;}
 .m3-cat-item-chip button{
   background:none;border:none;color:var(--ocre-deep);
   cursor:pointer;font-size:13px;padding:0;line-height:1;
@@ -3961,6 +3969,7 @@ body:not(.mode-admin) .admin-seul{display:none !important;}
 .banc-decision .surtitre{color:var(--sauge-deep);}
 .banc-decision p{margin:0 0 4px;text-align:justify;}
 @media (max-width:760px){.banc-options{grid-template-columns:1fr;}}
+.alerte-enregistrement.apercu-bandeau{background:var(--rose-deep);}
 .apercu-bandeau{position:fixed;left:50%;bottom:14px;z-index:400;transform:translateX(-50%);display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:999px;background:var(--ocre-deep);color:#fff;font:600 13px var(--police-interface);box-shadow:0 8px 24px rgba(0,0,0,.2);}
 .apercu-bandeau button{border:0;border-radius:999px;padding:4px 12px;background:#fff;color:var(--ocre-deep);font:700 12.5px var(--police-interface);cursor:pointer;}
 #tiroir-notes .analyse-notes-champ{min-height:240px;margin:0;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font:400 14.5px/1.6 var(--police-lecture);resize:vertical;}
@@ -5801,9 +5810,22 @@ function migrerIdentiteDossier(neuf) {
 function persist(){
   migrerIdentiteDossier();
   state.modifie = new Date().toISOString();
-  DEPOT.ecrire(state);
+  const ecrit = DEPOT.ecrire(state);
+  if (!window.apercuAdmin && !bacEnPause) alerteEnregistrement(!ecrit);
   // La mention « non exporté » suit le travail ; sans effet tant que la page n'est pas prête.
   try { if (outilCourant !== 'idc') majBarreDossier(outilCourant, subbarSurAccueilOutil); } catch (e) { /* démarrage */ }
+}
+/* La BAF n'arrive plus à enregistrer dans ce navigateur (le plus souvent : il est plein). Sans ça, le travail
+   continuait à l'écran sans être gardé, et on ne le voyait qu'en rouvrant le dossier (passe 212). */
+function alerteEnregistrement(echec) {
+  let b = document.getElementById('alerte-enregistrement');
+  if (!echec) { if (b) b.remove(); return; }
+  if (b || !document.body) return;
+  b = document.createElement('div');
+  b.id = 'alerte-enregistrement'; b.className = 'apercu-bandeau alerte-enregistrement no-print'; b.setAttribute('role', 'alert');
+  b.innerHTML = '⚠ La BAF n\'arrive plus à enregistrer dans ce navigateur. Exportez votre dossier maintenant pour ne rien perdre. ' +
+    '<button type="button" onclick="exporterDossierCourant()">Exporter</button>';
+  document.body.appendChild(b);
 }
 function loadPersisted(){
   const enregistre = DEPOT.lire();
@@ -6605,7 +6627,7 @@ function chipSeq(evt, seq, cle, cit, noms) {
   }
   return '<div class="seq-chip' + (effet ? ' seq-chip-iv' : '') + '" data-cit="' + esc(cit.id) + '" style="--c:' + couleurCleSeq(cle) + ';">' +
     '<span class="seq-chip-num" title="' + esc(nom) + '">' + esc(numeroSeulSeq(nom)) + '</span>' +
-    '<div class="seq-chip-corps"><span class="seq-chip-texte" title="Cliquer : voir ce passage dans le déclaratif" onclick="montrerCitSeq(\'' + esc(cit.id) + '\')">« ' + esc(texte.length > 220 ? texte.slice(0, 219) + '…' : texte) + ' »</span>' +
+    '<div class="seq-chip-corps"><span class="seq-chip-texte" title="Cliquer : voir ce passage dans le déclaratif" onclick="montrerCitSeq(\'' + esc(cit.id) + '\')">« ' + esc(texte) + ' »</span>' +
       (aussi.length ? '<span class="seq-chip-aussi" title="Le même passage est aussi rangé là">↺ aussi ' + esc(aussi.join(', ')) + '</span>' : '') + effet + '</div>' +
     '<span class="seq-chip-actions"><button type="button" class="seq-chip-deplacer" title="Déplacer, ou mettre aussi ailleurs" aria-label="Déplacer ou copier ce passage" onclick="ouvrirMenuCitSeq(\'' + esc(cit.id) + '\', this)">⇄</button>' +
       '<button type="button" class="seq-chip-x" title="Retirer ce passage (le texte redevient « pas encore traité »)" aria-label="Retirer" onclick="retirerCitSeq(\'' + esc(cit.id) + '\')">✕</button></span></div>';
@@ -6922,7 +6944,7 @@ function chipLectureSeq(evt, slot, cit, noms) {
   const sens = slot === 'interventions' ? sensCit(evt, cit) : '';
   return '<div class="seq-chip seq-chip-lecture' + (e.elementActif === elId ? ' actif' : '') + '" data-cit="' + esc(cit.id) + '" data-el="' + esc(elId) + '" style="--c:' + couleurCleSeq(slot) + ';" title="Voir cet élément dans Catégoriser" onclick="allerAElementSeq(\'' + volet + '\',\'' + esc(elId) + '\')">' +
     '<span class="seq-chip-num" title="' + esc(nom) + '">' + esc(numeroSeulSeq(nom)) + '</span>' +
-    '<div class="seq-chip-corps"><span class="seq-chip-texte">« ' + esc(texte.length > 140 ? texte.slice(0, 139) + '…' : texte) + ' »' +
+    '<div class="seq-chip-corps"><span class="seq-chip-texte">« ' + esc(texte) + ' »' +
       (sens ? '<span class="seq-chip-sens sens-' + sens + '" title="Effet noté : ' + esc(SENS_EFFET[sens].nom) + '">' + SENS_EFFET[sens].fleche + '</span>' : '') + '</span>' +
       (points ? '<span class="seq-chip-points">' + points + '</span>' : '') + '</div></div>';
 }
@@ -14049,6 +14071,27 @@ const _CONTROLES = [
       try { renderM3(); } catch (er) { /* vue masquée */ }
     }
   }},
+  {nom:'Pas de perte par la BAF (passe 212) : aucun verbatim coupé là où l\'on décide ; le vase garde la phrase entière ; le filtre « reste à catégoriser » ; l\'alerte si rien ne s\'enregistre', test: () => {
+    const coupe = /(slice|substring)\(0, ?\d+\) ?\+ ?'…'/;
+    const fonctions = {chipSeq, chipLectureSeq, blocItemM3, blocEvtM3, renderM3Sous, texteExemple, renderVaseExemples};
+    const coupees = Object.keys(fonctions).filter(k => coupe.test(String(fonctions[k])));
+    const long = 'x'.repeat(300);
+    const vase = texteExemple({texte: long}) === long;
+    const avant = m3SeulementAFaire, liste = document.getElementById('m3-items-list');
+    let filtre = false;
+    try {
+      m3SeulementAFaire = true; majBoutonRepliEvts();
+      filtre = !liste || liste.classList.contains('a-faire');
+      m3SeulementAFaire = false; majBoutonRepliEvts();
+      filtre = filtre && (!liste || !liste.classList.contains('a-faire'));
+    } finally { m3SeulementAFaire = avant; majBoutonRepliEvts(); }
+    alerteEnregistrement(true);
+    const alerte = !!document.getElementById('alerte-enregistrement');
+    alerteEnregistrement(false);
+    const partie = !document.getElementById('alerte-enregistrement');
+    return _bancEgal('fonctions qui coupent un verbatim | vase entier | filtre | alerte | puis retirée', '[] | true | true | true | true',
+      [JSON.stringify(coupees), vase, filtre, alerte, partie].join(' | '));
+  }},
   {nom:'Catégoriser (passe 211) : pas de bouton « Découper » ; la colonne des catégories défile seule ; changer de volet remonte en haut', test: () => {
     const sauve = state.m3.sous;
     try {
@@ -17016,6 +17059,17 @@ function replierTousEvts(replier) {
 }
 /* Un seul bouton (Arthur, 02/10/2026) : « Tout replier » tant qu'un épisode est
    déplié, « Tout déplier » quand tout est replié. */
+/* « Seulement ce qui reste à catégoriser » (passe 212, Arthur) : dans chaque volet, on ne voit plus que les épisodes
+   où il reste quelque chose à classer, dépliés, et dans chacun les seuls éléments pas encore classés. Retenu dans ce navigateur. */
+let m3SeulementAFaire = (() => { try { return localStorage.getItem('baf-m3-a-faire') === '1'; } catch (e) { return false; } })();
+function basculerSeulementAFaire() {
+  m3SeulementAFaire = !m3SeulementAFaire;
+  try { localStorage.setItem('baf-m3-a-faire', m3SeulementAFaire ? '1' : '0'); } catch (e) { /* rien */ }
+  if (m3SeulementAFaire) replierTousEvts(false);
+  majBoutonRepliEvts();
+  const col = document.querySelector('.m3-col-cats'), panneau = col && col.closest('.analyse-corps');
+  if (panneau && getComputedStyle(panneau).overflowY !== 'visible') panneau.scrollTop = 0;
+}
 function basculerTousEvts() {
   replierTousEvts(!!document.querySelector('#m3-items-list .m3-evt:not(.replie)'));
 }
@@ -17023,9 +17077,13 @@ function majBoutonRepliEvts() {
   const el = document.getElementById('m3-items-plier');
   if (!el) return;
   const evts = document.querySelectorAll('#m3-items-list .m3-evt');
-  if (evts.length < 2) { el.innerHTML = ''; return; }
+  const liste = document.getElementById('m3-items-list');
+  if (liste) liste.classList.toggle('a-faire', m3SeulementAFaire);
+  if (!evts.length) { el.innerHTML = ''; return; }
   const unDeplie = !!document.querySelector('#m3-items-list .m3-evt:not(.replie)');
-  el.innerHTML = '<button type="button" onclick="basculerTousEvts()">' + (unDeplie ? 'Tout replier' : 'Tout déplier') + '</button>';
+  el.innerHTML = '<button type="button" class="m3-filtre-a-faire' + (m3SeulementAFaire ? ' on' : '') + '" aria-pressed="' + m3SeulementAFaire + '" onclick="basculerSeulementAFaire()">' +
+      (m3SeulementAFaire ? '✓ ' : '') + 'Seulement ce qui reste à catégoriser</button>' +
+    (evts.length < 2 || m3SeulementAFaire ? '' : '<button type="button" onclick="basculerTousEvts()">' + (unDeplie ? 'Tout replier' : 'Tout déplier') + '</button>');
 }
 function majRepliEvt(evtId) {
   const el = [...document.querySelectorAll('#m3-items-list .m3-evt')].find(x => x.dataset.evtId === evtId);
@@ -17047,6 +17105,16 @@ function statutEvtM3(sousId, items) {
 
 /* Un épisode dans la colonne de gauche : son en-tête (numéro, CD, détail),
    puis ses éléments du volet ouvert, en tiroir. */
+/* Un épisode rangé dans Découper n'arrive dans Catégoriser que par ce qui a été rangé. Si le rangement n'est pas
+   terminé, le reste du déclaratif n'apparaît pas ici : on le dit, avec un lien pour le lire (passe 212, Arthur). */
+function alerteRangementM3(evt, idx) {
+  const seq = evt && evt.id ? sequenceActive(evt) : null;
+  if (!seq || seq.termine) return '';
+  const cov = couvertureSequence(evt, seq);
+  if (!cov.restes.length) return '';
+  return '<div class="m3-evt-alerte m3-evt-reste">Rangement pas terminé dans Découper : ' + (100 - cov.pct) + ' % du déclaratif n\'est pas encore rangé, et n\'apparaît donc pas ici. ' +
+    '<button type="button" class="m3-item-detail" onclick="allerDecouper(\'' + esc(evt.id) + '\',event)">Lire le déclaratif complet</button></div>';
+}
 function blocEvtM3(sousId, sous, groupe, cats, etiquettes) {
   const evt = (state.m2.evenements || [])[groupe.evtIdx] || {};
   const n = groupe.evtIdx + 1;
@@ -17075,6 +17143,7 @@ function blocEvtM3(sousId, sous, groupe, cats, etiquettes) {
       <button type="button" class="m3-item-detail" title="Revoir l'épisode complet" onclick="ouvrirDetailEvt(${groupe.evtIdx},'${sousId}',event)">détail</button>
     </div>
     ${alerteCtx}
+    ${alerteRangementM3(evt, groupe.evtIdx)}
     ${st.decoupe && !decoupageAJour(evt) ? `<div class="m3-evt-alerte">Le texte de cet épisode a changé depuis le découpage : un passage cité n'y est plus. ${sousId === 'cp' ? 'Revoyez le rangement dans Découper.' : 'Voir le volet Comportements.'}</div>` : ''}
     ${src ? `<div class="m3-evt-source">${esc(src)}</div>` : ''}
     <div class="m3-evt-items">${groupe.items.map(it => blocItemM3(sousId, sous, it, cats, etiquettes, st, n)).join('')}</div>
@@ -17436,10 +17505,11 @@ function renderM3Sous(sousId) {
     if (der && der.evtIdx === it.evtIdx) der.items.push(it); else groupes.push({evtIdx: it.evtIdx, items: [it]});
   });
   if (items.length === 0) {
-    listEl.innerHTML = '<div class="event-empty">Aucun élément extrait des épisodes du module 1 pour ce sous-module.</div>';
+    listEl.innerHTML = '<div class="event-empty">Aucun élément dans les épisodes pour ce volet.</div>';
   } else {
     const etiquettes = Object.assign(etiquettesCD(), etiquettesVolets());
-    listEl.innerHTML = groupes.map(gr => blocEvtM3(sousId, sous, gr, cats, etiquettes)).join('');
+    listEl.innerHTML = groupes.map(gr => blocEvtM3(sousId, sous, gr, cats, etiquettes)).join('') +
+      '<div class="event-empty m3-tout-fait">Il ne reste rien à catégoriser dans ce volet ✓</div>';
   }
   majBoutonRepliEvts();
 
@@ -17482,7 +17552,7 @@ function renderM3Sous(sousId) {
             ? `<div class="m3-cat-empty">Cliquez sur un élément à gauche pour l\'assigner ici.</div>`
             : catItems.map(it => `
               <span class="m3-cat-item-chip" onclick="allerVersItem('${it.id}')" title="Voir cet élément dans la colonne de gauche" style="cursor:pointer;">
-                <b class="m3-puce-ref">${etiqPuces[it.id] || 'Évt ' + (it.evtIdx + 1)}</b> ${esc(it.texte.length > 44 ? it.texte.substring(0,44)+'…' : it.texte)}
+                <b class="m3-puce-ref">${etiqPuces[it.id] || 'Épisode ' + (it.evtIdx + 1)}</b> <span class="m3-puce-texte">${esc(it.texte)}</span>
                 <button onclick="retirerDeUneCat('${sousId}','${it.id}','${catId}',event)" title="Retirer">×</button>
               </span>`).join('')
           }
@@ -19364,7 +19434,8 @@ function regrouperExemples(liste) {
   liste.forEach(x => { const k = nmTexte(x.texte); (g[k] = g[k] || {texte: x.texte, eps: []}).eps.push(x.n); });
   return Object.values(g).sort((a, b) => b.eps.length - a.eps.length || a.eps[0] - b.eps[0]);
 }
-function texteExemple(x) { return x.texte.length > 90 ? x.texte.slice(0, 89) + '…' : x.texte; }
+// Le texte entier : c'est lui qui part au vase, puis dans la Synthèse (passe 212 : il était coupé à 90 caractères).
+function texteExemple(x) { return x.texte; }
 function renderVaseExemples() {
   const el = document.getElementById('vase-exemples');
   if (!el) return;
@@ -19375,12 +19446,14 @@ function renderVaseExemples() {
     const gr = regrouperExemples(par[liste]);
     if (!gr.length) return '<div class="vase-ex-col ' + liste + '"><h5>' + titre + '</h5><p class="vase-ex-note">Aucune pour l\'instant.</p></div>';
     const pris = new Set((state.m4.vase[liste] || []).map(t => nmTexte(t.texte)));
-    return '<div class="vase-ex-col ' + liste + '"><h5>' + titre + ' (' + par[liste].length + ')</h5>' +
-      gr.slice(0, 8).map((x, i) => '<div class="vase-ex"><span class="vase-ex-texte">« ' + esc(x.texte) + ' »</span>' +
+    const ligne = (x, i) => '<div class="vase-ex"><span class="vase-ex-texte">« ' + esc(x.texte) + ' »</span>' +
         '<span class="vase-ex-eps">' + (x.eps.length > 1 ? x.eps.length + ' épisodes' : 'épisode ' + x.eps[0]) + '</span>' +
         (pris.has(nmTexte(texteExemple(x))) ? '<span class="vase-ex-pris">✓ au vase</span>'
-          : '<button type="button" class="vase-ex-ajouter no-print" onclick="retenirExempleVase(\'' + liste + '\',' + i + ')" title="L\'ajouter à « ' + (liste === 'monte' ? 'ce qui fait monter la tension, dans son environnement' : 'ce qui fait redescendre la tension, dans son environnement') + ' »">＋ au vase</button>') + '</div>').join('') +
-      (gr.length > 8 ? '<div class="vase-ex-suite">et ' + (gr.length - 8) + ' autre' + (gr.length - 8 > 1 ? 's' : '') + '.</div>' : '') + '</div>';
+          : '<button type="button" class="vase-ex-ajouter no-print" onclick="retenirExempleVase(\'' + liste + '\',' + i + ')" title="L\'ajouter à « ' + (liste === 'monte' ? 'ce qui fait monter la tension, dans son environnement' : 'ce qui fait redescendre la tension, dans son environnement') + ' »">＋ au vase</button>') + '</div>';
+    return '<div class="vase-ex-col ' + liste + '"><h5>' + titre + ' (' + par[liste].length + ')</h5>' +
+      gr.slice(0, 8).map((x, i) => ligne(x, i)).join('') +
+      (gr.length > 8 ? '<details class="vase-ex-suite"><summary>et ' + (gr.length - 8) + ' autre' + (gr.length - 8 > 1 ? 's' : '') + '</summary>' +
+        gr.slice(8).map((x, i) => ligne(x, i + 8)).join('') + '</details>' : '') + '</div>';
   };
   el.innerHTML = '<details class="vase-exemples"' + (vaseExemplesOuvert ? ' open' : '') + ' ontoggle="vaseExemplesOuvert = this.open">' +
     '<summary>Ce que les épisodes en disent <span class="vase-ex-aide">— ' + par.monte.length + ' intervention' + (par.monte.length > 1 ? 's' : '') + ' suivie' + (par.monte.length > 1 ? 's' : '') + ' d\'une montée, ' +
@@ -23894,6 +23967,22 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-11',
+    version: 'v2026.10.11-15',
+    titre: "Que la BAF ne fasse rien perdre ; seulement ce qui reste à catégoriser",
+    corps: `
+<p><b>Que la BAF ne fasse rien perdre</b> (Arthur et Émilie) :</p>
+<ul>
+<li><b>Le vase garde la phrase entière.</b> « ＋ au vase », dans Interpréter, enregistrait une phrase coupée à 90 caractères, et c'est elle qui partait dans la Synthèse. Les exemples au-delà de huit se déplient au lieu d'être seulement comptés.</li>
+<li><b>Aucun verbatim n'est plus coupé là où l'on décide</b> : les passages rangés dans Découper, leur rappel, les puces des catégories (« Épisode 9 », et non plus « Évt 9 ») s'affichent en entier. Un contrôle du banc garde la règle.</li>
+<li><b>Un épisode dont le rangement n'est pas terminé le dit, dans Catégoriser</b> : la part du déclaratif pas encore rangée n'y apparaît pas, et un lien mène au déclaratif complet.</li>
+<li><b>Si la BAF n'arrive plus à enregistrer</b> (navigateur plein), une alerte le dit tout de suite, avec un bouton pour exporter.</li>
+<li><b>« Seulement ce qui reste à catégoriser »</b>, en haut de la colonne de gauche, dans chaque volet : on ne voit plus que les éléments pas encore classés.</li>
+</ul>
+`
+  },
 
   {
     date: '2026-10-11',
