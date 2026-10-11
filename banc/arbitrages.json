@@ -1,0 +1,34 @@
+{
+  "_mode_emploi": "Le banc d'essai de la BAF (mode administrateur). Un arbitrage = un numéro, jamais réutilisé ; des options A, B, C… Chaque option peut avoir des captures (dossier du numéro, ordinateur et téléphone), un texte, une maquette HTML (iframe), ou être « direct » : la préférence allume alors l'option dans la BAF elle-même (optionEssai(n) dans le code). Pour trancher : statut 'tranché', retenue = la lettre, dateTranche.",
+  "arbitrages": [
+    {
+      "n": 1,
+      "date": "2026-10-11",
+      "titre": "La page d'accueil du recueil",
+      "question": "Quelle présentation garde-t-on pour la page d'accueil du recueil des données ? Les deux captures montrent le même dossier fictif (Léo, 52 épisodes), sur ordinateur et sur téléphone.",
+      "statut": "ouvert",
+      "retenue": null,
+      "enLigne": "B",
+      "options": [
+        {
+          "lettre": "A",
+          "titre": "Vendredi 9 octobre",
+          "texte": "« Avant de commencer » lu en entier en haut de la page. Les quatre étapes dans un même cadre blanc, chacune avec une phrase qui dit ce qu'on y fait ; l'étape en cours se détache en bleu.",
+          "captures": [
+            {"src": "01/A-ordi.jpg", "format": "ordi"},
+            {"src": "01/A-tel.jpg", "format": "tel"}
+          ]
+        },
+        {
+          "lettre": "B",
+          "titre": "Dimanche 11 octobre",
+          "texte": "« Avant de commencer » replié en une ligne. Les étapes en blocs de couleur, numérotées de 0 à 3 (bleu pour le préambule et la synthèse, sauge pour recueillir et analyser) ; la phrase de chaque étape apparaît au survol ; l'étape en cours est entourée.",
+          "captures": [
+            {"src": "01/B-ordi.jpg", "format": "ordi"},
+            {"src": "01/B-tel.jpg", "format": "tel"}
+          ]
+        }
+      ]
+    }
+  ]
+}

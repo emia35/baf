@@ -3944,8 +3944,32 @@ body:not(.mode-admin) .admin-seul{display:none !important;}
 .admin-partie{margin:0 0 20px;}
 .admin-partie .surtitre{margin-bottom:6px;color:var(--ocre-deep);}
 .admin-boutons{display:flex;flex-wrap:wrap;gap:6px;}
-.admin-essai{display:flex;align-items:baseline;gap:6px;margin:0 0 6px;font-size:13.5px;}
 .admin-cles{margin:6px 0 10px;padding-left:18px;font-size:12.5px;}
+/* ── Le banc d'essai (passe 206) : des cartes numérotées, puis l'arbitrage choisi, ses options côte à côte ── */
+#banc-contenu{display:flex;flex-direction:column;gap:14px;}
+.banc-liste{display:flex;flex-wrap:wrap;gap:8px;}
+.banc-carte{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:220px;padding:10px 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--sheet);font:13px var(--police-interface);color:var(--ink);text-align:left;cursor:pointer;}
+.banc-carte:hover{border-color:var(--sauge);}
+.banc-carte.on{background:var(--sauge-pale);border-color:var(--sauge-deep);}
+.banc-num{font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--sauge-deep);}
+.banc-tranches > summary{margin-bottom:8px;cursor:pointer;}
+.banc-arbitrage h3{margin:2px 0 6px;font-size:20px;}
+.banc-question,.banc-texte{margin:0;text-align:justify;hyphens:auto;}
+.banc-reglages{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+.banc-options{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:14px;align-items:start;}
+.banc-option{display:flex;flex-direction:column;gap:10px;}
+.banc-option.preferee{box-shadow:0 0 0 2px var(--sauge-deep),var(--ombre-feuille);}
+.banc-option-tete{display:flex;flex-wrap:wrap;align-items:center;gap:10px;}
+.banc-lettre{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:var(--slate);color:#fff;font:700 17px var(--police-interface);}
+.banc-tag{padding:2px 9px;border-radius:999px;background:var(--paper-deep);font-size:11.5px;color:var(--ink-soft);}
+.banc-tag.retenue{background:var(--sauge-pale);color:var(--sauge-deep);font-weight:700;}
+.banc-capture{display:block;overflow:hidden;border:1px solid var(--line);border-radius:10px;}
+.banc-capture img{display:block;width:100%;height:auto;}
+.banc-capture.banc-tel{align-self:center;width:100%;max-width:390px;}
+.banc-maquette{width:100%;height:520px;border:1px solid var(--line);border-radius:10px;background:#fff;}
+.banc-option > .bt{align-self:flex-start;}
+.banc-avis textarea{width:100%;margin:4px 0 6px;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;font:14px var(--police-lecture);resize:vertical;}
+@media (max-width:760px){.banc-options{grid-template-columns:1fr;}}
 .apercu-bandeau{position:fixed;left:50%;bottom:14px;z-index:400;transform:translateX(-50%);display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:999px;background:var(--ocre-deep);color:#fff;font:600 13px var(--police-interface);box-shadow:0 8px 24px rgba(0,0,0,.2);}
 .apercu-bandeau button{border:0;border-radius:999px;padding:4px 12px;background:#fff;color:var(--ocre-deep);font:700 12.5px var(--police-interface);cursor:pointer;}
 #tiroir-notes .analyse-notes-champ{min-height:240px;margin:0;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font:400 14.5px/1.6 var(--police-lecture);resize:vertical;}
@@ -4242,6 +4266,16 @@ body:not(.mode-admin) .admin-seul{display:none !important;}
       <div class="sub">Les éléments avec lesquels chaque écran se construit. Une couleur pour naviguer, l'ardoise ; les couleurs des volets pour les données, et rien d'autre ; des feuilles plutôt que des cadres ; une phrase en clair avant un dessin ; le détail replié ; ce qui sert tout le temps dans une barre fixe, ce qui sert parfois dans un tiroir.</div>
     </div>
     <div id="charte-contenu"></div>
+  </section>
+
+  <section id="view-banc" class="view">
+    <div class="mod-header">
+      <div class="crumb"><button onclick="route('accueil')">← Accueil</button></div>
+      <span class="temps-tag tag-m4">Mode administrateur</span>
+      <h2>Banc d'essai</h2>
+      <div class="sub">Quand un choix se discute, les options côte à côte. Chaque arbitrage a un numéro, pour en parler entre vous ; chacun note sa préférence et un mot, gardés dans son navigateur. Pour trancher, dites à Claude le numéro et la lettre retenue.</div>
+    </div>
+    <div id="banc-contenu"></div>
   </section>
 
   <section id="view-notes" class="view">
@@ -6991,6 +7025,7 @@ function route(name, fromHistory){
   }
   fermetureVolontaire = false;
   /* Organiser et Interpréter sont des panneaux d'Analyser : leurs anciennes adresses y mènent. */
+  if (name === 'banc' && !adminActif()) name = 'accueil';   // le banc d'essai, seulement en mode administrateur
   let posAnalyse = null;
   if (name === 'm3') { posAnalyse = 2; name = 'analyser'; }
   else if (name === 'm4') { posAnalyse = 3; name = 'analyser'; }
@@ -7017,7 +7052,7 @@ function route(name, fromHistory){
   const entreeParticiper = name === 'declarant' && !modeDeclarantActif();
   const isBaf = ['baf-accueil','m1','m2','m2-form','analyser','comparer','synthese','declarant','reserve'].includes(name) && !entreeParticiper;
   const isIdc = ['idc-accueil','idc-main'].includes(name);
-  const isGlobal = ['accueil','reperes','ressources','apropos','notes','parcours','charte'].includes(name);
+  const isGlobal = ['accueil','reperes','ressources','apropos','notes','parcours','charte','banc'].includes(name);
   const bafNavGroup = document.getElementById('baf-nav-group');
   const idcNavGroup = document.getElementById('idc-nav-group');
   const globalNavGroup = document.getElementById('global-nav-group');
@@ -7027,6 +7062,7 @@ function route(name, fromHistory){
   if(name === 'reperes') renderReperes();
   if(name === 'notes') renderNotes();
   if(name === 'charte') renderCharte();
+  if(name === 'banc') renderBanc();
   if(name === 'declarant') renderDeclarant();
   if(name === 'parcours') renderParcours();
   if(name === 'comparer') {
@@ -7274,17 +7310,92 @@ function quitterAdmin() {
   showToast('Mode administrateur fermé.');
 }
 
-/* Les fonctions en essai : visibles seulement en mode administrateur, quand on les allume dans le panneau. Pour en ajouter
-   une : une entrée dans ESSAIS, et « if (enEssai('id')) … » là où elle s'affiche. */
-const ESSAIS = [];
-function essaisAllumes() { try { return JSON.parse(localStorage.getItem('baf-essais') || '[]'); } catch (e) { return []; } }
-function enEssai(id) { return adminActif() && essaisAllumes().indexOf(id) >= 0; }
-function basculerEssai(id, on) {
-  const l = essaisAllumes().filter(x => x !== id);
-  if (on) l.push(id);
-  try { localStorage.setItem('baf-essais', JSON.stringify(l)); } catch (e) { /* rien */ }
-  renderPanneauAdmin();
+/* Le banc d'essai (passe 206, Arthur et Émilie) : quand un choix se discute, plusieurs options côte à côte. Chaque
+   arbitrage porte un numéro, jamais réutilisé, pour en parler (« l'arbitrage n° 12 ») ; chacun note sa préférence et un
+   mot dans son navigateur ; Claude applique l'option retenue. Les arbitrages et leurs captures sont dans le dossier
+   banc/ du dépôt, chargés seulement en mode administrateur : la BAF des équipes n'en porte rien. Une option « direct »
+   s'essaie dans la BAF elle-même : « if (optionEssai(12) === 'B') … » là où elle s'affiche. */
+let BANC = null, bancErreur = '', bancChoisi = null;
+const bancReglages = {format: 'ordi', vue: 'cote', lettre: null};
+function prefsBanc() { try { return JSON.parse(localStorage.getItem('baf-banc') || '{}'); } catch (e) { return {}; } }
+function ecrirePrefsBanc(p) { try { localStorage.setItem('baf-banc', JSON.stringify(p)); } catch (e) { /* rien */ } }
+// L'option qu'on essaie dans ce navigateur pour l'arbitrage n : celle qu'on préfère ; rien hors du mode administrateur.
+function optionEssai(n) { return adminActif() ? ((prefsBanc()[n] || {}).pref || null) : null; }
+async function chargerBanc() {
+  try {
+    const r = await fetch('banc/arbitrages.json', {cache: 'no-store'});
+    if (!r.ok) throw new Error(r.status);
+    BANC = (await r.json()).arbitrages || []; bancErreur = '';
+  } catch (e) {
+    BANC = []; bancErreur = 'Le banc d\'essai se lit sur la BAF en ligne : il ne s\'ouvre pas depuis un fichier enregistré sur l\'ordinateur.';
+  }
+  return BANC;
 }
+function resumeBanc() {
+  if (!BANC) return 'Les choix en discussion, options côte à côte.';
+  if (bancErreur) return bancErreur;
+  const o = BANC.filter(a => a.statut !== 'tranché');
+  return o.length ? o.length + ' arbitrage' + (o.length > 1 ? 's' : '') + ' ouvert' + (o.length > 1 ? 's' : '') + ' : ' + o.map(a => 'n° ' + a.n).join(', ') + '.' : 'Aucun arbitrage ouvert.';
+}
+function ouvrirBanc(n) { if (n) bancChoisi = n; fermerTiroir('tiroir-admin'); route('banc'); }
+async function renderBanc() {
+  const el = document.getElementById('banc-contenu');
+  if (!el) return;
+  if (!BANC) { el.innerHTML = '<p class="discret">Chargement…</p>'; await chargerBanc(); }
+  el.innerHTML = bancHtml(BANC, bancChoisi, prefsBanc(), bancReglages, bancErreur);
+}
+function bancHtml(liste, choisi, prefs, reg, erreur) {
+  if (erreur) return '<div class="feuille"><p>' + esc(erreur) + '</p></div>';
+  if (!liste.length) return '<div class="feuille"><p class="discret">Aucun arbitrage pour l\'instant.</p></div>';
+  const ouverts = liste.filter(a => a.statut !== 'tranché'), tranches = liste.filter(a => a.statut === 'tranché');
+  const a = liste.find(x => x.n === choisi) || ouverts[0] || liste[0];
+  const carte = x => {
+    const p = (prefs[x.n] || {}).pref;
+    return '<button type="button" class="banc-carte' + (x === a ? ' on' : '') + '" onclick="bancChoisi = ' + x.n + '; bancReglages.lettre = null; renderBanc()">' +
+      '<span class="banc-num">n° ' + x.n + '</span><b>' + esc(x.titre) + '</b><span class="discret">' + x.options.length + ' options · ' +
+      (x.statut === 'tranché' ? 'retenue : ' + esc(x.retenue || '') : p ? 'ma préférence : ' + esc(p) : 'à regarder') + '</span></button>';
+  };
+  return (ouverts.length ? '<div class="banc-liste">' + ouverts.map(carte).join('') + '</div>' : '') +
+    (tranches.length ? '<details class="repli banc-tranches"' + (a.statut === 'tranché' ? ' open' : '') + '><summary>Arbitrages tranchés · ' + tranches.length + '</summary><div class="banc-liste">' + tranches.map(carte).join('') + '</div></details>' : '') +
+    arbitrageHtml(a, prefs[a.n] || {}, reg);
+}
+function arbitrageHtml(a, pref, reg) {
+  const formats = [['ordi', 'Ordinateur'], ['tel', 'Téléphone']].filter(([f]) => a.options.some(o => (o.captures || []).some(c => c.format === f)));
+  const format = formats.some(([f]) => f === reg.format) ? reg.format : (formats[0] || [''])[0];
+  const uneSeule = reg.vue === 'une' && a.options.length > 1;
+  const montree = uneSeule ? (a.options.find(o => o.lettre === reg.lettre) || a.options[0]).lettre : null;
+  const seg = (items, actif, fn) => '<div class="segment" role="group">' + items.map(([k, l]) => '<button type="button" class="' + (k === actif ? 'on' : '') + '" onclick="' + fn + '(\'' + k + '\')">' + l + '</button>').join('') + '</div>';
+  const jour = new Date(a.date + 'T12:00:00');
+  const option = o => '<div class="feuille banc-option' + (pref.pref === o.lettre ? ' preferee' : '') + '">' +
+      '<div class="banc-option-tete"><span class="banc-lettre">' + esc(o.lettre) + '</span><b>' + esc(o.titre) + '</b>' +
+        (a.enLigne === o.lettre && a.statut !== 'tranché' ? '<span class="banc-tag">en ligne aujourd\'hui</span>' : '') +
+        (a.statut === 'tranché' && a.retenue === o.lettre ? '<span class="banc-tag retenue">retenue</span>' : '') + '</div>' +
+      // Les captures d'abord, toutes à la même hauteur d'une option à l'autre ; le texte ensuite.
+      (o.captures || []).filter(c => c.format === format).map(c => '<a class="banc-capture banc-' + esc(c.format) + '" href="banc/' + esc(c.src) + '" target="_blank" rel="noopener" title="Ouvrir en grand"><img src="banc/' + esc(c.src) + '" alt="Option ' + esc(o.lettre) + '" loading="lazy"></a>').join('') +
+      (o.maquette ? '<iframe class="banc-maquette" src="banc/' + esc(o.maquette) + '" title="Maquette ' + esc(o.lettre) + '"></iframe>' : '') +
+      (o.texte ? '<p class="banc-texte">' + esc(o.texte) + '</p>' : '') +
+      (o.direct ? '<p class="discret">Cette option s\'essaie dans la BAF elle-même : préférez-la, puis parcourez l\'outil.</p>' : '') +
+      (a.statut === 'tranché' ? '' : '<button type="button" class="bt' + (pref.pref === o.lettre ? ' fait' : '') + '" onclick="preferer(' + a.n + ', \'' + esc(o.lettre) + '\')">' + (pref.pref === o.lettre ? '✓ Je préfère ' : 'Je préfère ') + esc(o.lettre) + '</button>') +
+    '</div>';
+  return '<div class="feuille banc-arbitrage">' +
+      '<div class="surtitre">Arbitrage n° ' + a.n + (isNaN(jour) ? '' : ' · ' + esc(jour.toLocaleDateString('fr-FR', {day: 'numeric', month: 'long', year: 'numeric'}))) +
+        (a.statut === 'tranché' ? ' · tranché : ' + esc(a.retenue || '') : '') + '</div>' +
+      '<h3>' + esc(a.titre) + '</h3><p class="banc-question">' + esc(a.question) + '</p>' +
+      '<div class="banc-reglages">' +
+        (formats.length > 1 ? seg(formats, format, 'bancFormat') : '') +
+        (a.options.length > 1 ? seg([['cote', 'Côte à côte'], ['une', 'Une à la fois']], uneSeule ? 'une' : 'cote', 'bancVue') : '') +
+        (uneSeule ? seg(a.options.map(o => [o.lettre, 'Option ' + o.lettre]), montree, 'bancLettre') : '') +
+      '</div></div>' +
+    '<div class="banc-options" style="--n:' + (uneSeule ? 1 : a.options.length) + '">' + a.options.filter(o => !uneSeule || o.lettre === montree).map(option).join('') + '</div>' +
+    (a.statut === 'tranché' ? '' : '<div class="feuille banc-avis"><label class="surtitre" for="banc-note">Mon avis sur l\'arbitrage n° ' + a.n + '</label>' +
+      '<textarea id="banc-note" rows="3" placeholder="Ce qui vous fait pencher d\'un côté ou de l\'autre… (gardé dans ce navigateur)" oninput="noterBanc(' + a.n + ', this.value)">' + esc(pref.note || '') + '</textarea>' +
+      '<p class="discret">Pour trancher, dites à Claude : « arbitrage n° ' + a.n + ' : ' + esc(pref.pref || a.options[0].lettre) + ' ».</p></div>');
+}
+function preferer(n, lettre) { const p = prefsBanc(); p[n] = Object.assign({}, p[n], {pref: lettre}); ecrirePrefsBanc(p); renderBanc(); }
+function noterBanc(n, texte) { const p = prefsBanc(); p[n] = Object.assign({}, p[n], {note: texte}); ecrirePrefsBanc(p); }
+function bancFormat(f) { bancReglages.format = f; renderBanc(); }
+function bancVue(v) { bancReglages.vue = v; renderBanc(); }
+function bancLettre(l) { bancReglages.lettre = l; renderBanc(); }
 
 /* Voir en tant que : la BAF telle que la voit un déclarant (qui vient d'ouvrir son fichier), ou quelqu'un qui l'ouvre pour la
    première fois. Lecture seule : rien ne s'enregistre (DEPOT.ecrire) ; revenir recharge la page, et le dossier revient intact. */
@@ -7325,7 +7436,6 @@ function renderPanneauAdmin() {
   const el = document.getElementById('admin-corps');
   if (!el) return;
   const cles = etatNavigateurAdmin(), total = cles.reduce((n, c) => n + c.ko, 0);
-  const essais = essaisAllumes();
   const role = window.apercuAdmin || 'analyste';
   el.innerHTML =
     '<section class="admin-partie"><div class="surtitre">Simuler un dossier</div>' +
@@ -7339,16 +7449,15 @@ function renderPanneauAdmin() {
     '<section class="admin-partie"><div class="surtitre">Pages cachées</div><div class="admin-boutons">' +
       '<button type="button" class="bt" onclick="fermerTiroir(\'tiroir-admin\'); route(\'charte\')">🎨 La charte</button>' +
       '<button type="button" class="bt" onclick="fermerTiroir(\'tiroir-admin\'); ouvrirJournal()">📓 Le journal de bord</button></div></section>' +
-    '<section class="admin-partie"><div class="surtitre">Fonctions en essai</div>' +
-      (ESSAIS.length ? ESSAIS.map(e => '<label class="admin-essai"><input type="checkbox" ' + (essais.indexOf(e.id) >= 0 ? 'checked' : '') +
-          ' onchange="basculerEssai(\'' + e.id + '\', this.checked)"> <b>' + esc(e.nom) + '</b> <span class="discret">' + esc(e.desc || '') + '</span></label>').join('')
-        : '<p class="discret">Aucune pour l\'instant. Quand une fonction sera en essai, elle apparaîtra ici : vous l\'allumez, vous la testez, et les équipes ne la voient pas encore.</p>') +
-    '</section>' +
+    '<section class="admin-partie"><div class="surtitre">Banc d\'essai</div>' +
+      '<p class="discret" id="admin-banc-resume">' + esc(resumeBanc()) + '</p>' +
+      '<div class="admin-boutons"><button type="button" class="bt" onclick="ouvrirBanc()">⚖ Ouvrir le banc d\'essai</button></div></section>' +
     '<section class="admin-partie"><div class="surtitre">Ce navigateur</div>' +
       '<p class="discret">' + (cles.length ? Math.round(total) + ' Ko gardés par la BAF' + (state.modifie ? ' · dernière modification le ' + esc(dateLisible(state.modifie)) : '') : 'Rien n\'est gardé par la BAF dans ce navigateur.') + '</p>' +
       (cles.length ? '<ul class="admin-cles">' + cles.map(c => '<li><code>' + esc(c.k) + '</code> <span class="discret">' + (c.ko < 1 ? '< 1' : Math.round(c.ko)) + ' Ko</span></li>').join('') + '</ul>' : '') +
       '<button type="button" class="btn btn-ghost btn-sm" onclick="effacerNavigateurAdmin()">🗑 Tout effacer dans ce navigateur</button></section>' +
     '<section class="admin-partie"><button type="button" class="btn btn-secondary btn-sm" onclick="quitterAdmin()">Quitter le mode administrateur</button></section>';
+  if (!BANC) chargerBanc().then(() => { const r = document.getElementById('admin-banc-resume'); if (r) r.textContent = resumeBanc(); });
 }
 
 function importDepuisSimulation() {
@@ -7448,6 +7557,7 @@ const ADRESSES_VUES = {
   'parcours':     'le-parcours',
   'notes':        'notes-de-version',
   'charte':       'charte',
+  'banc':         'banc-d-essai',
   'declarant':    'declarant',
   'reserve':      'reserve-a-l-equipe',
   'baf-accueil':  'recueil-des-donnees',
@@ -13382,6 +13492,37 @@ const _CONTROLES = [
     if (sauveD) state.m3.decoupages = sauveD; else delete state.m3.decoupages;
     return _bancEgal('Identifiant dans A | charnière dans A | dans B',
       'e' + evt.id + '_ua2|e' + evt.id + '_ca3_a|null', [idA, idAc, String(idB)].join('|'));
+  }},
+
+  {nom:'Banc d\'essai (passe 206) : chaque arbitrage a son numéro et ses options ; la préférence se garde ; la page est réservée au mode administrateur', test: () => {
+    const sauve = localStorage.getItem('baf-banc'), admin = sessionStorage.getItem('baf-admin');
+    try {
+      const liste = [{n: 7, date: '2026-10-11', titre: 'Essai', question: 'Laquelle ?', statut: 'ouvert', options: [
+          {lettre: 'A', titre: 'Un', texte: 'x', captures: [{src: '07/A-ordi.jpg', format: 'ordi'}, {src: '07/A-tel.jpg', format: 'tel'}]},
+          {lettre: 'B', titre: 'Deux', texte: 'y', captures: [{src: '07/B-ordi.jpg', format: 'ordi'}]},
+          {lettre: 'C', titre: 'Trois', direct: true}]},
+        {n: 3, date: '2026-10-01', titre: 'Ancien', question: '?', statut: 'tranché', retenue: 'B', options: [{lettre: 'A', titre: 'a'}, {lettre: 'B', titre: 'b'}]}];
+      const d = document.createElement('div');
+      d.innerHTML = bancHtml(liste, null, {7: {pref: 'B'}}, {format: 'ordi', vue: 'cote'}, '');
+      const options = d.querySelectorAll('.banc-option').length;
+      const numero = d.querySelector('.banc-arbitrage .surtitre').textContent.indexOf('n° 7') >= 0;
+      const ordi = d.querySelectorAll('.banc-capture img').length;   // A et B sur ordinateur, pas le téléphone
+      const preferee = d.querySelector('.banc-option.preferee .banc-lettre').textContent;
+      const tranches = d.querySelectorAll('.banc-tranches .banc-carte').length;
+      d.innerHTML = bancHtml(liste, null, {}, {format: 'ordi', vue: 'une', lettre: 'B'}, '');
+      const uneSeule = [...d.querySelectorAll('.banc-option .banc-lettre')].map(e => e.textContent).join('');
+      localStorage.setItem('baf-banc', JSON.stringify({7: {pref: 'C'}}));
+      sessionStorage.removeItem('baf-admin');
+      const horsAdmin = optionEssai(7);
+      sessionStorage.setItem('baf-admin', '1');
+      const enAdmin = optionEssai(7);
+      const cachee = !document.querySelector('.nav-btn[data-go="banc"]') && adresseDeVue('banc') === 'banc-d-essai';
+      return _bancEgal('options | numéro | captures ordinateur | préférée | tranchés repliés | une à la fois | essai hors admin | essai en admin | page cachée',
+        '3 | true | 2 | B | 1 | B | null | C | true', [options, numero, ordi, preferee, tranches, uneSeule, String(horsAdmin), enAdmin, cachee].join(' | '));
+    } finally {
+      if (sauve === null) localStorage.removeItem('baf-banc'); else localStorage.setItem('baf-banc', sauve);
+      if (admin === null) sessionStorage.removeItem('baf-admin'); else sessionStorage.setItem('baf-admin', admin);
+    }
   }},
 
   {nom:'Le journal de bord est chiffré, et ne s\'ouvre plus que par le mode administrateur', test: () => {
@@ -23614,6 +23755,22 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-11',
+    version: 'v2026.10.11-9',
+    titre: "Le banc d'essai : des arbitrages numérotés",
+    corps: `
+<p><b>Le banc d'essai</b> (Arthur et Émilie), dans le mode administrateur, à la place des « fonctions en essai » :</p>
+<ul>
+<li><b>Un arbitrage, un numéro</b>, jamais réutilisé : on peut en parler entre nous (« l'arbitrage n° 1 »). Chacun a ses options A, B, C…</li>
+<li><b>Les options côte à côte</b> : des captures (ordinateur et téléphone), un texte, une petite maquette qui fonctionne, ou une option à essayer dans la BAF elle-même. On les voit côte à côte, ou une à la fois pour basculer de l'une à l'autre.</li>
+<li><b>Chacun note sa préférence et un mot</b>, gardés dans son navigateur. Pour trancher, on dit à Claude « arbitrage n° 1 : B ».</li>
+<li><b>Premier arbitrage</b> : la page d'accueil du recueil, vendredi (A) ou aujourd'hui (B).</li>
+</ul>
+<p>Le banc ne s'ouvre qu'en mode administrateur, et seulement sur la BAF en ligne : ses captures sont à côté de la BAF, pas dedans, pour que l'outil des équipes reste léger.</p>
+`
+  },
 
   {
     date: '2026-10-11',
