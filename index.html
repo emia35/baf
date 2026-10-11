@@ -3948,6 +3948,16 @@ details.declarant-comment > summary::-webkit-details-marker{display:none;}
 details.declarant-comment > summary::after{content:"▸";float:right;color:var(--sauge-deep);transition:transform .2s;}
 details.declarant-comment[open] > summary{margin-bottom:12px;}
 details.declarant-comment[open] > summary::after{transform:rotate(90deg);}
+/* ── Les notes de version par mois (passe 202) ── */
+.nv-mois-titre{margin:26px 0 10px;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--sauge-deep);}
+details.nv-mois{margin:0 0 8px;border-radius:var(--rayon-feuille);background:var(--sheet);box-shadow:var(--ombre-legere);}
+details.nv-mois > summary{display:flex;align-items:baseline;gap:10px;padding:14px 18px;cursor:pointer;list-style:none;}
+details.nv-mois > summary::-webkit-details-marker{display:none;}
+details.nv-mois > summary::before{content:"▸";color:var(--sauge-deep);transition:transform .2s;}
+details.nv-mois[open] > summary::before{transform:rotate(90deg);}
+.nv-mois-nom{font-size:16px;font-weight:700;color:var(--ink);}
+.nv-mois-n{font-size:12.5px;color:var(--ink-faint);}
+.nv-mois-corps{padding:0 12px 12px;}
 #tiroir-notes .analyse-notes-champ{min-height:240px;margin:0;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font:400 14.5px/1.6 var(--police-lecture);resize:vertical;}
 .analyse-note{margin:0 0 14px;font-size:13px;color:var(--ink-soft);}
 
@@ -16174,6 +16184,17 @@ const _CONTROLES = [
     }
   }},
 
+  {nom:'Notes de version (passe 202) : le mois le plus récent en détail, les mois précédents repliés, chacun avec ses notes', test: () => {
+    const el = document.createElement('div'); el.innerHTML = notesParMois();
+    const mois = n => String(n.date || '').slice(0, 7);
+    const recent = NOTES_VERSION.reduce((m, n) => mois(n) > m ? mois(n) : m, '');
+    const detail = el.querySelectorAll(':scope > details.note-v').length === NOTES_VERSION.filter(n => mois(n) === recent).length;
+    const replis = el.querySelectorAll(':scope > details.nv-mois').length === new Set(NOTES_VERSION.map(n => mois(n) || 'sans-date').filter(k => k !== recent)).size;
+    const toutes = el.querySelectorAll('details.note-v').length === NOTES_VERSION.length;
+    const fermes = [...el.querySelectorAll(':scope > details.nv-mois')].every(d => !d.open);
+    return _bancEgal('mois récent en détail | un repli par mois | toutes les notes | replis fermés', 'true | true | true | true', [detail, replis, toutes, fermes].join(' | '));
+  }},
+
   {nom:'Déclarant et mail (passe 201) : ni Analyser ni Synthèse pour le déclarant, un merci ; le mail mis en page, avec la capture et « BAF » en entier', test: () => {
     const c = courrielLancement('Léo');
     const eml = construireEml(c.sujet, c.corps, 'kit.json', '{}', c.html);
@@ -24919,6 +24940,15 @@ const NOTES_VERSION = [
 
   {
     date: '2026-10-11',
+    version: 'v2026.10.11-5',
+    titre: "Les notes de version, mois par mois",
+    corps: `
+<p><b>Les notes de version, mois par mois</b> (Arthur et Émilie) : le mois en cours se lit en détail ; les mois précédents se replient chacun en une ligne — « Septembre 2026 · 13 notes » —, et s'ouvrent sur le détail de leurs notes.</p>
+`
+  },
+
+  {
+    date: '2026-10-11',
     version: 'v2026.10.11-4',
     titre: "Le déclarant ne voit que ce qui est pour lui ; un mail plus court, avec une capture",
     corps: `
@@ -26556,6 +26586,29 @@ function majPiedVersion() {
   const el = document.getElementById('footer-version');
   if (el) el.textContent = versionCourante() + ' · notes de version';
 }
+/* Les notes de version, mois par mois (passe 202) : le mois de la note la plus récente se lit en détail ; chaque mois
+   précédent se replie en une ligne (« Septembre 2026 · 13 notes ») et s'ouvre sur le détail de ses notes. */
+function notesParMois() {
+  const mois = n => String(n.date || '').slice(0, 7);
+  const note = (n, ouverte) => '<details class="note-v"' + (ouverte ? ' open' : '') + '>' +
+    '<summary><span class="nv-version">' + esc(versionNote(n)) + '</span><span class="nv-titre">' + esc(n.titre) + '</span></summary>' +
+    '<div class="nv-corps">' + n.corps + '</div></details>';
+  const recent = NOTES_VERSION.reduce((m, n) => mois(n) > m ? mois(n) : m, '');
+  const groupes = {};
+  NOTES_VERSION.forEach(n => { const k = mois(n) || 'sans-date'; (groupes[k] = groupes[k] || []).push(n); });
+  const nomMois = k => {
+    if (k === 'sans-date') return 'Sans date';
+    const l = new Date(k + '-15T12:00:00').toLocaleDateString('fr-FR', {month: 'long', year: 'numeric'});
+    return l.charAt(0).toUpperCase() + l.slice(1);
+  };
+  const autres = Object.keys(groupes).filter(k => k !== recent).sort().reverse();
+  return '<h3 class="nv-mois-titre">' + esc(nomMois(recent)) + '</h3>' +
+    (groupes[recent] || []).map((n, i) => note(n, i === 0)).join('') +
+    (autres.length ? '<h3 class="nv-mois-titre">Les mois précédents</h3>' : '') +
+    autres.map(k => '<details class="nv-mois"><summary><span class="nv-mois-nom">' + esc(nomMois(k)) + '</span>' +
+      '<span class="nv-mois-n">' + groupes[k].length + ' note' + (groupes[k].length > 1 ? 's' : '') + '</span></summary>' +
+      '<div class="nv-mois-corps">' + groupes[k].map(n => note(n, false)).join('') + '</div></details>').join('');
+}
 function renderNotes() {
   const el = document.getElementById('notes-contenu');
   if (!el) return;
@@ -26568,15 +26621,7 @@ function renderNotes() {
           ' — survolez une barre pour le détail. En vert, les lignes ajoutées depuis le dépôt Git (juin 2026). En ocre pointillé, le code écrit avant, dans les conversations : c\'est la taille des fichiers livrés (ÉQAF, BAF, ICAF), pas un décompte de lignes ajoutées.</div>' +
         activite +
       '</div>'
-    : '') + NOTES_VERSION.map((n, i) =>
-    '<details class="note-v"' + (i === 0 ? ' open' : '') + '>' +
-      '<summary>' +
-        '<span class="nv-version">' + esc(versionNote(n)) + '</span>' +
-        '<span class="nv-titre">' + esc(n.titre) + '</span>' +
-      '</summary>' +
-      '<div class="nv-corps">' + n.corps + '</div>' +
-    '</details>'
-  ).join('');
+    : '') + notesParMois();
   equiperGraphiques(el);
 }
 
