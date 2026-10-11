@@ -3997,7 +3997,6 @@ details.avant-commencer p{margin:10px 0 0;font:400 15px/1.65 var(--police-lectur
 .po-etape.po-sauge:hover{background:var(--sauge);}
 .po-etape.ici{box-shadow:0 0 0 3px var(--paper),0 0 0 5.5px var(--ocre),0 8px 24px rgba(45,59,82,.18);}
 .po-titre{position:relative;font-size:17px;line-height:1.25;}
-.po-titre[data-aide]:hover::after{content:attr(data-aide);position:absolute;left:0;top:calc(100% + 8px);z-index:10;width:max-content;max-width:260px;padding:8px 11px;border-radius:10px;background:var(--ink);color:#fff;font:400 13px/1.45 var(--police-lecture);box-shadow:0 8px 22px rgba(0,0,0,.2);}
 .po-etat{margin-top:0;font-weight:600;opacity:.92;}
 .po-ardoise .po-jauge{background:rgba(255,255,255,.22);}
 .po-ardoise .po-jauge i{background:#fff;}
@@ -12168,10 +12167,10 @@ function renderParcoursOutil() {
   const iIci = etapes.findIndex(e => e.id === ici);
   el.innerHTML = etapes.map((e, i) => {
     const fait = i < iIci && (e.id !== 'm1' || pct1 >= 100);
-    // Le détail ne s'affiche qu'au survol du titre (Arthur, 11/10/2026) : le bloc reste léger.
+    // Le détail ne s'affiche qu'au survol, dans la bulle du navigateur (Arthur, 11/10/2026) : le bloc reste léger.
     return '<div class="po-etape po-' + e.couleur + (e.id === ici ? ' ici' : '') + (fait ? ' fait' : '') + '" role="button" tabindex="0" title="' + esc(e.desc) + '" onclick="route(\'' + e.id + '\')">' +
       (fait ? '<span class="po-coche" aria-hidden="true">✓</span>' : '') +
-      '<span class="po-titre" data-aide="' + esc(e.desc) + '">' + e.titre + '</span>' +
+      '<span class="po-titre">' + e.titre + '</span>' +
       '<span class="po-etat">' + (e.jauge !== undefined ? '<span class="po-jauge"><i style="width:' + Math.max(0, Math.min(100, e.jauge)) + '%"></i></span>' : '') + esc(e.etat) + '</span>' +
       (e.id === ici ? '<button type="button" class="po-suite" onclick="event.stopPropagation(); ' + suite[1] + '">' + esc(suite[0]) + ' →</button>' : '') +
     '</div>';
@@ -16441,7 +16440,8 @@ const _CONTROLES = [
       const blocs = [...document.querySelectorAll('#parcours-outil .po-etape')];
       const couleurs = blocs.map(b => b.classList.contains('po-ardoise') ? 'a' : b.classList.contains('po-sauge') ? 's' : '?').join('');
       const titres = blocs.map(b => b.querySelector('.po-titre').textContent).join(' | ');
-      const survol = blocs.every(b => b.querySelector('.po-titre').dataset.aide) && !document.querySelector('#parcours-outil .po-desc');
+      // Le détail au survol : la bulle du navigateur, seule (passe 216) ; plus d'encart en plus sur le titre.
+      const survol = blocs.every(b => b.title && !b.querySelector('.po-titre').dataset.aide) && !document.querySelector('#parcours-outil .po-desc');
       const entete = getComputedStyle(document.querySelector('#view-baf-accueil .hero')).textAlign;
       const avant = !!document.querySelector('#view-baf-accueil details.avant-commencer summary');
       return _bancEgal('outil 1 sans fond blanc | accueil centré | couleurs | titres | détail au survol | accueil du recueil centré | avant de commencer repliable',
@@ -24171,6 +24171,15 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-11',
+    version: 'v2026.10.11-19',
+    titre: "Accueil du recueil : une seule bulle au survol",
+    corps: `
+<p><b>Accueil du recueil</b> (Arthur et Émilie) : au survol d'une étape, une seule bulle s'affiche, celle du navigateur. L'encart qui s'y ajoutait sur le titre doublait le texte et se lisait mal en mode sombre.</p>
+`
+  },
 
   {
     date: '2026-10-11',
