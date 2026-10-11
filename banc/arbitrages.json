@@ -15,8 +15,14 @@
           "titre": "Vendredi 9 octobre",
           "texte": "« Avant de commencer » lu en entier en haut de la page. Les quatre étapes dans un même cadre blanc, chacune avec une phrase qui dit ce qu'on y fait ; l'étape en cours se détache en bleu.",
           "captures": [
-            {"src": "01/A-ordi.jpg", "format": "ordi"},
-            {"src": "01/A-tel.jpg", "format": "tel"}
+            {
+              "src": "01/A-ordi.jpg",
+              "format": "ordi"
+            },
+            {
+              "src": "01/A-tel.jpg",
+              "format": "tel"
+            }
           ]
         },
         {
@@ -24,8 +30,136 @@
           "titre": "Dimanche 11 octobre",
           "texte": "« Avant de commencer » replié en une ligne. Les étapes en blocs de couleur, numérotées de 0 à 3 (bleu pour le préambule et la synthèse, sauge pour recueillir et analyser) ; la phrase de chaque étape apparaît au survol ; l'étape en cours est entourée.",
           "captures": [
-            {"src": "01/B-ordi.jpg", "format": "ordi"},
-            {"src": "01/B-tel.jpg", "format": "tel"}
+            {
+              "src": "01/B-ordi.jpg",
+              "format": "ordi"
+            },
+            {
+              "src": "01/B-tel.jpg",
+              "format": "tel"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "n": 2,
+      "date": "2026-10-11",
+      "titre": "Le mode sombre : quelle palette ?",
+      "question": "Trois façons de faire le mode sombre, sur trois écrans (même dossier fictif, Léo). La palette A est déjà dans la BAF : bouton ☾ en haut à droite. B et C ne sont que des captures : si l'une d'elles est retenue, elle remplace A.",
+      "statut": "ouvert",
+      "retenue": null,
+      "enLigne": "A",
+      "options": [
+        {
+          "lettre": "A",
+          "titre": "Ardoise de nuit",
+          "texte": "Un fond bleu-gris profond, des feuilles un ton plus clair, un texte blanc cassé. La plus proche de l'ardoise de la BAF en clair.",
+          "captures": [
+            {
+              "src": "02/A-accueil-ordi.jpg",
+              "format": "ordi",
+              "legende": "L'accueil du recueil"
+            },
+            {
+              "src": "02/A-accueil-tel.jpg",
+              "format": "tel",
+              "legende": "L'accueil du recueil"
+            },
+            {
+              "src": "02/A-categoriser-ordi.jpg",
+              "format": "ordi",
+              "legende": "Catégoriser (volet Antécédents)"
+            },
+            {
+              "src": "02/A-categoriser-tel.jpg",
+              "format": "tel",
+              "legende": "Catégoriser (volet Antécédents)"
+            },
+            {
+              "src": "02/A-synthese-ordi.jpg",
+              "format": "ordi",
+              "legende": "La Synthèse"
+            },
+            {
+              "src": "02/A-synthese-tel.jpg",
+              "format": "tel",
+              "legende": "La Synthèse"
+            }
+          ]
+        },
+        {
+          "lettre": "B",
+          "titre": "Brun chaud",
+          "texte": "Un fond brun très sombre, des feuilles couleur cuir, un texte crème. Plus doux, plus « papier », dans la famille du désert de la BAF en clair.",
+          "captures": [
+            {
+              "src": "02/B-accueil-ordi.jpg",
+              "format": "ordi",
+              "legende": "L'accueil du recueil"
+            },
+            {
+              "src": "02/B-accueil-tel.jpg",
+              "format": "tel",
+              "legende": "L'accueil du recueil"
+            },
+            {
+              "src": "02/B-categoriser-ordi.jpg",
+              "format": "ordi",
+              "legende": "Catégoriser (volet Antécédents)"
+            },
+            {
+              "src": "02/B-categoriser-tel.jpg",
+              "format": "tel",
+              "legende": "Catégoriser (volet Antécédents)"
+            },
+            {
+              "src": "02/B-synthese-ordi.jpg",
+              "format": "ordi",
+              "legende": "La Synthèse"
+            },
+            {
+              "src": "02/B-synthese-tel.jpg",
+              "format": "tel",
+              "legende": "La Synthèse"
+            }
+          ]
+        },
+        {
+          "lettre": "C",
+          "titre": "Gris neutre",
+          "texte": "Un fond gris presque noir, sans teinte, un texte blanc. Le plus sobre : seules les couleurs des volets colorent la page.",
+          "captures": [
+            {
+              "src": "02/C-accueil-ordi.jpg",
+              "format": "ordi",
+              "legende": "L'accueil du recueil"
+            },
+            {
+              "src": "02/C-accueil-tel.jpg",
+              "format": "tel",
+              "legende": "L'accueil du recueil"
+            },
+            {
+              "src": "02/C-categoriser-ordi.jpg",
+              "format": "ordi",
+              "legende": "Catégoriser (volet Antécédents)"
+            },
+            {
+              "src": "02/C-categoriser-tel.jpg",
+              "format": "tel",
+              "legende": "Catégoriser (volet Antécédents)"
+            },
+            {
+              "src": "02/C-synthese-ordi.jpg",
+              "format": "ordi",
+              "legende": "La Synthèse"
+            },
+            {
+              "src": "02/C-synthese-tel.jpg",
+              "format": "tel",
+              "legende": "La Synthèse"
+            }
           ]
         }
       ]

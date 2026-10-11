@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BAF — Boussole pour une Analyse Fonctionnelle</title>
+<script>
+/* Le mode sombre (passe 213) : décidé avant le premier affichage, pour ne pas montrer un éclair blanc. Le choix fait
+   avec le bouton ☾ / ☀ est retenu dans ce navigateur ; sans choix, la BAF suit le réglage de l'ordinateur. */
+(function () {
+  let choix = null; try { choix = localStorage.getItem('baf-theme'); } catch (e) { /* rien */ }
+  const sombre = choix ? choix === 'sombre' : !!(window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+  document.documentElement.setAttribute('data-theme', sombre ? 'sombre' : 'clair');
+})();
+</script>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Ccircle cx='24' cy='24' r='20.5' fill='%233D4F6B' stroke='%233D4F6B' stroke-width='1.4'/%3E%3Ccircle cx='24' cy='24' r='20.5' fill='none' stroke='%239AB5A8' stroke-width='1.4'/%3E%3Cpath d='M24 10 L29.5 24 L24 38 L18.5 24 Z' fill='%239AB5A8' stroke='none'/%3E%3Ccircle cx='24' cy='24' r='2.6' fill='%233D4F6B' stroke='%23fff' stroke-width='1'/%3E%3C/svg%3E">
 <style>
 
@@ -131,6 +140,112 @@
   --hdr-outline: rgba(255,255,255,.16);
   --hdr-fill: rgba(255,255,255,.06);
 }
+
+/* ── Le mode sombre (passe 213, Arthur et Émilie) : « ardoise de nuit », l'option A de l'arbitrage n° 2 ──────────────
+   Les mêmes variables, d'autres valeurs : un fond bleu-gris profond, des feuilles un ton plus clair, un texte blanc
+   cassé. La palette d'Émilie reste reconnaissable, éclaircie juste assez pour rester lisible. Écran seulement :
+   l'impression et l'export Word restent clairs. Le thème se choisit avant l'affichage (script en tête de page). */
+@media screen{
+  html[data-theme="sombre"]{
+    color-scheme:dark;
+    --ink: #E9E4D8;
+    --ink-soft: #BDB6A8;
+    --ink-faint: #A39C8E;
+    --paper: #151B24;
+    --paper-deep: #10151C;
+    --card: #1E2631;
+    --sheet: #1E2631;
+    --surface: #252E3B;
+    --line: #3A4556;
+    --line-soft: #2B3443;
+    --line-feuille: #2E3846;
+
+    --slate: #7896C6;
+    --slate-deep: #86A2CB;
+    --slate-pale: #27344A;
+
+    --sauge: #7FA393;
+    --sauge-deep: #93BDAA;
+    --sauge-pale: #213129;
+
+    --ocre: #C9A84C;
+    --ocre-deep: #D8BC6C;
+    --ocre-pale: #382F19;
+
+    --rose: #E3A891;
+    --rose-deep: #EC9A80;
+    --rose-pale: #3A2621;
+
+    --prune: #B4859A;
+    --prune-deep: #CDA0B2;
+    --prune-pale: #33242C;
+
+    --vase-monte: #E8693F;
+    --vase-monte-deep: #F08A66;
+    --vase-monte-pale: #3D221A;
+    --vase-descend: #7FBFB2;
+    --vase-descend-deep: #8ACBBE;
+    --vase-descend-pale: #1C302C;
+
+    --vol-contexte:       #8EA3C2;
+    --vol-contexte-deep:  #A4B8D6;
+    --vol-contexte-pale:  #232D3C;
+    --vol-contexte-texte: #B3C4DD;
+    --vol-antecedent-texte: #DCC274;
+    --vol-comportement-texte: #A3CBB9;
+
+    --sel: #8A6E14;
+    --sel-deep: #E2B533;
+    --sel-pale: #3A3216;
+
+    --vol-contexte-hl: rgba(142,163,194,.30);
+    --vol-antecedent-hl: rgba(201,168,76,.30);
+    --vol-comportement-hl: rgba(127,163,147,.32);
+    --vol-intervention-hl: rgba(180,133,154,.30);
+    --vol-consequence-hl: rgba(227,168,145,.30);
+
+    --ombre-feuille: 0 1px 0 rgba(0,0,0,.25), 0 10px 30px rgba(0,0,0,.30);
+    --ombre-legere: 0 1px 0 rgba(0,0,0,.25), 0 4px 14px rgba(0,0,0,.25);
+    --ombre-flottante: 0 14px 40px rgba(0,0,0,.55);
+    --shadow-soft: 0 2px 14px rgba(0,0,0,.30);
+    --shadow-card: 0 6px 24px rgba(0,0,0,.35);
+
+    --hdr-bg: #1B2433;
+    --hdr-outline: rgba(255,255,255,.14);
+    --hdr-fill: rgba(255,255,255,.06);
+  }
+}
+/* Le mode sombre, ce que les variables ne suffisent pas à dire (passe 213) */
+@media screen{
+  /* Le bandeau : sombre dans tous les outils ; l'outil se reconnaît à son liseré. */
+  html[data-theme="sombre"] body, html[data-theme="sombre"] body.tool-baf, html[data-theme="sombre"] body.tool-idc{
+    --hdr-bg: #1B2433; --hdr-text: #E9E4D8; --hdr-text-soft: rgba(233,228,216,.74); --hdr-text-faint: rgba(233,228,216,.55);
+    --hdr-outline: rgba(255,255,255,.14); --hdr-fill: rgba(255,255,255,.06); --hdr-accent-text: #141A22;
+  }
+  html[data-theme="sombre"] body{--hdr-accent: var(--slate);}
+  html[data-theme="sombre"] body.tool-baf{--hdr-accent: var(--sauge);}
+  html[data-theme="sombre"] body.tool-idc{--hdr-accent: var(--rose);}
+  html[data-theme="sombre"] body.tool-baf header.top{box-shadow:inset 0 -3px 0 var(--sauge);}
+  html[data-theme="sombre"] body.tool-idc header.top{box-shadow:inset 0 -3px 0 var(--rose);}
+  /* Sur un fond de couleur (pastilles, étiquettes, blocs), le texte blanc devient foncé : les couleurs, éclaircies, ne le portent plus. */
+  html[data-theme="sombre"] :is(.m3-item-cd,.seq-active,.m3-item-tag-post,.abc-pattern-num,.compteur,.idc-nav-btn.on,.mod-btn .num,.mod-btn .titre,.mod-btn .desc,.mod-btn.m2,.mod-btn.m2 .num,.mod-btn.m2 .temps,.po-sauge .po-titre,.po-sauge .po-etat,.m3-item-cat-badge,.score-btn.on,.score-btn.s1,.score-btn.s2,.score-btn.s3){color:#141A22 !important;}
+  html[data-theme="sombre"] :is(.btn-primary,.bt.plein,.po-ardoise,.po-ardoise .po-titre,.po-ardoise .po-etat){color:#141A22 !important;}
+  html[data-theme="sombre"] .po-coche{background:var(--sheet);color:var(--sauge-deep) !important;}
+  html[data-theme="sombre"] .synth-chaleur td{color:var(--ink);}
+  html[data-theme="sombre"] .ih-sc{color:var(--ink) !important;}
+  html[data-theme="sombre"] .po-suite{background:var(--sheet);color:var(--ink);}
+  html[data-theme="sombre"] .m3-evt-etat{background:var(--sheet);}
+  html[data-theme="sombre"] .jf-bloc{color:var(--ink);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);}
+  html[data-theme="sombre"] .btn-del{color:var(--ink-faint);}
+  html[data-theme="sombre"] .fleche-bas{color:#7FB0E6 !important;}
+  /* Le texte surligné reste lisible : il prend la couleur du texte, pas le noir par défaut. */
+  html[data-theme="sombre"] mark{color:var(--ink);}
+  /* Les images et les captures gardent leur fond. */
+  html[data-theme="sombre"] img{background:transparent;}
+}
+/* Le bouton ☾ / ☀, dans le bandeau */
+.theme-bouton{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;margin-right:6px;padding:0;border:1px solid var(--hdr-outline);border-radius:50%;background:var(--hdr-fill);color:var(--hdr-text);font:16px/1 var(--police-interface);cursor:pointer;}
+.theme-bouton:hover{background:rgba(255,255,255,.14);}
 body.tool-baf{
   --hdr-bg: var(--sauge);
   --hdr-text: var(--slate);
@@ -3442,7 +3557,7 @@ body.seq-selection .seq-case .seq-vide{display:none;}
 .synth-chaleur{width:100%;border-collapse:separate;border-spacing:4px;font-size:12.5px;}
 .synth-chaleur th{font-size:11.5px;font-weight:600;color:var(--ink-faint);text-align:center;}
 .synth-chaleur th.m{padding-right:8px;font-size:12.5px;font-weight:500;color:var(--ink-soft);text-align:right;white-space:nowrap;}
-.synth-chaleur td{height:30px;border-radius:7px;font-weight:600;color:rgba(44,36,22,.6);text-align:center;}
+.synth-chaleur td{height:30px;border-radius:7px;font-weight:600;color:var(--ink-soft);text-align:center;}
 .synth-chaleur .tot{font-weight:500;color:var(--ink-soft);text-align:right;}
 .synth-question{margin:14px 0 0;padding:12px 14px;border-radius:12px;background:var(--surface);font:400 15px/1.55 var(--police-lecture);}
 .synth-question b{display:block;margin-bottom:2px;font:700 11px var(--police-interface);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);}
@@ -3959,6 +4074,7 @@ body:not(.mode-admin) .admin-seul{display:none !important;}
 .banc-lettre{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:var(--slate);color:#fff;font:700 17px var(--police-interface);}
 .banc-tag{padding:2px 9px;border-radius:999px;background:var(--paper-deep);font-size:11.5px;color:var(--ink-soft);}
 .banc-tag.retenue{background:var(--sauge-pale);color:var(--sauge-deep);font-weight:700;}
+.banc-legende{margin:4px 0 -4px;font-size:12px;font-weight:700;color:var(--ink-soft);}
 .banc-capture{display:block;overflow:hidden;border:1px solid var(--line);border-radius:10px;}
 .banc-capture img{display:block;width:100%;height:auto;}
 .banc-capture.banc-tel{align-self:center;width:100%;max-width:390px;}
@@ -4033,6 +4149,7 @@ body:not(.mode-admin) .admin-seul{display:none !important;}
       </span>
     </nav>
     <div class="top-actions">
+      <button type="button" class="theme-bouton no-print" id="theme-bouton" onclick="basculerTheme()" aria-label="Passer en mode sombre" title="Passer en mode sombre">☾</button>
       <button type="button" class="admin-badge admin-seul" onclick="ouvrirPanneauAdmin()" title="Le panneau du mode administrateur">⚙ Admin</button>
       <!-- Repères et Ressources vivent à droite, juste avant la marque EMIA :
            ce sont des ressources de consultation, pas des étapes du parcours. -->
@@ -5376,7 +5493,7 @@ body:not(.mode-admin) .admin-seul{display:none !important;}
 const BAC_CLE = 'baf-admin-mise-de-cote', BAC_VIVANT = 'baf-admin-vivant';
 function clesBafDuNavigateur() {
   const l = [];
-  try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (/^(baf|icaf)/i.test(k) && [BAC_CLE, BAC_VIVANT, 'baf-banc'].indexOf(k) < 0) l.push(k); } } catch (e) { /* rien */ }
+  try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (/^(baf|icaf)/i.test(k) && [BAC_CLE, BAC_VIVANT, 'baf-banc', 'baf-theme'].indexOf(k) < 0) l.push(k); } } catch (e) { /* rien */ }
   return l;
 }
 function restaurerMiseDeCote() {
@@ -7318,6 +7435,29 @@ function empreinteAdmin(t) {
   }
   return h1.toString(16).padStart(8, '0') + h2.toString(16).padStart(8, '0');
 }
+function themeSombre() { return document.documentElement.getAttribute('data-theme') === 'sombre'; }
+function majBoutonTheme() {
+  const b = document.getElementById('theme-bouton');
+  if (!b) return;
+  const sombre = themeSombre(), t = sombre ? 'Passer en mode clair' : 'Passer en mode sombre';
+  b.textContent = sombre ? '☀' : '☾'; b.title = t; b.setAttribute('aria-label', t);
+}
+function appliquerTheme(sombre) {
+  document.documentElement.setAttribute('data-theme', sombre ? 'sombre' : 'clair');
+  majBoutonTheme();
+  // Les dessins faits par le code relisent leurs couleurs.
+  try { if (typeof refreshSynthese === 'function') refreshSynthese(); } catch (e) { /* rien */ }
+}
+function basculerTheme() {
+  const sombre = !themeSombre();
+  try { localStorage.setItem('baf-theme', sombre ? 'sombre' : 'clair'); } catch (e) { /* rien */ }
+  appliquerTheme(sombre);
+}
+if (window.matchMedia) {
+  const mq = matchMedia('(prefers-color-scheme: dark)');
+  const suivre = e => { let choix = null; try { choix = localStorage.getItem('baf-theme'); } catch (x) { /* rien */ } if (!choix) appliquerTheme(e.matches); };
+  if (mq.addEventListener) mq.addEventListener('change', suivre);
+}
 function adminActif() { try { return sessionStorage.getItem('baf-admin') === '1'; } catch (e) { return false; } }
 function appliquerModeAdmin() { document.body.classList.toggle('mode-admin', adminActif()); }
 let clicsMarque = [];
@@ -7466,7 +7606,7 @@ function arbitrageHtml(a, pref, reg) {
         (a.enLigne === o.lettre && a.statut !== 'tranché' ? '<span class="banc-tag">en ligne aujourd\'hui</span>' : '') +
         (a.statut === 'tranché' && a.retenue === o.lettre ? '<span class="banc-tag retenue">retenue</span>' : '') + '</div>' +
       // Les captures d'abord, toutes à la même hauteur d'une option à l'autre ; le texte ensuite.
-      (o.captures || []).filter(c => c.format === format).map(c => '<a class="banc-capture banc-' + esc(c.format) + '" href="banc/' + esc(c.src) + '" target="_blank" rel="noopener" title="Ouvrir en grand"><img src="banc/' + esc(c.src) + '" alt="Option ' + esc(o.lettre) + '" loading="lazy"></a>').join('') +
+      (o.captures || []).filter(c => c.format === format).map(c => (c.legende ? '<div class="banc-legende">' + esc(c.legende) + '</div>' : '') + '<a class="banc-capture banc-' + esc(c.format) + '" href="banc/' + esc(c.src) + '" target="_blank" rel="noopener" title="Ouvrir en grand"><img src="banc/' + esc(c.src) + '" alt="Option ' + esc(o.lettre) + '" loading="lazy"></a>').join('') +
       (o.maquette ? '<iframe class="banc-maquette" src="banc/' + esc(o.maquette) + '" title="Maquette ' + esc(o.lettre) + '"></iframe>' : '') +
       (o.texte ? '<p class="banc-texte">' + esc(o.texte) + '</p>' : '') +
       (o.direct && a.statut !== 'tranché' ? '<p class="discret">Cette option s\'essaie dans la BAF elle-même, dans ce navigateur seulement : allumez-la, puis parcourez l\'outil.</p>' +
@@ -11080,7 +11220,7 @@ function chaleurMomentsJours(evts) {
   const ordre = Object.keys(lignes).sort((a, b) => mediane(heures[a]) - mediane(heures[b]) || a.localeCompare(b, 'fr'));
   const cols = J.map((_, j) => j).filter(j => ordre.some(m => lignes[m][j] > 0));
   if (!cols.length) return '';
-  const fond = n => n ? 'rgba(94,138,120,' + (0.14 + 0.76 * n / max).toFixed(2) + ')' : '#F3EEE5';
+  const fond = n => n ? 'rgba(94,138,120,' + (0.14 + 0.76 * n / max).toFixed(2) + ')' : 'var(--surface)';
   return '<table class="synth-chaleur"><thead><tr><th></th>' + cols.map(j => '<th>' + J[j] + '</th>').join('') + '<th class="tot">total</th></tr></thead><tbody>' +
     ordre.map(m => '<tr><th class="m">' + esc(m) + '</th>' + cols.map(j => {
       const n = lignes[m][j];
@@ -12273,7 +12413,20 @@ function resoudreVariablesCSS(html) {
   return out;
 }
 
-async function lancerExportWord(){
+/* Ce qui sort de la BAF reste clair (passe 213) : le document Word et les images relisent les couleurs de l'écran ;
+   le temps de les composer, la page repasse en clair. */
+function enClair(fn) {
+  const html = document.documentElement, avant = html.getAttribute('data-theme');
+  if (avant !== 'sombre') return fn();
+  html.setAttribute('data-theme', 'clair');
+  let r;
+  try { r = fn(); } catch (e) { html.setAttribute('data-theme', avant); throw e; }
+  if (r && typeof r.then === 'function') return r.finally(() => html.setAttribute('data-theme', avant));
+  html.setAttribute('data-theme', avant);
+  return r;
+}
+function lancerExportWord() { return enClair(lancerExportWordEnClair); }
+async function lancerExportWordEnClair(){
   const choisies = SECTIONS_EXPORT.filter(s => {
     const cb = document.getElementById('exp-' + s.cle);
     return cb && cb.checked;
@@ -14069,6 +14222,26 @@ const _CONTROLES = [
       const cp = state.m3.categories.cp; Object.keys(cp).forEach(k => delete cp[k]); Object.assign(cp, JSON.parse(sauveCp));
       const cx = state.m3.categories.contexte; Object.keys(cx).forEach(k => delete cx[k]); Object.assign(cx, JSON.parse(sauveCx));
       try { renderM3(); } catch (er) { /* vue masquée */ }
+    }
+  }},
+  {nom:'Mode sombre (passe 213) : le bouton bascule et se souvient ; les feuilles deviennent sombres ; ce qui sort de la BAF (Word, images) se compose en clair', test: () => {
+    const html = document.documentElement, avant = html.getAttribute('data-theme');
+    let choix0 = null; try { choix0 = localStorage.getItem('baf-theme'); } catch (e) { /* rien */ }
+    try {
+      appliquerTheme(false);
+      const clair = getComputedStyle(html).getPropertyValue('--sheet').trim().toUpperCase();
+      basculerTheme();
+      const sombre = themeSombre(), retenu = localStorage.getItem('baf-theme') === 'sombre';
+      const feuille = getComputedStyle(html).getPropertyValue('--sheet').trim().toUpperCase();
+      const pendant = enClair(() => html.getAttribute('data-theme') + ' ' + getComputedStyle(html).getPropertyValue('--sheet').trim().toUpperCase());
+      const apres = html.getAttribute('data-theme');
+      const bouton = document.getElementById('theme-bouton').textContent;
+      const horsBac = clesBafDuNavigateur().indexOf('baf-theme') < 0;
+      return _bancEgal('feuille en clair | bascule | retenu | feuille en sombre | export en clair | revient en sombre | bouton | le thème n\'est pas mis de côté',
+        '#FFFDF8 | true | true | #1E2631 | clair #FFFDF8 | sombre | ☀ | true', [clair, sombre, retenu, feuille, pendant, apres, bouton, horsBac].join(' | '));
+    } finally {
+      try { if (choix0 === null) localStorage.removeItem('baf-theme'); else localStorage.setItem('baf-theme', choix0); } catch (e) { /* rien */ }
+      appliquerTheme(avant === 'sombre');
     }
   }},
   {nom:'Pas de perte par la BAF (passe 212) : aucun verbatim coupé là où l\'on décide ; le vase garde la phrase entière ; le filtre « reste à catégoriser » ; l\'alerte si rien ne s\'enregistre', test: () => {
@@ -16097,7 +16270,8 @@ const _CONTROLES = [
     const lum = c => { const [r, gg, b] = c.map(x => { x /= 255; return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); }); return 0.2126 * r + 0.7152 * gg + 0.0722 * b; };
     const papier = lum(rgb('--paper'));
     const faibles = ['--ink', '--ink-soft', '--ink-faint', '--slate', '--sauge-deep', '--ocre-deep', '--vase-descend-deep', '--vol-contexte-deep', '--prune-deep']
-      .filter(v => (papier + 0.05) / (lum(rgb(v)) + 0.05) < 4.5);
+      // Dans les deux sens : texte foncé sur papier clair, ou clair sur papier sombre (passe 213).
+      .filter(v => { const t = lum(rgb(v)); return (Math.max(papier, t) + 0.05) / (Math.min(papier, t) + 0.05) < 4.5; });
     return _bancEgal('Entrée et Espace | couleurs sous 4,5 sur le papier', '2 | aucune', clics + ' | ' + (faibles.join(', ') || 'aucune'));
   }},
 
@@ -21250,7 +21424,7 @@ function nomImageBloc(bloc, ext) {
 function exporterBlocImage(btn, format) {
   const bloc = btn.closest('.synth-block');
   if (!bloc) return;
-  const rendu = blocVersSVG(bloc);
+  const rendu = enClair(() => blocVersSVG(bloc));
   if (format === 'svg') { telechargerFichier(rendu.texte, nomImageBloc(bloc, 'svg'), 'image/svg+xml;charset=utf-8'); return; }
   const libelle = btn.textContent;
   btn.disabled = true; btn.textContent = '…';
@@ -21272,13 +21446,13 @@ function equiperBlocsSynthese() {
 }
 
 function exporterGraphiqueSVG(btn) {
-  const g = graphiqueCompose(btn);
+  const g = enClair(() => graphiqueCompose(btn));
   if (!g) return;
   telechargerFichier(g.compose.texte, nomFichierGraphique(g.nom, 'svg'), 'image/svg+xml;charset=utf-8');
 }
 
 function exporterGraphiquePNG(btn) {
-  const g = graphiqueCompose(btn);
+  const g = enClair(() => graphiqueCompose(btn));
   if (!g) return;
   const libelle = btn.textContent;
   btn.disabled = true; btn.textContent = '…';
@@ -23970,6 +24144,22 @@ const NOTES_VERSION = [
 
   {
     date: '2026-10-11',
+    version: 'v2026.10.11-16',
+    titre: "Le mode sombre",
+    corps: `
+<p><b>Le mode sombre</b> (Arthur et Émilie) :</p>
+<ul>
+<li><b>Un bouton ☾ en haut à droite</b>, sur toutes les pages : un clic passe en sombre, ☀ revient en clair. Le choix est retenu dans ce navigateur, et ne passe pas dans les fichiers : chacun garde le sien.</li>
+<li><b>À la première visite, la BAF suit le réglage de l'ordinateur</b> : si Windows est en sombre, elle s'ouvre en sombre.</li>
+<li><b>« Ardoise de nuit »</b> : un fond bleu-gris profond, des feuilles un ton plus clair, un texte blanc cassé ; la palette d'Émilie, éclaircie juste ce qu'il faut pour rester lisible. Le bandeau devient sombre dans tous les outils, avec un liseré de leur couleur.</li>
+<li><b>Ce qui sort de la BAF reste clair</b> : le document Word, les images des graphiques et l'impression.</li>
+<li><b>Deux autres palettes</b> (brun chaud, gris neutre) sont au banc d'essai, arbitrage n° 2 : si l'une d'elles est retenue, elle remplacera celle-ci.</li>
+</ul>
+`
+  },
+
+  {
+    date: '2026-10-11',
     version: 'v2026.10.11-15',
     titre: "Que la BAF ne fasse rien perdre ; seulement ce qui reste à catégoriser",
     corps: `
@@ -26095,8 +26285,10 @@ function allerAPartieReperes(id) {
 const DC = ["#3D4F6B","#7A9A8C","#C9A84C","#8B5E6B","#5A7E6A","#A8883A"];
 
 function lightC(hex,op){
+  // Une teinte légère de la couleur, posée sur le fond : le blanc en clair, la feuille en sombre (passe 213).
+  const f=(typeof themeSombre==='function'&&themeSombre())?[30,38,49]:[255,255,255];
   let r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
-  let lr=Math.round(r+(255-r)*(1-op)),lg=Math.round(g+(255-g)*(1-op)),lb=Math.round(b+(255-b)*(1-op));
+  let lr=Math.round(r*op+f[0]*(1-op)),lg=Math.round(g*op+f[1]*(1-op)),lb=Math.round(b*op+f[2]*(1-op));
   return'rgb('+lr+','+lg+','+lb+')';}
 
 // ============================================================
@@ -27378,6 +27570,7 @@ const vueInitiale = vueDepuisAdresse(location.hash) || 'accueil';
 history.replaceState({route:vueInitiale}, '', '#'+adresseDeVue(vueInitiale));
 route(vueInitiale, true);
 majPiedVersion();
+majBoutonTheme();
 demarrerBacASable();
 
 </script>
