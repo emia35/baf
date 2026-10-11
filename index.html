@@ -3932,6 +3932,12 @@ details.avant-commencer p{margin:10px 0 0;font:400 15px/1.65 var(--police-lectur
 .ev-trou{margin:0;padding:6px 16px;border-top:1px solid var(--line-feuille);background:repeating-linear-gradient(135deg,transparent 0 7px,rgba(44,36,22,.035) 7px 14px);font-size:12px;font-style:italic;color:var(--ink-faint);cursor:pointer;}
 .ev-trou:hover{color:var(--ink-soft);}
 .ev-feuille > .ev-trou:first-child{border-top:0;}
+/* ── Le formulaire (passe 200) ── */
+.heure-mode{margin:0 0 8px;}
+.heure-saisie{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-soft);}
+.heure-saisie input[type=time]{width:auto;}
+.heure-inconnue-msg{font:italic 400 13.5px var(--police-lecture);color:var(--sauge-deep);}
+.vide-ok{display:block;margin-top:2px;font:italic 400 13px var(--police-lecture);color:var(--sauge-deep);letter-spacing:0;text-transform:none;}
 #tiroir-notes .analyse-notes-champ{min-height:240px;margin:0;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font:400 14.5px/1.6 var(--police-lecture);resize:vertical;}
 .analyse-note{margin:0 0 14px;font-size:13px;color:var(--ink-soft);}
 
@@ -4670,7 +4676,7 @@ details.avant-commencer p{margin:10px 0 0;font:400 15px/1.65 var(--police-lectur
       <div class="crumb"><button onclick="annulerFormulaireEvt()">← Retour à la liste</button></div>
       <span class="temps-tag tag-m2">Module 1 · Instant de voir</span>
       <h2 id="m2form-titre">Décrire un épisode</h2>
-      <div class="sub">Répondez une question à la fois. L'objectif : décrire les faits comme une caméra les aurait filmés — sans interpréter, sans analyser. Ça viendra après.</div>
+      <div class="sub">Répondez une question à la fois. L'objectif : décrire les faits comme une caméra les aurait filmés — sans interpréter, sans analyser. Ça viendra après. <b>Vous ne savez pas ? Laissez vide</b> : une case vide vaut mieux qu'une réponse devinée.</div>
     </div>
 
     <!-- STEPPER VISUEL -->
@@ -6174,10 +6180,10 @@ function champsBrut(evt) {
   // Le cadre : quand, qui déclare, où, avec qui.
   const d = evt.date ? new Date(evt.date + 'T12:00:00') : null;
   const date = d && !isNaN(d) ? d.toLocaleDateString('fr-FR', {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'}) : '';
-  ajoute('quand', 'Quand', [date, evt.heure ? String(evt.heure).replace(':', 'h') : '', evt.moment || ''].filter(Boolean).join(' · ') +
+  ajoute('quand', 'Quand', [date, heureTexte(evt).replace(/(\d{2}):(\d{2})/g, '$1h$2'), evt.moment || ''].filter(Boolean).join(' · ') +
     (evt.momentPrecision ? ' (' + evt.momentPrecision + ')' : ''), true);
   const role = evt.role === 'Professionnel·le' ? [evt.role, evt.rolePro === 'Autre fonction' ? evt.roleProAutre : evt.rolePro]
-    : evt.role === 'Famille / proche' ? [evt.role, evt.roleFamille] : evt.role === 'Autre' ? [evt.roleAutre || 'Autre'] : [];
+    : evt.role === 'Famille / proche' ? [evt.role, evt.roleFamille === 'Autre lien' && evt.roleFamilleAutre ? evt.roleFamilleAutre : evt.roleFamille] : evt.role === 'Autre' ? [evt.roleAutre || 'Autre'] : [];
   const roles = role.filter(Boolean);
   const roleTexte = roles.length > 1 ? roles[0] + ' (' + roles.slice(1).join(', ') + ')' : (roles[0] || '');
   const temoin = evt.temoin ? evt.temoin.charAt(0).toLowerCase() + evt.temoin.slice(1) : '';
@@ -7334,6 +7340,13 @@ function vueDepuisAdresse(adresse) {
 
 window.addEventListener('popstate', (e)=>{
   const name = (e.state && e.state.route) || vueDepuisAdresse(location.hash) || 'accueil';
+  // Dans le formulaire d'un épisode, « précédent » parcourt les étapes ; un formulaire déjà refermé ne se rouvre pas vide.
+  if (name === 'm2-form') {
+    const ouvert = (document.getElementById('view-m2-form') || {classList: {contains: () => false}}).classList.contains('show');
+    if (ouvert) { aller(typeof (e.state || {}).etape === 'number' ? e.state.etape : 0, true); return; }
+    route('m2', true);
+    return;
+  }
   route(name, true);
 });
 
@@ -8753,15 +8766,6 @@ const ETAPES_DETAIL = [
           <div class="help">Écrivez-le toujours de la même façon : sinon, l'outil croit avoir affaire à plusieurs personnes.</div>
         </div>
         <div class="field">
-          <label>Avez-vous vu la scène vous-même ?</label>
-          <div class="choice-row" id="f-temoin">
-            ${['Témoin direct','Rapporté par un tiers','Constaté après coup'].map(v =>
-              `<label><input type="radio" name="ftemoin" value="${v}" ${d.temoin===v?'checked data-coche="1"':''} onclick="basculerRadio(this)"> ${v}</label>`
-            ).join('')}
-          </div>
-          <div class="help">« Rapporté » : un collègue, un proche vous l'a raconté. « Constaté après coup » : vous n'avez pas vu la scène, mais vous en avez vu les traces (chambre, personne encore en tension...).</div>
-        </div>
-        <div class="field">
           <label>Votre rôle auprès de la personne</label>
           <div class="choice-row" id="f-role">
             ${['Professionnel·le','Famille / proche','Autre'].map(r =>
@@ -8772,7 +8776,7 @@ const ETAPES_DETAIL = [
             <label for="f-role-pro">Fonction</label>
             <select id="f-role-pro" onchange="onRoleProChange()">
               <option value="">— choisir —</option>
-              ${['Éducateur·rice spécialisé·e','AES / AMP','Moniteur·rice-éducateur·rice','Surveillant·e de nuit','Psychologue','Infirmier·ère','Enseignant·e','Orthophoniste','Psychomotricien·ne','Chef de service','Autre fonction'].map(f=>`<option value="${esc(f)}" ${d.rolePro===f?'selected':''}>${f}</option>`).join('')}
+              ${['Éducateur·rice spécialisé·e','AES / AMP','Moniteur·rice-éducateur·rice','Surveillant·e de nuit','Psychologue','Infirmier·ère','Ergothérapeute','Enseignant·e','Orthophoniste','Psychomotricien·ne','Chef de service','Autre fonction'].map(f=>`<option value="${esc(f)}" ${d.rolePro===f?'selected':''}>${f}</option>`).join('')}
             </select>
             <input type="text" id="f-role-pro-autre" placeholder="Précisez la fonction..." value="${esc(d.roleProAutre||'')}" style="margin-top:6px;display:${d.rolePro==='Autre fonction'?'':'none'};">
           </div>
@@ -8782,19 +8786,41 @@ const ETAPES_DETAIL = [
           </div>
           <div id="f-role-famille-wrap" class="field" style="display:${d.role==='Famille / proche'?'':'none'};margin-top:8px;">
             <label for="f-role-famille">Lien avec la personne</label>
-            <select id="f-role-famille">
+            <select id="f-role-famille" onchange="onRoleFamilleChange()">
               <option value="">— choisir —</option>
               ${['Père','Mère','Frère','Sœur','Oncle','Tante','Grand-père','Grand-mère','Tuteur·rice','Autre lien'].map(f=>`<option value="${esc(f)}" ${d.roleFamille===f?'selected':''}>${f}</option>`).join('')}
             </select>
+            <input type="text" id="f-role-famille-autre" placeholder="Précisez qui, dans la famille…" value="${esc(d.roleFamilleAutre||'')}" style="margin-top:6px;display:${d.roleFamille==='Autre lien'?'':'none'};">
           </div>
+        </div>
+        <div class="field">
+          <label>Avez-vous vu la scène vous-même ?</label>
+          <div class="choice-row" id="f-temoin">
+            ${['Témoin direct','Rapporté par un tiers','Constaté après coup'].map(v =>
+              `<label><input type="radio" name="ftemoin" value="${v}" ${d.temoin===v?'checked data-coche="1"':''} onclick="basculerRadio(this)"> ${v}</label>`
+            ).join('')}
+          </div>
+          <div class="help">« Rapporté » : un collègue, un proche vous l'a raconté. « Constaté après coup » : vous n'avez pas vu la scène, mais vous en avez vu les traces (chambre, personne encore en tension...).</div>
         </div>
         <div class="field">
           <label for="f-date">Date de l'épisode</label>
           <input type="date" id="f-date" value="${esc(d.date||'')}" onchange="verifierCoherenceHeureMoment()">
         </div>
         <div class="field">
-          <label for="f-heure">Heure approximative</label>
-          <input type="time" id="f-heure" value="${esc(d.heure||'')}" onchange="verifierCoherenceHeureMoment()">
+          <label>Heure de l'épisode</label>
+          ${(() => { const m = d.heureInconnue ? 'inconnue' : d.heureFin ? 'plage' : 'precise'; return `
+          <div class="segment heure-mode" id="f-heure-mode" data-mode="${m}" role="group" aria-label="Comment indiquer l'heure">
+            <button type="button" data-mode="precise" class="${m==='precise'?'on':''}" onclick="choisirModeHeure('precise')">Une heure précise</button>
+            <button type="button" data-mode="plage" class="${m==='plage'?'on':''}" onclick="choisirModeHeure('plage')">Une plage horaire</button>
+            <button type="button" data-mode="inconnue" class="${m==='inconnue'?'on':''}" onclick="choisirModeHeure('inconnue')">Je ne sais pas</button>
+          </div>
+          <div id="f-heure-precise" class="heure-saisie" style="display:${m==='precise'?'':'none'};">
+            <input type="time" id="f-heure" value="${esc(m==='precise' ? (d.heure||'') : '')}" onchange="verifierCoherenceHeureMoment()">
+          </div>
+          <div id="f-heure-plage" class="heure-saisie" style="display:${m==='plage'?'':'none'};">
+            entre <input type="time" id="f-heure-debut" value="${esc(m==='plage' ? (d.heure||'') : '')}"> et <input type="time" id="f-heure-fin" value="${esc(d.heureFin||'')}">
+          </div>
+          <div id="f-heure-inconnue" class="heure-inconnue-msg" style="display:${m==='inconnue'?'':'none'};">Pas de souci : le moment de la journée, juste en dessous, suffit.</div>`; })()}
         </div>
         <div class="field">
           <label>Moment de la journée</label>
@@ -8818,8 +8844,12 @@ const ETAPES_DETAIL = [
       roleProAutre: val('f-role-pro-autre'),
       roleAutre: val('f-role-autre'),
       roleFamille: val('f-role-famille'),
+      roleFamilleAutre: val('f-role-famille') === 'Autre lien' ? val('f-role-famille-autre') : '',
       date: val('f-date'),
-      heure: val('f-heure'),
+      // Une heure précise, ou une plage (son début dans « heure », sa fin dans « heureFin »), ou « je ne sais pas » (passe 200).
+      heure: modeHeure() === 'precise' ? val('f-heure') : modeHeure() === 'plage' ? val('f-heure-debut') : '',
+      heureFin: modeHeure() === 'plage' ? val('f-heure-fin') : '',
+      heureInconnue: modeHeure() === 'inconnue',
       moment: radioVal('fmoment'),
       momentPrecision: val('f-moment-precision'),
     })
@@ -8830,14 +8860,14 @@ const ETAPES_DETAIL = [
     render: (d) => `
       <div class="card">
         <div style="background:var(--vol-contexte-pale);padding:13px 16px;border-radius:12px;margin-bottom:20px;font:400 15px/1.55 var(--police-lecture);" title="Bleu ardoise : le contexte, ce qui pèse de loin.">
-          <b>Contexte (setting events)</b> — Ce qui précède de loin, pas juste la seconde d'avant. C'est souvent là que les clés se cachent.
+          <b>Contexte</b> — Ce qui précède de loin, pas juste la seconde d'avant. C'est souvent là que les clés se cachent.
         </div>
         <div class="field">
           <label for="f-lieu">Où se passe l'épisode ?</label>
           <input type="text" id="f-lieu" placeholder="ex : salle d'activité, couloir, réfectoire, chambre..." value="${esc(d.lieu||'')}">
         </div>
         <div class="field">
-          <label for="f-presences">Qui était présent ? Combien de pros pour combien de personnes ?</label>
+          <label for="f-presences">Qui était présent ? Combien de personnes ?</label>
           <div class="help">Le ratio d'encadrement est souvent déterminant. "1 pro, 8 résidents" n'est pas la même chose que "2 pros, 3 résidents".</div>
           <textarea id="f-presences" placeholder="ex : 1 éducatrice, 6 résidents dans la salle. Un AMP venait de partir.">${esc(d.presences||'')}</textarea>
         </div>
@@ -8992,7 +9022,7 @@ const ETAPES_DETAIL = [
         <h3 style="font-size:18px;margin-bottom:18px;">Récapitulatif de l'épisode</h3>
         <div style="display:grid;gap:14px;">
           ${recapBloc('👤 Déclarant', `${d.declarant||'—'} (${d.role||'—'})` + (d.temoin ? ' · '+d.temoin : ''))}
-          ${recapBloc('📅 Quand', `${formatDate(d.date)} ${d.heure?'à '+d.heure:''} — ${d.moment||'moment non précisé'}`)}
+          ${recapBloc('📅 Quand', `${formatDate(d.date)} ${heureTexte(d) ? (d.heureFin || d.heureInconnue ? heureTexte(d) : 'à ' + d.heure) : ''} — ${d.moment||'moment non précisé'}`)}
           ${recapBloc('📍 Où / Qui présent', [d.lieu, d.presences].filter(Boolean).join(' — ') || '—')}
           ${recapEtape(d, 'contexte', '⏮ Contexte', d.avantLoin)}
           ${recapEtape(d, 'antecedent', '⚡ Antécédent', ((d.antecedents||[]).filter(a=>a.texte && a.texte.trim())
@@ -9149,6 +9179,11 @@ function onRoleChange() {
   if (proWrap) proWrap.style.display = v === 'Professionnel·le' ? '' : 'none';
   if (autreWrap) autreWrap.style.display = v === 'Autre' ? '' : 'none';
   if (familleWrap) familleWrap.style.display = v === 'Famille / proche' ? '' : 'none';
+}
+function onRoleFamilleChange() {
+  const sel = document.getElementById('f-role-famille');
+  const autre = document.getElementById('f-role-famille-autre');
+  if (sel && autre) autre.style.display = sel.value === 'Autre lien' ? '' : 'none';
 }
 function onRoleProChange() {
   const sel = document.getElementById('f-role-pro');
@@ -9482,10 +9517,28 @@ function momentDeLHeure(heure, dateISO) {
   return '';
 }
 
+function modeHeure() { const el = document.getElementById('f-heure-mode'); return el ? el.dataset.mode : 'precise'; }
+function choisirModeHeure(m) {
+  const el = document.getElementById('f-heure-mode');
+  if (!el) return;
+  el.dataset.mode = m;
+  el.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.mode === m));
+  [['precise', 'f-heure-precise'], ['plage', 'f-heure-plage'], ['inconnue', 'f-heure-inconnue']].forEach(([k, id]) => {
+    const z = document.getElementById(id); if (z) z.style.display = k === m ? '' : 'none';
+  });
+  verifierCoherenceHeureMoment();
+}
+// L'heure d'un épisode telle qu'on la lit : « 14:05 », « 14:00–15:00 », « heure inconnue », ou rien.
+function heureTexte(e) {
+  if (!e) return '';
+  if (e.heureInconnue) return 'heure inconnue';
+  if (e.heureFin) return (e.heure || '?') + '–' + e.heureFin;
+  return e.heure || '';
+}
 function verifierCoherenceHeureMoment() {
   const box = document.getElementById('f-moment-alerte');
   if (!box) return;
-  const heure = val('f-heure');
+  const heure = modeHeure() === 'precise' ? val('f-heure') : '';
   const moment = radioVal('fmoment');
   const creneau = creneauDuMoment(moment);
   if (!heure || !moment || !creneau) { box.style.display = 'none'; return; }
@@ -9674,6 +9727,10 @@ function renderEtape(idx) {
   // Label d\'étape
   document.getElementById('form-step-label').textContent =
     ETAPES[idx].numero ? `Étape ${ETAPES[idx].numero} / 4 — ${ETAPES[idx].label}` : ETAPES[idx].label;
+  // « Vous ne savez pas ? Laissez vide. », sous le libellé de chaque étape (passe 200).
+  let vide = document.getElementById('form-step-vide');
+  if (!vide) { vide = document.createElement('div'); vide.id = 'form-step-vide'; vide.className = 'vide-ok'; document.getElementById('form-step-label').after(vide); }
+  vide.textContent = ETAPES[idx].id !== 'recap' ? 'Vous ne savez pas ? Laissez vide.' : '';
 
   // Contenu
   document.getElementById('form-etapes').innerHTML = rendreEtape(ETAPES[idx], formDraft);
@@ -9695,12 +9752,14 @@ function renderEtape(idx) {
   window.scrollTo({top:0, behavior:'instant'});
 }
 
-function aller(idx) {
+function aller(idx, depuisHistorique) {
   // Collecter l\'étape courante
   const collected = collecterEtape(ETAPES[currentEtapeIdx]);
   Object.assign(formDraft, collected);
   saveBrouillon();
   renderEtape(idx);
+  // Chaque étape est une page pour le navigateur : « précédent » ramène à l'étape d'avant (Arthur, 11/10/2026).
+  if (!depuisHistorique) history.pushState({route: 'm2-form', etape: idx}, '', '#' + adresseDeVue('m2-form'));
 }
 
 /* ── Ajouter un ou des épisodes (Arthur et Émilie, 08/10/2026) ───────────────────────────────────────────────────────────
@@ -10225,7 +10284,7 @@ function refreshM2List(){
     const desc = e.comportement
       ? e.comportement.substring(0,80) + (e.comportement.length > 80 ? '…' : '')
       : (e.texteBrut ? e.texteBrut.substring(0,80) + (e.texteBrut.length > 80 ? '…' : '') : (e.description ? e.description.substring(0,80) : 'Épisode sans description'));
-    const quand = (dateValide ? JOURS_COURTS[d.getDay()] + ' ' + d.getDate() + ' ' + d.toLocaleDateString('fr-FR', {month: 'short'}) : 'Date non précisée') + (e.heure ? ' · ' + e.heure : '');
+    const quand = (dateValide ? JOURS_COURTS[d.getDay()] + ' ' + d.getDate() + ' ' + d.toLocaleDateString('fr-FR', {month: 'short'}) : 'Date non précisée') + (heureTexte(e) ? ' · ' + heureTexte(e) : '');
     const brouillonTag = idsAvecBrouillon.has(e.id) ? '<span class="event-brouillon-tag" title="Modifications non validées">brouillon</span>' : '';
     const indirectTag = (e.temoin && e.temoin !== 'Témoin direct') ? `<span class="event-indirect-tag" title="${esc(e.temoin)}">${e.temoin === 'Rapporté par un tiers' ? 'rapporté' : 'après coup'}</span>` : '';
     const niveau = niveauDetailEvt(e);
@@ -16102,6 +16161,20 @@ const _CONTROLES = [
       if (!etaitMontree) vue.classList.remove('show');
       try { allerAnalyse(sauvePos, {sansDefilement: true}); } catch (er) { /* vue masquée */ }
     }
+  }},
+
+  {nom:'Formulaire (passe 200) : le témoin sous le rôle, ergothérapeute, autre lien précisé, l\'heure en plage ou inconnue, plus de setting events', test: () => {
+    const html = ETAPES_DETAIL[0].render({role: 'Famille / proche', roleFamille: 'Autre lien', roleFamilleAutre: 'Cousine', heure: '14:00', heureFin: '15:00'});
+    const ordre = html.indexOf('f-role') < html.indexOf('f-temoin');
+    const ergo = html.indexOf('Ergothérapeute') >= 0;
+    const lien = /id="f-role-famille-autre"[^>]*value="Cousine"/.test(html);
+    const plage = /data-mode="plage"/.test(html) && /id="f-heure-fin" value="15:00"/.test(html);
+    const textes = [heureTexte({heure: '14:00', heureFin: '15:00'}), heureTexte({heureInconnue: true}), heureTexte({heure: '09:30'})].join(', ');
+    const setting = /setting events/i.test(document.getElementById('view-m2-form').innerHTML + ETAPES_DETAIL.map(e => e.render({})).join(''));
+    const qui = champsBrut({id: 'x', role: 'Famille / proche', roleFamille: 'Autre lien', roleFamilleAutre: 'Cousine', declarant: 'Lou'}).find(c => c.champ === 'qui');
+    return _bancEgal('rôle avant témoin | ergothérapeute | autre lien | plage | heures lues | setting events | qui (déclaratif brut)',
+      'true | true | true | true | 14:00–15:00, heure inconnue, 09:30 | false | Lou · Famille / proche (Cousine)',
+      [ordre, ergo, lien, plage, textes, setting, qui && qui.texte].join(' | '));
   }},
 
   {nom:'Préambule et Recueillir (passe 199) : sommaire à la demande, le vase dans son fonctionnement / environnement, les jours sans information dans la liste', test: () => {
@@ -24771,6 +24844,22 @@ const NOTES_VERSION = [
 
   {
     date: '2026-10-11',
+    version: 'v2026.10.11-3',
+    titre: "Le formulaire : l'heure en plage ou inconnue, « précédent » revient à l'étape d'avant",
+    corps: `
+<p><b>Le formulaire d'un épisode</b> (Arthur et Émilie, d'après la présentation à l'équipe) :</p>
+<ul>
+<li>« Avez-vous vu la scène ? » vient <b>après le rôle</b>. Les pros peuvent choisir <b>ergothérapeute</b> ; en famille, « Autre lien » ouvre une case pour préciser qui.</li>
+<li><b>L'heure</b> : une heure précise, <b>une plage horaire</b> (« entre 14 h et 15 h »), ou <b>« Je ne sais pas »</b> — le moment de la journée suffit alors.</li>
+<li>« Qui était présent ? Combien de <b>personnes</b> ? » ; le terme « setting events » disparaît (formulaire et ICAF).</li>
+<li><b>« Vous ne savez pas ? Laissez vide »</b> : en tête du formulaire, et rappelé à chaque étape.</li>
+<li><b>Le bouton « précédent » du navigateur</b> ramène à l'étape d'avant, au lieu de sortir de l'épisode.</li>
+</ul>
+`
+  },
+
+  {
+    date: '2026-10-11',
     version: 'v2026.10.11-2',
     titre: "Préambule et Recueillir : le sommaire à la demande, les jours sans information dans la liste",
     corps: `
@@ -26937,7 +27026,7 @@ const DIMS=[
  subItems:[
   "Les antécédents immédiats sont identifiés et observables",
   "Les antécédents sont suffisamment spécifiques pour orienter une intervention",
-  "Les événements de contexte (setting events) sont distingués des déclencheurs",
+  "Les événements de contexte sont distingués des déclencheurs",
   "Les conséquences sont décrites concrètement",
   "Les interventions humaines sont décrites concrètement",
   "L'efficacité de l'intervention sur la diminution du CC est précisée",
