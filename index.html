@@ -3922,6 +3922,16 @@ details.avant-commencer p{margin:10px 0 0;font:400 15px/1.65 var(--police-lectur
 .po-sauge .po-suite:hover{background:var(--slate);}
 .po-coche{background:#fff;color:var(--sauge-deep);}
 .po-etape.fait .po-titre{padding-right:26px;}
+/* ── Préambule et Recueillir (passe 199) ── */
+.mod-header .sub{max-width:none;}
+.m1-page{grid-template-columns:40px minmax(0,1fr);}
+.m1-page.sommaire-ouvert{grid-template-columns:190px minmax(0,1fr);}
+.m1-page:not(.sommaire-ouvert) .m1-sommaire > :not(.m1-sommaire-bt){display:none;}
+.m1-sommaire-bt{align-self:flex-start;display:grid;place-items:center;width:34px;height:34px;margin:0 0 6px;padding:0;border:0;border-radius:10px;background:var(--sauge-pale);color:var(--sauge-deep);font-size:16px;font-weight:700;box-shadow:var(--ombre-legere);}
+.m1-sommaire-bt:hover{background:var(--sauge);color:var(--ink);}
+.ev-trou{margin:0;padding:6px 16px;border-top:1px solid var(--line-feuille);background:repeating-linear-gradient(135deg,transparent 0 7px,rgba(44,36,22,.035) 7px 14px);font-size:12px;font-style:italic;color:var(--ink-faint);cursor:pointer;}
+.ev-trou:hover{color:var(--ink-soft);}
+.ev-feuille > .ev-trou:first-child{border-top:0;}
 #tiroir-notes .analyse-notes-champ{min-height:240px;margin:0;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font:400 14.5px/1.6 var(--police-lecture);resize:vertical;}
 .analyse-note{margin:0 0 14px;font-size:13px;color:var(--ink-soft);}
 
@@ -4535,27 +4545,27 @@ details.avant-commencer p{margin:10px 0 0;font:400 15px/1.65 var(--police-lectur
         <div class="help">Avant même de regarder les épisodes : d'après ce que vous connaissez de cette personne, qu'est-ce qui fait monter la tension, qu'est-ce qui la fait redescendre ? Ce sont des hypothèses de départ — le module Interpréter les remettra plus tard face à ce que les données auront montré.</div>
         <div class="vase-connu-grille">
           <div>
-            <label for="m1-vase-interieur" class="vase-connu-titre">🔺 Ce qui le fait monter — d'elle ou de lui</label>
+            <label for="m1-vase-interieur" class="vase-connu-titre">🔺 Ce qui fait monter la tension, dans son fonctionnement</label>
             <div class="help">Son fonctionnement, son angoisse, son histoire, sa santé — ce qui remplit le vase de l'intérieur.</div>
             <textarea id="m1-vase-interieur" placeholder="ex : supporte mal l'imprévu, angoisse montante en fin de semaine, douleurs dentaires récurrentes..." oninput="saveM1()"></textarea>
           </div>
           <div>
-            <label for="m1-vase-exterieur" class="vase-connu-titre">🔺 Ce qui le fait monter — du dehors</label>
+            <label for="m1-vase-exterieur" class="vase-connu-titre">🔺 Ce qui fait monter la tension, dans son environnement</label>
             <div class="help">L'environnement, l'organisation, les personnes, les épisodes — ce qui remplit le vase de l'extérieur.</div>
             <textarea id="m1-vase-exterieur" placeholder="ex : bruit du réfectoire, changement d'éducateur, absence de sa mère, travaux dans le bâtiment..." oninput="saveM1()"></textarea>
           </div>
           <div>
-            <label for="m1-vase-descend-interieur" class="vase-connu-titre"><span class="fleche-bas" style="color:#2F6FB5;" aria-hidden="true">▼</span> Ce qui le fait redescendre — d'elle ou de lui</label>
+            <label for="m1-vase-descend-interieur" class="vase-connu-titre"><span class="fleche-bas" style="color:#2F6FB5;" aria-hidden="true">▼</span> Ce qui fait redescendre la tension, dans son fonctionnement</label>
             <div class="help">Ce qu'elle ou il fait pour se réguler, ce qui l'apaise de l'intérieur — même partiellement, même provisoirement.</div>
             <textarea id="m1-vase-descend-interieur" placeholder="ex : s'isoler dans sa chambre, se balancer, dormir, un rituel à soi..." oninput="saveM1()"></textarea>
           </div>
           <div>
-            <label for="m1-vase-descend-exterieur" class="vase-connu-titre"><span class="fleche-bas" style="color:#2F6FB5;" aria-hidden="true">▼</span> Ce qui le fait redescendre — du dehors</label>
+            <label for="m1-vase-descend-exterieur" class="vase-connu-titre"><span class="fleche-bas" style="color:#2F6FB5;" aria-hidden="true">▼</span> Ce qui fait redescendre la tension, dans son environnement</label>
             <div class="help">Ce que l'environnement, l'organisation ou les personnes apportent — même partiellement, même provisoirement.</div>
             <textarea id="m1-vase-descend-exterieur" placeholder="ex : musique au casque, marcher dehors, retrouver sa routine, présence d'une personne précise..." oninput="saveM1()"></textarea>
           </div>
           <div class="vase-connu-ancien" id="m1-vase-descend-ancien" hidden>
-            <label for="m1-vase-descend" class="vase-connu-titre"><span class="fleche-bas" style="color:#2F6FB5;" aria-hidden="true">▼</span> Ce qui le fait redescendre — écrit avant qu'on distingue l'intérieur du dehors</label>
+            <label for="m1-vase-descend" class="vase-connu-titre"><span class="fleche-bas" style="color:#2F6FB5;" aria-hidden="true">▼</span> Ce qui fait redescendre la tension — écrit avant qu'on distingue l'intérieur du dehors</label>
             <div class="help">Gardé tel quel. Vous pouvez le répartir dans les deux cases ci-dessus, puis vider celle-ci.</div>
             <textarea id="m1-vase-descend" oninput="saveM1()"></textarea>
           </div>
@@ -4619,7 +4629,7 @@ details.avant-commencer p{margin:10px 0 0;font:400 15px/1.65 var(--police-lectur
     <div id="m2-rapide-content">
     <div id="m2-bandeau-provisoire"></div>
     <div class="card" id="m2-intro-card">
-      <p>On vous guide pas à pas, une question à la fois — un peu comme si l'équipe était face à vous.</p>
+      <p>On vous guide pas à pas, une question à la fois.</p>
       <div class="m2-intro-actions">
         <button class="btn btn-primary" onclick="ouvrirAjoutEpisodes()">+ Ajouter un ou des épisodes</button>
         <button class="btn btn-secondary analyste-seul" onclick="ouvrirFenetre('kit-overlay')">✉ Transmettre un fichier déclarant</button>
@@ -4827,7 +4837,7 @@ details.avant-commencer p{margin:10px 0 0;font:400 15px/1.65 var(--police-lectur
       <div id="vase-exemples"></div>
       <div class="vase-section">
         <div class="vase-card monte">
-          <h4>🔺 Ce qui le fait monter — d'elle ou de lui</h4>
+          <h4>🔺 Ce qui fait monter la tension, dans son fonctionnement</h4>
           <div class="help field">Son fonctionnement, son angoisse, son histoire, sa santé — ce qui remplit le vase de l'intérieur.</div>
           <div class="vase-tags" id="vase-interieur-tags"></div>
           <div class="vase-input-row monte">
@@ -4836,7 +4846,7 @@ details.avant-commencer p{margin:10px 0 0;font:400 15px/1.65 var(--police-lectur
           </div>
         </div>
         <div class="vase-card monte">
-          <h4>🔺 Ce qui le fait monter — du dehors</h4>
+          <h4>🔺 Ce qui fait monter la tension, dans son environnement</h4>
           <div class="help field">L'environnement, l'organisation, les personnes, les épisodes — ce qui remplit le vase de l'extérieur.</div>
           <div class="vase-tags" id="vase-exterieur-tags"></div>
           <div class="vase-input-row monte">
@@ -4845,7 +4855,7 @@ details.avant-commencer p{margin:10px 0 0;font:400 15px/1.65 var(--police-lectur
           </div>
         </div>
         <div class="vase-card descend">
-          <h4>🔻 Ce qui le fait redescendre — d'elle ou de lui</h4>
+          <h4>🔻 Ce qui fait redescendre la tension, dans son fonctionnement</h4>
           <div class="help field">Ce qu'elle ou il fait pour se réguler, ce qui l'apaise de l'intérieur — même partiellement, même provisoirement.</div>
           <div class="vase-tags" id="vase-descend-interieur-tags"></div>
           <div class="vase-input-row descend">
@@ -4854,7 +4864,7 @@ details.avant-commencer p{margin:10px 0 0;font:400 15px/1.65 var(--police-lectur
           </div>
         </div>
         <div class="vase-card descend">
-          <h4>🔻 Ce qui le fait redescendre — du dehors</h4>
+          <h4>🔻 Ce qui fait redescendre la tension, dans son environnement</h4>
           <div class="help field">Ce que l'environnement, l'organisation ou les personnes apportent — même partiellement, même provisoirement.</div>
           <div class="vase-tags" id="vase-descend-exterieur-tags"></div>
           <div class="vase-input-row descend">
@@ -5200,7 +5210,7 @@ details.avant-commencer p{margin:10px 0 0;font:400 15px/1.65 var(--police-lectur
 
 <div id="trous-overlay" class="sim-modal-overlay" style="display:none;" onclick="fermerFenetre('trous-overlay', event)">
   <div class="sim-modal fenetre-simple trous-modal" role="dialog" aria-modal="true" aria-labelledby="trous-titre">
-    <h3 id="trous-titre">Jours non renseignés</h3>
+    <h3 id="trous-titre">Jours sans information indiquée</h3>
     <div id="trous-corps"></div>
     <button class="sim-modal-close" onclick="fermerFenetre('trous-overlay')">Fermer</button>
   </div>
@@ -7388,10 +7398,21 @@ let partieM1Courante = 'm1-p-personne', observateurM1 = null;
 function partieM1Remplie(el) {
   return [...el.querySelectorAll('input, textarea, select')].some(x => x.type === 'checkbox' || x.type === 'radio' ? x.checked : String(x.value || '').trim() !== '');
 }
+/* Le sommaire du préambule ne s'affiche qu'au besoin (Arthur, 11/10/2026) : un petit bouton ☰, à gauche, le déplie. Le choix est
+   gardé dans ce navigateur. */
+function sommaireM1Ouvert() { try { return localStorage.getItem('baf-m1-sommaire') === 'ouvert'; } catch (e) { return false; } }
+function basculerSommaireM1() {
+  try { localStorage.setItem('baf-m1-sommaire', sommaireM1Ouvert() ? 'ferme' : 'ouvert'); } catch (e) { /* rien */ }
+  renderSommaireM1();
+}
 function renderSommaireM1() {
   const nav = document.getElementById('m1-sommaire');
   if (!nav) return;
-  nav.innerHTML = '<span class="m1-sommaire-titre">Le préambule</span>' + PARTIES_M1.map(([id, nom]) => {
+  const ouvert = sommaireM1Ouvert();
+  const page = document.getElementById('m1-rapide-content');
+  if (page) page.classList.toggle('sommaire-ouvert', ouvert);
+  nav.innerHTML = '<button type="button" class="m1-sommaire-bt" aria-expanded="' + ouvert + '" title="' + (ouvert ? 'Ranger le sommaire' : 'Afficher le sommaire du préambule') + '" onclick="basculerSommaireM1()">' + (ouvert ? '‹' : '☰') + '</button>' +
+    '<span class="m1-sommaire-titre">Le préambule</span>' + PARTIES_M1.map(([id, nom]) => {
     const el = document.getElementById(id);
     if (!el) return '';
     const plein = partieM1Remplie(el);
@@ -10162,10 +10183,32 @@ function refreshM2List(){
   const JOURS_COURTS = ['dim.', 'lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.'];
   const groupes = [];
   let g = null, semaineCourante = null;
+  /* Les jours d'accueil sans aucune information (ni épisode, ni journée déclarée) s'intercalent, discrets, dans le déroulé, pour
+     qu'on voie d'un coup d'œil où ils se trouvent (Arthur, 11/10/2026). Seulement quand rien n'est filtré. Un clic ouvre la
+     fenêtre où l'on répond pour ces jours-là. */
+  const sansFiltre = !filtreSourceChrono && filtresM2.etat === 'tous' && !filtresM2.declarant && !filtresM2.moment && !filtresM2.texte;
+  const trous = sansFiltre ? trousCouverture() : [];
+  let iTrou = 0;
+  const poserTrous = jusqua => {
+    while (iTrou < trous.length && (jusqua === null || trous[iTrou].debut < jusqua)) {
+      const t = trous[iTrou++], cleT = t.debut.slice(0, 7);
+      if (!g || g.cle !== cleT) {
+        const lib = new Date(t.debut + 'T12:00:00').toLocaleDateString('fr-FR', {month: 'long', year: 'numeric'});
+        g = {cle: cleT, libelle: lib.charAt(0).toUpperCase() + lib.slice(1), n: 0, html: ''};
+        groupes.push(g);
+        semaineCourante = null;
+      }
+      const semT = libelleSemaine(new Date(t.debut + 'T12:00:00'));
+      if (semT && semT !== semaineCourante) { semaineCourante = semT; g.html += '<div class="ev-groupe-semaine">' + esc(semT) + '</div>'; }
+      g.html += '<div class="ev-trou" role="button" tabindex="0" onclick="ouvrirFenetre(\'trous-overlay\')" title="Personne n\'a rien indiqué ces jours-là : ni épisode, ni journée déclarée. Cliquer pour y répondre.">' +
+        esc(plageCourte(t.debut, t.fin)) + ' · ' + t.jours + ' jour' + (t.jours > 1 ? 's' : '') + ' sans information indiquée</div>';
+    }
+  };
   evts.forEach((e, i) => {
     if (!garderEvtM2(e)) return;
     const d = e.date ? new Date(e.date + 'T12:00:00') : null;
     const dateValide = d && !isNaN(d);
+    if (dateValide) poserTrous(e.date);
     const cle = dateValide ? e.date.slice(0, 7) : 'sans-date';
     if (!g || g.cle !== cle) {
       const lib = dateValide ? d.toLocaleDateString('fr-FR', {month: 'long', year: 'numeric'}) : 'Date non précisée';
@@ -10207,12 +10250,13 @@ function refreshM2List(){
       '<button type="button" class="ev-suppr no-print" onclick="supprimerEvt(' + i + ',event)" title="Supprimer cet épisode" aria-label="Supprimer cet épisode">🗑</button>' +
     '</div>';
   });
+  poserTrous(null);
   const dejaVu = new Set();
   list.innerHTML = groupes.length
     ? groupes.map(x => {
         const id = dejaVu.has(x.cle) ? '' : ' id="m2-mois-' + x.cle + '"';
         dejaVu.add(x.cle);
-        return '<div class="ev-groupe-mois"' + id + '><b>' + esc(x.libelle) + '</b><small>' + x.n + ' épisode' + (x.n > 1 ? 's' : '') + '</small></div><div class="ev-feuille">' + x.html + '</div>';
+        return '<div class="ev-groupe-mois"' + id + '><b>' + esc(x.libelle) + '</b><small>' + (x.n ? x.n + ' épisode' + (x.n > 1 ? 's' : '') : 'aucun épisode') + '</small></div><div class="ev-feuille">' + x.html + '</div>';
       }).join('')
     : '<div class="event-empty">Aucun épisode ne correspond à ces filtres. <button type="button" class="bt-lien" onclick="effacerFiltresM2()">Tout afficher</button></div>';
   renderMoisM2(groupes);
@@ -10483,12 +10527,12 @@ function blocVaseSynthese() {
         (etatEchelle ? note(etatEchelle) : '') +
       '</div>' +
     '</div>' +
-    ligne("Ce qui le fait monter — d'elle ou de lui", monte.filter(t => t.source === 'interieur'), 'monte') +
-    ligne('Ce qui le fait monter — du dehors', monte.filter(t => t.source === 'exterieur'), 'monte') +
-    ligne('Ce qui le fait monter — reste à situer', monte.filter(t => !t.source), 'monte') +
-    ligne("Ce qui le fait redescendre — d'elle ou de lui", descend.filter(t => t.source === 'interieur'), 'descend') +
-    ligne('Ce qui le fait redescendre — du dehors', descend.filter(t => t.source === 'exterieur'), 'descend') +
-    ligne('Ce qui le fait redescendre — reste à situer', descend.filter(t => !t.source), 'descend') +
+    ligne("Ce qui fait monter la tension, dans son fonctionnement", monte.filter(t => t.source === 'interieur'), 'monte') +
+    ligne('Ce qui fait monter la tension, dans son environnement', monte.filter(t => t.source === 'exterieur'), 'monte') +
+    ligne('Ce qui fait monter la tension — reste à situer', monte.filter(t => !t.source), 'monte') +
+    ligne("Ce qui fait redescendre la tension, dans son fonctionnement", descend.filter(t => t.source === 'interieur'), 'descend') +
+    ligne('Ce qui fait redescendre la tension, dans son environnement', descend.filter(t => t.source === 'exterieur'), 'descend') +
+    ligne('Ce qui fait redescendre la tension — reste à situer', descend.filter(t => !t.source), 'descend') +
     (vase.texte && vase.texte.trim()
       ? '<div style="font-size:13px;line-height:1.6;margin-top:8px;color:var(--ink);"><b>Observations :</b> ' + esc(vase.texte.trim()) + '</div>'
       : '') +
@@ -15929,7 +15973,7 @@ const _CONTROLES = [
       const frise = document.querySelectorAll('#m1-journee-frise .jf-bloc').length === state.m1.journeeCreneaux.length;
       const parties = PARTIES_M1.every(([id]) => document.getElementById(id)) && document.querySelectorAll('#view-m1 .m1-partie').length === 7;
       renderSommaireM1();
-      const sommaire = document.querySelectorAll('#m1-sommaire button').length === 7;
+      const sommaire = document.querySelectorAll('#m1-sommaire button[data-cible]').length === 7;
       return _bancEgal('au quart d\'heure | triés en minutes, le trou comblé | heure absente affichée | pas d\'alerte : le premier créneau est à 9 h | frise | sept parties | sommaire',
         'true | A 09h00-09h30, ~ 09h30-13h45, B 13h45-16h00 | true | true | true | true | true', [quart, ordre, absente, pasDAlerte, frise, parties, sommaire].join(' | '));
     } finally { state.m1 = JSON.parse(avant); renderCreneauList(); }
@@ -16057,6 +16101,30 @@ const _CONTROLES = [
       analyseEtat().episode = sauveEp; analyseEtat().pos = sauvePos; oublierTravailSeq();
       if (!etaitMontree) vue.classList.remove('show');
       try { allerAnalyse(sauvePos, {sansDefilement: true}); } catch (er) { /* vue masquée */ }
+    }
+  }},
+
+  {nom:'Préambule et Recueillir (passe 199) : sommaire à la demande, le vase dans son fonctionnement / environnement, les jours sans information dans la liste', test: () => {
+    const vue = (document.querySelector('section.view.show') || {}).id;
+    let avantPref = null; try { avantPref = localStorage.getItem('baf-m1-sommaire'); localStorage.removeItem('baf-m1-sommaire'); } catch (e) { /* rien */ }
+    try {
+      route('m1'); renderSommaireM1();
+      const page = document.getElementById('m1-rapide-content');
+      const ferme = !page.classList.contains('sommaire-ouvert');
+      basculerSommaireM1();
+      const ouvert = page.classList.contains('sommaire-ouvert');
+      basculerSommaireM1();
+      const vase = /Ce qui fait monter la tension, dans son fonctionnement/.test(document.getElementById('view-m1').textContent);
+      route('m2'); refreshM2List();
+      const n = statsCouverture().joursSansInfo;
+      const lignes = document.querySelectorAll('#m2-event-list .ev-trou').length;
+      const attendu = trousCouverture().length;
+      const mot = !n || /sans information indiquée/.test(document.getElementById('view-m2').textContent);
+      return _bancEgal('fermé d\'abord | s\'ouvre | vase | une ligne par période sans information | le mot', 'true | true | true | true | true',
+        [ferme, ouvert, vase, lignes === attendu, mot].join(' | '));
+    } finally {
+      try { if (avantPref === null) localStorage.removeItem('baf-m1-sommaire'); else localStorage.setItem('baf-m1-sommaire', avantPref); } catch (e) { /* rien */ }
+      if (vue) route(vue.replace(/^view-/, ''));
     }
   }},
 
@@ -20239,7 +20307,7 @@ function renderVaseExemples() {
       gr.slice(0, 8).map((x, i) => '<div class="vase-ex"><span class="vase-ex-texte">« ' + esc(x.texte) + ' »</span>' +
         '<span class="vase-ex-eps">' + (x.eps.length > 1 ? x.eps.length + ' épisodes' : 'épisode ' + x.eps[0]) + '</span>' +
         (pris.has(nmTexte(texteExemple(x))) ? '<span class="vase-ex-pris">✓ au vase</span>'
-          : '<button type="button" class="vase-ex-ajouter no-print" onclick="retenirExempleVase(\'' + liste + '\',' + i + ')" title="L\'ajouter à « ' + (liste === 'monte' ? 'ce qui le fait monter, du dehors' : 'ce qui le fait redescendre, du dehors') + ' »">＋ au vase</button>') + '</div>').join('') +
+          : '<button type="button" class="vase-ex-ajouter no-print" onclick="retenirExempleVase(\'' + liste + '\',' + i + ')" title="L\'ajouter à « ' + (liste === 'monte' ? 'ce qui fait monter la tension, dans son environnement' : 'ce qui fait redescendre la tension, dans son environnement') + ' »">＋ au vase</button>') + '</div>').join('') +
       (gr.length > 8 ? '<div class="vase-ex-suite">et ' + (gr.length - 8) + ' autre' + (gr.length - 8 > 1 ? 's' : '') + '.</div>' : '') + '</div>';
   };
   el.innerHTML = '<details class="vase-exemples"' + (vaseExemplesOuvert ? ' open' : '') + ' ontoggle="vaseExemplesOuvert = this.open">' +
@@ -20267,11 +20335,11 @@ function renderVaseApriori() {
   if (!el) return;
   const vc = state.m1.vaseConnu || {};
   const lignes = [
-    vc.interieur ? '<div><b>Ce qui le fait monter, venant d\'elle ou de lui :</b> ' + esc(vc.interieur) + '</div>' : '',
-    vc.exterieur ? '<div><b>Ce qui le fait monter, venant du dehors :</b> ' + esc(vc.exterieur) + '</div>' : '',
-    vc.descendInterieur ? '<div><b>Ce qui le fait redescendre, venant d\'elle ou de lui :</b> ' + esc(vc.descendInterieur) + '</div>' : '',
-    vc.descendExterieur ? '<div><b>Ce qui le fait redescendre, venant du dehors :</b> ' + esc(vc.descendExterieur) + '</div>' : '',
-    vc.descend   ? '<div><b>Ce qui le fait redescendre :</b> ' + esc(vc.descend) + '</div>' : ''
+    vc.interieur ? '<div><b>Ce qui fait monter la tension, dans son fonctionnement :</b> ' + esc(vc.interieur) + '</div>' : '',
+    vc.exterieur ? '<div><b>Ce qui fait monter la tension, dans son environnement :</b> ' + esc(vc.exterieur) + '</div>' : '',
+    vc.descendInterieur ? '<div><b>Ce qui fait redescendre la tension, dans son fonctionnement :</b> ' + esc(vc.descendInterieur) + '</div>' : '',
+    vc.descendExterieur ? '<div><b>Ce qui fait redescendre la tension, dans son environnement :</b> ' + esc(vc.descendExterieur) + '</div>' : '',
+    vc.descend   ? '<div><b>Ce qui fait redescendre la tension :</b> ' + esc(vc.descend) + '</div>' : ''
   ].filter(Boolean);
   if (!lignes.length) { el.innerHTML = ''; return; }
   el.innerHTML = '<div class="vase-apriori"><h5>Ce qu\'on en disait dans le préambule, avant de regarder les données</h5>' +
@@ -20305,12 +20373,12 @@ function renderVaseTags() {
     return '<div class="vase-a-situer-groupe"><b>' + libelle + '</b><div class="vase-tags" style="margin-top:6px;">' +
       aSituer.map(x =>
         '<span class="vase-tag">' + esc(x.t.texte) +
-        '<button class="situer" onclick="situerVaseTag(\'' + liste + '\',' + x.i + ',\'interieur\')">d\'elle</button>' +
-        '<button class="situer" onclick="situerVaseTag(\'' + liste + '\',' + x.i + ',\'exterieur\')">du dehors</button>' +
+        '<button class="situer" onclick="situerVaseTag(\'' + liste + '\',' + x.i + ',\'interieur\')">son fonctionnement</button>' +
+        '<button class="situer" onclick="situerVaseTag(\'' + liste + '\',' + x.i + ',\'exterieur\')">son environnement</button>' +
         '<button onclick="retirerVaseTag(\'' + liste + '\',' + x.i + ')">×</button></span>'
       ).join('') + '</div></div>';
   };
-  const blocs = groupe('monte', 'Ce qui le fait monter') + groupe('descend', 'Ce qui le fait redescendre');
+  const blocs = groupe('monte', 'Ce qui fait monter la tension') + groupe('descend', 'Ce qui fait redescendre la tension');
   el.innerHTML = blocs
     ? '<div class="vase-a-situer">Ces éléments ont été saisis avant qu\'on distingue l\'intérieur du dehors. Où les rangez-vous ?' + blocs + '</div>'
     : '';
@@ -21281,10 +21349,10 @@ function corpsPreambule() {
 
     docxIntertitre('6 · Son vase de tension, ce qu\'on en sait déjà', DOCX_C.antecedent, DOCX_C.antecedentTrait) +
     docxP('Tout le monde a un vase qui se remplit de ce qu\'il vit. Avant même de regarder les épisodes : d\'après ce que vous connaissez de cette personne, qu\'est-ce qui le remplit, qu\'est-ce qui le vide ? Ce sont des hypothèses de départ — les données les confirmeront ou non.', {taille: 18, couleur: DOCX_C.inkSoft, apres: 100}) +
-    champ('Ce qui le fait monter, venant d\'elle ou de lui — fonctionnement, angoisse, histoire, santé', 800) +
-    champ('Ce qui le fait monter, venant du dehors — environnement, organisation, personnes, épisodes', 800) +
-    champ('Ce qui le fait redescendre, venant d\'elle ou de lui — ce qui l\'apaise, ce qu\'elle ou il fait pour se réguler', 800) +
-    champ('Ce qui le fait redescendre, venant du dehors — environnement, organisation, personnes', 800) +
+    champ('Ce qui fait monter la tension, dans son fonctionnement — angoisse, histoire, santé', 800) +
+    champ('Ce qui fait monter la tension, dans son environnement — organisation, personnes, épisodes', 800) +
+    champ('Ce qui fait redescendre la tension, dans son fonctionnement — ce qui l\'apaise, ce qu\'elle ou il fait pour se réguler', 800) +
+    champ('Ce qui fait redescendre la tension, dans son environnement — organisation, personnes', 800) +
 
     docxIntertitre('7 · Autre chose', DOCX_C.papierFonce, DOCX_C.slate) +
     champ('Tout ce qui pourrait être utile par la suite', 1100);
@@ -23154,6 +23222,14 @@ function fenetreRecueil() {
   return {debut: dates[0], fin: dates[dates.length - 1]};
 }
 
+// « Le 1er mars », « Du 14 au 18 mars », « Du 30 mars au 3 avril ».
+function plageCourte(debut, fin) {
+  const d = iso => new Date(iso + 'T12:00:00'), a = d(debut), b = d(fin);
+  const jour = x => x.getDate() === 1 ? '1er' : String(x.getDate()), mois = x => x.toLocaleDateString('fr-FR', {month: 'long'});
+  if (debut === fin) return 'Le ' + jour(a) + ' ' + mois(a);
+  return 'Du ' + jour(a) + (a.getMonth() === b.getMonth() ? '' : ' ' + mois(a)) + ' au ' + jour(b) + ' ' + mois(b);
+}
+
 /* Les jours d'accueil de la fenêtre dont on ne sait rien, groupés en plages
    consécutives — c'est la liste de ce qu'il reste à demander. */
 function trousCouverture() {
@@ -23250,7 +23326,7 @@ function renderCouverture() {
       '<span class="periode-plage">' + esc(formatPlage(f.debut, f.fin)) + ' · ' + nbJours + ' jour' + (nbJours > 1 ? 's' : '') + '.</span>' +
       (n
         ? '<button type="button" class="jours-non-renseignes" onclick="ouvrirFenetre(\'trous-overlay\')" ' +
-            'title="Voir les jours à renseigner">' + n + ' jour' + (n > 1 ? 's' : '') + ' non renseigné' + (n > 1 ? 's' : '') + '</button>'
+            'title="Voir ces jours">' + n + ' jour' + (n > 1 ? 's' : '') + ' sans information indiquée</button>'
         : '<button type="button" class="jours-tous-renseignes" onclick="ouvrirFenetre(\'trous-overlay\')">✓ Tous les jours sont renseignés</button>') +
     '</div>';
   majFenetreTrous();
@@ -24692,6 +24768,20 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-11',
+    version: 'v2026.10.11-2',
+    titre: "Préambule et Recueillir : le sommaire à la demande, les jours sans information dans la liste",
+    corps: `
+<p><b>Préambule et Recueillir</b> (Arthur et Émilie) :</p>
+<ul>
+<li><b>Le sommaire du préambule</b> ne s'affiche qu'au besoin : le petit bouton ☰, à gauche, le déplie.</li>
+<li><b>Le vase</b> dit maintenant « Ce qui fait monter la tension, dans son fonctionnement », « … dans son environnement », et de même pour ce qui la fait redescendre — dans le préambule, dans Interpréter, dans la synthèse, dans le document Word et dans le préambule papier.</li>
+<li><b>Recueillir</b> : le sous-titre prend toute la largeur ; « On vous guide pas à pas, une question à la fois. » ; on parle de <b>jours sans information indiquée</b>, et ces périodes s'intercalent, discrètes, dans la liste des épisodes (« Du 14 au 18 mars · 5 jours sans information indiquée ») : un clic ouvre la fenêtre où l'on dit si quelqu'un observait.</li>
+</ul>
+`
+  },
 
   {
     date: '2026-10-11',
