@@ -949,7 +949,16 @@ body.mode-declarant .situer-coin{display:none !important;}
 @media(max-width:379px){
   .subbar-dossier-court i.long{display:none;}
   .subbar-dossier-court i.court{display:inline;}
+  /* Les plus petits téléphones (320 px) : le menu et la barre du dossier se resserrent pour tenir (passe 219). */
+  #baf-nav-group, #idc-nav-group{gap:2px;}
+  #baf-nav-group .nav-btn, #idc-nav-group .idc-nav-btn{padding-left:6px;padding-right:6px;font-size:12px;}
+  .subbar-actions{gap:4px;}
+  .subbar-actions button{padding-left:7px;padding-right:7px;}
+  .volet-compte{white-space:normal;}
+  .synth-tete-droite{flex-wrap:wrap;max-width:100%;}
 }
+/* La carte de chaleur défile dans son cadre plutôt que de pousser la page (passe 219). */
+#synth-chaleur{max-width:100%;overflow-x:auto;}
 
 .brand{
   display:flex;align-items:center;gap:11px;
@@ -1247,7 +1256,7 @@ footer.bottom .footer-line{
 }
 footer.bottom .footer-left{text-align:left;flex:1;}
 footer.bottom .footer-right{text-align:right;flex-shrink:0;}
-footer.bottom a{color:var(--ink-soft);text-decoration:underline;}
+footer.bottom a{color:var(--ink-soft);text-decoration:underline;overflow-wrap:anywhere;}
 @media(max-width:760px){
   footer.bottom .footer-inner{font-size:9.5px;padding:5px 14px;}
 }
@@ -1894,11 +1903,13 @@ body.tool-idc .scrolltop-btn{background:var(--prune);}
 
 .m3-layout{
   display:grid;
-  grid-template-columns:1fr 1fr;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
   gap:20px;
   align-items:start;
 }
-@media(max-width:720px){.m3-layout{grid-template-columns:1fr;}}
+/* minmax(0,1fr) : une colonne peut descendre sous la largeur de son plus long élément ; avec 1fr, Catégoriser débordait
+   de 40 à 110 px sur les téléphones étroits (passe 219). */
+@media(max-width:720px){.m3-layout{grid-template-columns:minmax(0,1fr);}}
 
 .m3-col-items,.m3-col-cats{
   background:var(--card);
@@ -4019,7 +4030,7 @@ details.avant-commencer p{margin:10px 0 0;font:400 15px/1.65 var(--police-lectur
 .ev-trou:hover{color:var(--ink-soft);}
 .ev-feuille > .ev-trou:first-child{border-top:0;}
 /* ── Le formulaire (passe 200) ── */
-.heure-mode{margin:0 0 8px;}
+.heure-mode{margin:0 0 8px;max-width:100%;flex-wrap:wrap;}
 .heure-saisie{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-soft);}
 .heure-saisie input[type=time]{width:auto;}
 .heure-inconnue-msg{font:italic 400 13.5px var(--police-lecture);color:var(--sauge-deep);}
@@ -24171,6 +24182,15 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-11',
+    version: 'v2026.10.11-22',
+    titre: "Les petits téléphones : plus rien ne déborde",
+    corps: `
+<p><b>Les petits téléphones</b> (Arthur et Émilie) : sur un écran de 320 à 390 px de large, Catégoriser débordait à droite de 40 à 110 px (il fallait faire glisser la page de côté), et quelques pages de 2 à 27 px. Les deux colonnes de Catégoriser peuvent maintenant rétrécir, le menu et la barre du dossier se resserrent sous 380 px, l'adresse du pied de page se coupe, et la carte de chaleur de la Synthèse défile dans son cadre. Vérifié sur toutes les pages, de 320 à 1280 px : plus aucun débordement.</p>
+`
+  },
 
   {
     date: '2026-10-11',
