@@ -1,5 +1,5 @@
 {
-  "_mode_emploi": "Le banc d'essai de la BAF (mode administrateur). Un arbitrage = un numéro, jamais réutilisé ; des options A, B, C… Chaque option peut avoir des captures (dossier du numéro, ordinateur et téléphone), un texte, une maquette HTML (iframe), ou être « direct » : la préférence allume alors l'option dans la BAF elle-même (optionEssai(n) dans le code). Pour trancher (l'arbitrage oral d'Arthur et Émilie) : statut 'tranché', retenue = la lettre, dateTranche (AAAA-MM-JJ), raison (une ou deux phrases), version (celle où l'option a été appliquée). Un arbitrage tranché reste dans le fichier, pour trace.",
+  "_mode_emploi": "Le banc d'essai de la BAF (mode administrateur). Un arbitrage = un numéro, jamais réutilisé ; des options A, B, C… Chaque option peut avoir des captures (dossier du numéro, ordinateur et téléphone), un texte, une maquette HTML (iframe), ou être « direct » : le bouton « Essayer dans la BAF » allume alors l'option dans ce navigateur (optionEssai(n) dans le code). Pour trancher (l'arbitrage oral d'Arthur et Émilie) : statut 'tranché', retenue = la lettre, dateTranche (AAAA-MM-JJ), raison (une ou deux phrases), version (celle où l'option a été appliquée). Un arbitrage tranché reste dans le fichier, pour trace.",
   "arbitrages": [
     {
       "n": 1,
