@@ -408,6 +408,36 @@ details.regle > summary{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8
 .regle-liste{margin:0 0 8px;padding-left:18px;font-size:13px;overflow-wrap:anywhere;}
 .regle-detail{margin:0 0 8px;font:400 14px/1.6 var(--police-lecture);text-align:justify;color:var(--ink-soft);}
 .regle-sens{margin:0 0 8px;font-size:12px;color:var(--ink-faint);}
+/* ── Les fiches des pièces (passe 226) ── */
+.fenetre.fiche{max-width:820px;}
+.fiche-mode{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0;}
+.fiche-rapide{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:0 0 10px;}
+@media(max-width:700px){.fiche-rapide{grid-template-columns:minmax(0,1fr);}}
+.fiche-case{display:flex;align-items:center;gap:8px;padding:7px 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);font-size:13px;cursor:pointer;}
+.fiche-case:has(input:checked){background:var(--sauge-pale);border-color:var(--sauge-deep);}
+.fiche-case input{margin:0;flex-shrink:0;}
+.fiche-lib{flex:1 1 200px;min-width:0;overflow-wrap:break-word;}
+.fiche-revue{display:flex;gap:8px;align-items:flex-start;font-size:13px;margin:6px 0 4px;}
+.sens-tag{flex-shrink:0;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap;color:var(--ink);}
+.sens-monte{background:var(--rose-pale);}
+.sens-apaise{background:var(--sauge-pale);}
+.sens-risque{background:var(--ocre-pale);}
+.sens-variable{background:var(--slate-pale);}
+.sens-neutre{background:var(--paper-deep);}
+.fiche-ligne{padding:7px 0;border-top:1px solid var(--line-feuille);}
+.fiche-ligne-haut{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;}
+.fiche-ligne-bas{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin:6px 0 2px;font-size:12.5px;}
+.fiche-ligne-bas label{display:inline-flex;align-items:center;gap:6px;}
+.fiche-ligne-bas select{width:auto;min-height:30px;padding:3px 8px;font-size:12.5px;}
+.tri{display:inline-flex;gap:3px;padding:3px;border-radius:9px;background:var(--paper-deep);}
+.tri button{min-width:42px;height:28px;border:0;border-radius:7px;background:transparent;font:600 12.5px var(--police-interface);color:var(--ink-soft);}
+.tri button.on{background:var(--sheet);color:var(--ink);box-shadow:0 2px 8px rgba(44,36,22,.08);}
+.chip-fiche{display:inline-block;padding:1px 9px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:11.5px;font-weight:600;color:var(--ink);}
+.chip-fiche.n1{background:var(--ocre-pale);border-color:var(--ocre-deep);}
+.chip-fiche.n2{background:var(--sauge-pale);border-color:var(--sauge-deep);}
+.fiche-piece{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:6px 0;border-top:1px solid var(--line-feuille);}
+.fiche-piece-nom{flex:1;min-width:140px;font-weight:600;font-size:13.5px;}
+.source.declare{border-style:dashed;}
 /* ── Listes du préambule ── */
 .liste-edit{display:flex;flex-direction:column;gap:6px;margin:0 0 10px;}
 .liste-edit .ligne{display:grid;grid-template-columns:minmax(0,1fr) 92px 92px 34px;gap:6px;align-items:center;}
@@ -605,6 +635,11 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
         <p class="discret">Le guide : Bellusso, Haegelé, Harnist, Kathrein, Massias-Zeder (2017), <i>Autisme &amp; sensorialité — guide pédagogique et technique pour l'aménagement de l'espace</i>, CRA Alsace.</p>
       </details>
     </div>
+    <div class="feuille referent-seul fiches-feuille">
+      <div class="surtitre">Ce qu'on trouve dans chaque pièce</div>
+      <p class="discret">Le plan dit où sont les pièces ; la fiche dit ce qu'on y trouve : bruit, lumière, repères, retrait, sécurité… d'après le guide. Une liste à cocher pour aller vite, ou la grille complète pour aller au fond. Chaque point arrive avec le sens que lui donne le guide, que l'équipe corrige si besoin.</p>
+      <div id="fiches-liste"></div>
+    </div>
     <div class="feuille">
       <div class="surtitre">Les moments de la journée</div>
       <p class="discret">Les horaires sont indicatifs : ils servent à proposer le bon moment quand on déclare un épisode.</p>
@@ -740,6 +775,13 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
     <div id="admin-corps"></div>
   </div>
 </div>
+<div class="voile" id="fen-fiche" hidden onclick="if (event.target === this) fermerFiche()">
+  <div class="fenetre fiche" role="dialog" aria-modal="true" aria-labelledby="fen-fiche-titre">
+    <h3 id="fen-fiche-titre">La fiche de la pièce</h3>
+    <div id="fiche-corps"></div>
+    <div class="pied"><button type="button" class="bt plein" onclick="fermerFiche()">Fait</button></div>
+  </div>
+</div>
 <div class="toast" id="toast" role="status"></div>
 
 <footer class="bas no-print">
@@ -759,7 +801,7 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
    chose lue de la BAF, en lecture : le choix clair / sombre, pour s'ouvrir dans le même thème.
    ══════════════════════════════════════════════════════════════════════════════════════════════ */
 
-const VERSION_BASE = 'BASE v2026.10.12-4';
+const VERSION_BASE = 'BASE v2026.10.12-5';
 const CLE_SOCLE = 'base-dossier-v1', CLE_DECL = 'base-declarant-v1', CLE_MODE = 'base-mode', CLE_THEME = 'base-theme';
 const TYPES_ZONE = [['activite', "Salle d'activité"], ['sejour', 'Séjour, salon'], ['repas', 'Repas'], ['accueil', 'Accueil'], ['circulation', 'Circulation'],
   ['chambre', 'Chambre'], ['repos', 'Salle de repos'], ['calme', 'Salle de mise au calme'], ['snoezelen', 'Salle multisensorielle'], ['soins', 'Soins, infirmerie'],
@@ -805,7 +847,7 @@ let D = null;           // le dossier ouvert dans le mode courant
 function dossierVide() {
   return {
     idDossier: nouvelId('lieu'), cree: new Date().toISOString(), modifie: '',
-    b1: {lieu: '', dates: {debut: '', fin: ''}, echelle: null, plan: {niveaux: [{id: 'n0', nom: 'Rez-de-chaussée'}], pieces: [], elements: []},
+    b1: {lieu: '', dates: {debut: '', fin: ''}, echelle: null, fiches: {}, plan: {niveaux: [{id: 'n0', nom: 'Rez-de-chaussée'}], pieces: [], elements: []},
       moments: MOMENTS_DEFAUT.map(m => ({id: nouvelId('m'), nom: m[0], debut: m[1], fin: m[2]})), typesCD: []},
     b2: {episodes: [], calmes: []},
     contributions: {}, exporte: ''
@@ -834,6 +876,10 @@ function normaliserPlan(d) {
     else if (!e.niveau || !ids.has(e.niveau)) e.niveau = defaut;
   });
   if (!(d.b1.echelle > 0)) d.b1.echelle = null;
+  // Les fiches des pièces (passe 226) : un objet par pièce ; celle d'une pièce qui n'existe plus est écartée.
+  if (!d.b1.fiches || typeof d.b1.fiches !== 'object' || Array.isArray(d.b1.fiches)) d.b1.fiches = {};
+  const pids = new Set((pl.pieces || []).map(p => p.id));
+  Object.keys(d.b1.fiches).forEach(id => { if (!pids.has(id) || !d.b1.fiches[id] || typeof d.b1.fiches[id] !== 'object') delete d.b1.fiches[id]; });
   return d;
 }
 function changerMode(m) {
@@ -1073,6 +1119,7 @@ function dupliquerPiece() {
   const p = selection && pieceParId(selection.piece); if (!p) return;
   const id = nouvelId('p');
   modifierPlan(() => pieces().push({id, nom: p.nom + ' (copie)', type: p.type, niveau: niveauDe(p), rects: p.rects.map(r => ({x: r.x + 2, y: r.y + 2, w: r.w, h: r.h}))}));
+  if (fiches()[p.id]) { const c = clone(fiches()[p.id]); delete c.note; fiches()[id] = c; persister(); }
   selection = {piece: id, morceau: 0}; rendrePlanEdition();
 }
 function episodesDansPiece(id) { return (D.b2.episodes || []).filter(e => e.piece === id).length; }
@@ -1413,6 +1460,7 @@ function rendrePanneauPiece() {
     '<label class="champ"><span>Type de zone</span><select id="pp-type" onchange="typerPiece(this.value)">' + optionsTypesZone(p.type) + '</select></label></div>' +
     '<div class="boutons"><button type="button" class="bt petit" onclick="ajouterMorceau()" title="Pour une pièce en L ou en T : un rectangle collé à celui-ci">＋ Un morceau à cette pièce</button>' +
     (p.rects.length > 1 ? '<button type="button" class="bt petit" onclick="retirerMorceau()">Retirer ce morceau</button>' : '') +
+    (ficheOuverte(p) ? '<button type="button" class="bt petit" onclick="ouvrirFiche()">📋 Fiche de la pièce</button>' + chipFiche(completudeFiche(p)) + ' ' : '') +
     '<button type="button" class="bt petit" onclick="dupliquerPiece()">⧉ Dupliquer</button>' +
     '<button type="button" class="bt petit danger" onclick="supprimerPiece()">Supprimer</button>' + fini + '</div>';
   if (actif === 'pp-nom' || actif === 'pp-type') { const n = $(actif); if (n) n.focus(); }
@@ -1676,7 +1724,7 @@ function lectureDuPlan(b1) {
   return L;
 }
 
-const SG = f => ({t: 'guide', f}), SD = f => ({t: 'deduit', f});
+const SG = f => ({t: 'guide', f}), SD = f => ({t: 'deduit', f}), SR = f => ({t: 'repere', f});
 // Les règles de lecture du plan. sev : vigilance | appui | info | plan ; sens : monte | risque | apaise | variable | neutre.
 function reglesDuPlan(L, b1) {
   const P = id => L.pieces[id], nm = id => '« ' + P(id).nom + ' »';
@@ -1784,7 +1832,7 @@ function reglesDuPlan(L, b1) {
   }));
   // Le lien visuel entre un lieu de retrait et un espace collectif
   L.adj.filter(a => a.vue).forEach(a => [[P(a.a), P(a.b)], [P(a.b), P(a.a)]].forEach(([r, c]) => {
-    if (r.cl.retrait && c.cl.collectif && !c.ext) une('lien|' + r.id + '|' + c.id, () => R({id: 'lien-visuel-retrait', sev: 'appui', sens: 'apaise', famille: 'social', pieces: [r.id], autres: [c.id], titre: nm(r.id) + ' : un vitrage sur ' + nm(c.id),
+    if (r.cl.retrait && c.cl.collectif && !c.ext) une('lien|' + r.id + '|' + c.id, () => R({id: 'lien-visuel-retrait', caracId: 'lien-visuel', sev: 'appui', sens: 'apaise', famille: 'social', pieces: [r.id], autres: [c.id], titre: nm(r.id) + ' : un vitrage sur ' + nm(c.id),
       detail: 'Un lieu de repli qui garde un lien visuel avec le groupe permet de s\'écarter sans disparaître ; c\'est ce que décrit le guide.', source: SG('fiche 2, fiche 6')}));
   }));
   // Les escaliers, les ascenseurs et les étages
@@ -1814,6 +1862,27 @@ function reglesDuPlan(L, b1) {
   });
   ids.filter(id => P(id).type === 'activite' && P(id).aireM2 !== null && P(id).aireM2 < 25).forEach(id => R({id: 'activite-petite', sev: 'info', sens: 'neutre', famille: 'specifique', pieces: [id],
     titre: nm(id) + ' : environ ' + Math.round(P(id).aireM2) + ' m²', detail: 'Le guide décrit une salle d\'activités spacieuse (environ 40 m²), avec une zone d\'accueil, une zone de travail individuel, une zone collective et une zone de détente.', source: SG('fiche 5')}));
+  // Ce que l'équipe a déclaré dans les fiches des pièces (passe 226) : chaque point coché dit son sens (proposé par le guide, corrigeable) ;
+  // ce que la lecture du plan a déjà dit pour la même pièce n'est pas redit.
+  const virgule = x => String(x).replace('.', ',');
+  const deja = (cid, id) => L.regles.some(r => r.caracId === cid && r.pieces.indexOf(id) >= 0);
+  ids.forEach(id => {
+    const f = fiche(id), p = P(id);
+    Object.keys(f.carac || {}).forEach(cid => {
+      const rep = f.carac[cid], it = CARAC_PAR_ID[cid];
+      if (!it || !rep || rep.v !== 1 || !appliqueA(it, p) || deja(cid, id)) return;
+      const sens = sensEffectif(it, rep), sev = sens === 'apaise' ? 'appui' : (sens === 'monte' || sens === 'risque') ? 'vigilance' : 'info';
+      const niv = rep.niv >= 1 && rep.niv <= 3 ? ' (' + NIVEAUX_CARAC[rep.niv] + ')' : '', corrige = rep.sens && rep.sens !== it.sens ? ' — classé \u00ab\u00a0' + SENS_FICHE.find(x => x[0] === rep.sens)[2] + '\u00a0\u00bb par l\'équipe' : '';
+      R({id: 'carac-' + cid, caracId: cid, lib: it.lib, declare: true, sev, sens, famille: it.fam, pieces: [id], titre: nm(id) + ' : ' + it.lib.charAt(0).toLowerCase() + it.lib.slice(1) + niv + corrige,
+        detail: it.aide, source: it.src === 'deduit' ? SD(it.fiche) : SG(it.fiche)});
+    });
+    if (f.hauteur > 2.7 + EPS && !deja('plafond-haut', id)) R({id: 'plafond-haut', caracId: 'plafond-haut', lib: 'Un plafond haut', declare: true, famille: 'acoustique', pieces: [id], titre: nm(id) + ' : plafond à ' + virgule(f.hauteur) + ' m',
+      detail: 'Un plafond haut favorise la résonance : le guide préconise 2,60 à 2,70 m pour limiter l\'écho et donner de la contenance.', source: SG('fiche 1, fiche 5')});
+    if (f.habituel >= 9 && !deja('beaucoup-de-monde', id)) R({id: 'effectif-eleve', caracId: 'beaucoup-de-monde', lib: 'Un grand groupe', declare: true, famille: 'social', pieces: [id], titre: nm(id) + ' : ' + f.habituel + ' personnes en général',
+      detail: 'Le guide estime à 8 personnes la taille maximale d\'un groupe, et à 5 ou 6 quand les troubles du comportement sont importants.', source: SG('fiche 1')});
+    if (f.capacite > 0 && f.habituel > f.capacite) R({id: 'sureffectif', lib: 'Plus de monde que de places prévues', declare: true, famille: 'social', pieces: [id], titre: nm(id) + ' : ' + f.habituel + ' personnes pour ' + f.capacite + ' places prévues',
+      detail: 'La pièce reçoit plus de monde que ce pour quoi elle est prévue : proximité, bruit, attente.', source: SR('')});
+  });
   // Les contrôles du plan : ce que la BASE ne peut pas lire, ou lit mal
   const plan = (id, titre, detail, pieces) => R({id, sev: 'plan', sens: 'neutre', famille: 'plan', pieces: pieces || [], titre, detail, source: {t: 'plan', f: ''}});
   L.flottants.forEach(e => plan('ouverture-flottante', 'Une ' + (e.cat === 'porte' ? 'porte' : e.cat === 'baie' ? 'baie vitrée' : 'fenêtre') + ' ne touche aucun mur', 'Elle ne compte ni pour les passages ni pour la lumière. Faites-la glisser jusqu\'à un mur.'));
@@ -1855,8 +1924,8 @@ const LIB_SENS = {monte: 'peut faire monter la tension', apaise: 'peut apaiser',
 function grouperRegles(regles) {
   const g = {}, ordre = [];
   regles.forEach(r => {
-    const cle = r.id + '|' + r.sev;
-    if (!g[cle]) { g[cle] = {cle, id: r.id, sev: r.sev, sens: r.sens, source: r.source, famille: r.famille, detail: r.detail, lib: LIB_REGLES[r.id] || r.titre, items: []}; ordre.push(cle); }
+    const cle = r.id + '|' + r.sev + '|' + r.sens;
+    if (!g[cle]) { g[cle] = {cle, id: r.id, sev: r.sev, sens: r.sens, source: r.source, famille: r.famille, detail: r.detail, lib: r.lib || LIB_REGLES[r.id] || r.titre, declare: !!r.declare, items: []}; ordre.push(cle); }
     g[cle].items.push(r);
   });
   return ordre.map(c => g[c]);
@@ -1884,13 +1953,14 @@ function puceSource(s) {
 function htmlGroupe(g) {
   const n = g.items.length, sens = LIB_SENS[g.sens];
   return '<details class="regle" data-k="' + esc(g.cle) + '"' + (lectureOuverte.has(g.cle) ? ' open' : '') + ' ontoggle="memoLecture(this.dataset.k, this.open)">' +
-    '<summary><span class="regle-lib">' + esc(g.lib) + '</span>' + (n > 1 ? '<span class="regle-n">' + n + '</span>' : '') + puceSource(g.source) + '</summary>' +
+    '<summary><span class="regle-lib">' + esc(g.lib) + '</span>' + (n > 1 ? '<span class="regle-n">' + n + '</span>' : '') + puceSource(g.source) + (g.declare ? '<span class="source declare" title="Déclaré par l\'équipe dans la fiche de la pièce">Déclaré</span>' : '') + '</summary>' +
     '<ul class="regle-liste">' + g.items.map(r => '<li>' + esc(r.titre) + '</li>').join('') + '</ul>' +
     '<p class="regle-detail">' + esc(g.detail) + '</p>' +
     (sens ? '<p class="regle-sens sens-' + g.sens + '">' + esc(sens.charAt(0).toUpperCase() + sens.slice(1)) + ' — selon la personne, et selon ce que montreront les épisodes.</p>' : '') + '</details>';
 }
 function rendreLecture() {
   const el = $('lecture-plan'); if (!el || !D || !$('vue-preambule').classList.contains('show')) return;
+  rendreListeFiches();
   if (!pieces().length) { el.innerHTML = '<div class="vide">Le plan est vide : la BASE n\'a encore rien à lire.</div>'; return; }
   const L = lectureDuPlan(D.b1), groupes = grouperRegles(L.regles), multi = L.nivs.length > 1, arr = x => Math.round(x * 10) / 10;
   const nomP = id => esc(L.pieces[id].nom) + (multi ? ' <span class="discret">(' + esc(nomNiveau(L.pieces[id].niveau)) + ')</span>' : '');
@@ -1899,7 +1969,7 @@ function rendreLecture() {
   const de = sev => groupes.filter(g => g.sev === sev);
   const resume = nb(Object.keys(L.pieces).length, 'pièce') + (multi ? ' sur ' + L.nivs.length + ' niveaux' : '') + ' · ' + nb(L.ouvertures.portes, 'porte') + ', ' + nb(L.ouvertures.fenetres, 'fenêtre') +
     (L.ouvertures.baies ? ', ' + nb(L.ouvertures.baies, 'baie vitrée', 'baies vitrées') : '') + ' · ' + nb(L.adj.length, 'voisinage') + ', dont ' + L.adj.filter(a => a.porte).length + ' avec porte' +
-    (L.echelle ? ' · échelle : 1 case = ' + String(L.echelle).replace('.', ',') + ' m' : ' · sans échelle');
+    (L.echelle ? ' · échelle : 1 case = ' + String(L.echelle).replace('.', ',') + ' m' : ' · sans échelle') + resumeFiches();
   const voisinages = L.adj.map(a => '<li><b>' + nomP(a.a) + '</b> · <b>' + nomP(a.b) + '</b> — mur commun de ' + arr(a.longueur) + ' case' + (a.longueur > 1 ? 's' : '') + (a.porte ? ' · porte' : ' · sans porte') + (a.vue ? ' · vitrage' : '') + '</li>')
     .concat(L.escaliers.map(s => '<li><b>' + (s.e.type === 'ascenseur' ? 'Ascenseur' : 'Escalier') + '</b> — ' + (s.de ? nomP(s.de) : 'aucune pièce') + ' ⇅ ' + (s.vers ? nomP(s.vers) : 'aucune pièce') + '</li>'))
     .concat(L.superposees.map(s => '<li><b>' + nomP(s.haut) + '</b> est au-dessus de <b>' + nomP(s.bas) + '</b></li>'));
@@ -1923,6 +1993,298 @@ function majEchelleTexte() {
   if (i && document.activeElement !== i) i.value = e || '';
   t.textContent = e ? 'Une pièce de 6 × 4 cases fait environ ' + Math.round(24 * e * e) + ' m². La BASE peut comparer les surfaces aux repères du guide (par exemple 25 à 50 m² pour une salle multisensorielle).'
     : 'Sans échelle, la BASE compare les pièces entre elles (petite, moyenne, grande) et ne parle pas de mètres.';
+}
+
+
+/* ══ Les fiches des pièces (passe 226, Arthur et Émilie) ══
+   Le plan dit la géométrie ; la fiche dit ce qu'on trouve dans la pièce : bruit, lumière, repères, retrait, sécurité…
+   Le catalogue ci-dessous est tiré du guide « Autisme & sensorialité » (CRA Alsace, 2017) : chaque point dit sa fiche
+   et propose un SENS (ça peut faire monter la tension, apaiser, demande à être sécurisé, ou ça dépend de la personne).
+   Le sens est une hypothèse de départ, que l'équipe peut corriger pièce par pièce : un même stimulus n'agit pas dans le
+   même sens pour tous (l'hypersensible le fuit, l'hyposensible le cherche), et ce sont les épisodes qui confirment ou non.
+   Données : D.b1.fiches[idPièce] = {carac: {idPoint: {v: 1 (oui) | 0 (non), niv: 1..3, sens}}, hauteur (m), capacite,
+   habituel (personnes), note, revue}. Pas de réponse = « on ne sait pas ». Les fiches sont HORS de l'annulation du plan. */
+const FAMILLES = [['acoustique', 'Bruit et acoustique'], ['lumiere', 'Lumière naturelle et ouvertures'], ['eclairage', 'Éclairage artificiel'], ['visuel', 'Couleurs, matériaux, décor'],
+  ['air', 'Air, odeurs, température, toucher'], ['mouvement', 'Mouvement et corps'], ['lisibilite', 'Repères et lisibilité'], ['social', 'Monde, retrait, intimité'],
+  ['securite', 'Sécurité'], ['exterieur', 'Dehors'], ['specifique', 'Lieux particuliers']];
+const NOM_FAMILLE = f => (FAMILLES.find(x => x[0] === f) || ['', f])[1];
+const SENS_FICHE = [['monte', 'monte', 'peut faire monter la tension'], ['apaise', 'apaise', 'peut apaiser'], ['risque', 'risque', 'à sécuriser'], ['variable', 'ça dépend', 'ça dépend de la personne'], ['neutre', 'neutre', 'ni l\'un ni l\'autre']];
+const ICONE_SENS = {monte: '▲', apaise: '▼', risque: '⚠', variable: '◆', neutre: '·'};
+const NIVEAUX_CARAC = ['', 'un peu', 'nettement', 'très'];
+const CARAC = [];
+// k(id, famille, intitulé, sens proposé, drapeaux, pour, fiche du guide, explication)
+//   drapeaux : r = dans la liste rapide · n = on peut dire l'intensité · d = déduit du guide (non écrit tel quel)
+//   pour : à quelles pièces (types ou classes séparés par un espace) ; vide = toute pièce de l'intérieur ; « ext » = dehors
+const k = (id, fam, lib, sens, flags, pour, fiche, aide) => CARAC.push({id, fam, lib, sens, rapide: flags.indexOf('r') >= 0, niv: flags.indexOf('n') >= 0, src: flags.indexOf('d') >= 0 ? 'deduit' : 'guide', pour: pour ? pour.split(' ') : [], fiche, aide});
+// Bruit et acoustique (le facteur d'aménagement le plus important, selon le guide)
+k("resonance", "acoustique", "Résonance, écho", "monte", "rn", "", "fiche 8", "La pièce renvoie les sons (voix, chaises, pas). Certains crient pour entretenir l'écho, d'autres pour le couvrir.");
+k("brouhaha", "acoustique", "Brouhaha quand elle est occupée", "monte", "rn", "collectif", "fiche 8", "Beaucoup de sons à la fois, impossibles à localiser et à trier : très pénible pour qui hiérarchise mal ce qu'il entend.");
+k("bruit-exterieur", "acoustique", "Bruit venu de dehors (route, parking, cour)", "monte", "rn", "", "fiche 8", "Le guide demande de ne pas choisir un site bruyant, et pas de parking sous les fenêtres des chambres.");
+k("bruit-voisin", "acoustique", "Bruit venu des pièces voisines ou de l'étage", "monte", "n", "", "fiche 8", "Cloisons ou plafond qui laissent passer voix, pas et chaises.");
+k("isolation-phonique", "acoustique", "Bonne isolation phonique (murs, double vitrage)", "apaise", "r", "chambre retrait sensible collectif", "fiche 8", "À assurer efficacement pour les espaces privatifs et les lieux calmes ; les lieux collectifs sont à insonoriser.");
+k("sol-dur", "acoustique", "Sol dur et sonore (carrelage)", "monte", "r", "", "fiche 9", "Facile à entretenir, mais le carrelage résonne : le guide préfère un sol souple.");
+k("sol-souple", "acoustique", "Sol souple qui amortit les bruits", "apaise", "", "", "fiche 8, fiche 9", "Il atténue les pas, les chaises, les objets qui tombent.");
+k("absorbants", "acoustique", "Panneaux, mousse, rideaux épais ou tapis qui absorbent", "apaise", "", "", "fiche 8, fiche 9", "Des « pièges à sons » sur les murs ou au plafond atténuent le bruit des espaces collectifs.");
+k("pieds-feutres", "acoustique", "Pieds de chaises et de tables feutrés, tables antibruit", "apaise", "", "repas activite collectif", "fiche 8", "Un aménagement rapide : feutrine sous les pieds, revêtement antibruit sur les tables.");
+k("machine-bruyante", "acoustique", "Ventilation, chauffage ou appareil qui bourdonne", "monte", "", "", "fiche 8", "Le guide demande une ventilation insonorisée ou naturelle.");
+k("portes-claquent", "acoustique", "Portes qui claquent", "monte", "", "", "fiche 6", "Des systèmes qui amortissent la fermeture évitent les claquements.");
+k("ambiance-sourde", "acoustique", "Ambiance sonore sourde, calme", "apaise", "", "repas collectif retrait", "fiche 8", "Pour le repas en particulier : l'ambiance la plus sourde possible.");
+k("plafond-haut", "acoustique", "Plafond haut (plus de 2,70 m)", "monte", "", "", "fiche 1, fiche 5, fiche 8", "Un plafond trop haut favorise la résonance ; le guide préconise 2,60 à 2,70 m.");
+// Lumière naturelle et ouvertures
+k("lumiere-naturelle", "lumiere", "Lumière naturelle douce", "apaise", "", "", "fiche 7", "Elle repère le jour et l'heure ; on l'adoucit avec des vitres sablées ou des fenêtres hautes.");
+k("sans-lumiere-naturelle", "lumiere", "Aucune lumière naturelle", "monte", "d", "", "fiche 7", "Pas de fenêtre sur l'extérieur : plus de repère du jour.");
+k("baie-vitree", "lumiere", "Grande baie vitrée, vitrage jusqu'au sol", "monte", "r", "", "fiche 6", "Effet de miroir le soir, limite floue entre dedans et dehors, concentration difficile ; à moins de stores ou de rideaux.");
+k("reflets", "lumiere", "Éblouissement, reflets (soleil rasant, vitre-miroir le soir)", "monte", "rn", "", "fiche 6, fiche 7", "L'éblouissement peut conduire à éviter le regard ou à s'allonger au sol.");
+k("occultation", "lumiere", "Occultation possible (volets, stores, rideaux)", "apaise", "r", "", "fiche 6", "Occulter, en tout ou en partie, fait varier les ambiances lumineuses.");
+k("vitres-sablees", "lumiere", "Vitres sablées ou fenêtres hautes (lumière douce)", "apaise", "", "", "fiche 6, fiche 7", "Une diffusion douce et uniforme de la lumière.");
+k("vis-a-vis", "lumiere", "Regards intrusifs de l'extérieur (vis-à-vis, passage devant la fenêtre)", "monte", "", "chambre sanit soins retrait", "fiche 6", "Le guide demande de pouvoir occulter, ou de voir sans être vu (miroir sans tain).");
+k("lien-visuel", "lumiere", "Vitrage qui garde un lien visuel avec le groupe ou l'équipe", "apaise", "", "retrait chambre", "fiche 2, fiche 6", "Se retirer sans disparaître : un contact visuel rassurant, pour « être seul sans jamais l'être vraiment ».");
+// Éclairage artificiel
+k("neons", "eclairage", "Néons ou éclairage fluorescent (scintillement, bourdonnement)", "monte", "r", "", "fiche 7", "À proscrire : excitation visuelle et bourdonnement continu que les personnes avec autisme discriminent.");
+k("blanc-cru", "eclairage", "Lumière blanche crue ou très forte", "monte", "", "", "fiche 7", "Le guide préfère une lumière douce, plutôt orangée, de type incandescent.");
+k("lumiere-chaude", "eclairage", "Lumière chaude, douce", "apaise", "", "", "fiche 7", "Teintes plus chaudes que le blanc, intensité atténuée.");
+k("variateur", "eclairage", "Variateur d'intensité (avec ou sans télécommande)", "apaise", "r", "", "fiche 7", "Il adapte la lumière au moment, à l'activité, à l'ambiance recherchée.");
+k("eclairage-indirect", "eclairage", "Éclairage indirect ou appliques", "apaise", "", "", "fiche 7", "Moins d'éblouissement qu'un plafonnier ; appliques placées assez haut pour ne pas être détruites.");
+k("plafonnier-brillant", "eclairage", "Plafonnier brillant, effet miroir", "monte", "", "", "fiche 7", "Une source d'autostimulation lumineuse de plus, pour qui la recherche.");
+k("detecteur-mouvement", "eclairage", "Détecteur de mouvement qui allume la lumière", "monte", "", "", "fiche 7", "Le guide préfère une minuterie à un détecteur de mouvement.");
+k("veilleuse-sol", "eclairage", "Éclairage de nuit au niveau du sol (couloirs, escaliers)", "apaise", "", "circ chambre", "fiche 4, fiche 7", "On ne se retrouve pas dans le noir, et l'on ne dérange pas ceux qui dorment.");
+k("ombres-contrastes", "eclairage", "Ombres et contrastes forts", "monte", "", "", "fiche 7", "Des excès de stimulations visuelles.");
+k("lumiere-intermittente", "eclairage", "Lumières intermittentes (stroboscope, boule à facettes, guirlande clignotante)", "risque", "", "", "fiche 7, fiche 11", "Vigilance santé : l'épilepsie touche environ 30 % des personnes avec autisme, et c'est la seule contre-indication médicale de la salle multisensorielle.");
+// Couleurs, matériaux, décor
+k("couleurs-vives", "visuel", "Couleurs vives, criardes, ou beaucoup de teintes", "monte", "r", "", "fiche 7", "Le guide demande de les éviter et de limiter la diversité des teintes dans un même espace.");
+k("tons-neutres", "visuel", "Tons neutres, clairs, doux", "apaise", "r", "", "fiche 7", "Neutres, pâles ou pastel ; quelques tons chauds possibles.");
+k("sol-mouchete", "visuel", "Sol moucheté, petits carreaux, joints contrastés", "monte", "", "", "fiche 7, fiche 9", "Le guide demande un sol uniforme et clair, des joints de la teinte du carrelage.");
+k("brillance", "visuel", "Surfaces brillantes ou réfléchissantes", "monte", "", "", "fiche 9", "Peu supportées : le guide demande de limiter la brillance et les reflets.");
+k("decor-charge", "visuel", "Décor chargé : affichages, jouets ou objets à vue", "monte", "rn", "", "fiche 10", "Un trop-plein de stimulations visuelles ; le guide demande de rester sobre.");
+k("desordre", "visuel", "Désordre visuel (objets qui traînent, meubles en trop)", "monte", "", "", "fiche 1, fiche 10", "Éviter de sur-embellir et de sur-meubler.");
+k("rangements-fermes", "visuel", "Rangements fermés (grands placards)", "apaise", "", "", "fiche 2, fiche 10", "Tout le matériel n'est pas à portée : moins de sur-stimulation, et l'on est amené à demander.");
+k("seuils-ruptures", "visuel", "Ruptures de sol ou marches aux seuils", "monte", "", "", "fiche 7", "Franchir un seuil peut être difficile : le guide demande de les proscrire.");
+// Air, odeurs, température, toucher
+k("odeurs-fortes", "air", "Odeurs fortes ou mélangées (cuisine, sanitaires, produits)", "monte", "rn", "", "fiche 5, fiche 9", "Un mélange d'odeurs est une surcharge de plus ; le guide suggère des WC séparés.");
+k("ventilation-naturelle", "air", "Ventilation naturelle (ou insonorisée)", "apaise", "", "", "fiche 2", "À privilégier : elle évite le bruit continu d'une ventilation mécanique.");
+k("temperature", "air", "Température difficile (trop chaud, trop froid, courants d'air)", "monte", "rd", "", "particularités sensorielles", "Le thermique fait partie des sens en jeu ; le guide ne chiffre pas ce point.");
+k("textures", "air", "Textures variées à toucher (matériaux naturels, tissus)", "variable", "", "", "fiche 9, fiche 3", "Elles enrichissent l'expérience tactile des uns et gênent les hypersensibles.");
+// Mouvement et corps
+k("espace-bouger", "mouvement", "Espace pour bouger (sauter, marcher, rebondir)", "apaise", "r", "collectif activite sejour", "fiche 2", "Le mouvement physique est encouragé : espaces libres, salle d'activité physique ou de psychomotricité.");
+k("place-au-sol", "mouvement", "On peut s'y mettre au sol (tapis, coussins, matelas)", "apaise", "", "", "fiche 5", "Pour se détendre et se retirer du groupe.");
+k("mobilier-contenant", "mouvement", "Fauteuils ou banquettes contenants, à accoudoirs", "apaise", "", "", "fiche 10", "Une forme contenante et des accoudoirs qui sécurisent.");
+k("balancement", "mouvement", "Balancement ou mouvement proposé (hamac, ballon, toupie)", "variable", "", "snoezelen activite ext", "fiche 11", "Stimulation vestibulaire : recherchée par certains, mal tolérée par d'autres.");
+k("marches", "mouvement", "Marches ou différences de niveau dans la pièce", "risque", "", "", "fiche 4, fiche 7", "Un risque de chute ; et franchir un seuil peut être difficile.");
+// Repères et lisibilité (structuration de l'espace)
+k("fonction-claire", "lisibilite", "Une seule fonction, lisible", "apaise", "r", "", "structuration de l'espace", "Un lieu, une activité : on sait ce qu'on va y faire.");
+k("plusieurs-fonctions", "lisibilite", "Plusieurs fonctions dans la même pièce (repas, jeux, devoirs…)", "monte", "r", "", "structuration de l'espace", "On ne sait plus ce qu'on va y faire : déception, frustration, troubles du comportement possibles.");
+k("signaletique", "lisibilite", "Pictogramme ou photo sur la porte", "apaise", "r", "", "structuration de l'espace, fiche 6", "Des repères visuels simples, sans surcharge, adaptés au niveau de compréhension.");
+k("aires-delimitees", "lisibilite", "Aires délimitées (cloisons, meubles, tapis)", "apaise", "", "collectif activite sejour", "fiche 5", "Une grande pièce se découpe pour dire ce que l'on attend de la personne.");
+k("voir-avant-entrer", "lisibilite", "On voit à l'intérieur avant d'entrer (vitrage, demi-mur, hall)", "apaise", "", "", "fiche 1, fiche 6", "Minimiser l'inconnu avant d'entrer.");
+k("sas", "lisibilite", "Sas entre le dedans et le dehors", "apaise", "", "circ accueil", "fiche 6", "Il facilite le passage intérieur / extérieur.");
+k("modularite", "lisibilite", "Aménagement qui change souvent", "monte", "", "", "fiche 5", "Une modularité effrénée ne favorise ni la stabilité ni les repères.");
+k("open-space", "lisibilite", "Ouverte sur une autre pièce, sans cloison (open-space)", "monte", "", "collectif", "fiche 5", "Peu de clarté et de prévisibilité, et trop de stimulations : regards, résonance, odeurs mêlées.");
+k("repere-couleur", "lisibilite", "Une couleur ou un revêtement qui repère la pièce, la fonction ou l'étage", "apaise", "", "", "fiche 7, fiche 9", "Changer de couleur ou de sol dit que l'on change d'usage.");
+// Monde, retrait, intimité
+k("beaucoup-de-monde", "social", "Beaucoup de monde en même temps", "monte", "rnd", "collectif", "fiche 1", "Le guide estime à 8 personnes la taille maximale d'un groupe, 5 à 6 quand les troubles du comportement sont importants.");
+k("passage-frequent", "social", "Passage fréquent d'autres personnes", "monte", "rd", "", "fiche 2", "Les mouvements d'autrui comptent parmi les stresseurs de l'environnement.");
+k("peut-sisoler", "social", "On peut s'y isoler (porte qui se ferme, verrou qui se défait de l'intérieur)", "apaise", "r", "chambre retrait sanit", "fiche 6, fiche 2", "Pouvoir s'enfermer, la porte se déverrouillant en sortant : le contrôle de l'espace privatif compte.");
+k("refuge-recoin", "social", "Recoin, coin refuge ou siège en périphérie", "apaise", "r", "collectif activite sejour retrait", "fiche 2, fiche 5", "On peut participer depuis la périphérie, ou se mettre à l'écart du groupe.");
+k("personnalise", "social", "Personnalisée (photos, objets, couleurs choisies)", "apaise", "", "chambre", "fiche 2", "L'espace privatif, vecteur d'identité : la personne doit pouvoir se l'approprier.");
+k("intimite-sanitaires", "social", "Toilettes ou salle d'eau privatives", "apaise", "", "chambre", "fiche 2", "La protection de l'intimité fait partie du « chez soi ».");
+k("tables-rondes", "social", "Tables rondes de 3 ou 4 places, ou tables individuelles", "apaise", "", "repas activite", "fiche 10", "Une proximité raisonnable et un face-à-face acceptable ; des tables individuelles si la proximité est difficile.");
+// Sécurité
+k("angles-saillants", "securite", "Angles saillants, meubles ou radiateurs non fixés", "risque", "r", "", "fiche 4", "Le guide préfère les formes arrondies et demande de fixer meubles et radiateurs.");
+k("verre-non-protege", "securite", "Verre non protégé (fenêtres, vitrages, cloisons sans film anti-éclat)", "risque", "r", "", "fiche 4, fiche 6", "Double vitrage, ou films anti-éclat ; matériaux antichoc.");
+k("coin-aveugle", "securite", "Coin non visible des professionnels", "risque", "r", "", "fiche 4", "Le guide demande d'éviter les coins aveugles qui empêchent la surveillance visuelle.");
+k("fenetres-ouvrables", "securite", "Fenêtres qui s'ouvrent sans verrou", "risque", "", "", "fiche 4, fiche 6", "Des systèmes de verrouillage depuis l'intérieur, ou de blocage partiel.");
+k("radiateur-mural", "securite", "Radiateur mural non protégé", "risque", "", "", "fiche 4, fiche 13", "Chauffage au sol à privilégier ; jamais de radiateur mural dans la salle de mise au calme.");
+k("conduits-apparents", "securite", "Conduits, câbles ou éléments muraux à portée de main", "risque", "", "", "fiche 4", "Les encastrer, fixer les éléments muraux en hauteur.");
+k("escalier-sans-barriere", "securite", "Escalier sans barrière", "risque", "", "circ", "fiche 4", "Des barrières évitent les déambulations, notamment aux escaliers.");
+k("serrure-badge", "securite", "Porte à serrure magnétique (badge), ouvrable des deux côtés", "neutre", "", "", "fiche 4, fiche 6", "Un équipement que le guide recommande pour les portes.");
+// Dehors
+k("cloture", "exterieur", "Clôturé (digicode, fermeture)", "apaise", "r", "ext", "fiche 3, fiche 4", "Clôturer et sécuriser les espaces extérieurs ; clôturer les cours.");
+k("couvert", "exterieur", "Partie couverte (préau, porche, avancée de toit)", "apaise", "r", "ext", "fiche 3", "Des lieux couverts favorisent les transitions et donnent de la contenance.");
+k("contenant", "exterieur", "Parois latérales : une ambiance contenante", "apaise", "", "ext", "fiche 3", "Un espace enveloppant, délimité par des parois pleines ou à claire-voie.");
+k("sols-varies", "exterieur", "Sols variés (herbe, sable, gomme, bitume)", "apaise", "", "ext", "fiche 3", "Dureté, rugosité, amorti : une stimulation sensorielle riche.");
+k("jeux", "exterieur", "Structure de jeu, espace pour se dépenser", "apaise", "r", "ext", "fiche 3", "Un espace à trois dimensions pour évoluer.");
+k("plantes-eau", "exterieur", "Plantes, parfums, point d'eau (jardin sensoriel)", "apaise", "", "ext", "fiche 12", "Les plantes sont un support idéal de stimulation sensorielle ; l'eau apaise.");
+k("bancs", "exterieur", "Bancs, coins pour se poser ou se retrouver", "apaise", "", "ext", "fiche 3, fiche 12", "Des espaces de rencontre, conviviaux.");
+k("cour-bruyante", "exterieur", "Cour bruyante (récréation, cris, ballons)", "monte", "rnd", "ext", "fiche 8", "Un extérieur peut être une source de bruit pour les pièces voisines.");
+k("patio", "exterieur", "Patio : du dehors enclos dans le bâtiment", "monte", "", "ext", "fiche 6", "La configuration d'un patio peut s'avérer déstabilisante.");
+// Lieux particuliers
+k("calme-depouillee", "specifique", "Pièce dépouillée (petite, murs blancs, rien que le nécessaire)", "apaise", "r", "calme", "fiche 13", "Une pièce sécurisée et appauvrie au plan sensoriel, sans radiateur mural, à la lumière douce.");
+k("calme-protocole", "specifique", "Usage encadré par un protocole écrit", "apaise", "r", "calme", "fiche 13", "Le recours à la salle doit rester exceptionnel, encadré et sur prescription.");
+k("snoezelen-accompagnee", "specifique", "On n'y reste pas seul : un professionnel formé accompagne", "apaise", "", "snoezelen", "fiche 11", "Une relation duelle est préconisée, sans sur-stimuler.");
+k("activite-zones", "specifique", "Zones distinctes : accueil, travail seul, travail de groupe, détente", "apaise", "", "activite", "fiche 5", "Une salle d'activités spacieuse (environ 40 m²) et structurée.");
+k("sanitaires-grands", "specifique", "Grands (pour accompagner dans de bonnes conditions)", "apaise", "", "sanit", "fiche 5", "De grande superficie, pour accompagner les personnes dépendantes de façon respectueuse.");
+k("soins-equipee", "specifique", "Infirmerie équipée (lit médicalisé, bureau, grand placard)", "apaise", "", "soins", "fiche 2", "Les occasions de soins sont fréquentes.");
+k("chambre-individuelle", "specifique", "Chambre individuelle, qui se ferme à clé", "apaise", "", "chambre", "fiche 2", "À privilégier, avec des toilettes privatives.");
+k("chambre-niches", "specifique", "Niches ou panneaux d'affichage plutôt qu'étagères saillantes", "apaise", "", "chambre", "fiche 2, fiche 10", "Moins dangereux, et ils gardent à portée les objets qui rassurent.");
+const CARAC_PAR_ID = {}; CARAC.forEach(c => { CARAC_PAR_ID[c.id] = c; });
+const SENS_VALIDES = {monte: 1, apaise: 1, risque: 1, variable: 1, neutre: 1};
+// Cette pièce est-elle concernée par ce point ? (pf : {type, cl, ext})
+function appliqueA(it, pf) {
+  if (!it.pour.length) return !pf.ext;
+  return it.pour.some(t => t === 'ext' ? (pf.ext && !pf.cl.source) : t === 'int' ? !pf.ext : t === pf.type || !!pf.cl[t]);
+}
+const ficheOuverte = p => !classe(p.type).source;   // une route ou un parking n'a pas de fiche
+function caracsDe(p) { const pf = {type: p.type, cl: classe(p.type), ext: estExterieur(p.type)}; return CARAC.filter(c => appliqueA(c, pf)); }
+const sensEffectif = (it, rep) => (rep && SENS_VALIDES[rep.sens]) ? rep.sens : it.sens;
+function ficheDe(id) { return (D && D.b1.fiches && D.b1.fiches[id]) || null; }
+// Où en est la fiche d'une pièce ? 0 : rien ; 1 : quelques réponses (mode rapide) ; 2 : la grille est presque toute remplie (mode détaillé).
+function completudeFiche(p, fiches) {
+  const f = (fiches || (D && D.b1.fiches) || {})[p.id]; if (!f) return {niveau: 0, repondues: 0, total: caracsDe(p).length};
+  const liste = caracsDe(p), rep = liste.filter(c => f.carac && f.carac[c.id] && (f.carac[c.id].v === 0 || f.carac[c.id].v === 1)).length;
+  const aUnChamp = f.hauteur > 0 || f.capacite > 0 || f.habituel > 0 || (f.note || '').trim() !== '';
+  const niveau = liste.length && rep / liste.length >= .9 ? 2 : (rep > 0 || f.revue || aUnChamp) ? 1 : 0;
+  return {niveau, repondues: rep, total: liste.length};
+}
+
+/* ══ La fiche d'une pièce : l'écran (passe 226) ══
+   Deux façons de la remplir, au choix de chacun : RAPIDE (une liste à cocher, une trentaine de points au plus, deux minutes)
+   ou DÉTAILLÉE (la grille complète par famille : oui, non ou on ne sait pas, l'intensité, le sens corrigé, les chiffres).
+   Le même dossier se remplit des deux façons ; rien n'est jamais conclu à la place de l'équipe. */
+const CLE_MODE_FICHE = 'base-fiche-mode';
+let modeFiche = 'rapide', pieceFiche = null;
+try { if (localStorage.getItem(CLE_MODE_FICHE) === 'detaille') modeFiche = 'detaille'; } catch (e) { /* rien */ }
+const famillesOuvertes = new Set();
+function fiches() { if (!D.b1.fiches || typeof D.b1.fiches !== 'object' || Array.isArray(D.b1.fiches)) D.b1.fiches = {}; return D.b1.fiches; }
+function tagSens(sens) {
+  const s = SENS_FICHE.find(x => x[0] === sens) || SENS_FICHE[4];
+  return '<span class="sens-tag sens-' + s[0] + '" title="' + esc(s[2]) + '">' + ICONE_SENS[s[0]] + ' ' + esc(s[1]) + '</span>';
+}
+function chipFiche(c) {
+  return '<span class="chip-fiche n' + c.niveau + '">' + (c.niveau === 2 ? 'Détaillée · ' + c.repondues + '/' + c.total : c.niveau === 1 ? 'Rapide' + (c.repondues ? ' · ' + c.repondues + ' réponse' + (c.repondues > 1 ? 's' : '') : '') : 'Pas de fiche') + '</span>';
+}
+/* — L'ouverture et la fermeture — */
+function ouvrirFiche(id) {
+  id = id || (selection && selection.piece); const p = id && pieceParId(id);
+  if (!p) { toast('Touchez d\'abord une pièce du plan.'); return; }
+  if (!ficheOuverte(p)) { toast('Une route ou un parking n\'a pas de fiche.'); return; }
+  pieceFiche = p.id; $('fen-fiche-titre').textContent = 'La fiche de « ' + p.nom + ' »'; rendreFiche(); ouvrirFenetre('fen-fiche');
+}
+function fermerFiche() { fermerFenetre('fen-fiche'); pieceFiche = null; if (D) { rendrePanneauPiece(); planifierLecture(); } }
+function choisirModeFiche(m) { modeFiche = m === 'detaille' ? 'detaille' : 'rapide'; try { localStorage.setItem(CLE_MODE_FICHE, modeFiche); } catch (e) { /* rien */ } rendreFiche(); }
+/* — Écrire dans la fiche — */
+function modifierFiche(fn) {
+  const p = pieceParId(pieceFiche); if (!p) return;
+  const f = fiches()[p.id] = fiches()[p.id] || {carac: {}};
+  if (!f.carac || typeof f.carac !== 'object') f.carac = {};
+  fn(f);
+  const vide = !Object.keys(f.carac).length && !(f.hauteur > 0) && !(f.capacite > 0) && !(f.habituel > 0) && !(f.note || '').trim() && !f.revue;
+  if (vide) delete fiches()[p.id];
+  persister(); majEnteteFiche(); planifierLecture();
+}
+function cocherFiche(cid, coche) { modifierFiche(f => { if (coche) f.carac[cid] = Object.assign(f.carac[cid] || {}, {v: 1}); else delete f.carac[cid]; }); }
+function repondreFiche(cid, v) {
+  modifierFiche(f => { if (v === 1 || v === 0) f.carac[cid] = Object.assign(f.carac[cid] || {}, {v}); else delete f.carac[cid]; if (v !== 1 && f.carac[cid]) { delete f.carac[cid].niv; delete f.carac[cid].sens; } });
+  majLigneFiche(cid);
+}
+function intensiteFiche(cid, n) { modifierFiche(f => { const r = f.carac[cid]; if (!r) return; if (+n >= 1 && +n <= 3) r.niv = +n; else delete r.niv; }); }
+function sensFiche(cid, s) { modifierFiche(f => { const r = f.carac[cid]; if (!r) return; if (SENS_VALIDES[s] && s !== CARAC_PAR_ID[cid].sens) r.sens = s; else delete r.sens; }); majLigneFiche(cid); }
+function champFiche(champ, texte) {
+  const x = parseFloat(String(texte).replace(',', '.'));
+  modifierFiche(f => { if (!(x > 0)) delete f[champ]; else f[champ] = champ === 'hauteur' ? Math.round(Math.min(10, x) * 100) / 100 : Math.round(Math.min(500, x)); });
+}
+function noteFiche(t) { modifierFiche(f => { if ((t || '').trim()) f.note = t; else delete f.note; }); }
+function revueFiche(b) { modifierFiche(f => { if (b) f.revue = true; else delete f.revue; }); }
+function effacerFiche() {
+  const p = pieceParId(pieceFiche); if (!p || !fiches()[p.id]) return;
+  if (!confirm('Effacer toute la fiche de « ' + p.nom + ' » ?')) return;
+  delete fiches()[p.id]; persister(); rendreFiche(); planifierLecture();
+}
+function reprendreFiche(idSource) {
+  const p = pieceParId(pieceFiche), src = idSource && fiches()[idSource]; if (!p || !src) return;
+  const dejaFait = fiches()[p.id] && Object.keys(fiches()[p.id].carac || {}).length;
+  if (dejaFait && !confirm('Remplacer les réponses déjà données pour « ' + p.nom + ' » ?')) { rendreFiche(); return; }
+  const copie = clone(src); delete copie.note; fiches()[p.id] = copie; persister(); rendreFiche(); planifierLecture();
+  toast('Fiche reprise de « ' + nomPiece(idSource) + ' » : corrigez ce qui diffère.');
+}
+/* — Le dessin de la fiche — */
+function htmlLuPiece(p) {
+  const L = lectureDuPlan(D.b1), pf = L.pieces[p.id]; if (!pf) return '';
+  const nomV = id => esc(L.pieces[id].nom), multi = L.nivs.length > 1;
+  const lignes = [];
+  lignes.push('<b>Taille</b> : ' + (pf.ext ? 'dehors' : pf.taille || 'à comparer à d\'autres pièces') + (pf.aireM2 !== null ? ' (environ ' + Math.round(pf.aireM2) + ' m²)' : '') + ' · ' + pf.aire + ' cases');
+  lignes.push('<b>Ouvertures</b> : ' + nb(pf.fenetres, 'fenêtre') + (pf.baies ? ', ' + nb(pf.baies, 'baie vitrée', 'baies vitrées') : '') + (pf.vitragesInt ? ', ' + nb(pf.vitragesInt, 'vitrage', 'vitrages') + ' sur une pièce voisine' : ''));
+  const vois = pf.voisines.map(id => nomV(id) + (pf.passages.indexOf(id) >= 0 ? ' (porte)' : ''));
+  lignes.push('<b>Voisines</b> : ' + (vois.length ? vois.join(', ') : 'aucune') + (pf.escaliers ? ' · ' + (pf.escaliers > 1 ? pf.escaliers + ' escaliers' : 'un escalier') : ''));
+  if (pf.superposees.length) lignes.push('<b>Au-dessus ou au-dessous</b> : ' + pf.superposees.map(s => nomV(s.avec) + ' (' + s.ou.replace('au-dessus', 'en dessous').replace('au-dessous', 'au-dessus') + ')').join(', '));
+  const lus = grouperRegles((L.parPiece[p.id] || []).filter(r => !r.declare && r.sev !== 'plan' && r.sev !== 'info'));
+  if (lus.length) lignes.push('<b>Points lus dans le plan</b> : ' + lus.map(g => esc(g.lib) + ' <span class="discret">(' + (g.sev === 'appui' ? 'appui' : 'vigilance') + ')</span>').join(' ; '));
+  return '<details class="repli"><summary>Ce que la BASE a déjà lu dans le plan pour cette pièce</summary><ul class="regle-liste">' + lignes.map(l => '<li>' + l + '</li>').join('') + '</ul><p class="discret">Pas besoin de le redire dans la fiche.</p></details>';
+}
+function htmlRapide(p, f) {
+  const liste = caracsDe(p).filter(c => c.rapide);
+  return '<p class="discret">Cochez ce qui est présent dans cette pièce. Une case non cochée ne veut pas dire « non » : on ne sait pas. Le sens indiqué est celui que propose le guide ; il se corrige dans le mode détaillé.</p>' +
+    '<div class="fiche-rapide">' + liste.map(c => { const rep = f.carac[c.id];
+      return '<label class="fiche-case" title="' + esc(c.aide + ' (' + c.fiche + ')') + '"><input type="checkbox"' + (rep && rep.v === 1 ? ' checked' : '') + ' onchange="cocherFiche(\'' + c.id + '\', this.checked)"><span class="fiche-lib">' + esc(c.lib) + '</span>' + tagSens(sensEffectif(c, rep)) + '</label>'; }).join('') + '</div>' +
+    '<label class="fiche-revue"><input type="checkbox"' + (f.revue ? ' checked' : '') + ' onchange="revueFiche(this.checked)"> J\'ai passé la pièce en revue : ce qui n\'est pas coché n\'y est pas.</label>';
+}
+function htmlLigneFiche(c, rep) {
+  const v = rep && (rep.v === 1 || rep.v === 0) ? rep.v : null, sens = sensEffectif(c, rep);
+  let h = '<div class="fiche-ligne-haut"><span class="fiche-lib" title="' + esc(c.aide + ' (' + c.fiche + ')') + '">' + esc(c.lib) + '</span>' + tagSens(sens) +
+    '<span class="tri" role="group" aria-label="Réponse">' + [[1, 'Oui'], [0, 'Non'], ['null', '?']].map(([val, nom]) => '<button type="button" class="' + ((val === 'null' ? v === null : v === val) ? 'on' : '') + '" aria-pressed="' + (val === 'null' ? v === null : v === val) + '" onclick="repondreFiche(\'' + c.id + '\', ' + val + ')">' + nom + '</button>').join('') + '</span></div>';
+  if (v === 1) h += '<div class="fiche-ligne-bas">' +
+    (c.niv ? '<label>Intensité <select onchange="intensiteFiche(\'' + c.id + '\', this.value)"><option value="">?</option>' + [1, 2, 3].map(n => '<option value="' + n + '"' + (rep.niv === n ? ' selected' : '') + '>' + NIVEAUX_CARAC[n] + '</option>').join('') + '</select></label>' : '') +
+    '<label>Sens <select onchange="sensFiche(\'' + c.id + '\', this.value)"><option value="">proposé : ' + esc(SENS_FICHE.find(s => s[0] === c.sens)[2]) + '</option>' + SENS_FICHE.filter(s => s[0] !== c.sens).map(s => '<option value="' + s[0] + '"' + (rep.sens === s[0] ? ' selected' : '') + '>' + esc(s[2]) + '</option>').join('') + '</select></label>' +
+    '<span class="discret">' + esc(c.aide) + ' <i>(' + esc(c.fiche) + ')</i></span></div>';
+  return h;
+}
+function htmlDetaillee(p, f) {
+  const liste = caracsDe(p), repondu = c => f.carac[c.id] && (f.carac[c.id].v === 0 || f.carac[c.id].v === 1);
+  return '<div class="boutons" style="margin:0 0 8px"><button type="button" class="bt-lien" onclick="basculerFamillesFiche()">Tout déplier / tout replier</button></div>' +
+    FAMILLES.map(([fam, nom]) => {
+      const items = liste.filter(c => c.fam === fam); if (!items.length) return '';
+      return '<details class="repli fiche-famille" data-fam="' + fam + '"' + (famillesOuvertes.has(fam) ? ' open' : '') + ' ontoggle="ouvertFamilleFiche(this.dataset.fam, this.open)"><summary>' + esc(nom) + ' · <span class="fiche-compte" data-fam="' + fam + '">' + items.filter(repondu).length + ' sur ' + items.length + '</span></summary>' +
+        items.map(c => '<div class="fiche-ligne" id="fl-' + c.id + '">' + htmlLigneFiche(c, f.carac[c.id]) + '</div>').join('') + '</details>';
+    }).join('');
+}
+function resumeFiches() {
+  const ps = pieces().filter(ficheOuverte); if (!ps.length) return '';
+  const faites = ps.filter(p => completudeFiche(p).niveau > 0).length;
+  return ' · fiches : ' + faites + ' pièce' + (faites > 1 ? 's' : '') + ' sur ' + ps.length;
+}
+function ouvertFamilleFiche(fam, ouvert) { if (ouvert) famillesOuvertes.add(fam); else famillesOuvertes.delete(fam); }
+function basculerFamillesFiche() {
+  const l = [...document.querySelectorAll('#fiche-corps details.fiche-famille')], tout = l.length && l.every(d => d.open);
+  l.forEach(d => { d.open = !tout; });
+}
+function majLigneFiche(cid) {
+  const p = pieceParId(pieceFiche), el = $('fl-' + cid); if (!p || !el) { majEnteteFiche(); return; }
+  const f = fiches()[p.id] || {carac: {}};
+  el.innerHTML = htmlLigneFiche(CARAC_PAR_ID[cid], (f.carac || {})[cid]);
+  majEnteteFiche();
+}
+function majEnteteFiche() {
+  const p = pieceParId(pieceFiche), e = $('fiche-entete'); if (!p || !e) return;
+  e.innerHTML = chipFiche(completudeFiche(p)) + ' <span class="discret">' + esc(nomTypeZone(p.type)) + (niveaux().length > 1 ? ' · ' + esc(nomNiveau(niveauDe(p))) : '') + '</span>';
+  const f = fiches()[p.id] || {carac: {}}, liste = caracsDe(p);
+  document.querySelectorAll('#fiche-corps .fiche-compte').forEach(s => { const items = liste.filter(c => c.fam === s.dataset.fam); s.textContent = items.filter(c => f.carac && f.carac[c.id] && (f.carac[c.id].v === 0 || f.carac[c.id].v === 1)).length + ' sur ' + items.length; });
+}
+function rendreFiche() {
+  const p = pieceParId(pieceFiche), el = $('fiche-corps'); if (!p || !el) return;
+  const f = fiches()[p.id] || {carac: {}}, autres = pieces().filter(x => x.id !== p.id && fiches()[x.id] && ficheOuverte(x));
+  el.innerHTML = '<div id="fiche-entete" style="margin:0 0 8px"></div>' + htmlLuPiece(p) +
+    '<div class="fiche-mode"><div class="segment" role="tablist" aria-label="Façon de remplir"><button type="button" role="tab" class="' + (modeFiche === 'rapide' ? 'on' : '') + '" aria-selected="' + (modeFiche === 'rapide') + '" onclick="choisirModeFiche(\'rapide\')">Rapide · à cocher</button>' +
+    '<button type="button" role="tab" class="' + (modeFiche === 'detaille' ? 'on' : '') + '" aria-selected="' + (modeFiche === 'detaille') + '" onclick="choisirModeFiche(\'detaille\')">Détaillé · grille complète</button></div>' +
+    (autres.length ? '<select class="bt petit" style="width:auto;min-height:30px" aria-label="Reprendre la fiche d\'une autre pièce" onchange="reprendreFiche(this.value); this.value=\'\'"><option value="">Reprendre la fiche de…</option>' + autres.map(x => '<option value="' + x.id + '">' + esc(x.nom) + '</option>').join('') + '</select>' : '') + '</div>' +
+    (modeFiche === 'rapide' ? htmlRapide(p, f) : htmlDetaillee(p, f)) +
+    '<div class="grille3" style="margin-top:12px">' +
+      '<label class="champ"><span>Hauteur sous plafond (m)</span><input type="text" inputmode="decimal" value="' + (f.hauteur ? String(f.hauteur).replace('.', ',') : '') + '" placeholder="ex. : 2,60" onchange="champFiche(\'hauteur\', this.value)"></label>' +
+      '<label class="champ"><span>Places prévues (personnes)</span><input type="text" inputmode="numeric" value="' + (f.capacite || '') + '" onchange="champFiche(\'capacite\', this.value)"></label>' +
+      '<label class="champ"><span>Combien y sont en général ?</span><input type="text" inputmode="numeric" value="' + (f.habituel || '') + '" onchange="champFiche(\'habituel\', this.value)"></label></div>' +
+    '<label class="champ"><span>Une remarque (facultatif)</span><textarea onchange="noteFiche(this.value)" placeholder="Ce que l\'équipe sait de cette pièce et que la liste ne dit pas.">' + esc(f.note || '') + '</textarea></label>' +
+    '<div class="boutons"><button type="button" class="bt petit danger" onclick="effacerFiche()">Effacer la fiche de cette pièce</button></div>' +
+    '<p class="discret" style="margin-top:10px">D\'après le guide « Autisme &amp; sensorialité » (CRA Alsace, 2017). Un même stimulus n\'agit pas dans le même sens pour tous : le sens proposé est une hypothèse de départ, que les épisodes confirment ou non.</p>';
+  majEnteteFiche();
+}
+/* — La liste des fiches, sous le plan — */
+function rendreListeFiches() {
+  const el = $('fiches-liste'); if (!el || !D) return;
+  const ps = pieces().filter(ficheOuverte);
+  if (!ps.length) { el.innerHTML = '<div class="vide">Dessinez quelques pièces : chacune aura sa fiche.</div>'; return; }
+  const c = ps.map(p => ({p, c: completudeFiche(p)})), faites = c.filter(x => x.c.niveau > 0).length, multi = niveaux().length > 1;
+  el.innerHTML = '<p class="discret" style="margin:0 0 8px">' + faites + ' pièce' + (faites > 1 ? 's' : '') + ' sur ' + ps.length + ' ' + (faites > 1 ? 'ont' : 'a') + ' une fiche. <b>Rapide</b> : quelques cases cochées. <b>Détaillée</b> : la grille presque complète.</p>' +
+    niveaux().map(n => { const l = c.filter(x => niveauDe(x.p) === n.id); if (!l.length) return '';
+      return (multi ? '<div class="jour-titre">' + esc(n.nom) + '</div>' : '') + l.map(x => '<div class="fiche-piece"><span class="fiche-piece-nom">' + esc(x.p.nom) + ' <span class="discret">' + esc(nomTypeZone(x.p.type)) + '</span></span>' + chipFiche(x.c) +
+        '<button type="button" class="bt petit" onclick="ouvrirFiche(\'' + x.p.id + '\')">' + (x.c.niveau ? 'Ouvrir' : 'Renseigner') + '</button></div>').join(''); }).join('');
 }
 
 
@@ -2250,10 +2612,13 @@ function effacer() {
    le foyer a deux niveaux, un escalier, une baie vitrée et des chambres qui voient le parking d'en haut ; l'externat a une
    échelle (sa salle multisensorielle est trop petite) et une salle de repli à porte à hublot ; le bâtiment provisoire se
    dessine sans échelle (le mode rapide) et cumule les points de vigilance d'un lieu improvisé.
+   Passe 226 : chaque lieu a les fiches de ses pièces. Le bâtiment provisoire les remplit en mode rapide (rien que la liste à cocher) ; le foyer a deux
+   fiches détaillées (une chambre, la salle de mise au calme) et un sens corrigé par l'équipe ; l'externat a sa salle multisensorielle (lumières
+   intermittentes), sa cantine très bruyante et sa salle de repli détaillée. Format : [numéro de la pièce, {oui, non, sens, complet, h, cap, hab, note, revue}].
    Formats : pièce [nom, type, rects, niveau] · porte [x, y, mur, largeur, côté, niveau, vitrage] · fenêtre [x, y, mur, largeur, niveau, « baie »]
    · meuble [type, x, y, l, h, niveau] · escalier [x, y, l, h, niveau bas, niveau haut, type]. Le niveau est un rang (0 par défaut). */
 const LIEUX_SIMULES = [
-  {nom: 'Bâtiment provisoire', desc: 'Un IME déménagé dans des bureaux, dessiné sans échelle : un hall unique où tout le monde arrive, un long couloir aveugle, des salles sans fenêtre, une cour non clôturée contre la route, et le parking devant la porte.', graine: 7,
+  {nom: 'Bâtiment provisoire', desc: 'Un IME déménagé dans des bureaux, dessiné sans échelle : un hall unique où tout le monde arrive, un long couloir aveugle, des salles sans fenêtre, une cour non clôturée contre la route, et le parking devant la porte. Ses fiches de pièces sont remplies en mode rapide.', graine: 7,
     dates: ['2026-09-07', '2026-09-25'], moments: null,
     pieces: [['Hall d\'accueil', 'accueil', [[0, 0, 10, 6]]], ['Couloir', 'circulation', [[10, 2, 14, 2], [22, 4, 2, 8]]], ['Salle bleue', 'activite', [[10, 4, 7, 6]]],
       ['Salle verte', 'activite', [[17, 4, 5, 6]]], ['Réfectoire', 'repas', [[0, 6, 10, 8], [10, 10, 6, 4]]], ['Salle calme', 'calme', [[16, 10, 6, 4]]], ['Sanitaires', 'sanitaires', [[24, 0, 4, 5]]],
@@ -2262,11 +2627,19 @@ const LIEUX_SIMULES = [
     fenetres: [[5, 0, 'h', 2], [0, 9.5, 'v', 2], [19, 14, 'h', 2], [28, 2.5, 'v', 1]],
     meubles: [['banc', 1, 1, 3, .6], ['table', 11, 6, 2, 1.2], ['table', 14, 6, 2, 1.2], ['chaise', 11.5, 7.5, .7, .7], ['chaise', 14.5, 7.5, .7, .7], ['table', 18, 6, 2, 1.2],
       ['table', 1.5, 8, 3, 1.2], ['table', 5.5, 8, 3, 1.2], ['table', 1.5, 11, 3, 1.2], ['table', 5.5, 11, 3, 1.2], ['tapis', 16.5, 10.5, 2, 2], ['canape', 19, 12.5, 2.6, 1]],
+    fiches: [
+      [0, {oui: ['resonance:3', 'brouhaha:3', 'neons', 'beaucoup-de-monde:3', 'passage-frequent', 'bruit-exterieur:2', 'plusieurs-fonctions'], h: 3.2, hab: 16, revue: true}],
+      [1, {oui: ['neons', 'resonance:2', 'coin-aveugle'], revue: true}],
+      [2, {oui: ['neons', 'couleurs-vives', 'decor-charge:2', 'resonance:1'], revue: true}],
+      [3, {oui: ['neons', 'decor-charge', 'tons-neutres'], revue: true}],
+      [4, {oui: ['resonance:3', 'sol-dur', 'brouhaha:3', 'odeurs-fortes:2', 'decor-charge'], h: 2.5, hab: 22, revue: true}],
+      [5, {oui: ['calme-depouillee', 'peut-sisoler'], revue: true}],
+      [9, {oui: ['jeux', 'cour-bruyante:1']}]],
     types: ['Crie', 'Jette des objets', 'Sort de la salle en courant', 'Se bouche les oreilles', 'Frappe un adulte'],
     // [pièce, moment, poids] : le hall à l'arrivée et au départ, le réfectoire au repas, la salle bleue en matinée, le parking à l'arrivée
     chauds: [[0, 0, 9], [0, 6, 5], [4, 3, 7], [2, 1, 5], [1, 2, 4], [3, 5, 2], [5, 4, 1], [8, 0, 3], [8, 6, 2], [9, 2, 2]], n: 36,
     commentaires: ['Arrivée de tous les jeunes en même temps, le hall résonne.', 'S\'est bouché les oreilles puis est sorti en courant.', 'Bruit des chaises au réfectoire.', 'Descendu du taxi, a couru vers la route.']},
-  {nom: 'Foyer d\'hébergement', desc: 'Une unité de vie sur deux niveaux : salon avec baie vitrée sur le jardin, salle à manger et chambres au rez-de-chaussée ; à l\'étage, des chambres au-dessus de la salle à manger, qui voient le parking, et une salle de mise au calme. Un escalier relie les deux.', graine: 19,
+  {nom: 'Foyer d\'hébergement', desc: 'Une unité de vie sur deux niveaux : salon avec baie vitrée sur le jardin, salle à manger et chambres au rez-de-chaussée ; à l\'étage, des chambres au-dessus de la salle à manger, qui voient le parking, et une salle de mise au calme. Un escalier relie les deux. Deux fiches détaillées, les autres rapides.', graine: 19,
     dates: ['2026-09-14', '2026-10-02'],
     moments: [['Lever', '07:00', '08:00'], ['Petit-déjeuner', '08:00', '09:00'], ['Matinée', '09:00', '12:00'], ['Déjeuner', '12:00', '13:15'], ['Temps calme', '13:15', '14:30'],
       ['Après-midi', '14:30', '18:30'], ['Dîner', '18:30', '19:45'], ['Coucher', '19:45', '21:30']],
@@ -2288,10 +2661,21 @@ const LIEUX_SIMULES = [
       ['canape', 1, 1, 2.6, 1], ['tapis', 2, 2.5, 2, 2], ['table', 9.5, 2, 4, 1.4], ['chaise', 10, 1, .7, .7], ['chaise', 12, 1, .7, .7], ['chaise', 10, 3.6, .7, .7], ['chaise', 12, 3.6, .7, .7],
       ['plan', 15.5, .5, 3, .8], ['bureau', 19.5, 13, 2, 1], ['banc', -5, 2, 2.5, .6],
       ['lit', 9, 1.5, 1.6, 3, 1], ['lit', 14, 1.5, 1.6, 3, 1], ['armoire', 11, 4.9, 1.6, .7, 1], ['armoire', 16, 4.9, 1.6, .7, 1], ['tapis', 1, 2, 3, 2, 1]],
+    fiches: [
+      [0, {oui: ['cloture', 'bancs', 'plantes-eau', 'sols-varies'], non: ['patio', 'cour-bruyante'], revue: true}],
+      [1, {oui: ['baie-vitree', 'occultation', 'lumiere-chaude', 'variateur', 'place-au-sol', 'mobilier-contenant', 'refuge-recoin', 'tons-neutres', 'aires-delimitees'], non: ['neons', 'resonance', 'plusieurs-fonctions'], h: 2.6, hab: 5, cap: 8, revue: true}],
+      [2, {oui: ['resonance:3', 'sol-dur', 'brouhaha:3', 'odeurs-fortes:2', 'tables-rondes', 'plusieurs-fonctions'], non: ['pieds-feutres', 'ambiance-sourde'], sens: {resonance: 'variable'}, h: 2.8, hab: 9, cap: 8, note: 'Deux services : certains résidents mangent après les autres.', revue: true}],
+      [4, {oui: ['neons', 'resonance:2', 'veilleuse-sol', 'sol-dur'], revue: true}],
+      [5, {complet: true, oui: ['isolation-phonique', 'occultation', 'variateur', 'lumiere-chaude', 'personnalise', 'peut-sisoler', 'chambre-individuelle', 'chambre-niches', 'signaletique', 'fonction-claire', 'tons-neutres', 'sol-souple', 'rangements-fermes'], h: 2.5, hab: 1, cap: 1, revue: true}],
+      [6, {oui: ['bruit-voisin:2', 'resonance:1', 'vis-a-vis', 'personnalise', 'peut-sisoler', 'tons-neutres', 'passage-frequent'], non: ['isolation-phonique', 'occultation'], revue: true}],
+      [8, {oui: ['resonance:2', 'odeurs-fortes:2', 'sanitaires-grands', 'sol-dur'], non: ['peut-sisoler']}],
+      [13, {oui: ['bruit-exterieur:3', 'bruit-voisin:3', 'reflets:2', 'personnalise'], non: ['isolation-phonique', 'occultation', 'variateur'], note: 'Une voiture sur le parking le soir : s\'est collé à la fenêtre, puis n\'a plus voulu se coucher.', revue: true}],
+      [14, {oui: ['bruit-exterieur:2', 'bruit-voisin:3'], non: ['isolation-phonique']}],
+      [16, {complet: true, oui: ['calme-depouillee', 'calme-protocole', 'isolation-phonique', 'lumiere-chaude', 'sol-souple', 'tons-neutres', 'peut-sisoler', 'lien-visuel'], h: 2.5, revue: true}]],
     types: ['Crie', 'Frappe les portes', 'Se tape la tête', 'Refuse de quitter sa chambre', 'Jette la vaisselle'],
     chauds: [[2, 3, 7], [2, 6, 8], [4, 0, 6], [4, 7, 7], [5, 7, 3], [6, 0, 3], [8, 0, 4], [1, 5, 2], [0, 5, 1], [12, 5, 1], [13, 7, 6], [14, 7, 3], [17, 7, 3], [16, 4, 3]], n: 42,
     commentaires: ['Attente du repas, bruit de la vaisselle.', 'A frappé la porte de la chambre voisine au moment du coucher.', 'Salle de bain occupée, a dû attendre dans le couloir.', 'Voiture sur le parking : s\'est collé à la fenêtre, puis n\'a plus voulu se coucher.']},
-  {nom: 'Externat, groupe des grands', desc: 'Un IME en journée, plan à l\'échelle (1 case = 0,8 m) : classe, atelier, cantine, une salle multisensorielle trop petite, une salle de repli à porte à hublot, une cour avec un petit préau ; le parking des taxis à côté.', graine: 31,
+  {nom: 'Externat, groupe des grands', desc: 'Un IME en journée, plan à l\'échelle (1 case = 0,8 m) : classe, atelier, cantine, une salle multisensorielle trop petite, une salle de repli à porte à hublot, une cour avec un petit préau ; le parking des taxis à côté. Ses fiches disent la salle multisensorielle, la cantine, la salle de repli.', graine: 31,
     dates: ['2026-09-21', '2026-10-09'], echelle: .8,
     moments: [['Arrivée', '08:45', '09:15'], ['Matinée', '09:15', '10:30'], ['Récréation', '10:30', '10:50'], ['Fin de matinée', '10:50', '12:00'], ['Cantine', '12:00', '13:00'],
       ['Temps de cour', '13:00', '13:30'], ['Après-midi', '13:30', '15:45'], ['Départ', '15:45', '16:15']],
@@ -2304,6 +2688,16 @@ const LIEUX_SIMULES = [
     meubles: [['table', 1, 1.5, 2, 1.2], ['table', 4, 1.5, 2, 1.2], ['table', 1, 3.7, 2, 1.2], ['table', 4, 3.7, 2, 1.2], ['bureau', 6.2, .5, 1.5, .9],
       ['plan', 9, 1, 5, .9], ['etagere', 9, 4.8, 3, .6], ['tapis', 16, 1.5, 3, 3], ['table', 1, 9.5, 3, 1.2], ['table', 5, 9.5, 3, 1.2], ['table', 1, 12, 3, 1.2], ['table', 5, 12, 3, 1.2],
       ['banc', 2, 17, 2.5, .6], ['banc', -3.5, 16, 2.5, .6], ['bureau', 13, 10, 2, 1], ['tapis', -3, 10, 2, 2]],
+    fiches: [
+      [0, {oui: ['neons', 'decor-charge:2', 'resonance:1', 'tables-rondes', 'aires-delimitees', 'refuge-recoin', 'signaletique', 'fonction-claire', 'brouhaha:2'], h: 2.7, hab: 8, cap: 12, revue: true}],
+      [1, {oui: ['machine-bruyante', 'resonance:2', 'angles-saillants', 'coin-aveugle', 'brouhaha:3'], non: ['pieds-feutres'], hab: 6, cap: 10, revue: true}],
+      [2, {oui: ['lumiere-intermittente', 'snoezelen-accompagnee', 'variateur', 'sol-souple', 'absorbants', 'lumiere-chaude', 'balancement'], non: ['isolation-phonique'], h: 3, cap: 4, hab: 2, note: 'Petite pour son équipement : le matériel est entassé.', revue: true}],
+      [3, {oui: ['neons', 'resonance:2', 'sol-dur']}],
+      [4, {oui: ['resonance:3', 'sol-dur', 'brouhaha:3', 'odeurs-fortes:3', 'tables-rondes'], non: ['pieds-feutres', 'ambiance-sourde'], h: 3.2, hab: 24, cap: 30, revue: true}],
+      [5, {oui: ['resonance:2', 'odeurs-fortes:2']}],
+      [7, {oui: ['cour-bruyante:3', 'jeux', 'sols-varies'], non: ['cloture'], revue: true}],
+      [8, {oui: ['couvert', 'contenant', 'bancs']}],
+      [11, {complet: true, oui: ['calme-depouillee', 'calme-protocole', 'peut-sisoler', 'lien-visuel', 'lumiere-chaude', 'sol-souple'], non: ['isolation-phonique', 'neons'], revue: true}]],
     types: ['Crie', 'Se bouche les oreilles', 'Sort de la salle en courant', 'Pousse un camarade', 'Renverse le mobilier'],
     chauds: [[7, 2, 11], [7, 5, 10], [4, 4, 8], [1, 1, 3], [3, 0, 2], [3, 7, 2], [0, 3, 2], [2, 6, 1], [9, 7, 3], [8, 2, 2], [11, 4, 3]], n: 40,
     commentaires: ['Sonnerie de la récréation, tout le monde sort en même temps.', 'Cantine très bruyante, a renversé son plateau.', 'S\'est réfugié sous le préau.', 'Attente du taxi sur le parking, a voulu partir vers la route.', 'Est allé de lui-même à la salle de repli.']}
@@ -2320,6 +2714,16 @@ function construireLieu(i) {
     .concat((L.fenetres || []).map(([x, y, o, long, k, cat]) => ({id: nouvelId('e'), cat: cat || 'fenetre', niveau: niv(k), x, y, o, long, cote: 1, retourne: false})))
     .concat((L.meubles || []).map(([type, x, y, w, h, k]) => ({id: nouvelId('e'), cat: 'meuble', niveau: niv(k), type, x, y, w, h})))
     .concat((L.escaliers || []).map(([x, y, w, h, a, b, type]) => ({id: nouvelId('e'), cat: 'escalier', type: type || 'escalier', niveau: niv(a), niveaux: [niv(a), niv(b)], x, y, w, h})));
+  // Les fiches des pièces : « oui » / « non » (avec l'intensité après les deux-points), sens corrigés, chiffres ; « complet » : tout le reste est « non »
+  d.b1.fiches = {};
+  (L.fiches || []).forEach(([pi, sp]) => {
+    const p = d.b1.plan.pieces[pi]; if (!p) return;
+    const carac = {}, poser = (liste, v) => (liste || []).forEach(t => { const [cid, niv] = t.split(':'), rep = {v}; if (v === 1 && +niv) rep.niv = +niv; if (v === 1 && sp.sens && sp.sens[cid]) rep.sens = sp.sens[cid]; carac[cid] = rep; });
+    if (sp.complet) caracsDe(p).forEach(c => { carac[c.id] = {v: 0}; });
+    poser(sp.non, 0); poser(sp.oui, 1);
+    const f = {carac}; if (sp.h) f.hauteur = sp.h; if (sp.cap) f.capacite = sp.cap; if (sp.hab) f.habituel = sp.hab; if (sp.note) f.note = sp.note; if (sp.revue) f.revue = true;
+    d.b1.fiches[p.id] = f;
+  });
   let s = L.graine; const alea = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
   const roles = ['Éducateur·rice spécialisé·e', 'AES / AMP', 'Moniteur·rice-éducateur·rice', 'Infirmier·e'];
   // Les couples pièce × moment : les points chauds pèsent lourd, tous les autres un peu (du bruit de fond)
@@ -2367,7 +2771,7 @@ function empreinteAdmin(t) {
   return h1.toString(16).padStart(8, '0') + h2.toString(16).padStart(8, '0');
 }
 function adminActif() { try { return sessionStorage.getItem(CLE_ADMIN) === '1'; } catch (e) { return false; } }
-function clesBase() { const l = []; try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (/^base-/.test(k) && [CLE_MISE, CLE_THEME].indexOf(k) < 0) l.push(k); } } catch (e) { /* rien */ } return l; }
+function clesBase() { const l = []; try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (/^base-/.test(k) && [CLE_MISE, CLE_THEME, CLE_MODE_FICHE].indexOf(k) < 0) l.push(k); } } catch (e) { /* rien */ } return l; }
 function restaurerMiseDeCote() {
   let m = null; try { m = JSON.parse(localStorage.getItem(CLE_MISE) || 'null'); } catch (e) { m = null; }
   if (!m) return false;
@@ -2423,6 +2827,14 @@ document.addEventListener('click', ev => {
 
 /* ══ Les notes de version ══ */
 const NOTES_BASE = [
+  {version: 'BASE v2026.10.12-5', titre: 'Les fiches des pièces : ce qu\'on y trouve, d\'après le guide', corps: '<p><b>Chaque pièce a sa fiche</b> (Arthur et Émilie) : le plan dit où sont les pièces, la fiche dit ce qu\'on y trouve, d\'après le guide « Autisme &amp; sensorialité » (CRA Alsace, 2017).</p><ul>' +
+    '<li><b>Deux façons de la remplir</b>, au choix : <b>rapide</b> (une liste à cocher, une vingtaine de points, deux minutes par pièce) ou <b>détaillée</b> (la grille complète par famille : oui, non ou on ne sait pas, l\'intensité, le sens, les chiffres). Le même dossier se remplit des deux façons.</li>' +
+    '<li><b>Quatre-vingt-neuf points en onze familles</b> : bruit, lumière naturelle, éclairage, couleurs et matériaux, air et toucher, mouvement, repères, monde et retrait, sécurité, dehors, lieux particuliers (salle de mise au calme, multisensorielle, activités, sanitaires…). Chacun dit sa fiche du guide ; une pièce n\'a que les points qui la concernent.</li>' +
+    '<li><b>Le sens est proposé, jamais imposé</b> : chaque point arrive avec le sens que lui donne le guide (peut faire monter la tension, peut apaiser, à sécuriser, ça dépend de la personne), que l\'équipe corrige pièce par pièce. Un même stimulus n\'agit pas dans le même sens pour tous.</li>' +
+    '<li><b>Les chiffres comptent</b> : hauteur sous plafond (le guide préconise 2,60 à 2,70 m), places prévues, nombre de personnes en général (le guide estime à 8 la taille maximale d\'un groupe).</li>' +
+    '<li><b>La lecture du plan s\'en nourrit</b> : ce qu\'on coche apparaît dans « Ce que la BASE lit dans le plan », marqué « Déclaré » ; ce que le plan avait déjà dit n\'est pas redit, et une occultation déclarée atténue la baie vitrée lue dans le plan.</li>' +
+    '<li>On peut reprendre la fiche d\'une autre pièce ; dupliquer une pièce copie sa fiche. Les fiches voyagent avec le dossier (fichier socle, fichier déclarant vierge) et ne sont pas défaites par « Annuler ».</li>' +
+    '<li><b>Les trois lieux simulés</b> ont leurs fiches : le bâtiment provisoire en mode rapide ; le foyer avec deux fiches détaillées (une chambre, la salle de mise au calme) ; l\'externat avec sa salle multisensorielle aux lumières intermittentes, sa cantine très bruyante et sa salle de repli.</li></ul>'},
   {version: 'BASE v2026.10.12-4', titre: 'La BASE lit le plan : étages, escaliers, voisinages, points de vigilance', corps: '<p><b>La BASE comprend le plan</b> (Arthur et Émilie), à partir du guide « Autisme &amp; sensorialité » (CRA Alsace, 2017) :</p><ul>' +
     '<li><b>Étages et sous-sols</b> : « ＋ Niveau… » ajoute un niveau ; un onglet par niveau, l\'étage d\'à côté en filigrane pour aligner les pièces. Un <b>escalier</b> ou un <b>ascenseur</b> relie deux niveaux et se dessine sur les deux. Dans le recueil, on choisit le niveau puis la pièce. Sur la carte et dans l\'image exportée, un plan par niveau.</li>' +
     '<li><b>Baies vitrées</b>, <b>portes vitrées</b> ou <b>à hublot</b>, et de nouveaux types de zone : chambre, séjour, salle de mise au calme, salle multisensorielle, soins.</li>' +
@@ -2451,8 +2863,8 @@ function rendreNotes() { $('notes-contenu').innerHTML = NOTES_BASE.map((n, i) =>
 /* ══ Les vérifications (refont les calculs par un autre chemin ; ne touchent pas au dossier) ══ */
 function verifierBASE() {
   const r = [], ok = (nom, cond, detail) => r.push({nom, ok: !!cond, detail: detail || ''});
-  const sauveD = D, sauveMode = mode, vraiPersister = persister, vraiToast = toast, sauveNiveau = niveauCourant;
-  persister = () => {}; toast = () => {};   // les vérifications ne touchent jamais au dossier enregistré, ni à l'écran
+  const sauveD = D, sauveMode = mode, vraiPersister = persister, vraiToast = toast, sauveNiveau = niveauCourant, vraiConfirm = window.confirm, sauveModeFiche = modeFiche;
+  persister = () => {}; toast = () => {}; window.confirm = () => true;   // les vérifications ne touchent jamais au dossier enregistré, ni à l'écran
   try {
     mode = 'socle'; D = exempleFictif();
     // 1. Les fichiers : la BASE refuse ceux de la BAF, accepte les siens, et un aller-retour rend le dossier intact
@@ -2572,8 +2984,75 @@ function verifierBASE() {
     ok('La carte du foyer a un plan par niveau, et chaque effectif est celui de sa pièce', cF.niveaux.length === 2 && cF.niveaux.every((n, i) => parNiveau[i].join() === piecesNiveau(n.id).map(p => comptF[p.id]).join()));
     const expo = svgExport(), xml = new DOMParser().parseFromString(expo.svg, 'image/svg+xml');
     ok('L\'image exportée du foyer est un SVG valide qui empile les deux niveaux', !xml.querySelector('parsererror') && expo.svg.indexOf('Rez-de-chaussée') >= 0 && expo.svg.indexOf('Étage') >= 0 && expo.H > cF.niveaux.reduce((a, n) => a + n.vb[3] * 30, 0));
+    // 8. Les fiches des pièces (passe 226)
+    const types226 = new Set(TYPES_ZONE.map(t => t[0])), classes226 = new Set(Object.values(CLASSES).flatMap(c => Object.keys(c))), balises226 = new Set([...types226, ...classes226, 'ext', 'int']);
+    ok('Le catalogue des fiches : points uniques, famille, sens et fiche du guide renseignés, balises connues', new Set(CARAC.map(c => c.id)).size === CARAC.length && CARAC.length >= 80 &&
+      CARAC.every(c => FAMILLES.some(f => f[0] === c.fam) && SENS_VALIDES[c.sens] && c.fiche && c.lib && c.aide && c.pour.every(t => balises226.has(t))), CARAC.length + ' points');
+    ok('Chaque famille a au moins quatre points, et il y a de quoi cocher vite (20 à 40 points dans la liste rapide)', FAMILLES.every(f => CARAC.filter(c => c.fam === f[0]).length >= 4) && CARAC.filter(c => c.rapide).length >= 20 && CARAC.filter(c => c.rapide).length <= 40, CARAC.filter(c => c.rapide).length + ' rapides');
+    ok('Les points que la lecture du plan consulte existent au catalogue', ['isolation-phonique', 'occultation', 'cloture', 'baie-vitree', 'sans-lumiere-naturelle', 'lien-visuel', 'plafond-haut', 'beaucoup-de-monde'].every(id => !!CARAC_PAR_ID[id]));
+    const ch226 = {id: 'ch', nom: 'Chambre', type: 'chambre', rects: [{x: 0, y: 0, w: 4, h: 4}]}, cour226 = {id: 'co', nom: 'Cour', type: 'exterieur', rects: [{x: 0, y: 0, w: 4, h: 4}]}, cal226 = {id: 'ca', nom: 'Calme', type: 'calme', rects: [{x: 0, y: 0, w: 2, h: 2}]};
+    const ids226 = p => caracsDe(p).map(c => c.id);
+    ok('Chaque pièce n\'a que les points qui la concernent : une chambre ses niches, la cour sa clôture, la salle de mise au calme son protocole',
+      ids226(ch226).indexOf('chambre-niches') >= 0 && ids226(ch226).indexOf('cloture') < 0 && ids226(cour226).indexOf('cloture') >= 0 && ids226(cour226).indexOf('neons') < 0 && ids226(cal226).indexOf('calme-protocole') >= 0 && ids226(ch226).indexOf('calme-protocole') < 0);
+    ok('Une route ou un parking n\'a pas de fiche', !ficheOuverte({type: 'route'}) && !ficheOuverte({type: 'parking'}) && ficheOuverte(ch226));
+    const avecFiche = (ps, els, fiches, ech) => { const b = plan225(ps, els, null, ech); b.fiches = fiches; return lectureDuPlan(b); };
+    const deuxPieces = [['A', 'chambre', 0, 0, 4, 4], ['B', 'sejour', 4, 0, 4, 4]], porteAB226 = [{id: 'd', cat: 'porte', x: 4, y: 2, o: 'v', long: 1}];
+    const fa226 = avecFiche(deuxPieces, porteAB226, {A: {carac: {resonance: {v: 1, niv: 3}, variateur: {v: 1}, neons: {v: 0}, 'cloture': {v: 1}}}});
+    const rr = id => fa226.regles.filter(r => r.id === id);
+    ok('Un point coché devient un point de vigilance (le sens du guide), un point d\'appui s\'il apaise ; un « non » et un point d\'un autre type de pièce ne comptent pas',
+      rr('carac-resonance').length === 1 && rr('carac-resonance')[0].sev === 'vigilance' && rr('carac-resonance')[0].declare === true && /très/.test(rr('carac-resonance')[0].titre) && rr('carac-variateur')[0].sev === 'appui' && !rr('carac-neons').length && !rr('carac-cloture').length);
+    ok('… avec sa source : le guide et sa fiche', rr('carac-resonance')[0].source.t === 'guide' && /fiche 8/.test(rr('carac-resonance')[0].source.f) && rr('carac-variateur')[0].source.f === 'fiche 7');
+    const fb226 = avecFiche(deuxPieces, porteAB226, {A: {carac: {resonance: {v: 1, sens: 'variable'}, 'vis-a-vis': {v: 1, sens: 'apaise'}}}});
+    ok('Le sens se corrige pièce par pièce : « ça dépend » n\'est plus une vigilance, et un point corrigé en « apaise » devient un appui', fb226.regles.find(r => r.id === 'carac-resonance').sev === 'info' && fb226.regles.find(r => r.id === 'carac-resonance').sens === 'variable' && fb226.regles.find(r => r.id === 'carac-vis-a-vis').sev === 'appui');
+    const plafond = avecFiche(deuxPieces, porteAB226, {A: {carac: {}, hauteur: 3.1, habituel: 10, capacite: 6}, B: {carac: {'plafond-haut': {v: 1}, 'beaucoup-de-monde': {v: 1}}, hauteur: 3.4, habituel: 12}});
+    ok('Les chiffres de la fiche parlent aussi : plafond au-dessus de 2,70 m, plus de 8 personnes, plus de monde que de places ; le même point coché en plus n\'est pas dit deux fois',
+      plafond.regles.filter(r => r.caracId === 'plafond-haut').length === 2 && plafond.regles.some(r => r.id === 'effectif-eleve' && r.pieces[0] === 'A') && plafond.regles.some(r => r.id === 'sureffectif' && r.pieces[0] === 'A') &&
+      plafond.regles.filter(r => r.caracId === 'beaucoup-de-monde' && r.pieces[0] === 'B').length === 1, plafond.regles.filter(r => r.declare).map(r => r.id).join(' '));
+    const baie226 = {id: 'b', cat: 'baie', x: 4, y: 2, o: 'v', long: 2.5}, parBaie = [['S', 'sejour', 0, 0, 4, 4], ['J', 'exterieur', 4, 0, 4, 4]];
+    const g1 = avecFiche(parBaie, [baie226], {S: {carac: {'baie-vitree': {v: 1}}}}), g2 = avecFiche(parBaie, [baie226], {S: {carac: {occultation: {v: 1}}}}), g3 = avecFiche(parBaie, [baie226], {});
+    ok('La baie lue dans le plan et la baie déclarée dans la fiche ne sont dite qu\'une fois ; une occultation déclarée atténue la baie',
+      g1.regles.filter(r => r.caracId === 'baie-vitree').length === 1 && g1.regles.find(r => r.caracId === 'baie-vitree').declare !== true && g3.regles.find(r => r.id === 'baie-vitree').sev === 'vigilance' && g2.regles.find(r => r.id === 'baie-vitree').sev === 'info');
+    const comp = (f, p) => completudeFiche(p || ch226, {[(p || ch226).id]: f}).niveau, tout = {}; caracsDe(ch226).forEach(c => { tout[c.id] = {v: 0}; });
+    ok('La fiche a trois états : rien, rapide (quelques réponses, ou « passé en revue », ou un chiffre), détaillée (la grille presque complète)',
+      completudeFiche(ch226, {}).niveau === 0 && comp({carac: {}}) === 0 && comp({carac: {resonance: {v: 1}}}) === 1 && comp({carac: {}, revue: true}) === 1 && comp({carac: {}, hauteur: 2.5}) === 1 && comp({carac: tout}) === 2);
+    // L'écran de la fiche : s'ouvre sur une pièce, se remplit des deux façons, se vide
+    D = construireLieu(1); mode = 'socle'; niveauCourant = null; selection = null; historique = []; refaites = [];
+    const sal = pieces().find(p => p.nom === 'Chambre 2'), avantFiche = JSON.stringify(D.b1.fiches[sal.id]);
+    modeFiche = 'rapide'; ouvrirFiche(sal.id);
+    ok('La fiche s\'ouvre sur une pièce : liste rapide à cocher (quelques cases déjà cochées dans le lieu simulé)', pieceFiche === sal.id && !$('fen-fiche').hidden && document.querySelectorAll('#fiche-corps .fiche-case').length >= 8 && document.querySelectorAll('#fiche-corps .fiche-case input:checked').length >= 3);
+    cocherFiche('neons', true); const apres = D.b1.fiches[sal.id].carac.neons;
+    cocherFiche('neons', false);
+    ok('Cocher écrit « oui » dans la fiche, décocher efface la réponse (on ne sait plus)', apres && apres.v === 1 && !D.b1.fiches[sal.id].carac.neons && JSON.stringify(D.b1.fiches[sal.id]) === avantFiche);
+    choisirModeFiche('detaille');
+    ok('Le mode détaillé montre la grille complète par famille', document.querySelectorAll('#fiche-corps details.fiche-famille').length >= 8 && document.querySelectorAll('#fiche-corps .fiche-ligne').length === caracsDe(sal).length && modeFiche === 'detaille', caracsDe(sal).length + ' lignes');
+    repondreFiche('couleurs-vives', 1); intensiteFiche('couleurs-vives', 2); sensFiche('couleurs-vives', 'variable');
+    const rc = D.b1.fiches[sal.id].carac['couleurs-vives'];
+    ok('Détaillé : oui, l\'intensité, le sens corrigé se gardent ; « non » les efface', rc.v === 1 && rc.niv === 2 && rc.sens === 'variable' && (repondreFiche('couleurs-vives', 0), D.b1.fiches[sal.id].carac['couleurs-vives'].niv === undefined && D.b1.fiches[sal.id].carac['couleurs-vives'].sens === undefined && D.b1.fiches[sal.id].carac['couleurs-vives'].v === 0));
+    champFiche('hauteur', '2,6'); champFiche('capacite', '3'); champFiche('habituel', '2'); noteFiche('Une remarque.');
+    ok('Les chiffres et la remarque se gardent (la virgule est acceptée)', D.b1.fiches[sal.id].hauteur === 2.6 && D.b1.fiches[sal.id].capacite === 3 && D.b1.fiches[sal.id].habituel === 2 && D.b1.fiches[sal.id].note === 'Une remarque.');
+    const autre = pieces().find(p => p.nom === 'Chambre 5');
+    ouvrirFiche(autre.id); reprendreFiche(sal.id);
+    ok('Reprendre la fiche d\'une autre pièce copie les réponses (pas la remarque), à corriger ensuite', JSON.stringify(D.b1.fiches[autre.id].carac) === JSON.stringify(D.b1.fiches[sal.id].carac) && !D.b1.fiches[autre.id].note && D.b1.fiches[autre.id].carac !== D.b1.fiches[sal.id].carac);
+    ouvrirFiche(sal.id); effacerFiche();
+    ok('Effacer la fiche d\'une pièce la retire', !D.b1.fiches[sal.id]); fermerFiche();
+    selection = {piece: pieces().find(p => p.nom === 'Chambre 1').id, morceau: 0}; const idDup = (dupliquerPiece(), selection.piece);
+    ok('Dupliquer une pièce copie sa fiche (sans la remarque)', !!D.b1.fiches[idDup] && Object.keys(D.b1.fiches[idDup].carac).length > 5 && D.b1.fiches[idDup].carac !== D.b1.fiches[pieces().find(p => p.nom === 'Chambre 1').id].carac);
+    const nbF = Object.keys(D.b1.fiches).length; ajouterNiveau('haut'); annuler();
+    ok('Les fiches ne sont pas défaites par « Annuler » du plan (elles n\'en font pas partie)', Object.keys(D.b1.fiches).length === nbF);
+    ok('Un ancien dossier reçoit des fiches vides ; une fiche dont la pièce n\'existe plus est écartée', (() => { const a = normaliserPlan({b1: {plan: {pieces: [{id: 'x', nom: 'X', type: 'bureau', rects: [{x: 0, y: 0, w: 2, h: 2}]}]}}}), b = normaliserPlan({b1: {fiches: {x: {carac: {}, revue: true}, fantome: {carac: {}}}, plan: {pieces: [{id: 'x', nom: 'X', type: 'bureau', rects: [{x: 0, y: 0, w: 2, h: 2}]}]}}}); return typeof a.b1.fiches === 'object' && !Object.keys(a.b1.fiches).length && !!b.b1.fiches.x && !b.b1.fiches.fantome; })());
+    const lieux226 = LIEUX_SIMULES.map((_, i) => construireLieu(i));
+    ok('Les trois lieux simulés ont leurs fiches, et chaque point coché existe et concerne sa pièce', lieux226.every(l => Object.keys(l.b1.fiches).length >= 6 && Object.entries(l.b1.fiches).every(([id, f]) => { const p = l.b1.plan.pieces.find(x => x.id === id); return p && ficheOuverte(p) && Object.keys(f.carac).every(cid => CARAC_PAR_ID[cid] && caracsDe(p).some(c => c.id === cid)); })));
+    const niveaux226 = l => Object.keys(l.b1.fiches).map(id => completudeFiche(l.b1.plan.pieces.find(x => x.id === id), l.b1.fiches).niveau);
+    ok('Le bâtiment provisoire est rempli en mode rapide, le foyer a deux fiches détaillées, l\'externat une salle de repli détaillée et une salle multisensorielle aux lumières intermittentes',
+      niveaux226(lieux226[0]).every(n => n === 1) && niveaux226(lieux226[1]).filter(n => n === 2).length === 2 && niveaux226(lieux226[2]).filter(n => n === 2).length >= 1 &&
+      Object.values(lieux226[2].b1.fiches).some(f => f.carac['lumiere-intermittente'] && f.carac['lumiere-intermittente'].v === 1));
+    const decl = lieux226.map(l => lectureDuPlan(l.b1).regles.filter(r => r.declare));
+    ok('Les points déclarés dans les fiches des trois lieux nourrissent la lecture : vigilance, appui, et le sens corrigé', decl.every(d => d.some(r => r.sev === 'vigilance') && d.some(r => r.sev === 'appui')) && decl[1].some(r => r.sens === 'variable' && r.id === 'carac-resonance') && decl[0].some(r => r.id === 'plafond-haut'), decl.map(d => d.length).join(' / '));
+    const vierge226 = JSON.parse(JSON.stringify(contenuDeclarantVierge())), socle226 = JSON.parse(JSON.stringify(contenuSocle()));
+    ok('Les fiches voyagent avec le dossier : fichier socle et fichier déclarant vierge', JSON.stringify(vierge226.b1.fiches) === JSON.stringify(D.b1.fiches) && JSON.stringify(socle226.b1.fiches) === JSON.stringify(D.b1.fiches) && lireFichierBASE(socle226, ['base-dossier']).ok);
+    pieceFiche = null; choisirModeFiche(sauveModeFiche);
   } catch (e) { ok('Les vérifications ont planté', false, e.message); }
-  finally { persister = vraiPersister; toast = vraiToast; niveauCourant = sauveNiveau; D = sauveD; mode = sauveMode; selection = null; historique = []; refaites = []; }
+  finally { persister = vraiPersister; toast = vraiToast; window.confirm = vraiConfirm; modeFiche = sauveModeFiche; pieceFiche = null; niveauCourant = sauveNiveau; D = sauveD; mode = sauveMode; selection = null; historique = []; refaites = []; }
   return r;
 }
 function afficherVerifications() {
