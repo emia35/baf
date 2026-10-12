@@ -1223,8 +1223,8 @@ body.tool-idc .intro-card .ethique{background:var(--rose-pale);border-left-color
 #view-accueil .mod-row .mod-btn.m2 .temps{color:#fff;opacity:.85;}
 #view-accueil .mod-row .mod-btn.m2:nth-child(2){background:var(--rose);}
 /* L'outil 3, la BASE : le bleu du contexte (le lieu, c'est l'environnement). */
-#view-accueil .mod-row .mod-btn.mod-base{background:var(--vol-contexte);color:var(--slate);text-decoration:none;}
-#view-accueil .mod-row .mod-btn.mod-base .num{color:var(--slate);}
+/* C'est un lien, pas un bouton : il reprend la taille et l'interligne des deux autres (sans quoi il héritait de ceux de la page). */
+#view-accueil .mod-row .mod-btn.mod-base{background:var(--vol-contexte);text-decoration:none;font-size:13.3333px;line-height:normal;}
 
 .mod-btn.synth{
   background:var(--slate);
@@ -4307,9 +4307,9 @@ html[data-theme="sombre"] .analyse-tete .rail-etape.tel-vue{color:#141A22;}
         </button>
         <!-- Outil 3, la BASE (12/10/2026) : une expérimentation d'Arthur, dans son propre fichier, sans lien avec le reste de la BAF. -->
         <a class="mod-btn m2 mod-base" href="base.html">
-          <span class="num">Outil 3 — BASE · expérimentation</span>
-          <span class="titre">Analyse d'un lieu</span>
-          <span class="desc">Où et quand, dans un lieu, les comportements-défis se concentrent : un plan, un recueil court, une carte.</span>
+          <span class="num">Outil 3 — BASE</span>
+          <span class="titre">Analyse spatio-environnementale</span>
+          <span class="desc">Cartographie des points sensibles dans un lieu donné, à un moment donné.</span>
         </a>
       </div>
     </div>
@@ -24227,6 +24227,15 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-12',
+    version: 'v2026.10.12-2',
+    titre: "Accueil : le bouton de l'outil 3, comme les deux autres",
+    corps: `
+<p><b>Accueil</b> (Arthur et Émilie) : le troisième outil s'appelle « Analyse spatio-environnementale » — « Cartographie des points sensibles dans un lieu donné, à un moment donné » —, et son bouton a maintenant la même allure que les deux autres (texte blanc, même interligne).</p>
+`
+  },
 
   {
     date: '2026-10-12',
