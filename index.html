@@ -1222,6 +1222,9 @@ body.tool-idc .intro-card .ethique{background:var(--rose-pale);border-left-color
 #view-accueil .mod-row .mod-btn.m2 .num,
 #view-accueil .mod-row .mod-btn.m2 .temps{color:#fff;opacity:.85;}
 #view-accueil .mod-row .mod-btn.m2:nth-child(2){background:var(--rose);}
+/* L'outil 3, la BASE : le bleu du contexte (le lieu, c'est l'environnement). */
+#view-accueil .mod-row .mod-btn.mod-base{background:var(--vol-contexte);color:var(--slate);text-decoration:none;}
+#view-accueil .mod-row .mod-btn.mod-base .num{color:var(--slate);}
 
 .mod-btn.synth{
   background:var(--slate);
@@ -4302,6 +4305,12 @@ html[data-theme="sombre"] .analyse-tete .rail-etape.tel-vue{color:#141A22;}
           <span class="titre">Indice de confiance</span>
           <span class="desc">Évaluer la qualité du processus d'analyse fonctionnelle produit.</span>
         </button>
+        <!-- Outil 3, la BASE (12/10/2026) : une expérimentation d'Arthur, dans son propre fichier, sans lien avec le reste de la BAF. -->
+        <a class="mod-btn m2 mod-base" href="base.html">
+          <span class="num">Outil 3 — BASE · expérimentation</span>
+          <span class="titre">Analyse d'un lieu</span>
+          <span class="desc">Où et quand, dans un lieu, les comportements-défis se concentrent : un plan, un recueil court, une carte.</span>
+        </a>
       </div>
     </div>
 
@@ -24218,6 +24227,22 @@ function svgActiviteCode() {
 }
 
 const NOTES_VERSION = [
+
+  {
+    date: '2026-10-12',
+    version: 'v2026.10.12-1',
+    titre: "Un troisième outil à l'essai : la BASE, l'analyse d'un lieu",
+    corps: `
+<p><b>Un troisième outil, à l'essai : la BASE</b> (Boussole d'Analyse Spatio-Environnementale) — une expérimentation d'Arthur, dans son propre fichier.</p>
+<ul>
+<li><b>Un lieu, pas une personne</b> : un service, un bâtiment, un groupe. La BASE cherche où et quand, dans ce lieu, les comportements-défis se concentrent. Ce n'est pas une analyse fonctionnelle.</li>
+<li><b>Préambule</b> : le plan du lieu, dessiné comme sur une feuille (pièces, pièces en L, grille, annuler, souris et doigt), les moments de la journée, les comportements suivis.</li>
+<li><b>Recueillir</b> : un formulaire court par épisode, la pièce choisie d'un toucher sur le plan, « Rien à signaler aujourd'hui », des fichiers déclarants qui emportent le plan, réunis ensuite sans rien perdre ni doubler.</li>
+<li><b>Synthèse</b> : la carte du lieu, chaque pièce colorée selon le nombre d'épisodes, avec filtres, chiffres clés et image à exporter.</li>
+<li><b>En vase clos</b>, le temps de l'essayer : la BASE ne lit ni n'écrit rien du recueil RDAF ni de l'ICAF ; ses fichiers ne s'ouvrent que dans la BASE. On y entre par le troisième bouton de l'accueil ; elle a ses propres notes de version.</li>
+</ul>
+`
+  },
 
   {
     date: '2026-10-11',
