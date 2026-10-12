@@ -357,6 +357,26 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--slate);}
 .poignee{fill:var(--sheet);stroke:var(--slate);}
 .morceau-actif{fill:none;stroke:var(--slate);stroke-dasharray:.3 .2;pointer-events:none;}
 
+/* ── Dehors, ouvertures, meubles (passe 224) — ajouts à la charte : le vert d'une cour, l'asphalte d'une route ── */
+:root{--ext-vert:#E3ECD6;--ext-trait:#6E8F6A;--asphalte:#D9D6CF;}
+@media screen{html[data-theme="sombre"]{--ext-vert:#25322A;--ext-trait:#8DB08A;--asphalte:#30343B;}}
+.zone-exterieur .piece-fond,.zone-preau .piece-fond{fill:var(--ext-vert);}
+.zone-route .piece-fond,.zone-parking .piece-fond{fill:var(--asphalte);}
+.exterieur .piece-trait{stroke:var(--ext-trait);}
+.piece.selection .piece-fond{fill:var(--slate-pale);}
+.piece.choisie .piece-fond{fill:var(--sauge-pale);}
+.route-ligne,.parking-ligne{stroke:#FFFFFF;opacity:.85;pointer-events:none;}
+.ouverture{stroke:var(--sheet);pointer-events:none;}
+.porte{stroke:var(--ink);pointer-events:none;}
+.porte-arc{fill:none;stroke:var(--ink-soft);pointer-events:none;}
+.fenetre{stroke:var(--vol-contexte-deep);pointer-events:none;}
+.elem-zone{fill:transparent;stroke:none;cursor:grab;}
+.elem-zone.selection{stroke:var(--slate);stroke-dasharray:.15 .1;}
+.meuble-fond{fill:var(--paper-deep);stroke:var(--ink-faint);cursor:grab;}
+.meuble.selection .meuble-fond{fill:var(--slate-pale);stroke:var(--slate);}
+.meuble.filigrane{opacity:.35;pointer-events:none;}
+.meuble-nom{font-family:var(--police-interface);fill:var(--ink-soft);text-anchor:middle;dominant-baseline:middle;pointer-events:none;}
+.noms{pointer-events:none;}
 /* ── Listes du préambule ── */
 .liste-edit{display:flex;flex-direction:column;gap:6px;margin:0 0 10px;}
 .liste-edit .ligne{display:grid;grid-template-columns:minmax(0,1fr) 92px 92px 34px;gap:6px;align-items:center;}
@@ -512,6 +532,9 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
       <p class="discret">Dessinez comme sur une feuille pour un collègue : pas d'échelle ni de mètres, seules comptent les tailles et les voisinages.</p>
       <div class="plan-outils">
         <button type="button" class="bt plein petit" onclick="ajouterPiece()">＋ Pièce</button>
+        <button type="button" class="bt petit" onclick="ajouterMural('porte')" title="Sur un mur de la pièce choisie ; elle glisse ensuite le long des murs">＋ Porte</button>
+        <button type="button" class="bt petit" onclick="ajouterMural('fenetre')" title="Sur un mur de la pièce choisie ; elle glisse ensuite le long des murs">＋ Fenêtre</button>
+        <select class="bt petit" style="width:auto;min-height:28px;padding:0 8px" aria-label="Ajouter un meuble" onchange="ajouterMeuble(this.value); this.value=''"><option value="">＋ Meuble…</option></select>
         <span class="sep"></span>
         <button type="button" class="bt petit" id="btn-annuler" onclick="annuler()" title="Annuler (Ctrl+Z)">↶ Annuler</button>
         <button type="button" class="bt petit" id="btn-refaire" onclick="refaire()" title="Rétablir (Ctrl+Y)">↷ Rétablir</button>
@@ -524,7 +547,7 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
           <button type="button" class="texte" onclick="ajusterVue()" title="Voir tout le plan" aria-label="Voir tout le plan">⤢</button>
         </div>
       </div>
-      <p class="plan-aide">Glisser une pièce pour la déplacer, ses poignées pour l'agrandir ; glisser le fond pour se déplacer ; molette ou ＋ / － pour zoomer. Double-clic (ou appui long) sur une pièce pour la nommer.</p>
+      <p class="plan-aide">Glisser une pièce pour la déplacer, ses poignées pour l'agrandir ; glisser le fond pour se déplacer ; molette ou ＋ / － pour zoomer. Double-clic (ou appui long) sur une pièce pour la nommer. Les portes et fenêtres se posent sur un mur de la pièce choisie, les meubles dedans ; les zones de dehors (cour, route, parking) se choisissent dans « Type de zone ».</p>
       <div class="plan-panneau" id="plan-panneau"></div>
     </div>
     <div class="feuille">
@@ -680,10 +703,11 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
    chose lue de la BAF, en lecture : le choix clair / sombre, pour s'ouvrir dans le même thème.
    ══════════════════════════════════════════════════════════════════════════════════════════════ */
 
-const VERSION_BASE = 'BASE v2026.10.12-2';
+const VERSION_BASE = 'BASE v2026.10.12-3';
 const CLE_SOCLE = 'base-dossier-v1', CLE_DECL = 'base-declarant-v1', CLE_MODE = 'base-mode', CLE_THEME = 'base-theme';
 const TYPES_ZONE = [['activite', "Salle d'activité"], ['repos', 'Salle de repos'], ['accueil', 'Accueil'], ['circulation', 'Circulation'],
-  ['repas', 'Repas'], ['sanitaires', 'Sanitaires'], ['exterieur', 'Extérieur'], ['bureau', 'Bureau'], ['autre', 'Autre']];
+  ['repas', 'Repas'], ['sanitaires', 'Sanitaires'], ['bureau', 'Bureau'], ['autre', 'Autre'],
+  ['exterieur', 'Cour, jardin'], ['route', 'Route'], ['parking', 'Parking'], ['preau', 'Préau, abri']];
 const MOMENTS_DEFAUT = [['Arrivée, accueil', '08:45', '09:15'], ['Matinée', '09:15', '11:45'], ['Transition', '11:45', '12:00'],
   ['Repas', '12:00', '13:00'], ['Temps calme', '13:00', '13:45'], ['Après-midi', '13:45', '16:00'], ['Départ', '16:00', '16:30']];
 const SUGGESTIONS_CD = ['Crie', 'Jette des objets', 'Sort de la salle en courant', 'Se tape la tête', 'Mord', 'Frappe un adulte',
@@ -724,7 +748,7 @@ let D = null;           // le dossier ouvert dans le mode courant
 function dossierVide() {
   return {
     idDossier: nouvelId('lieu'), cree: new Date().toISOString(), modifie: '',
-    b1: {lieu: '', dates: {debut: '', fin: ''}, plan: {pieces: []},
+    b1: {lieu: '', dates: {debut: '', fin: ''}, plan: {pieces: [], elements: []},
       moments: MOMENTS_DEFAUT.map(m => ({id: nouvelId('m'), nom: m[0], debut: m[1], fin: m[2]})), typesCD: []},
     b2: {episodes: [], calmes: []},
     contributions: {}, exporte: ''
@@ -739,10 +763,13 @@ function persister() {
   catch (e) { if (!alerteStockage) { alerteStockage = true; alert("La BASE n'arrive plus à enregistrer dans ce navigateur. Exportez votre fichier maintenant pour ne rien perdre."); } }
   majBarre();
 }
+// Un dossier d'avant les portes et les meubles (passe 224) reçoit une liste vide : rien d'autre ne change.
+function normaliserPlan(d) { if (d && d.b1 && d.b1.plan && !Array.isArray(d.b1.plan.elements)) d.b1.plan.elements = []; return d; }
 function changerMode(m) {
   mode = m === 'declarant' ? 'declarant' : 'socle';
   try { localStorage.setItem(CLE_MODE, mode); } catch (e) { /* rien */ }
   D = lireStockage(mode === 'declarant' ? CLE_DECL : CLE_SOCLE) || (mode === 'socle' ? dossierVide() : null);
+  normaliserPlan(D);
   document.body.classList.toggle('mode-declarant', mode === 'declarant');
   historique = []; refaites = []; selection = null;
 }
@@ -821,6 +848,7 @@ function ouvrirSocle(r, nom) {
   const c = clone(r.contenu); delete c.baf;
   D = Object.assign(dossierVide(), c, {exporte: r.env.exporte || ''});
   D.idDossier = r.env.idDossier || c.idDossier || D.idDossier;
+  normaliserPlan(D);
   persister(); aller('recueillir'); toast('Fichier socle ouvert : ' + (D.b1.lieu || 'lieu sans nom') + '.');
 }
 function ouvrirDeclarant(r) {
@@ -832,6 +860,7 @@ function ouvrirDeclarant(r) {
   D = {idDossier: r.env.idDossier, idContribution: r.env.idContribution || nouvelId('ctr'), b1: c.b1, b2: c.b2 || {episodes: [], calmes: []},
     declarant: c.declarant || null, modifie: '', exporte: r.env.vierge ? '' : (r.env.envoye || '')};
   if (!D.b2.calmes) D.b2.calmes = [];
+  normaliserPlan(D);
   persister(); aller('recueillir');
   if (!D.declarant || !D.declarant.role) demanderRole();
 }
@@ -960,23 +989,145 @@ function supprimerPiece() {
   const p = selection && pieceParId(selection.piece); if (!p) return;
   const n = mode === 'socle' ? episodesDansPiece(p.id) : 0;
   if (n) { alert('« ' + p.nom + ' » a déjà ' + nb(n, 'épisode') + ' : on ne la supprime pas, pour ne rien perdre. Renommez-la, ou déplacez-la.'); return; }
-  modifierPlan(() => D.b1.plan.pieces = pieces().filter(x => x.id !== p.id)); selection = null; rendrePlanEdition();
+  const siens = new Set(elementsDeLaPiece(p).map(e => e.id));
+  modifierPlan(() => { D.b1.plan.pieces = pieces().filter(x => x.id !== p.id); D.b1.plan.elements = elements().filter(e => !siens.has(e.id)); }); selection = null; rendrePlanEdition();
 }
 function renommerPiece(v) { const p = selection && pieceParId(selection.piece); if (!p) return; modifierPlan(() => { p.nom = v; }); }
 function typerPiece(v) { const p = selection && pieceParId(selection.piece); if (!p) return; modifierPlan(() => { p.type = v; }); }
 const nomTypeZone = t => (TYPES_ZONE.find(x => x[0] === t) || ['', ''])[1];
+
+/* ── Intérieur, extérieur (passe 224) : les zones de dehors se dessinent autrement (contour en pointillés, cour verte,
+   route et parking couleur asphalte) et se comptent à part dans la synthèse. ── */
+const EXTERIEURS = ['exterieur', 'route', 'parking', 'preau'];
+const estExterieur = t => EXTERIEURS.indexOf(t) >= 0;
+function optionsTypesZone(choisi) {
+  const opt = t => '<option value="' + t[0] + '"' + (choisi === t[0] ? ' selected' : '') + '>' + esc(t[1]) + '</option>';
+  return '<optgroup label="Intérieur">' + TYPES_ZONE.filter(t => !estExterieur(t[0])).map(opt).join('') + '</optgroup>' +
+    '<optgroup label="Extérieur">' + TYPES_ZONE.filter(t => estExterieur(t[0])).map(opt).join('') + '</optgroup>';
+}
+
+/* ── Portes, fenêtres, meubles (passe 224) ──
+   Une porte ou une fenêtre s'accroche à un mur (le bord d'un morceau) et glisse le long des murs ; un meuble se pose
+   dans une pièce, se tourne, s'agrandit. Les meubles et les ouvertures d'une pièce la suivent quand on la déplace. */
+const MEUBLES = [['table', 'Table', 2, 1.2], ['chaise', 'Chaise', .7, .7], ['canape', 'Canapé', 2.6, 1], ['lit', 'Lit', 1.6, 3], ['armoire', 'Armoire', 2, .8],
+  ['bureau', 'Bureau', 1.8, 1], ['etagere', 'Étagère', 2, .6], ['plan', 'Plan de travail', 2.5, .8], ['banc', 'Banc', 2.5, .6], ['tapis', 'Tapis', 2, 2], ['autre', 'Autre meuble', 1.5, 1]];
+const nomMeuble = t => (MEUBLES.find(m => m[0] === t) || ['', 'Meuble'])[1];
+function elements() { if (!D.b1.plan.elements) D.b1.plan.elements = []; return D.b1.plan.elements; }
+function elemParId(id) { return elements().find(e => e.id === id); }
+const arrondi = (v, pas) => Math.round(v / pas) * pas;
+// Les murs : les quatre bords de chaque morceau ; « int » dit de quel côté est l'intérieur (+1 : vers les x ou y croissants).
+function murs() {
+  const l = [];
+  pieces().forEach(p => p.rects.forEach(r => {
+    l.push({o: 'h', a: r.x, b: r.x + r.w, c: r.y, int: 1, piece: p.id}, {o: 'h', a: r.x, b: r.x + r.w, c: r.y + r.h, int: -1, piece: p.id},
+      {o: 'v', a: r.y, b: r.y + r.h, c: r.x, int: 1, piece: p.id}, {o: 'v', a: r.y, b: r.y + r.h, c: r.x + r.w, int: -1, piece: p.id});
+  }));
+  return l;
+}
+// Accroche une porte ou une fenêtre au mur le plus proche du point (x, y), en restant entière sur ce mur.
+function accrocher(el, x, y) {
+  let best = null, dmin = Infinity;
+  murs().forEach(m => {
+    if (m.b - m.a < el.long) return;
+    const le = m.o === 'h' ? x : y, a = Math.max(m.a + el.long / 2, Math.min(m.b - el.long / 2, arrondi(le, .5)));
+    const px = m.o === 'h' ? a : m.c, py = m.o === 'h' ? m.c : a, d = Math.hypot(px - x, py - y);
+    if (d < dmin - 1e-9) { dmin = d; best = {px, py, m}; }
+  });
+  if (!best) return false;
+  el.x = best.px; el.y = best.py; el.o = best.m.o; el.cote = best.m.int * (el.retourne ? -1 : 1);
+  return true;
+}
+function centreElement(e) { return e.cat === 'meuble' ? {x: e.x + e.w / 2, y: e.y + e.h / 2} : {x: e.x, y: e.y}; }
+function elementsDeLaPiece(p) {
+  return elements().filter(e => { const c = centreElement(e); return p.rects.some(r => c.x >= r.x - .01 && c.x <= r.x + r.w + .01 && c.y >= r.y - .01 && c.y <= r.y + r.h + .01); });
+}
+function deplacerPiece(p, rects0, elems0, dx, dy) {
+  p.rects = rects0.map(r => ({x: r.x + dx, y: r.y + dy, w: r.w, h: r.h}));
+  elems0.forEach(e0 => { const e = elemParId(e0.id); if (e) { e.x = e0.x + dx; e.y = e0.y + dy; } });
+}
+function ajouterMural(cat) {
+  const p = selection && selection.piece && pieceParId(selection.piece);
+  if (!p) { toast('Touchez d\'abord la pièce où poser la ' + (cat === 'porte' ? 'porte' : 'fenêtre') + '.'); return; }
+  const r = p.rects[selection.morceau || 0], el = {id: nouvelId('e'), cat, long: cat === 'porte' ? 1 : 1.5, retourne: false};
+  // Sur le mur du bas du morceau, au milieu ; une deuxième se décale pour ne pas recouvrir la première
+  let x = r.x + r.w / 2;
+  while (elements().some(e => e.cat !== 'meuble' && Math.abs(e.x - x) < .1 && Math.abs(e.y - (r.y + r.h)) < .1)) x += 1.5;
+  modifierPlan(() => { accrocher(el, x, r.y + r.h); elements().push(el); });
+  selection = {elem: el.id}; rendrePlanEdition();
+}
+function ajouterMeuble(type) {
+  if (!type) return;
+  const m = MEUBLES.find(x => x[0] === type) || MEUBLES[MEUBLES.length - 1];
+  const p = selection && selection.piece && pieceParId(selection.piece), c = cadreEdition();
+  const r = p ? p.rects[selection.morceau || 0] : null;
+  const cx = r ? r.x + r.w / 2 : vueEdition.x + c.w / vueEdition.k / 2, cy = r ? r.y + r.h / 2 : vueEdition.y + c.h / vueEdition.k / 2;
+  const el = {id: nouvelId('e'), cat: 'meuble', type: m[0], x: arrondi(cx - m[2] / 2, .5), y: arrondi(cy - m[3] / 2, .5), w: m[2], h: m[3]};
+  modifierPlan(() => elements().push(el));
+  selection = {elem: el.id}; rendrePlanEdition();
+}
+function modifierElement(fn) { const e = selection && selection.elem && elemParId(selection.elem); if (!e) return; modifierPlan(() => fn(e)); }
+function supprimerElement() { const id = selection && selection.elem; if (!id) return; modifierPlan(() => { D.b1.plan.elements = elements().filter(e => e.id !== id); }); selection = null; rendrePlanEdition(); }
+function tournerMeuble() { modifierElement(e => { const cx = e.x + e.w / 2, cy = e.y + e.h / 2, w = e.w; e.w = e.h; e.h = w; e.x = arrondi(cx - e.w / 2, .25); e.y = arrondi(cy - e.h / 2, .25); }); }
+function tailleElement(champ, delta) {
+  modifierElement(e => {
+    if (e.cat === 'meuble') e[champ] = Math.max(.5, Math.min(12, +(e[champ] + delta).toFixed(2)));
+    else { e.long = Math.max(.5, Math.min(4, +(e.long + delta).toFixed(2))); accrocher(e, e.x, e.y); }
+  });
+}
+function retournerPorte() { modifierElement(e => { e.retourne = !e.retourne; e.cote = -(e.cote || 1); }); }
+function typerMeuble(t) { modifierElement(e => { e.type = t; }); }
+
+// Le dessin des portes, fenêtres et meubles. « filigrane » : sur la carte et le plan du recueil, les meubles s'effacent.
+function dessinElements(o) {
+  const k = o.k || 26, ep = (o.trait || 2.2) / k, els = (D && D.b1.plan.elements) || [];
+  const meubles = els.filter(e => e.cat === 'meuble').map(e => {
+    const sel = o.selection === e.id ? ' selection' : '', t = Math.min(.36, e.w / Math.max(3, nomMeuble(e.type).length * .55));
+    return '<g class="meuble' + sel + (o.filigrane ? ' filigrane' : '') + '"><rect class="meuble-fond" data-elem="' + e.id + '" x="' + e.x + '" y="' + e.y + '" width="' + e.w + '" height="' + e.h + '" rx="' + (e.type === 'chaise' ? .2 : .1) + '" stroke-width="' + ep * .7 + '"/>' +
+      (!o.filigrane && e.w >= 1 && e.h >= .55 ? '<text class="meuble-nom" x="' + (e.x + e.w / 2) + '" y="' + (e.y + e.h / 2) + '" font-size="' + t + '">' + esc(nomMeuble(e.type)) + '</text>' : '') + '</g>';
+  }).join('');
+  const muraux = els.filter(e => e.cat !== 'meuble').map(e => {
+    const L = e.long, h = e.o === 'h', x1 = h ? e.x - L / 2 : e.x, y1 = h ? e.y : e.y - L / 2, x2 = h ? e.x + L / 2 : e.x, y2 = h ? e.y : e.y + L / 2;
+    const sel = o.selection === e.id, cote = e.cote || 1;
+    let g = '<line class="ouverture" x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke-width="' + ep * 2.8 + '"/>';
+    if (e.cat === 'porte') {
+      const fx = h ? x1 : x1 + cote * L, fy = h ? y1 + cote * L : y1;   // le battant, ouvert à angle droit depuis le gond
+      const sweep = h ? (cote > 0 ? 1 : 0) : (cote > 0 ? 0 : 1);
+      g += '<line class="porte" x1="' + x1 + '" y1="' + y1 + '" x2="' + fx + '" y2="' + fy + '" stroke-width="' + ep * .9 + '"/>' +
+        '<path class="porte-arc" d="M' + x2 + ' ' + y2 + ' A' + L + ' ' + L + ' 0 0 ' + sweep + ' ' + fx + ' ' + fy + '" stroke-width="' + ep * .5 + '"/>';
+    } else {
+      const d = ep * .9, dx = h ? 0 : d, dy = h ? d : 0;
+      g += '<line class="fenetre" x1="' + (x1 - dx) + '" y1="' + (y1 - dy) + '" x2="' + (x2 - dx) + '" y2="' + (y2 - dy) + '" stroke-width="' + ep * .55 + '"/>' +
+        '<line class="fenetre" x1="' + (x1 + dx) + '" y1="' + (y1 + dy) + '" x2="' + (x2 + dx) + '" y2="' + (y2 + dy) + '" stroke-width="' + ep * .55 + '"/>' +
+        '<line class="fenetre" x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke-width="' + ep * .35 + '"/>';
+    }
+    if (o.edition) {
+      const z = .7, zx = h ? x1 : e.x - z / 2, zy = h ? e.y - z / 2 : y1;
+      g += '<rect class="elem-zone' + (sel ? ' selection' : '') + '" data-elem="' + e.id + '" x="' + zx + '" y="' + zy + '" width="' + (h ? L : z) + '" height="' + (h ? z : L) + '" rx="' + (.12) + '" stroke-width="' + (1.5 / k) + '"/>';
+    }
+    return '<g class="' + e.cat + '-g">' + g + '</g>';
+  }).join('');
+  return (o.meubles === false ? '' : meubles) + muraux;
+}
 
 /* Le dessin d'un plan, commun à l'édition, au choix de la pièce et à la carte. Les traits de tous les morceaux d'abord,
    puis leurs fonds par-dessus : les coutures intérieures d'une pièce en L disparaissent, seul son contour reste. */
 function dessinPlan(ps, o) {
   const k = o.k || 26, ep = (o.trait || 2.2) / k;
   const grand = p => p.rects.reduce((a, r) => r.w * r.h > a.w * a.h ? r : a, p.rects[0]);
-  return ps.map(p => {
-    const cl = 'piece' + (o.selection === p.id ? ' selection' : '') + (o.choisie === p.id ? ' choisie' : '');
+  const corps = ps.map(p => {
+    const ext = estExterieur(p.type);
+    const cl = 'piece zone-' + esc(p.type) + (ext ? ' exterieur' : '') + (o.selection === p.id ? ' selection' : '') + (o.choisie === p.id ? ' choisie' : '');
     const fond = o.couleurs ? ' style="fill:' + o.couleurs[p.id] + '"' : '';
     const g = grand(p), cx = g.x + g.w / 2, cy = g.y + g.h / 2, taille = Math.max(.42, Math.min(1, g.w / Math.max(4, (p.nom || '').length * .62)));
-    const traits = p.rects.map(r => '<rect class="piece-trait" x="' + r.x + '" y="' + r.y + '" width="' + r.w + '" height="' + r.h + '" stroke-width="' + (ep * 2) + '"/>').join('');
+    const traits = p.rects.map(r => '<rect class="piece-trait" x="' + r.x + '" y="' + r.y + '" width="' + r.w + '" height="' + r.h + '" stroke-width="' + (ep * 2) + '"' + (ext ? ' stroke-dasharray="' + (ep * 3) + ' ' + (ep * 2.2) + '"' : '') + '/>').join('');
     const fonds = p.rects.map((r, i) => '<rect class="piece-fond" data-piece="' + p.id + '" data-morceau="' + i + '" x="' + r.x + '" y="' + r.y + '" width="' + r.w + '" height="' + r.h + '"' + fond + '/>').join('');
+    // La route : une ligne médiane en tirets ; le parking : des places tracées.
+    let marques = '';
+    if ((p.type === 'route' || p.type === 'parking') && !o.couleurs) {
+      const r = g, long = r.w >= r.h;
+      if (p.type === 'route') marques = '<line class="route-ligne" x1="' + (long ? r.x + .3 : cx) + '" y1="' + (long ? cy : r.y + .3) + '" x2="' + (long ? r.x + r.w - .3 : cx) + '" y2="' + (long ? cy : r.y + r.h - .3) + '" stroke-width="' + ep * 1.2 + '" stroke-dasharray="' + (ep * 6) + ' ' + (ep * 5) + '"/>';
+      else for (let t = 1.2; t < (long ? r.w : r.h) - .2; t += 1.2) marques += '<line class="parking-ligne" x1="' + (long ? r.x + t : r.x) + '" y1="' + (long ? r.y : r.y + t) + '" x2="' + (long ? r.x + t : r.x + Math.min(1.6, r.w * .4)) + '" y2="' + (long ? r.y + Math.min(1.6, r.h * .4) : r.y + t) + '" stroke-width="' + ep * .9 + '"/>';
+    }
     let texte;
     if (o.comptes) {
       const n = o.comptes[p.id] || 0, coul = o.encre ? o.encre[p.id] : '';
@@ -986,8 +1137,10 @@ function dessinPlan(ps, o) {
       texte = '<text class="piece-nom" x="' + cx + '" y="' + (cy - (o.types ? taille * .3 : 0)) + '" font-size="' + (taille * .82) + '">' + esc(p.nom) + '</text>' +
         (o.types ? '<text class="piece-type" x="' + cx + '" y="' + (cy + taille * .62) + '" font-size="' + (taille * .5) + '">' + esc(nomTypeZone(p.type)) + '</text>' : '');
     }
-    return '<g class="' + cl + '" data-piece="' + p.id + '">' + traits + fonds + texte + '</g>';
-  }).join('');
+    return {texte, g: '<g class="' + cl + '" data-piece="' + p.id + '">' + traits + fonds + marques + '</g>'};
+  });
+  // Les pièces, puis les meubles et les ouvertures, puis les noms par-dessus tout.
+  return corps.map(c => c.g).join('') + (o.elements === false ? '' : dessinElements(o)) + '<g class="noms">' + corps.map(c => c.texte).join('') + '</g>';
 }
 function rendrePlanEdition() {
   const svg = $('plan-edition'); if (!svg || !$('vue-preambule').classList.contains('show')) return;
@@ -996,26 +1149,47 @@ function rendrePlanEdition() {
   const pas = 1, r = Math.max(.04, 1.2 / k);
   let h = '<defs><pattern id="grille" width="' + pas + '" height="' + pas + '" patternUnits="userSpaceOnUse"><circle cx="0" cy="0" r="' + r + '" fill="var(--line)"/></pattern></defs>' +
     '<rect class="plan-fond" x="' + v.x + '" y="' + v.y + '" width="' + vw + '" height="' + vh + '" fill="url(#grille)"/>';
-  h += dessinPlan(pieces(), {k, selection: selection && selection.piece, types: true});
-  const p = selection && pieceParId(selection.piece);
+  h += dessinPlan(pieces(), {k, selection: selection && (selection.piece || selection.elem), types: true, edition: true});
+  const p = selection && selection.piece && pieceParId(selection.piece);
+  const e = selection && selection.elem && elemParId(selection.elem);
+  const poignees = m => { const t = 11 / k; let s = ''; [['nw', 0, 0], ['n', .5, 0], ['ne', 1, 0], ['e', 1, .5], ['se', 1, 1], ['s', .5, 1], ['sw', 0, 1], ['w', 0, .5]].forEach(([d, fx, fy]) => {
+    s += '<rect class="poignee" data-poignee="' + d + '" x="' + (m.x + m.w * fx - t / 2) + '" y="' + (m.y + m.h * fy - t / 2) + '" width="' + t + '" height="' + t + '" rx="' + (2 / k) + '" stroke-width="' + (1.5 / k) + '" style="cursor:' + d + '-resize"/>'; }); return s; };
   if (p) {
-    const m = p.rects[selection.morceau], t = 11 / k;
+    const m = p.rects[selection.morceau];
     if (p.rects.length > 1) h += '<rect class="morceau-actif" x="' + m.x + '" y="' + m.y + '" width="' + m.w + '" height="' + m.h + '" stroke-width="' + (1.5 / k) + '"/>';
-    [['nw', 0, 0], ['n', .5, 0], ['ne', 1, 0], ['e', 1, .5], ['se', 1, 1], ['s', .5, 1], ['sw', 0, 1], ['w', 0, .5]].forEach(([d, fx, fy]) => {
-      h += '<rect class="poignee" data-poignee="' + d + '" x="' + (m.x + m.w * fx - t / 2) + '" y="' + (m.y + m.h * fy - t / 2) + '" width="' + t + '" height="' + t + '" rx="' + (2 / k) + '" stroke-width="' + (1.5 / k) + '" style="cursor:' + d + '-resize"/>';
-    });
+    h += poignees(m);
   }
+  if (e && e.cat === 'meuble') h += poignees(e);
   svg.innerHTML = h;
   rendrePanneauPiece();
   majBoutonsHistorique();
 }
 function rendrePanneauPiece() {
   const el = $('plan-panneau'); if (!el) return;
-  const p = selection && pieceParId(selection.piece);
-  if (!p) { el.innerHTML = pieces().length ? '<p class="discret">Touchez une pièce pour la nommer, la typer, lui ajouter un morceau, la dupliquer ou la supprimer.</p>' : '<div class="vide">Le plan est vide. « ＋ Pièce » pose une première pièce au centre.</div>'; return; }
   const actif = document.activeElement && document.activeElement.id;
+  const e = selection && selection.elem && elemParId(selection.elem);
+  if (e) {
+    const fini = '<button type="button" class="bt-lien" style="margin-left:auto" onclick="selection=null;rendrePlanEdition()">Fini</button>';
+    if (e.cat === 'meuble') {
+      el.innerHTML = '<div class="grille2"><label class="champ"><span>Le meuble</span><select id="pm-type" onchange="typerMeuble(this.value)">' + MEUBLES.map(m => '<option value="' + m[0] + '"' + (e.type === m[0] ? ' selected' : '') + '>' + esc(m[1]) + '</option>').join('') + '</select></label>' +
+        '<div class="champ"><span style="display:block;margin:0 0 4px;font-size:12.5px;font-weight:700;color:var(--ink-soft)">Sa taille</span><div class="boutons">' +
+        '<button type="button" class="bt petit" onclick="tailleElement(\'w\',-.5)" aria-label="Moins large">◂ ▸ −</button><button type="button" class="bt petit" onclick="tailleElement(\'w\',.5)" aria-label="Plus large">◂ ▸ ＋</button>' +
+        '<button type="button" class="bt petit" onclick="tailleElement(\'h\',-.5)" aria-label="Moins profond">▴ ▾ −</button><button type="button" class="bt petit" onclick="tailleElement(\'h\',.5)" aria-label="Plus profond">▴ ▾ ＋</button></div></div></div>' +
+        '<div class="boutons"><button type="button" class="bt petit" onclick="tournerMeuble()">↻ Tourner</button><button type="button" class="bt petit danger" onclick="supprimerElement()">Supprimer</button>' + fini + '</div>';
+      if (actif === 'pm-type') { const n = $(actif); if (n) n.focus(); }
+    } else {
+      const nom = e.cat === 'porte' ? 'La porte' : 'La fenêtre';
+      el.innerHTML = '<p class="discret"><b>' + nom + '</b> glisse le long des murs : faites-la glisser jusqu\'à sa place.</p>' +
+        '<div class="boutons"><button type="button" class="bt petit" onclick="tailleElement(\'long\',-.5)">Plus étroite</button><button type="button" class="bt petit" onclick="tailleElement(\'long\',.5)">Plus large</button>' +
+        (e.cat === 'porte' ? '<button type="button" class="bt petit" onclick="retournerPorte()">⇅ Ouvrir de l\'autre côté</button>' : '') +
+        '<button type="button" class="bt petit danger" onclick="supprimerElement()">Supprimer</button>' + fini + '</div>';
+    }
+    return;
+  }
+  const p = selection && selection.piece && pieceParId(selection.piece);
+  if (!p) { el.innerHTML = pieces().length ? '<p class="discret">Touchez une pièce pour la nommer, la typer, lui ajouter un morceau, une porte, une fenêtre ou un meuble, la dupliquer ou la supprimer.</p>' : '<div class="vide">Le plan est vide. « ＋ Pièce » pose une première pièce au centre.</div>'; return; }
   el.innerHTML = '<div class="grille2"><label class="champ"><span>Nom de la pièce</span><input type="text" id="pp-nom" value="' + esc(p.nom) + '" onchange="renommerPiece(this.value)"></label>' +
-    '<label class="champ"><span>Type de zone</span><select id="pp-type" onchange="typerPiece(this.value)">' + TYPES_ZONE.map(t => '<option value="' + t[0] + '"' + (p.type === t[0] ? ' selected' : '') + '>' + esc(t[1]) + '</option>').join('') + '</select></label></div>' +
+    '<label class="champ"><span>Type de zone</span><select id="pp-type" onchange="typerPiece(this.value)">' + optionsTypesZone(p.type) + '</select></label></div>' +
     '<div class="boutons"><button type="button" class="bt petit" onclick="ajouterMorceau()" title="Pour une pièce en L ou en T : un rectangle collé à celui-ci">＋ Un morceau à cette pièce</button>' +
     (p.rects.length > 1 ? '<button type="button" class="bt petit" onclick="retirerMorceau()">Retirer ce morceau</button>' : '') +
     '<button type="button" class="bt petit" onclick="dupliquerPiece()">⧉ Dupliquer</button>' +
@@ -1024,24 +1198,32 @@ function rendrePanneauPiece() {
   if (actif === 'pp-nom' || actif === 'pp-type') { const n = $(actif); if (n) n.focus(); }
 }
 
-// Les gestes : un seul pointeur suit son geste (déplacer une pièce, l'agrandir, se déplacer dans la vue).
+// Les gestes : un seul pointeur suit son geste (déplacer une pièce ou un élément, agrandir, se déplacer dans la vue).
 let geste = null;
 function pointDuMonde(ev) { const r = $('plan-edition').getBoundingClientRect(); return {x: vueEdition.x + (ev.clientX - r.left) / vueEdition.k, y: vueEdition.y + (ev.clientY - r.top) / vueEdition.k, px: ev.clientX - r.left, py: ev.clientY - r.top}; }
 function brancherEditeur() {
   const svg = $('plan-edition');
   svg.addEventListener('pointerdown', ev => {
     if (ev.button > 0) return;
-    const pt = pointDuMonde(ev), cible = ev.target, poignee = cible.getAttribute && cible.getAttribute('data-poignee');
-    const idP = cible.getAttribute && cible.getAttribute('data-piece');
+    const pt = pointDuMonde(ev), cible = ev.target, at = n => cible.getAttribute && cible.getAttribute(n);
+    const poignee = at('data-poignee'), idE = at('data-elem'), idP = at('data-piece');
     svg.setPointerCapture(ev.pointerId);
-    if (poignee && selection) {
+    if (poignee && selection && selection.elem) {
+      const e = elemParId(selection.elem);
+      geste = {type: 'taille-meuble', dir: poignee, depart: pt, r0: {x: e.x, y: e.y, w: e.w, h: e.h}, avant: etatPlan()};
+    } else if (poignee && selection && selection.piece) {
       const p = pieceParId(selection.piece);
       geste = {type: 'taille', dir: poignee, depart: pt, r0: clone(p.rects[selection.morceau]), avant: etatPlan()};
+    } else if (idE) {
+      selection = {elem: idE};
+      const e = elemParId(idE);
+      geste = {type: 'element', depart: pt, x0: e.x, y0: e.y, avant: etatPlan()};
+      rendrePlanEdition();
     } else if (idP) {
-      selection = {piece: idP, morceau: +cible.getAttribute('data-morceau') || 0};
+      selection = {piece: idP, morceau: +at('data-morceau') || 0};
       const p = pieceParId(idP);
-      geste = {type: 'deplacer', depart: pt, rects0: clone(p.rects), avant: etatPlan(), bouge: false, t: Date.now()};
-      clearTimeout(geste.long); geste.long = setTimeout(() => { if (geste && !geste.bouge) { geste = null; nommerSelection(); } }, 600);
+      geste = {type: 'deplacer', depart: pt, rects0: clone(p.rects), elems0: clone(elementsDeLaPiece(p)), avant: etatPlan(), bouge: false};
+      geste.long = setTimeout(() => { if (geste && !geste.bouge) { geste = null; nommerSelection(); } }, 600);
       rendrePlanEdition();
     } else {
       if (selection) { selection = null; rendrePlanEdition(); }
@@ -1056,16 +1238,20 @@ function brancherEditeur() {
     const dx = pt.x - geste.depart.x, dy = pt.y - geste.depart.y;
     if (geste.type === 'deplacer') {
       if (Math.abs(dx) + Math.abs(dy) > .3) geste.bouge = true;
-      const p = pieceParId(selection.piece), sx = Math.round(dx), sy = Math.round(dy);
-      p.rects = geste.rects0.map(r => ({x: r.x + sx, y: r.y + sy, w: r.w, h: r.h}));
-    } else if (geste.type === 'taille') {
-      const p = pieceParId(selection.piece), r0 = geste.r0, d = geste.dir;
+      deplacerPiece(pieceParId(selection.piece), geste.rects0, geste.elems0, Math.round(dx), Math.round(dy));
+    } else if (geste.type === 'element') {
+      const e = elemParId(selection.elem);
+      if (e.cat === 'meuble') { e.x = arrondi(geste.x0 + dx, .5); e.y = arrondi(geste.y0 + dy, .5); }
+      else accrocher(e, geste.x0 + dx, geste.y0 + dy);
+    } else if (geste.type === 'taille' || geste.type === 'taille-meuble') {
+      const meuble = geste.type === 'taille-meuble', pas = meuble ? .5 : 1, mini = meuble ? .5 : 1, r0 = geste.r0, d = geste.dir;
       let x = r0.x, y = r0.y, x2 = r0.x + r0.w, y2 = r0.y + r0.h;
-      if (d.indexOf('w') >= 0) x = Math.min(x2 - 1, Math.round(r0.x + dx));
-      if (d.indexOf('e') >= 0) x2 = Math.max(x + 1, Math.round(r0.x + r0.w + dx));
-      if (d.indexOf('n') >= 0) y = Math.min(y2 - 1, Math.round(r0.y + dy));
-      if (d.indexOf('s') >= 0) y2 = Math.max(y + 1, Math.round(r0.y + r0.h + dy));
-      p.rects[selection.morceau] = {x, y, w: x2 - x, h: y2 - y};
+      if (d.indexOf('w') >= 0) x = Math.min(x2 - mini, arrondi(r0.x + dx, pas));
+      if (d.indexOf('e') >= 0) x2 = Math.max(x + mini, arrondi(r0.x + r0.w + dx, pas));
+      if (d.indexOf('n') >= 0) y = Math.min(y2 - mini, arrondi(r0.y + dy, pas));
+      if (d.indexOf('s') >= 0) y2 = Math.max(y + mini, arrondi(r0.y + r0.h + dy, pas));
+      if (meuble) Object.assign(elemParId(selection.elem), {x, y, w: x2 - x, h: y2 - y});
+      else pieceParId(selection.piece).rects[selection.morceau] = {x, y, w: x2 - x, h: y2 - y};
     }
     rendrePlanEdition();
   });
@@ -1083,7 +1269,7 @@ function brancherEditeur() {
     const champ = /^(INPUT|SELECT|TEXTAREA)$/.test((document.activeElement || {}).tagName || '');
     if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'z' && !champ) { ev.preventDefault(); if (ev.shiftKey) refaire(); else annuler(); }
     else if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'y' && !champ) { ev.preventDefault(); refaire(); }
-    else if ((ev.key === 'Delete' || ev.key === 'Backspace') && selection && !champ) { ev.preventDefault(); supprimerPiece(); }
+    else if ((ev.key === 'Delete' || ev.key === 'Backspace') && selection && !champ) { ev.preventDefault(); if (selection.elem) supprimerElement(); else supprimerPiece(); }
   });
   window.addEventListener('resize', () => { rendrePlanEdition(); });
 }
@@ -1181,7 +1367,7 @@ function rendrePlanChoix() {
   const b = boite(pieces()), w = cadre.clientWidth || 560, h = cadre.clientHeight || 340, m = 1.5;
   const k = Math.min(w / (b.w + 2 * m), h / (b.h + 2 * m));
   svg.setAttribute('viewBox', (b.x - m - (w / k - b.w - 2 * m) / 2) + ' ' + (b.y - m - (h / k - b.h - 2 * m) / 2) + ' ' + (w / k) + ' ' + (h / k));
-  svg.innerHTML = dessinPlan(pieces(), {k, choisie: pieceChoisie});
+  svg.innerHTML = dessinPlan(pieces(), {k, choisie: pieceChoisie, filigrane: true});
   $('e-piece').value = pieceChoisie || '';
 }
 function brancherChoix() {
@@ -1254,7 +1440,7 @@ function svgCarte(eps, opts) {
   const couleurs = {}, encre = {};
   pieces().forEach(p => { couleurs[p.id] = couleurCarte(comptes[p.id], max, sombre); encre[p.id] = comptes[p.id] ? encreSur(couleurs[p.id]) : (sombre ? '#E9E4D8' : '#6B6152'); });
   const b = boite(pieces()), m = 1.2, k = 30;
-  return {comptes, max, vb: [b.x - m, b.y - m, b.w + 2 * m, b.h + 2 * m], corps: dessinPlan(pieces(), {k, couleurs, comptes, encre})};
+  return {comptes, max, vb: [b.x - m, b.y - m, b.w + 2 * m, b.h + 2 * m], corps: dessinPlan(pieces(), {k, couleurs, comptes, encre, filigrane: true})};
 }
 function majSynthese() {
   if (!$('vue-synthese').classList.contains('show')) return;
@@ -1267,7 +1453,7 @@ function majSynthese() {
   const degrade = 'linear-gradient(90deg,' + ECHELLE.join(',') + ')';
   $('legende').innerHTML = '<span><i class="zero" style="background:' + (sombre ? ZERO_SOMBRE : ZERO_CLAIR) + '"></i> aucun épisode</span>' +
     (c.max ? '<span>1 <i class="degrade" style="background:' + degrade + '"></i> ' + c.max + ' épisode' + (c.max > 1 ? 's' : '') + '</span>' : '') +
-    '<span>Le nombre écrit dans chaque pièce est l\'effectif.</span>';
+    '<span>Le nombre écrit dans chaque pièce est l\'effectif.</span>' + (pieces().some(p => estExterieur(p.type)) ? '<span>Contour en pointillés : dehors.</span>' : '');
   // Les chiffres clés
   const dates = eps.map(e => e.date).sort(), provs = new Set(eps.map(e => e.provenance || (e.source ? e.source : 'le référent')));
   const calmes = D.b2.calmes.filter(x => (!f.debut || x.date >= f.debut) && (!f.fin || x.date <= f.fin));
@@ -1285,7 +1471,10 @@ function majSynthese() {
   const horsPlan = eps.filter(e => !pieceParId(e.piece)).length;
   const parMoment = D.b1.moments.map(m => [m.nom, eps.filter(e => e.moment === m.id).length]).filter(x => x[1]).sort((a, b) => b[1] - a[1]);
   const parType = D.b1.typesCD.map(t => [t.nom, eps.filter(e => (e.types || []).indexOf(t.id) >= 0).length]).concat([['Autre', eps.filter(e => e.autre).length]]).filter(x => x[1]).sort((a, b) => b[1] - a[1]);
-  $('repartitions').innerHTML = tableau('Par pièce', parPiece, horsPlan ? nb(horsPlan, 'épisode') + ' dans une pièce retirée du plan, compté' + (horsPlan > 1 ? 's' : '') + ' ici mais pas sur la carte.' : '') +
+  const dehors = eps.filter(e => { const p = pieceParId(e.piece); return p && estExterieur(p.type); }).length;
+  const notePieces = [pieces().some(p => estExterieur(p.type)) ? 'Dehors (cour, jardin, route, parking, préau) : ' + nb(dehors, 'épisode') + (n ? ', ' + pct(dehors) : '') + '.' : '',
+    horsPlan ? nb(horsPlan, 'épisode') + ' dans une pièce retirée du plan, compté' + (horsPlan > 1 ? 's' : '') + ' ici mais pas sur la carte.' : ''].filter(Boolean).join(' ');
+  $('repartitions').innerHTML = tableau('Par pièce', parPiece, notePieces) +
     tableau('Par moment de la journée', parMoment) +
     tableau('Par comportement', parType, 'Un épisode peut porter plusieurs comportements : le total peut dépasser 100 %.');
 }
@@ -1296,7 +1485,7 @@ function svgExport() {
   const titre = (D.b1.lieu || 'Le lieu') + ' — épisodes déclarés par pièce';
   const fil = [f.moment && nomMoment(f.moment), f.type && (f.type === '_autre' ? 'Autre' : nomType(f.type)), (f.debut || f.fin) && ((f.debut ? 'du ' + dateFr(f.debut) : '') + (f.fin ? ' au ' + dateFr(f.fin) : ''))].filter(Boolean).join(' · ');
   let deg = '<defs><linearGradient id="lg">' + ECHELLE.map((col, i) => '<stop offset="' + (i / (ECHELLE.length - 1)) + '" stop-color="' + col + '"/>').join('') + '</linearGradient></defs>';
-  const style = '<style>.piece-trait{fill:none;stroke:#2C2416}.piece-fond{fill:#FFFDF8}.piece-nom{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;font-weight:700;text-anchor:middle;dominant-baseline:middle}.piece-type{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;text-anchor:middle;dominant-baseline:middle}text{font-family:Space Grotesk,Segoe UI,Arial,sans-serif}</style>';
+  const style = '<style>.piece-trait{fill:none;stroke:#2C2416}.exterieur .piece-trait{stroke:#6E8F6A}.piece-fond{fill:#FFFDF8}.ouverture{stroke:#FFFDF8}.porte{stroke:#2C2416}.porte-arc{fill:none;stroke:#6B6152}.fenetre{stroke:#5A6D8B}.meuble-fond{fill:#EDE7D9;stroke:#746B5B}.meuble.filigrane{opacity:.35}.piece-nom{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;font-weight:700;text-anchor:middle;dominant-baseline:middle}.piece-type{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;text-anchor:middle;dominant-baseline:middle}text{font-family:Space Grotesk,Segoe UI,Arial,sans-serif}</style>';
   const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + (H + haut + bas) + '" viewBox="0 0 ' + W + ' ' + (H + haut + bas) + '">' + style + deg +
     '<rect width="100%" height="100%" fill="#F5F0E8"/>' +
     '<text x="16" y="28" font-size="18" font-weight="700" fill="#2C2416">' + esc(titre) + '</text>' +
@@ -1389,33 +1578,52 @@ function effacer() {
    « points chauds » : des couples pièce × moment plus fréquents que les autres, pour que la carte et les filtres aient
    quelque chose à montrer. Le tirage est fixé (graine) : le même lieu donne toujours les mêmes épisodes. */
 const LIEUX_SIMULES = [
-  {nom: 'Bâtiment provisoire', desc: 'Un IME déménagé dans des bureaux : un hall unique où tout le monde arrive, beaucoup d\'écho.', graine: 7,
+  {nom: 'Bâtiment provisoire', desc: 'Un IME déménagé dans des bureaux : un hall unique où tout le monde arrive, beaucoup d\'écho, pas d\'extérieur protégé — le parking donne sur la route.', graine: 7,
     dates: ['2026-09-07', '2026-09-25'], moments: null,
     pieces: [['Hall d\'accueil', 'accueil', [[0, 0, 10, 6]]], ['Couloir', 'circulation', [[10, 2, 14, 2], [22, 4, 2, 8]]], ['Salle bleue', 'activite', [[10, 4, 7, 6]]],
-      ['Salle verte', 'activite', [[17, 4, 5, 6]]], ['Réfectoire', 'repas', [[0, 6, 10, 8], [10, 10, 6, 4]]], ['Salle calme', 'repos', [[16, 10, 6, 4]]], ['Sanitaires', 'sanitaires', [[24, 0, 4, 5]]]],
+      ['Salle verte', 'activite', [[17, 4, 5, 6]]], ['Réfectoire', 'repas', [[0, 6, 10, 8], [10, 10, 6, 4]]], ['Salle calme', 'repos', [[16, 10, 6, 4]]], ['Sanitaires', 'sanitaires', [[24, 0, 4, 5]]],
+      ['Route', 'route', [[-12, -3, 3, 20]]], ['Parking', 'parking', [[-9, 0, 9, 8]]]],
+    // [x, y, mur horizontal « h » ou vertical « v », largeur, côté d'ouverture]
+    portes: [[0, 3, 'v', 1.5, 1], [10, 3, 'v', 1, 1], [13, 4, 'h', 1, 1], [19, 4, 'h', 1, 1], [22, 12, 'v', 1, -1], [24, 3, 'v', 1, 1], [5, 6, 'h', 1.5, 1]],
+    fenetres: [[5, 0, 'h', 2], [0, 10, 'v', 2], [19, 14, 'h', 2], [28, 2.5, 'v', 1]],
+    meubles: [['banc', 1, 1, 3, .6], ['table', 11, 6, 2, 1.2], ['table', 14, 6, 2, 1.2], ['chaise', 11.5, 7.5, .7, .7], ['chaise', 14.5, 7.5, .7, .7], ['table', 18, 6, 2, 1.2],
+      ['table', 1.5, 8, 3, 1.2], ['table', 5.5, 8, 3, 1.2], ['table', 1.5, 11, 3, 1.2], ['table', 5.5, 11, 3, 1.2], ['tapis', 16.5, 10.5, 2, 2], ['canape', 19, 12.5, 2.6, 1]],
     types: ['Crie', 'Jette des objets', 'Sort de la salle en courant', 'Se bouche les oreilles', 'Frappe un adulte'],
-    // [pièce, moment, poids] : le hall à l'arrivée et au départ, le réfectoire au repas, la salle bleue en matinée
-    chauds: [[0, 0, 9], [0, 6, 5], [4, 3, 7], [2, 1, 5], [1, 2, 4], [3, 5, 2], [5, 4, 1]], n: 34,
-    commentaires: ['Arrivée de tous les jeunes en même temps, le hall résonne.', 'S\'est bouché les oreilles puis est sorti en courant.', 'Bruit des chaises au réfectoire.']},
+    // [pièce, moment, poids] : le hall à l'arrivée et au départ, le réfectoire au repas, la salle bleue en matinée, le parking à l'arrivée
+    chauds: [[0, 0, 9], [0, 6, 5], [4, 3, 7], [2, 1, 5], [1, 2, 4], [3, 5, 2], [5, 4, 1], [8, 0, 3], [8, 6, 2]], n: 36,
+    commentaires: ['Arrivée de tous les jeunes en même temps, le hall résonne.', 'S\'est bouché les oreilles puis est sorti en courant.', 'Bruit des chaises au réfectoire.', 'Descendu du taxi, a couru vers la route.']},
   {nom: 'Foyer d\'hébergement', desc: 'Une unité de vie : chambres, salle à manger, jardin ; du lever au coucher.', graine: 19,
     dates: ['2026-09-14', '2026-10-02'],
     moments: [['Lever', '07:00', '08:00'], ['Petit-déjeuner', '08:00', '09:00'], ['Matinée', '09:00', '12:00'], ['Déjeuner', '12:00', '13:15'], ['Temps calme', '13:15', '14:30'],
       ['Après-midi', '14:30', '18:30'], ['Dîner', '18:30', '19:45'], ['Coucher', '19:45', '21:30']],
     pieces: [['Jardin', 'exterieur', [[-7, 0, 7, 13]]], ['Salon', 'repos', [[0, 0, 8, 6]]], ['Salle à manger', 'repas', [[8, 0, 7, 6]]], ['Cuisine', 'autre', [[15, 0, 4, 4]]],
       ['Couloir', 'circulation', [[0, 6, 19, 2], [17, 8, 2, 8]]], ['Chambre 1', 'repos', [[0, 8, 5, 5]]], ['Chambre 2', 'repos', [[5, 8, 5, 5]]], ['Chambre 3', 'repos', [[10, 8, 5, 5]]],
-      ['Salle de bain', 'sanitaires', [[19, 8, 4, 4]]], ['Bureau éducatif', 'bureau', [[19, 12, 4, 4]]], ['Lingerie', 'autre', [[15, 8, 2, 5]]]],
+      ['Salle de bain', 'sanitaires', [[19, 8, 4, 4]]], ['Bureau éducatif', 'bureau', [[19, 12, 4, 4]]], ['Lingerie', 'autre', [[15, 8, 2, 5]]],
+      ['Route', 'route', [[-7, -12, 30, 3]]], ['Parking', 'parking', [[8, -9, 11, 9]]]],
+    portes: [[0, 3, 'v', 1.5, 1], [8, 3, 'v', 1, 1], [15, 2, 'v', 1, 1], [4, 6, 'h', 1, -1], [2.5, 8, 'h', 1, 1], [7.5, 8, 'h', 1, 1], [12.5, 8, 'h', 1, 1],
+      [19, 10, 'v', 1, 1], [19, 14, 'v', 1, 1], [17, 10.5, 'v', 1, -1], [11.5, 0, 'h', 1.5, 1]],
+    fenetres: [[2.5, 13, 'h', 1.5], [7.5, 13, 'h', 1.5], [12.5, 13, 'h', 1.5], [4, 0, 'h', 2], [19, 2, 'v', 1], [23, 10, 'v', 1.5]],
+    meubles: [['lit', .5, 9.5, 1.6, 3], ['lit', 5.5, 9.5, 1.6, 3], ['lit', 10.5, 9.5, 1.6, 3], ['armoire', 3, 12, 1.6, .7], ['armoire', 8, 12, 1.6, .7], ['armoire', 13, 12, 1.6, .7],
+      ['canape', 1, 1, 2.6, 1], ['tapis', 2, 2.5, 2, 2], ['table', 9.5, 2, 4, 1.4], ['chaise', 10, 1, .7, .7], ['chaise', 12, 1, .7, .7], ['chaise', 10, 3.6, .7, .7], ['chaise', 12, 3.6, .7, .7],
+      ['plan', 15.5, .5, 3, .8], ['bureau', 19.5, 13, 2, 1], ['banc', -5, 2, 2.5, .6]],
     types: ['Crie', 'Frappe les portes', 'Se tape la tête', 'Refuse de quitter sa chambre', 'Jette la vaisselle'],
-    chauds: [[2, 3, 7], [2, 6, 8], [4, 0, 5], [4, 7, 6], [5, 7, 3], [6, 0, 3], [8, 0, 4], [1, 5, 2], [0, 5, 1]], n: 40,
+    chauds: [[2, 3, 7], [2, 6, 8], [4, 0, 6], [4, 7, 7], [5, 7, 3], [6, 0, 3], [8, 0, 4], [1, 5, 2], [0, 5, 1], [12, 5, 1]], n: 42,
     commentaires: ['Attente du repas, bruit de la vaisselle.', 'A frappé la porte de la chambre voisine au moment du coucher.', 'Salle de bain occupée, a dû attendre dans le couloir.']},
-  {nom: 'Externat, groupe des grands', desc: 'Un IME en journée : classe, atelier, cantine et une cour sans abri.', graine: 31,
+  {nom: 'Externat, groupe des grands', desc: 'Un IME en journée : classe, atelier, cantine, une cour avec un petit préau ; le parking des taxis à côté.', graine: 31,
     dates: ['2026-09-21', '2026-10-09'],
     moments: [['Arrivée', '08:45', '09:15'], ['Matinée', '09:15', '10:30'], ['Récréation', '10:30', '10:50'], ['Fin de matinée', '10:50', '12:00'], ['Cantine', '12:00', '13:00'],
       ['Temps de cour', '13:00', '13:30'], ['Après-midi', '13:30', '15:45'], ['Départ', '15:45', '16:15']],
     pieces: [['Salle de classe', 'activite', [[0, 0, 8, 6]]], ['Atelier bois', 'activite', [[8, 0, 7, 6]]], ['Salle snoezelen', 'repos', [[15, 0, 5, 6]]], ['Couloir', 'circulation', [[0, 6, 20, 2]]],
-      ['Cantine', 'repas', [[0, 8, 9, 6]]], ['Sanitaires', 'sanitaires', [[9, 8, 3, 6]]], ['Bureau', 'bureau', [[12, 8, 4, 6]]], ['Cour', 'exterieur', [[0, 14, 20, 5], [16, 8, 4, 6]]]],
+      ['Cantine', 'repas', [[0, 8, 9, 6]]], ['Sanitaires', 'sanitaires', [[9, 8, 3, 6]]], ['Bureau', 'bureau', [[12, 8, 4, 6]]], ['Cour', 'exterieur', [[0, 14, 20, 5], [16, 8, 4, 6]]],
+      ['Préau', 'preau', [[-4, 14, 4, 5]]], ['Parking des taxis', 'parking', [[20, 0, 7, 8]]], ['Route', 'route', [[27, -2, 3, 23]]]],
+    portes: [[4, 6, 'h', 1, -1], [11.5, 6, 'h', 1, -1], [17.5, 6, 'h', 1, -1], [4.5, 8, 'h', 1, 1], [10.5, 8, 'h', 1, 1], [14, 8, 'h', 1, 1], [4.5, 14, 'h', 1.5, 1], [18, 8, 'h', 1.5, 1], [20, 7, 'v', 1.5, -1]],
+    fenetres: [[4, 0, 'h', 2], [11.5, 0, 'h', 2], [17.5, 0, 'h', 1.5], [0, 11, 'v', 2]],
+    meubles: [['table', 1, 1.5, 2, 1.2], ['table', 4, 1.5, 2, 1.2], ['table', 1, 3.7, 2, 1.2], ['table', 4, 3.7, 2, 1.2], ['bureau', 6.2, .5, 1.5, .9],
+      ['plan', 9, 1, 5, .9], ['etagere', 9, 4.8, 3, .6], ['tapis', 16, 1.5, 3, 3], ['table', 1, 9.5, 3, 1.2], ['table', 5, 9.5, 3, 1.2], ['table', 1, 12, 3, 1.2], ['table', 5, 12, 3, 1.2],
+      ['banc', 2, 17, 2.5, .6], ['banc', -3.5, 16, 2.5, .6], ['bureau', 13, 10, 2, 1]],
     types: ['Crie', 'Se bouche les oreilles', 'Sort de la salle en courant', 'Pousse un camarade', 'Renverse le mobilier'],
-    chauds: [[7, 2, 11], [7, 5, 10], [4, 4, 8], [1, 1, 3], [3, 0, 2], [3, 7, 2], [0, 3, 2], [2, 6, 1]], n: 38,
-    commentaires: ['Sonnerie de la récréation, tout le monde sort en même temps.', 'Cantine très bruyante, a renversé son plateau.', 'S\'est réfugié sous le préau.']}
+    chauds: [[7, 2, 11], [7, 5, 10], [4, 4, 8], [1, 1, 3], [3, 0, 2], [3, 7, 2], [0, 3, 2], [2, 6, 1], [9, 7, 3], [8, 2, 2]], n: 40,
+    commentaires: ['Sonnerie de la récréation, tout le monde sort en même temps.', 'Cantine très bruyante, a renversé son plateau.', 'S\'est réfugié sous le préau.', 'Attente du taxi sur le parking, a voulu partir vers la route.']}
 ];
 function construireLieu(i) {
   const L = LIEUX_SIMULES[i] || LIEUX_SIMULES[0], d = dossierVide();
@@ -1423,6 +1631,9 @@ function construireLieu(i) {
   if (L.moments) d.b1.moments = L.moments.map(m => ({id: nouvelId('m'), nom: m[0], debut: m[1], fin: m[2]}));
   d.b1.plan.pieces = L.pieces.map(([nom, type, rects]) => ({id: nouvelId('p'), nom, type, rects: rects.map(([x, y, w, h]) => ({x, y, w, h}))}));
   d.b1.typesCD = L.types.map(nom => ({id: nouvelId('t'), nom}));
+  d.b1.plan.elements = (L.portes || []).map(([x, y, o, long, cote]) => ({id: nouvelId('e'), cat: 'porte', x, y, o, long, cote, retourne: cote < 0}))
+    .concat((L.fenetres || []).map(([x, y, o, long]) => ({id: nouvelId('e'), cat: 'fenetre', x, y, o, long, cote: 1, retourne: false})))
+    .concat((L.meubles || []).map(([type, x, y, w, h]) => ({id: nouvelId('e'), cat: 'meuble', type, x, y, w, h})));
   let s = L.graine; const alea = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
   const roles = ['Éducateur·rice spécialisé·e', 'AES / AMP', 'Moniteur·rice-éducateur·rice', 'Infirmier·e'];
   // Les couples pièce × moment : les points chauds pèsent lourd, tous les autres un peu (du bruit de fond)
@@ -1526,6 +1737,12 @@ document.addEventListener('click', ev => {
 
 /* ══ Les notes de version ══ */
 const NOTES_BASE = [
+  {version: 'BASE v2026.10.12-3', titre: 'Dehors, portes, fenêtres et meubles', corps: '<p><b>Le plan s\'enrichit</b> (Arthur et Émilie) :</p><ul>' +
+    '<li><b>Intérieur et extérieur</b> : les types de zone se rangent en deux groupes ; dehors, on choisit cour ou jardin, route, parking, préau. Les zones de dehors ont un contour en pointillés, une cour est verte, une route et un parking couleur asphalte (ligne médiane, places tracées). La synthèse dit combien d\'épisodes ont eu lieu dehors.</li>' +
+    '<li><b>Portes et fenêtres</b> : sur un mur de la pièce choisie ; elles glissent le long des murs, s\'élargissent ; une porte s\'ouvre d\'un côté ou de l\'autre.</li>' +
+    '<li><b>Meubles</b> : table, chaise, canapé, lit, armoire, bureau, étagère, plan de travail, banc, tapis… On les glisse, on les tourne, on les agrandit. Ils suivent leur pièce quand on la déplace.</li>' +
+    '<li>Sur la carte et le plan du recueil, portes et fenêtres restent visibles ; les meubles passent en filigrane, pour laisser lire les effectifs.</li>' +
+    '<li><b>Les trois lieux simulés</b> ont maintenant leur route, leur parking (et un préau pour l\'externat), leurs portes, fenêtres et meubles.</li></ul>'},
   {version: 'BASE v2026.10.12-2', titre: 'Le mode administrateur, trois lieux simulés', corps: '<p><b>Un mode administrateur</b>, comme dans la BAF (Arthur et Émilie) : trois clics sur la boussole, le même mot de passe.</p><ul>' +
     '<li><b>Trois lieux simulés</b> : un bâtiment provisoire (un IME déménagé dans des bureaux), un foyer d\'hébergement (du lever au coucher), un externat d\'IME (classe, atelier, cantine, cour). Chacun a son plan, ses moments, ses comportements et ses points chauds.</li>' +
     '<li><b>Un bac à sable</b> : en y entrant, votre dossier est mis de côté ; en le quittant, il revient tel qu\'il était. Aucun vrai fichier ne s\'y ouvre.</li>' +
@@ -1585,6 +1802,19 @@ function verifierBASE() {
     const coherents = lieux.every(l => l.b1.plan.pieces.length >= 7 && l.b2.episodes.length >= 30 && l.b2.calmes.length === 3 && l.b2.calmes.every(c => !l.b2.episodes.some(e => e.date === c.date)) && l.b2.episodes.every(e => l.b1.plan.pieces.some(p => p.id === e.piece) && l.b1.moments.some(x => x.id === e.moment) && e.types.length));
     const memes = construireLieu(1).b2.episodes.map(e => e.date + e.heure).join() === lieux[1].b2.episodes.map(e => e.date + e.heure).join();
     ok('Trois lieux simulés, complets et cohérents (chaque épisode dans une pièce et un moment du lieu)', coherents && memes, lieux.map(l => l.b2.episodes.length).join(' / ') + ' épisodes');
+    // 6. Portes, fenêtres, meubles, dehors (passe 224)
+    D = construireLieu(0); mode = 'socle';
+    const hall = pieces()[0], meublesHall = clone(elementsDeLaPiece(hall).filter(e => e.cat === 'meuble')), porteHall = clone(elementsDeLaPiece(hall).filter(e => e.cat === 'porte'));
+    deplacerPiece(hall, clone(hall.rects), clone(elementsDeLaPiece(hall)), 0, 3);
+    const suivi = meublesHall.every(m => elemParId(m.id).y === m.y + 3) && porteHall.every(m => elemParId(m.id).y === m.y + 3);
+    ok('Déplacer une pièce emporte ses meubles et ses portes', meublesHall.length > 0 && porteHall.length > 0 && suivi, nb(meublesHall.length, 'meuble') + ', ' + nb(porteHall.length, 'porte'));
+    const porte = {cat: 'porte', long: 1, retourne: false}; accrocher(porte, 3.3, 9.4);
+    const surUnMur = murs().some(m => (m.o === 'h' ? Math.abs(porte.y - m.c) < 1e-9 && porte.x - .5 >= m.a - 1e-9 && porte.x + .5 <= m.b + 1e-9 : Math.abs(porte.x - m.c) < 1e-9 && porte.y - .5 >= m.a - 1e-9 && porte.y + .5 <= m.b + 1e-9));
+    ok('Une porte posée près d\'un mur s\'y accroche, entière', surUnMur, porte.o + ' ' + porte.x + ',' + porte.y);
+    const dessin = dessinPlan(pieces(), {k: 26});
+    ok('Les zones de dehors se dessinent à part (pointillés, route, parking)', /class="piece zone-route exterieur/.test(dessin) && /route-ligne/.test(dessin) && /parking-ligne/.test(dessin) && /stroke-dasharray/.test(dessin));
+    ok('Sur la carte, portes et fenêtres restent ; les meubles passent en filigrane', /class="porte"/.test(svgCarte(D.b2.episodes, {}).corps) && /meuble filigrane/.test(svgCarte(D.b2.episodes, {}).corps));
+    ok('Un ancien dossier, sans liste d\'éléments, en reçoit une vide', Array.isArray(normaliserPlan({b1: {plan: {pieces: []}}}).b1.plan.elements));
     ok('Le mode administrateur : un mauvais mot de passe ne passe pas ; la mise de côté n\'est pas une donnée du dossier', empreinteAdmin('pas le bon') !== EMPREINTE_ADMIN && EMPREINTE_ADMIN.length === 16 && clesBase().indexOf(CLE_MISE) < 0);
   } catch (e) { ok('Les vérifications ont planté', false, e.message); }
   finally { persister = vraiPersister; D = sauveD; mode = sauveMode; selection = null; historique = []; refaites = []; }
@@ -1609,6 +1839,8 @@ function afficherVerifications() {
   changerMode(m);
   if (!D) changerMode('socle');
   brancherEditeur(); brancherChoix(); majBoutonTheme();
+  const listeMeubles = document.querySelector('select[aria-label="Ajouter un meuble"]');
+  if (listeMeubles) listeMeubles.innerHTML += MEUBLES.map(m => '<option value="' + m[0] + '">' + esc(m[1]) + '</option>').join('');
   const h = (location.hash || '').slice(1);
   aller(['accueil', 'preambule', 'recueillir', 'synthese', 'notes'].indexOf(h) >= 0 ? h : 'accueil', true);
   const bandeau = $('bandeau'); if (bandeau && window.ResizeObserver) new ResizeObserver(() => document.documentElement.style.setProperty('--hauteur-bandeau', bandeau.offsetHeight + 'px')).observe(bandeau);
