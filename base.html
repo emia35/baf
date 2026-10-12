@@ -438,6 +438,18 @@ details.regle > summary{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8
 .fiche-piece{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:6px 0;border-top:1px solid var(--line-feuille);}
 .fiche-piece-nom{flex:1;min-width:140px;font-weight:600;font-size:13.5px;}
 .source.declare{border-style:dashed;}
+/* ── La synthèse lit le plan (passe 227) ── */
+.piece-sous{font-family:var(--police-interface);fill:var(--ink-soft);text-anchor:middle;dominant-baseline:middle;pointer-events:none;}
+.calques{margin:0 0 10px;}
+.quadrants{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:0 0 12px;}
+@media(max-width:900px){.quadrants{grid-template-columns:minmax(0,1fr);}}
+.quadrant{padding:10px 14px;border-radius:12px;background:var(--surface);}
+.quadrant-titre{margin:0 0 4px;font-size:13.5px;font-weight:700;}
+.defile{overflow-x:auto;}
+table.croise th{padding:4px;text-align:left;font-size:11.5px;font-weight:700;color:var(--ink-faint);}
+table.croise th:not(:first-child){text-align:right;}
+table.croise td{vertical-align:top;}
+table.croise td.n{white-space:normal;}
 /* ── Listes du préambule ── */
 .liste-edit{display:flex;flex-direction:column;gap:6px;margin:0 0 10px;}
 .liste-edit .ligne{display:grid;grid-template-columns:minmax(0,1fr) 92px 92px 34px;gap:6px;align-items:center;}
@@ -687,13 +699,18 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
     <div class="chiffres" id="chiffres"></div>
     <div class="feuille">
       <div class="surtitre" id="carte-titre">La carte des épisodes</div>
+      <div class="segment calques no-print" id="calques" role="tablist" aria-label="Calques de la carte"></div>
       <div class="carte-cadre plan-carte" id="carte-cadre"></div>
       <div class="legende" id="legende"></div>
-      <p class="avertissement">Cette carte montre où des épisodes ont été déclarés, pas pourquoi. Une pièce très fréquentée, ou occupée longtemps, recueille mécaniquement plus d'épisodes : c'est le taux de base, que la carte ne corrige pas. Une pièce froide peut aussi être une pièce où personne ne remplit, et un point chaud peut tenir à une seule personne. Les pistes se discutent en équipe.</p>
+      <p class="avertissement" id="avertissement">Cette carte montre où des épisodes ont été déclarés, pas pourquoi. Une pièce très fréquentée, ou occupée longtemps, recueille mécaniquement plus d'épisodes : c'est le taux de base, que la carte ne corrige pas. Une pièce froide peut aussi être une pièce où personne ne remplit, et un point chaud peut tenir à une seule personne. Les pistes se discutent en équipe.</p>
       <div class="boutons no-print" style="margin-top:12px;">
         <button type="button" class="bt petit" onclick="exporterCarte('png')">⬇ Image PNG</button>
         <button type="button" class="bt petit" onclick="exporterCarte('svg')">⬇ Image SVG</button>
       </div>
+    </div>
+    <div class="feuille referent-seul" id="croisements-feuille">
+      <div class="surtitre">Le plan et les épisodes, ensemble</div>
+      <div id="croisements"></div>
     </div>
     <div class="repartitions" id="repartitions"></div>
   </section>
@@ -801,7 +818,7 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
    chose lue de la BAF, en lecture : le choix clair / sombre, pour s'ouvrir dans le même thème.
    ══════════════════════════════════════════════════════════════════════════════════════════════ */
 
-const VERSION_BASE = 'BASE v2026.10.12-5';
+const VERSION_BASE = 'BASE v2026.10.12-6';
 const CLE_SOCLE = 'base-dossier-v1', CLE_DECL = 'base-declarant-v1', CLE_MODE = 'base-mode', CLE_THEME = 'base-theme';
 const TYPES_ZONE = [['activite', "Salle d'activité"], ['sejour', 'Séjour, salon'], ['repas', 'Repas'], ['accueil', 'Accueil'], ['circulation', 'Circulation'],
   ['chambre', 'Chambre'], ['repos', 'Salle de repos'], ['calme', 'Salle de mise au calme'], ['snoezelen', 'Salle multisensorielle'], ['soins', 'Soins, infirmerie'],
@@ -1348,9 +1365,10 @@ function dessinPlan(ps, o) {
     }
     let texte;
     if (o.comptes) {
-      const n = o.comptes[p.id] || 0, coul = o.encre ? o.encre[p.id] : '';
-      texte = '<text class="piece-nom" x="' + cx + '" y="' + (cy - taille * .55) + '" font-size="' + (taille * 1.25) + '"' + (coul ? ' style="fill:' + coul + '"' : '') + '>' + n + '</text>' +
-        '<text class="piece-type" x="' + cx + '" y="' + (cy + taille * .65) + '" font-size="' + (taille * .62) + '"' + (coul ? ' style="fill:' + coul + '"' : '') + '>' + esc(p.nom) + '</text>';
+      const n = o.comptes[p.id] || 0, coul = o.encre ? o.encre[p.id] : '', ecrit = o.etiquettes ? o.etiquettes[p.id] : n, sous = o.sous && o.sous[p.id];
+      texte = '<text class="piece-nom" x="' + cx + '" y="' + (cy - taille * .55) + '" font-size="' + (taille * 1.25) + '"' + (coul ? ' style="fill:' + coul + '"' : '') + '>' + esc(ecrit) + '</text>' +
+        '<text class="piece-type" x="' + cx + '" y="' + (cy + taille * .65) + '" font-size="' + (taille * .62) + '"' + (coul ? ' style="fill:' + coul + '"' : '') + '>' + esc(p.nom) + '</text>' +
+        (sous ? '<text class="piece-sous" x="' + cx + '" y="' + (cy + taille * 1.3) + '" font-size="' + (taille * .5) + '"' + (coul ? ' style="fill:' + coul + '"' : '') + '>' + esc(sous) + '</text>' : '');
     } else {
       texte = '<text class="piece-nom" x="' + cx + '" y="' + (cy - (o.types ? taille * .3 : 0)) + '" font-size="' + (taille * .82) + '">' + esc(p.nom) + '</text>' +
         (o.types ? '<text class="piece-type" x="' + cx + '" y="' + (cy + taille * .62) + '" font-size="' + (taille * .5) + '">' + esc(nomTypeZone(p.type)) + '</text>' : '');
@@ -2435,10 +2453,11 @@ function retirerCalme(id) { D.b2.calmes = D.b2.calmes.filter(c => c.id !== id); 
 const ECHELLE = ['#F5E6BC', '#EDC678', '#E09C49', '#C9692E', '#A24A25', '#6E2D17'];
 const ZERO_CLAIR = '#E2DCCF', ZERO_SOMBRE = '#36404E';
 function hexRgb(h) { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
-function couleurCarte(n, max, sombre) {
+function couleurCarte(n, max, sombre, ech) {
+  ech = ech || ECHELLE;
   if (!n) return sombre ? ZERO_SOMBRE : ZERO_CLAIR;
-  const t = max <= 1 ? 1 : (n - 1) / (max - 1), pos = t * (ECHELLE.length - 1), i = Math.min(ECHELLE.length - 2, Math.floor(pos)), f = pos - i;
-  const a = hexRgb(ECHELLE[i]), b = hexRgb(ECHELLE[i + 1]);
+  const t = max <= 1 ? 1 : (n - 1) / (max - 1), pos = t * (ech.length - 1), i = Math.min(ech.length - 2, Math.floor(pos)), f = pos - i;
+  const a = hexRgb(ech[i]), b = hexRgb(ech[i + 1]);
   return 'rgb(' + a.map((v, j) => Math.round(v + (b[j] - v) * f)).join(',') + ')';
 }
 function encreSur(couleur) { const m = /(\d+),\s*(\d+),\s*(\d+)/.exec(couleur) || [0, ...hexRgb(couleur.startsWith('#') ? couleur : '#000000')]; const l = (.299 * m[1] + .587 * m[2] + .114 * m[3]) / 255; return l > .55 ? '#2C2416' : '#FFFFFF'; }
@@ -2454,29 +2473,127 @@ function remplirFiltres() {
   garder('f-type', '<option value="">Tous</option>' + D.b1.typesCD.map(t => '<option value="' + t.id + '">' + esc(t.nom) + '</option>').join('') + '<option value="_autre">Autre</option>');
 }
 function effacerFiltres() { ['f-moment', 'f-type', 'f-debut', 'f-fin'].forEach(id => { $(id).value = ''; }); majSynthese(); }
+/* ══ La synthèse lit le plan (passe 227, Arthur et Émilie) ══
+   La carte garde les épisodes ; on peut y superposer ce que le plan et les fiches disent de chaque pièce : les points de
+   vigilance (prune), les points d'appui (sauge), les fiches renseignées (ardoise). Dessous, le plan et les épisodes
+   ensemble : les pièces où l'on attendait des épisodes et où il y en a, celles où il y en a sans alerte au plan, celles qui
+   alertent mais restent calmes ; puis, facteur par facteur, la part des pièces concernées et la part des épisodes qui s'y
+   trouvent. Toujours de la co-occurrence : une pièce occupée plus longtemps recueille mécaniquement plus d'épisodes (le taux
+   de base), et un facteur présent presque partout ne peut rien montrer. Rien n'est jamais présenté comme une cause. */
+let calque = 'episodes';
+const CALQUES = [['episodes', 'Épisodes'], ['vigilance', 'Points de vigilance'], ['appui', 'Points d\'appui'], ['fiches', 'Fiches des pièces']];
+// Une échelle par calque, du clair au foncé : sable → brique (épisodes), prune (vigilance), sauge (appui) ; ardoise pour les fiches.
+const ECHELLES = {episodes: ECHELLE, vigilance: ['#F1E3E7', '#DDBAC6', '#C791A5', '#AA6A85', '#864765', '#5E2A45'], appui: ['#E6EEEB', '#C0D5CC', '#98BAAB', '#6F9D8B', '#4B7968', '#325747']};
+const FICHE_SIGNES = ['○', '◐', '●'];
+function couleurFiche(niveau, sombre) { return niveau <= 0 ? (sombre ? ZERO_SOMBRE : ZERO_CLAIR) : niveau === 1 ? (sombre ? '#4A5D7A' : '#B4C1D7') : (sombre ? '#6E88B3' : '#6F87AE'); }
+const virguleSynthese = x => String(x).replace('.', ',');
+// Ce que chaque pièce vaut pour le calque choisi : la valeur (qui donne la couleur), ce qu'on écrit dedans, et sous le nom le nombre d'épisodes.
+function valeursCalque(cq, eps) {
+  const comptes = comptesParPiece(eps);
+  if (cq === 'episodes') return {valeurs: comptes, etiquettes: null, sous: null, max: Math.max(0, ...Object.values(comptes))};
+  const L = lectureDuPlan(D.b1), v = {}, et = {}, sous = {};
+  pieces().forEach(p => {
+    const regs = L.parPiece[p.id] || [], compte = sev => new Set(regs.filter(r => r.sev === sev).map(r => r.id + '|' + r.sens)).size;
+    if (cq === 'fiches') { const n = ficheOuverte(p) ? completudeFiche(p).niveau : -1; v[p.id] = n; et[p.id] = n < 0 ? '—' : FICHE_SIGNES[n]; }
+    else { v[p.id] = compte(cq === 'vigilance' ? 'vigilance' : 'appui'); et[p.id] = String(v[p.id]); }
+    if (comptes[p.id]) sous[p.id] = nb(comptes[p.id], 'épisode');
+  });
+  return {valeurs: v, etiquettes: et, sous, max: Math.max(0, ...Object.values(v))};
+}
 function svgCarte(eps, opts) {
-  const sombre = !opts.export && themeSombre(), comptes = comptesParPiece(eps), max = Math.max(0, ...Object.values(comptes));
+  const sombre = !opts.export && themeSombre(), cq = opts.calque || 'episodes', vc = valeursCalque(cq, eps), comptes = comptesParPiece(eps), max = vc.max;
   const couleurs = {}, encre = {};
-  pieces().forEach(p => { couleurs[p.id] = couleurCarte(comptes[p.id], max, sombre); encre[p.id] = comptes[p.id] ? encreSur(couleurs[p.id]) : (sombre ? '#E9E4D8' : '#6B6152'); });
+  pieces().forEach(p => {
+    const n = vc.valeurs[p.id];
+    couleurs[p.id] = cq === 'fiches' ? couleurFiche(n, sombre) : couleurCarte(n, max, sombre, ECHELLES[cq]);
+    encre[p.id] = n > 0 ? encreSur(couleurs[p.id]) : (sombre ? '#E9E4D8' : '#6B6152');
+  });
   // Un plan par niveau, cadré sur ses propres pièces ; les couleurs, elles, se comparent d'un niveau à l'autre (même échelle de couleur).
   const m = 1.2, k = 30;
   const niv = niveaux().filter(n => piecesNiveau(n.id).length).map(n => { const b = boite(piecesNiveau(n.id));
-    return {id: n.id, nom: n.nom, vb: [b.x - m, b.y - m, b.w + 2 * m, b.h + 2 * m], corps: dessinPlan(piecesNiveau(n.id), {k, couleurs, comptes, encre, filigrane: true, niveau: n.id})}; });
-  return {comptes, max, vb: niv.length ? niv[0].vb : [0, 0, 24, 16], niveaux: niv, corps: niv.map(n => n.corps).join('')};
+    return {id: n.id, nom: n.nom, vb: [b.x - m, b.y - m, b.w + 2 * m, b.h + 2 * m], corps: dessinPlan(piecesNiveau(n.id), {k, couleurs, comptes: vc.valeurs, etiquettes: vc.etiquettes, sous: vc.sous, encre, filigrane: true, niveau: n.id})}; });
+  return {comptes, valeurs: vc.valeurs, max, calque: cq, vb: niv.length ? niv[0].vb : [0, 0, 24, 16], niveaux: niv, corps: niv.map(n => n.corps).join('')};
 }
+function rendreCalques() {
+  const el = $('calques'); if (!el) return;
+  el.innerHTML = CALQUES.map(([id, nom]) => '<button type="button" role="tab" class="' + (id === calque ? 'on' : '') + '" aria-selected="' + (id === calque) + '" onclick="choisirCalque(\'' + id + '\')">' + esc(nom) + '</button>').join('');
+}
+function choisirCalque(c) { calque = CALQUES.some(x => x[0] === c) ? c : 'episodes'; majSynthese(); }
+const NOM_CALQUE = {episodes: 'épisodes déclarés par pièce', vigilance: 'points de vigilance par pièce', appui: 'points d\'appui par pièce', fiches: 'fiches des pièces'};
+function legendeCalque(cq, max, sombre) {
+  const case_ = fond => '<i class="zero" style="background:' + fond + '"></i> ', zero = sombre ? ZERO_SOMBRE : ZERO_CLAIR;
+  const degrade = e => 'linear-gradient(90deg,' + e.join(',') + ')', dehors = pieces().some(p => estExterieur(p.type)) ? '<span>Contour en pointillés : dehors.</span>' : '';
+  if (cq === 'episodes') return '<span>' + case_(zero) + 'aucun épisode</span>' + (max ? '<span>1 <i class="degrade" style="background:' + degrade(ECHELLE) + '"></i> ' + max + ' épisode' + (max > 1 ? 's' : '') + '</span>' : '') + '<span>Le nombre écrit dans chaque pièce est l\'effectif.</span>' + dehors;
+  if (cq === 'fiches') return '<span>' + case_(zero) + '○ pas de fiche</span><span>' + case_(couleurFiche(1, sombre)) + '◐ rapide</span><span>' + case_(couleurFiche(2, sombre)) + '● détaillée</span><span>« — » : pas de fiche pour une route ou un parking.</span><span>Sous le nom : le nombre d\'épisodes.</span>' + dehors;
+  const mot = cq === 'vigilance' ? 'point de vigilance' : 'point d\'appui', pluriel = cq === 'vigilance' ? 'points de vigilance' : 'points d\'appui';
+  return '<span>' + case_(zero) + 'aucun ' + mot + '</span>' + (max ? '<span>1 <i class="degrade" style="background:' + degrade(ECHELLES[cq]) + '"></i> ' + max + ' ' + (max > 1 ? pluriel : mot) + '</span>' : '') +
+    '<span>Le nombre écrit dans chaque pièce est le nombre de points différents (lus dans le plan ou déclarés dans la fiche). Sous le nom : le nombre d\'épisodes.</span>' + dehors;
+}
+function avertissementCalque(cq) {
+  if (cq === 'episodes') return 'Cette carte montre où des épisodes ont été déclarés, pas pourquoi. Une pièce très fréquentée, ou occupée longtemps, recueille mécaniquement plus d\'épisodes : c\'est le taux de base, que la carte ne corrige pas. Une pièce froide peut aussi être une pièce où personne ne remplit, et un point chaud peut tenir à une seule personne. Les pistes se discutent en équipe.';
+  return 'Cette carte ne montre pas des épisodes mais ce que le plan et les fiches disent de chaque pièce, d\'après le guide « Autisme & sensorialité » (CRA Alsace, 2017). Un point est une piste à discuter, pas un constat : un même stimulus n\'agit pas dans le même sens pour tous, et le nombre de points n\'est pas une mesure de gravité.' +
+    (cq === 'fiches' ? ' Une pièce sans fiche n\'a simplement pas été renseignée : ses points ne sont alors connus que par le plan.' : '');
+}
+/* ── Le plan et les épisodes, ensemble ── */
+// Les facteurs : chaque règle lue dans le plan ou déclarée dans une fiche, avec les pièces qu'elle concerne.
+function facteursDuLieu(L) {
+  const g = {};
+  L.regles.forEach(r => {
+    if ((r.sev !== 'vigilance' && r.sev !== 'appui') || !r.pieces.length) return;
+    const cle = r.id + '|' + r.sens + '|' + r.sev;
+    const x = g[cle] = g[cle] || {cle, id: r.id, sev: r.sev, sens: r.sens, source: r.source, declare: !!r.declare, lib: r.lib || LIB_REGLES[r.id] || r.titre, pieces: new Set()};
+    r.pieces.forEach(id => x.pieces.add(id));
+  });
+  return Object.values(g);
+}
+function croisementsDuLieu(eps) {
+  const L = lectureDuPlan(D.b1), comptes = comptesParPiece(eps), T = Object.values(comptes).reduce((a, b) => a + b, 0), N = pieces().length;
+  const lignes = facteursDuLieu(L).map(x => {
+    const ids = [...x.pieces].filter(id => comptes[id] !== undefined), m = ids.reduce((a, id) => a + comptes[id], 0), partP = N ? ids.length / N : 0, partE = T ? m / T : 0;
+    return Object.assign(x, {ids, nbPieces: ids.length, nbEps: m, partPieces: partP, partEps: partE, rapport: partP ? partE / partP : 0});
+  }).filter(x => x.nbPieces).sort((a, b) => b.nbEps - a.nbEps || b.rapport - a.rapport);
+  // Les pièces : combien de points de vigilance différents, combien d'épisodes. Chaude : au moins deux fois sa part si les épisodes se répartissaient également (entre 10 et 20 % des épisodes), et au moins 3.
+  const seuil = Math.max(3, Math.ceil(T * Math.min(.2, Math.max(.1, 2 / (N || 1)))));
+  const fiches227 = pieces().map(p => { const regs = (L.parPiece[p.id] || []).filter(r => r.sev === 'vigilance');
+    return {id: p.id, nom: p.nom, niveau: niveauDe(p), vig: new Set(regs.map(r => r.id + '|' + r.sens)).size, titres: grouperRegles(regs).map(g => g.lib), eps: comptes[p.id] || 0}; });
+  const parEps = (a, b) => b.eps - a.eps || b.vig - a.vig;
+  return {T, N, seuil, lignes, attendus: fiches227.filter(x => x.vig >= 2 && x.eps >= seuil).sort(parEps), surprises: fiches227.filter(x => x.vig < 2 && x.eps >= seuil).sort(parEps), calmes: fiches227.filter(x => x.vig >= 2 && x.eps === 0).sort((a, b) => b.vig - a.vig)};
+}
+function htmlCroisements(eps) {
+  const x = croisementsDuLieu(eps), multi = niveaux().length > 1;
+  if (!x.T) return '<div class="vide">Rien à croiser tant qu\'aucun épisode n\'est déclaré (ou que les filtres n\'en laissent aucun).</div>';
+  const nomP = p => esc(p.nom) + (multi ? ' <span class="discret">(' + esc(nomNiveau(p.niveau)) + ')</span>' : '');
+  const quadrant = (titre, aide, l, texte) => '<div class="quadrant"><div class="quadrant-titre">' + titre + ' · ' + l.length + '</div><p class="discret">' + aide + '</p>' +
+    (l.length ? '<ul class="regle-liste">' + l.map(p => '<li><b>' + nomP(p) + '</b> — ' + texte(p) + '</li>').join('') + '</ul>' : '<p class="discret">Aucune.</p>') + '</div>';
+  const pts = p => nb(p.vig, 'point') + ' de vigilance' + (p.titres.length ? ' <span class="discret">(' + esc(p.titres.slice(0, 3).join(' ; ') + (p.titres.length > 3 ? '…' : '')) + ')</span>' : '');
+  const ligne = f => '<tr><td>' + esc(f.lib) + ' ' + puceSource(f.source) + (f.declare ? '<span class="source declare">Déclaré</span>' : '') + '</td><td class="n">' + f.nbPieces + ' sur ' + x.N + '</td><td class="n">' + f.nbEps + ' sur ' + x.T + ' · ' + Math.round(f.partEps * 100) + ' %</td><td class="n">' +
+    (f.partPieces >= .8 ? 'partout' : '×' + virguleSynthese((Math.round(f.rapport * 10) / 10).toFixed(1))) + '</td></tr>';
+  const entete = '<thead><tr><th>Ce que le plan ou la fiche dit</th><th>Pièces</th><th>Épisodes qui s\'y trouvent</th><th>Concentration</th></tr></thead>';
+  const table = l => '<div class="defile"><table class="rep croise">' + entete + '<tbody>' + l.map(ligne).join('') + '</tbody></table></div>';
+  const tableau = (titre, sev, ouvert) => { const l = x.lignes.filter(f => f.sev === sev); if (!l.length) return '';
+    return '<details class="repli"' + (ouvert ? ' open' : '') + '><summary>' + titre + ' · ' + l.length + '</summary>' + table(l.slice(0, 10)) + (l.length > 10 ? '<details class="repli"><summary>Les ' + (l.length - 10) + ' autres</summary>' + table(l.slice(10)) + '</details>' : '') + '</details>'; };
+  return '<p class="discret" style="margin:0 0 10px">' + nb(x.T, 'épisode') + ' sur ' + nb(x.N, 'pièce') + '. Une pièce est « chaude » à partir de ' + nb(x.seuil, 'épisode') + ' (au moins deux fois sa part si tout se répartissait également) ; elle « alerte » à partir de deux points de vigilance différents.</p>' +
+    '<div class="quadrants">' +
+    quadrant('Chaudes, comme le plan le laissait attendre', 'Des points de vigilance, et des épisodes : c\'est là qu\'une piste du guide a le plus de chances de compter.', x.attendus, p => nb(p.eps, 'épisode') + ' · ' + pts(p)) +
+    quadrant('Chaudes, sans alerte au plan', 'Des épisodes sans point de vigilance : le plan et les fiches ne disent pas pourquoi. À explorer sur place, ou à compléter par la fiche.', x.surprises, p => nb(p.eps, 'épisode') + ' · ' + (p.vig ? nb(p.vig, 'point') + ' de vigilance' : 'aucun point de vigilance')) +
+    quadrant('Alertes au plan, mais calmes', 'Des points de vigilance, aucun épisode déclaré : une pièce où l\'on passe peu, où l\'on ne remplit pas, ou qui tient bon malgré tout.', x.calmes, p => pts(p)) + '</div>' +
+    tableau('Points de vigilance : où sont les épisodes ?', 'vigilance', true) + tableau('Points d\'appui : où sont les épisodes ?', 'appui', false) +
+    '<details class="repli"><summary>Comment lire ces tableaux</summary><p class="lecture">Chaque ligne est un point lu dans le plan ou déclaré dans une fiche. « Pièces » : combien de pièces sont concernées. « Épisodes qui s\'y trouvent » : la part des épisodes déclarés dans ces pièces. « Concentration » : la part des épisodes divisée par la part des pièces : au-dessus de ×1, les épisodes s\'y trouvent plus que le nombre de pièces ne le laisserait attendre ; au-dessous, moins.</p>' +
+    '<p class="lecture">Ce n\'est jamais une cause, seulement une co-occurrence. Une pièce occupée plus longtemps ou par plus de monde recueille mécaniquement plus d\'épisodes (le taux de base), et une pièce où personne ne remplit paraît calme. Un point présent dans presque toutes les pièces (« partout ») ne peut rien montrer. Avec peu d\'épisodes, une seule pièce suffit à tout changer. Les pistes se discutent en équipe, et se vérifient sur place.</p></details>';
+}
+function rendreCroisements(eps) { const el = $('croisements'); if (el) el.innerHTML = htmlCroisements(eps); }
 function majSynthese() {
   if (!$('vue-synthese').classList.contains('show')) return;
   const f = filtres(), eps = episodesFiltres(f), tous = D.b2.episodes;
-  if (!pieces().length) { $('carte-cadre').innerHTML = '<div class="vide" style="margin:14px">Le plan est vide : dessinez le lieu dans le préambule.</div>'; $('legende').innerHTML = ''; $('chiffres').innerHTML = ''; $('repartitions').innerHTML = ''; return; }
-  const c = svgCarte(eps, {});
+  if (!pieces().length) { $('carte-cadre').innerHTML = '<div class="vide" style="margin:14px">Le plan est vide : dessinez le lieu dans le préambule.</div>'; $('legende').innerHTML = ''; $('chiffres').innerHTML = ''; $('repartitions').innerHTML = ''; $('calques').innerHTML = ''; $('croisements').innerHTML = ''; return; }
+  rendreCalques();
+  const c = svgCarte(eps, {calque}), sombre = themeSombre(), filtreActif = f.moment || f.type || f.debut || f.fin;
   $('carte-cadre').innerHTML = c.niveaux.map(n => '<div class="carte-niveau">' + (c.niveaux.length > 1 ? '<div class="carte-niveau-nom">' + esc(n.nom) + '</div>' : '') +
-    '<svg viewBox="' + n.vb.join(' ') + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Carte des épisodes par pièce' + (c.niveaux.length > 1 ? ' — ' + esc(n.nom) : '') + '">' + n.corps + '</svg></div>').join('');
-  const sombre = themeSombre(), filtreActif = f.moment || f.type || f.debut || f.fin;
-  $('carte-titre').textContent = 'La carte des épisodes' + (filtreActif ? ' — filtrée : ' + nb(eps.length, 'épisode') + ' sur ' + tous.length : ' — ' + nb(eps.length, 'épisode'));
-  const degrade = 'linear-gradient(90deg,' + ECHELLE.join(',') + ')';
-  $('legende').innerHTML = '<span><i class="zero" style="background:' + (sombre ? ZERO_SOMBRE : ZERO_CLAIR) + '"></i> aucun épisode</span>' +
-    (c.max ? '<span>1 <i class="degrade" style="background:' + degrade + '"></i> ' + c.max + ' épisode' + (c.max > 1 ? 's' : '') + '</span>' : '') +
-    '<span>Le nombre écrit dans chaque pièce est l\'effectif.</span>' + (pieces().some(p => estExterieur(p.type)) ? '<span>Contour en pointillés : dehors.</span>' : '');
+    '<svg viewBox="' + n.vb.join(' ') + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Carte : ' + esc(NOM_CALQUE[calque]) + (c.niveaux.length > 1 ? ' — ' + esc(n.nom) : '') + '">' + n.corps + '</svg></div>').join('');
+  $('carte-titre').textContent = calque === 'episodes' ? 'La carte des épisodes' + (filtreActif ? ' — filtrée : ' + nb(eps.length, 'épisode') + ' sur ' + tous.length : ' — ' + nb(eps.length, 'épisode'))
+    : 'La carte du plan : ' + NOM_CALQUE[calque] + (filtreActif ? ' (épisodes filtrés)' : '');
+  $('legende').innerHTML = legendeCalque(calque, c.max, sombre);
+  $('avertissement').textContent = avertissementCalque(calque);
   // Les chiffres clés
   const dates = eps.map(e => e.date).sort(), provs = new Set(eps.map(e => e.provenance || (e.source ? e.source : 'le référent')));
   const calmes = D.b2.calmes.filter(x => (!f.debut || x.date >= f.debut) && (!f.fin || x.date <= f.fin));
@@ -2500,32 +2617,40 @@ function majSynthese() {
   $('repartitions').innerHTML = tableau('Par pièce', parPiece, notePieces) +
     tableau('Par moment de la journée', parMoment) +
     tableau('Par comportement', parType, 'Un épisode peut porter plusieurs comportements : le total peut dépasser 100 %.');
+  rendreCroisements(eps);
 }
-// L'image de la carte : toujours claire (elle part dans un document), avec son titre, sa légende et l'avertissement.
+// L'image de la carte : toujours claire (elle part dans un document), avec son titre, sa légende et l'avertissement. Celle du calque choisi.
 function svgExport() {
-  const f = filtres(), eps = episodesFiltres(f), c = svgCarte(eps, {export: true}), k = 30;
+  const f = filtres(), eps = episodesFiltres(f), c = svgCarte(eps, {export: true, calque}), k = 30, cq = c.calque;
   const multi = c.niveaux.length > 1, ent = multi ? 26 : 0, ecart = 8, haut = 64, bas = 86;
   const tailles = c.niveaux.map(n => [Math.round(n.vb[2] * k), Math.round(n.vb[3] * k)]);
   const W = Math.max(720, ...tailles.map(t => t[0])), H = tailles.reduce((a, t) => a + t[1] + ent, 0) + (c.niveaux.length - 1) * ecart;
-  const titre = (D.b1.lieu || 'Le lieu') + ' — épisodes déclarés par pièce';
+  const titre = (D.b1.lieu || 'Le lieu') + ' — ' + NOM_CALQUE[cq];
   const fil = [f.moment && nomMoment(f.moment), f.type && (f.type === '_autre' ? 'Autre' : nomType(f.type)), (f.debut || f.fin) && ((f.debut ? 'du ' + dateFr(f.debut) : '') + (f.fin ? ' au ' + dateFr(f.fin) : ''))].filter(Boolean).join(' · ');
-  let deg = '<defs><linearGradient id="lg">' + ECHELLE.map((col, i) => '<stop offset="' + (i / (ECHELLE.length - 1)) + '" stop-color="' + col + '"/>').join('') + '</linearGradient></defs>';
-  const style = '<style>.piece-trait{fill:none;stroke:#2C2416}.exterieur .piece-trait{stroke:#6E8F6A}.piece-fond{fill:#FFFDF8}.ouverture{stroke:#FFFDF8}.porte{stroke:#2C2416}.porte.vitree{stroke:#5A6D8B}.hublot{fill:#FFFDF8;stroke:#5A6D8B}.porte-arc{fill:none;stroke:#6B6152}.fenetre{stroke:#5A6D8B}.baie{stroke:#5A6D8B}.escalier-fond{fill:#F5E8C8;stroke:#82692D}.escalier-trait{stroke:#82692D}.escalier-nom{font-weight:700;fill:#82692D;text-anchor:middle;dominant-baseline:middle;paint-order:stroke;stroke:#F5E8C8;stroke-width:.14px}.meuble-fond{fill:#EDE7D9;stroke:#746B5B}.meuble.filigrane{opacity:.35}.piece-nom{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;font-weight:700;text-anchor:middle;dominant-baseline:middle}.piece-type{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;text-anchor:middle;dominant-baseline:middle}text{font-family:Space Grotesk,Segoe UI,Arial,sans-serif}</style>';
+  const echelle = ECHELLES[cq] || ECHELLE;
+  let deg = '<defs><linearGradient id="lg">' + echelle.map((col, i) => '<stop offset="' + (i / (echelle.length - 1)) + '" stop-color="' + col + '"/>').join('') + '</linearGradient></defs>';
+  const style = '<style>.piece-trait{fill:none;stroke:#2C2416}.exterieur .piece-trait{stroke:#6E8F6A}.piece-fond{fill:#FFFDF8}.ouverture{stroke:#FFFDF8}.porte{stroke:#2C2416}.porte.vitree{stroke:#5A6D8B}.hublot{fill:#FFFDF8;stroke:#5A6D8B}.porte-arc{fill:none;stroke:#6B6152}.fenetre{stroke:#5A6D8B}.baie{stroke:#5A6D8B}.escalier-fond{fill:#F5E8C8;stroke:#82692D}.escalier-trait{stroke:#82692D}.escalier-nom{font-weight:700;fill:#82692D;text-anchor:middle;dominant-baseline:middle;paint-order:stroke;stroke:#F5E8C8;stroke-width:.14px}.meuble-fond{fill:#EDE7D9;stroke:#746B5B}.meuble.filigrane{opacity:.35}.piece-nom{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;font-weight:700;text-anchor:middle;dominant-baseline:middle}.piece-type{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;text-anchor:middle;dominant-baseline:middle}.piece-sous{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;text-anchor:middle;dominant-baseline:middle}text{font-family:Space Grotesk,Segoe UI,Arial,sans-serif}</style>';
   let y0 = haut;
   const plans = c.niveaux.map((n, i) => {
     const [wi, hi] = tailles[i], y1 = y0; y0 += hi + ent + ecart;
     return (multi ? '<text x="16" y="' + (y1 + 18) + '" font-size="13" font-weight="700" fill="#2C2416">' + esc(n.nom) + '</text>' : '') +
       '<svg x="' + Math.round((W - wi) / 2) + '" y="' + (y1 + ent) + '" width="' + wi + '" height="' + hi + '" viewBox="' + n.vb.join(' ') + '">' + n.corps + '</svg>';
   }).join('');
+  const bs = H + haut, mot = cq === 'vigilance' ? 'point de vigilance' : 'point d\'appui', gris = (x, w, fond) => '<rect x="' + x + '" y="' + (bs + 14) + '" width="22" height="14" rx="3" fill="' + fond + '" stroke="#D9D0C0"/>';
+  const legende = cq === 'fiches'
+    ? gris(16, 22, ZERO_CLAIR) + '<text x="44" y="' + (bs + 25) + '" font-size="12" fill="#6B6152">○ pas de fiche</text>' + gris(150, 22, couleurFiche(1, false)) + '<text x="178" y="' + (bs + 25) + '" font-size="12" fill="#6B6152">◐ rapide</text>' + gris(260, 22, couleurFiche(2, false)) + '<text x="288" y="' + (bs + 25) + '" font-size="12" fill="#6B6152">● détaillée</text>'
+    : gris(16, 22, ZERO_CLAIR) + '<text x="44" y="' + (bs + 25) + '" font-size="12" fill="#6B6152">aucun ' + (cq === 'episodes' ? 'épisode' : mot) + '</text>' +
+      (c.max ? '<text x="170" y="' + (bs + 25) + '" font-size="12" fill="#6B6152">1</text><rect x="182" y="' + (bs + 14) + '" width="160" height="14" rx="3" fill="url(#lg)"/><text x="350" y="' + (bs + 25) + '" font-size="12" fill="#6B6152">' + c.max + '</text>' : '');
+  const note = cq === 'episodes'
+    ? ['La carte montre où des épisodes ont été déclarés, pas pourquoi. Une pièce occupée longtemps en recueille mécaniquement plus ;', 'une pièce froide peut être une pièce où personne ne remplit. Les pistes se discutent en équipe.']
+    : ['Ce que le plan et les fiches disent de chaque pièce (guide « Autisme & sensorialité », CRA Alsace, 2017) : des pistes, pas des constats.', 'Le nombre de points n\'est pas une mesure de gravité. Sous le nom de chaque pièce : le nombre d\'épisodes déclarés.'];
   const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + (H + haut + bas) + '" viewBox="0 0 ' + W + ' ' + (H + haut + bas) + '">' + style + deg +
     '<rect width="100%" height="100%" fill="#F5F0E8"/>' +
     '<text x="16" y="28" font-size="18" font-weight="700" fill="#2C2416">' + esc(titre) + '</text>' +
     '<text x="16" y="50" font-size="12.5" fill="#6B6152">' + esc(nb(eps.length, 'épisode') + (fil ? ' · ' + fil : '') + ' · BASE, outil 3 de la BAF (EMIA35)') + '</text>' +
-    plans +
-    '<rect x="16" y="' + (H + haut + 14) + '" width="22" height="14" rx="3" fill="' + ZERO_CLAIR + '" stroke="#D9D0C0"/><text x="44" y="' + (H + haut + 25) + '" font-size="12" fill="#6B6152">aucun épisode</text>' +
-    (c.max ? '<text x="150" y="' + (H + haut + 25) + '" font-size="12" fill="#6B6152">1</text><rect x="162" y="' + (H + haut + 14) + '" width="160" height="14" rx="3" fill="url(#lg)"/><text x="330" y="' + (H + haut + 25) + '" font-size="12" fill="#6B6152">' + c.max + '</text>' : '') +
-    '<text x="16" y="' + (H + haut + 52) + '" font-size="11.5" fill="#6B6152">La carte montre où des épisodes ont été déclarés, pas pourquoi. Une pièce occupée longtemps en recueille mécaniquement plus ;</text>' +
-    '<text x="16" y="' + (H + haut + 68) + '" font-size="11.5" fill="#6B6152">une pièce froide peut être une pièce où personne ne remplit. Les pistes se discutent en équipe.</text></svg>';
+    plans + legende +
+    '<text x="16" y="' + (bs + 52) + '" font-size="11.5" fill="#6B6152">' + esc(note[0]) + '</text>' +
+    '<text x="16" y="' + (bs + 68) + '" font-size="11.5" fill="#6B6152">' + esc(note[1]) + '</text></svg>';
   return {svg, W, H: H + haut + bas};
 }
 function exporterCarte(format) {
@@ -2673,7 +2798,7 @@ const LIEUX_SIMULES = [
       [14, {oui: ['bruit-exterieur:2', 'bruit-voisin:3'], non: ['isolation-phonique']}],
       [16, {complet: true, oui: ['calme-depouillee', 'calme-protocole', 'isolation-phonique', 'lumiere-chaude', 'sol-souple', 'tons-neutres', 'peut-sisoler', 'lien-visuel'], h: 2.5, revue: true}]],
     types: ['Crie', 'Frappe les portes', 'Se tape la tête', 'Refuse de quitter sa chambre', 'Jette la vaisselle'],
-    chauds: [[2, 3, 7], [2, 6, 8], [4, 0, 6], [4, 7, 7], [5, 7, 3], [6, 0, 3], [8, 0, 4], [1, 5, 2], [0, 5, 1], [12, 5, 1], [13, 7, 6], [14, 7, 3], [17, 7, 3], [16, 4, 3]], n: 42,
+    chauds: [[2, 3, 7], [2, 6, 8], [4, 0, 6], [4, 7, 7], [5, 7, 15], [6, 0, 3], [8, 0, 4], [1, 5, 2], [0, 5, 1], [12, 5, 1], [13, 7, 6], [17, 7, 3], [16, 4, 3]], n: 42,
     commentaires: ['Attente du repas, bruit de la vaisselle.', 'A frappé la porte de la chambre voisine au moment du coucher.', 'Salle de bain occupée, a dû attendre dans le couloir.', 'Voiture sur le parking : s\'est collé à la fenêtre, puis n\'a plus voulu se coucher.']},
   {nom: 'Externat, groupe des grands', desc: 'Un IME en journée, plan à l\'échelle (1 case = 0,8 m) : classe, atelier, cantine, une salle multisensorielle trop petite, une salle de repli à porte à hublot, une cour avec un petit préau ; le parking des taxis à côté. Ses fiches disent la salle multisensorielle, la cantine, la salle de repli.', graine: 31,
     dates: ['2026-09-21', '2026-10-09'], echelle: .8,
@@ -2827,6 +2952,12 @@ document.addEventListener('click', ev => {
 
 /* ══ Les notes de version ══ */
 const NOTES_BASE = [
+  {version: 'BASE v2026.10.12-6', titre: 'La synthèse lit le plan : calques, et le plan croisé avec les épisodes', corps: '<p><b>La synthèse ne se contente plus de compter</b> (Arthur et Émilie) : elle superpose à la carte des épisodes ce que le plan et les fiches disent de chaque pièce.</p><ul>' +
+    '<li><b>Quatre calques</b> sur la carte : les <b>épisodes</b> (comme avant), les <b>points de vigilance</b> (prune), les <b>points d\'appui</b> (sauge), les <b>fiches des pièces</b> (ardoise : pas de fiche, rapide, détaillée). Sur les trois derniers, le nombre d\'épisodes reste écrit sous le nom de la pièce. Un plan par niveau, et l\'image exportée est celle du calque choisi.</li>' +
+    '<li><b>Le plan et les épisodes, ensemble</b> : les pièces <b>chaudes comme le plan le laissait attendre</b> (des points de vigilance et des épisodes), les pièces <b>chaudes sans alerte au plan</b> (des épisodes que rien dans le plan ou les fiches n\'explique : à explorer, ou à compléter par la fiche), et les pièces qui <b>alertent mais restent calmes</b>.</li>' +
+    '<li><b>Facteur par facteur</b> : pour chaque point lu dans le plan ou déclaré dans une fiche, combien de pièces sont concernées et quelle part des épisodes s\'y trouve, avec la <b>concentration</b> (la part des épisodes divisée par la part des pièces). Les filtres de la synthèse (moment, comportement, dates) valent aussi pour ce croisement.</li>' +
+    '<li><b>Toujours de la co-occurrence, jamais une cause</b> : une pièce occupée plus longtemps recueille mécaniquement plus d\'épisodes (le taux de base), un point présent presque partout ne peut rien montrer (« partout »), et avec peu d\'épisodes une seule pièce change tout. Les pistes se discutent en équipe et se vérifient sur place.</li>' +
+    '<li>Les trois lieux simulés montrent des pièces dans chaque case : le foyer, l\'externat et le bâtiment provisoire.</li></ul>'},
   {version: 'BASE v2026.10.12-5', titre: 'Les fiches des pièces : ce qu\'on y trouve, d\'après le guide', corps: '<p><b>Chaque pièce a sa fiche</b> (Arthur et Émilie) : le plan dit où sont les pièces, la fiche dit ce qu\'on y trouve, d\'après le guide « Autisme &amp; sensorialité » (CRA Alsace, 2017).</p><ul>' +
     '<li><b>Deux façons de la remplir</b>, au choix : <b>rapide</b> (une liste à cocher, une vingtaine de points, deux minutes par pièce) ou <b>détaillée</b> (la grille complète par famille : oui, non ou on ne sait pas, l\'intensité, le sens, les chiffres). Le même dossier se remplit des deux façons.</li>' +
     '<li><b>Quatre-vingt-neuf points en onze familles</b> : bruit, lumière naturelle, éclairage, couleurs et matériaux, air et toucher, mouvement, repères, monde et retrait, sécurité, dehors, lieux particuliers (salle de mise au calme, multisensorielle, activités, sanitaires…). Chacun dit sa fiche du guide ; une pièce n\'a que les points qui la concernent.</li>' +
@@ -2863,7 +2994,7 @@ function rendreNotes() { $('notes-contenu').innerHTML = NOTES_BASE.map((n, i) =>
 /* ══ Les vérifications (refont les calculs par un autre chemin ; ne touchent pas au dossier) ══ */
 function verifierBASE() {
   const r = [], ok = (nom, cond, detail) => r.push({nom, ok: !!cond, detail: detail || ''});
-  const sauveD = D, sauveMode = mode, vraiPersister = persister, vraiToast = toast, sauveNiveau = niveauCourant, vraiConfirm = window.confirm, sauveModeFiche = modeFiche;
+  const sauveD = D, sauveMode = mode, vraiPersister = persister, vraiToast = toast, sauveNiveau = niveauCourant, vraiConfirm = window.confirm, sauveModeFiche = modeFiche, sauveCalque = calque;
   persister = () => {}; toast = () => {}; window.confirm = () => true;   // les vérifications ne touchent jamais au dossier enregistré, ni à l'écran
   try {
     mode = 'socle'; D = exempleFictif();
@@ -3051,8 +3182,45 @@ function verifierBASE() {
     const vierge226 = JSON.parse(JSON.stringify(contenuDeclarantVierge())), socle226 = JSON.parse(JSON.stringify(contenuSocle()));
     ok('Les fiches voyagent avec le dossier : fichier socle et fichier déclarant vierge', JSON.stringify(vierge226.b1.fiches) === JSON.stringify(D.b1.fiches) && JSON.stringify(socle226.b1.fiches) === JSON.stringify(D.b1.fiches) && lireFichierBASE(socle226, ['base-dossier']).ok);
     pieceFiche = null; choisirModeFiche(sauveModeFiche);
+    // 9. La synthèse lit le plan (passe 227)
+    const sauveCalque227 = calque, sauveD227 = D;
+    ok('Les échelles de couleur : zéro reste neutre pour chaque calque, un point a déjà une couleur, le plus fort est le plus foncé',
+      ['episodes', 'vigilance', 'appui'].every(cq => couleurCarte(0, 5, false, ECHELLES[cq]) === ZERO_CLAIR && couleurCarte(1, 5, false, ECHELLES[cq]) !== ZERO_CLAIR && hexRgb(ECHELLES[cq][0]).reduce((s, v) => s + v) > hexRgb(ECHELLES[cq][5]).reduce((s, v) => s + v)));
+    const pie227 = (id, type, x) => ({id, nom: id, type, niveau: 'n0', rects: [{x, y: 0, w: 4, h: 4}]}), por227 = (id, x) => ({id, cat: 'porte', niveau: 'n0', x, y: 2, o: 'v', long: 1});
+    D = {b1: {echelle: null, fiches: {A: {carac: {resonance: {v: 1}, neons: {v: 1}}}, B: {carac: {resonance: {v: 1}, neons: {v: 1}}}, C: {carac: {variateur: {v: 1}}}, E: {carac: {resonance: {v: 1}, neons: {v: 1}}}},
+      plan: {niveaux: [{id: 'n0', nom: 'Rez-de-chaussée'}], pieces: [pie227('A', 'activite', 0), pie227('B', 'activite', 4), pie227('C', 'bureau', 8), pie227('E', 'activite', 12)], elements: [por227('d1', 4), por227('d2', 8), por227('d3', 12)]}}, b2: {episodes: [], calmes: []}};
+    const epsX = ['A', 'A', 'A', 'A', 'A', 'B', 'C', 'C', 'C', 'C'].map((p, i) => ({id: 'x' + i, piece: p, date: '2026-10-0' + (1 + i % 5), heure: '10:00', moment: 'm', types: [], nbPros: 1}));
+    const X = croisementsDuLieu(epsX), fx = id => X.lignes.find(l => l.id === id);
+    ok('Croiser le plan et les épisodes : une résonance déclarée dans 3 pièces sur 4 qui reçoivent 6 épisodes sur 10 (concentration 0,8) ; un variateur dans 1 pièce sur 4 qui en reçoit 4 sur 10 (1,6)',
+      X.T === 10 && X.N === 4 && fx('carac-resonance').nbPieces === 3 && fx('carac-resonance').nbEps === 6 && Math.abs(fx('carac-resonance').rapport - .8) < 1e-9 && fx('carac-variateur').sev === 'appui' && fx('carac-variateur').nbEps === 4 && Math.abs(fx('carac-variateur').rapport - 1.6) < 1e-9);
+    ok('Les pièces se rangent : chaude comme attendu (A : 5 épisodes, 2 points de vigilance), chaude sans alerte (C : 4 épisodes, aucun), alerte mais calme (E : 2 points, aucun épisode)',
+      X.seuil === 3 && X.attendus.map(p => p.id).join() === 'A' && X.surprises.map(p => p.id).join() === 'C' && X.calmes.map(p => p.id).join() === 'E');
+    const htmlX = htmlCroisements(epsX);
+    ok('Le tableau dit « Chaudes, comme le plan le laissait attendre » et ses deux voisines, les points de vigilance et d\'appui, et comment les lire ; sans épisode, il n\'y a rien à croiser',
+      /Chaudes, comme le plan le laissait attendre · 1/.test(htmlX) && /Chaudes, sans alerte au plan · 1/.test(htmlX) && /Alertes au plan, mais calmes · 1/.test(htmlX) && /Points de vigilance : où sont les épisodes/.test(htmlX) && /Points d'appui : où sont les épisodes/.test(htmlX) && /Comment lire ces tableaux/.test(htmlX) && /Rien à croiser/.test(htmlCroisements([])));
+    const nombres227 = corps => [...corps.matchAll(/class="piece-nom"[^>]*>([^<]*)</g)].map(x => x[1]).join();
+    ok('Les calques de la carte : points de vigilance (2, 3, 0, 2), points d\'appui (0, 0, 1, 0), fiches (rapide partout), épisodes sous le nom',
+      nombres227(svgCarte(epsX, {calque: 'vigilance'}).corps) === '2,3,0,2' && nombres227(svgCarte(epsX, {calque: 'appui'}).corps) === '0,0,1,0' && nombres227(svgCarte(epsX, {calque: 'fiches'}).corps) === '◐,◐,◐,◐' && nombres227(svgCarte(epsX, {}).corps) === '5,1,4,0' &&
+      /5 épisodes/.test(svgCarte(epsX, {calque: 'vigilance'}).corps) && !/5 épisodes/.test(svgCarte(epsX, {}).corps));
+    D = sauveD227;
+    // Sur les trois lieux simulés
+    const lieux227 = LIEUX_SIMULES.map((_, i) => construireLieu(i)), cr227 = lieux227.map(l => { D = l; return croisementsDuLieu(l.b2.episodes); }); D = sauveD227;
+    ok('Sur chacun des trois lieux simulés, des pièces sont chaudes comme le plan le laissait attendre ; sur l\'ensemble, il y a aussi des pièces chaudes sans alerte et des alertes calmes',
+      cr227.every(x => x.attendus.length >= 1) && cr227.reduce((s, x) => s + x.surprises.length, 0) >= 1 && cr227.reduce((s, x) => s + x.calmes.length, 0) >= 1, cr227.map(x => x.attendus.length + '/' + x.surprises.length + '/' + x.calmes.length).join(' · '));
+    ok('Les parts ne dépassent jamais le tout : jamais plus de pièces que de pièces, plus d\'épisodes que d\'épisodes', cr227.every(x => x.lignes.every(l => l.nbPieces <= x.N && l.nbEps <= x.T && l.partEps <= 1 + 1e-9 && l.partPieces <= 1 + 1e-9)));
+    D = lieux227[1]; mode = 'socle'; niveauCourant = null;
+    const vig227 = svgCarte(D.b2.episodes, {calque: 'vigilance'}), lec227 = lectureDuPlan(D.b1);
+    ok('Foyer, calque des points de vigilance : un plan par niveau, et chaque nombre est celui des points de vigilance différents de sa pièce',
+      vig227.niveaux.length === 2 && vig227.niveaux.every(n => nombres227(n.corps) === piecesNiveau(n.id).map(p => new Set((lec227.parPiece[p.id] || []).filter(r => r.sev === 'vigilance').map(r => r.id + '|' + r.sens)).size).join()));
+    const mom227 = D.b1.moments[3].id, filt227 = episodesFiltres({moment: mom227}), crf227 = croisementsDuLieu(filt227);
+    ok('Les filtres de la synthèse se retrouvent dans le croisement : même nombre d\'épisodes que la carte filtrée', crf227.T === filt227.filter(e => pieceParId(e.piece)).length && crf227.T < croisementsDuLieu(D.b2.episodes).T);
+    ok('La légende et l\'avertissement changent avec le calque ; l\'image exportée est celle du calque choisi (SVG valide, bon titre)', ['episodes', 'vigilance', 'appui', 'fiches'].every(cq => { calque = cq; const ex = svgExport(), x = new DOMParser().parseFromString(ex.svg, 'image/svg+xml');
+      return !x.querySelector('parsererror') && ex.svg.indexOf(esc(NOM_CALQUE[cq])) >= 0 && legendeCalque(cq, 3, false).length > 40 && avertissementCalque(cq).length > 60 && (cq === 'episodes') === /où des épisodes ont été déclarés/.test(avertissementCalque(cq)); }));
+    choisirCalque('vigilance'); const apresChoix = calque; rendreCalques(); const boutons227 = document.querySelectorAll('#calques button'); choisirCalque('nimportequoi');
+    ok('Le sélecteur de calque : quatre calques, celui qu\'on choisit est celui qui reste, un calque inconnu ramène aux épisodes', apresChoix === 'vigilance' && boutons227.length === 4 && calque === 'episodes' && boutons227[1].classList.contains('on') === true);
+    calque = sauveCalque227;
   } catch (e) { ok('Les vérifications ont planté', false, e.message); }
-  finally { persister = vraiPersister; toast = vraiToast; window.confirm = vraiConfirm; modeFiche = sauveModeFiche; pieceFiche = null; niveauCourant = sauveNiveau; D = sauveD; mode = sauveMode; selection = null; historique = []; refaites = []; }
+  finally { calque = sauveCalque; persister = vraiPersister; toast = vraiToast; window.confirm = vraiConfirm; modeFiche = sauveModeFiche; pieceFiche = null; niveauCourant = sauveNiveau; D = sauveD; mode = sauveMode; selection = null; historique = []; refaites = []; }
   return r;
 }
 function afficherVerifications() {
