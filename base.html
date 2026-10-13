@@ -336,7 +336,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--slate);}
 /* ── Le plan ── */
 .plan-cadre{position:relative;border-radius:14px;background:var(--surface);border:1.5px solid var(--line);overflow:hidden;touch-action:none;}
 .plan-cadre svg{display:block;width:100%;height:100%;user-select:none;-webkit-user-select:none;}
-.plan-edition .plan-cadre{height:min(62vh,560px);}
+.plan-edition .plan-cadre{height:clamp(440px,calc(100vh - 170px),740px);}
 .plan-choix .plan-cadre{height:min(46vh,380px);}
 .plan-outils{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 10px;}
 .plan-outils .sep{width:1px;height:22px;background:var(--line);margin:0 4px;}
@@ -344,6 +344,26 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--slate);}
 .plan-zoom button{width:32px;height:32px;border-radius:9px;border:1.5px solid var(--line);background:var(--sheet);color:var(--ink);font:700 16px/1 var(--police-interface);}
 .plan-zoom button.texte{font-size:11px;}
 .plan-panneau{margin-top:12px;}
+.plan-barre{position:absolute;top:10px;left:10px;right:10px;z-index:3;display:flex;gap:6px;align-items:flex-start;pointer-events:none;}
+.plan-barre > *{pointer-events:auto;}
+.barre-outils{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-width:0;padding:6px 8px;border-radius:12px;background:var(--sheet);border:1.5px solid var(--line);box-shadow:0 2px 10px rgba(0,0,0,.14);}
+.barre-outils .niveaux,.barre-outils .plan-outils{display:contents;}
+.barre-bascule{flex:none;min-height:30px;padding:0 10px;border-radius:999px;border:1.5px solid var(--line);background:var(--sheet);color:var(--ink);font:700 12.5px/1 var(--police-interface);box-shadow:0 2px 10px rgba(0,0,0,.14);cursor:pointer;}
+.plan-barre.repliee .barre-outils{display:none;}
+.plan-vide{position:absolute;left:50%;top:56%;transform:translate(-50%,-50%);width:max-content;max-width:min(440px,calc(100% - 100px));background:var(--sheet);pointer-events:none;z-index:2;}
+.plan-panneau.carte-plan{position:absolute;z-index:4;margin:0;box-sizing:border-box;width:min(370px,calc(100% - 66px));max-height:calc(100% - 16px);overflow:auto;padding:10px 12px 6px;border-radius:12px;background:var(--sheet);border:1.5px solid var(--slate);box-shadow:0 6px 22px rgba(0,0,0,.22);touch-action:auto;font-size:13.5px;}
+.plan-panneau.carte-plan[hidden]{display:none;}
+.carte-plan label.champ{margin:0 0 8px;}
+.carte-plan .grille2{gap:0 10px;align-items:end;}
+.plan-vue-outils{position:absolute;left:10px;bottom:10px;right:58px;z-index:3;display:flex;flex-wrap:wrap;gap:6px;align-items:center;pointer-events:none;}
+.plan-vue-outils > *{pointer-events:auto;box-shadow:0 2px 8px rgba(0,0,0,.12);background:var(--sheet);}
+.plan-filigrane{padding:4px 9px;border-radius:8px;border:1.5px solid var(--line);font-size:12px;}
+.plan-filigrane:empty{display:none;}
+.plan-barre.repliee ~ .plan-vue-outils{display:none;}
+.carte-plan p.discret{font-size:12px;margin:0 0 8px;}
+.carte-plan details.repli{margin:8px 0 4px;padding:0 10px;}
+.carte-plan details.repli > summary{padding:7px 0;font-size:12.5px;}
+.carte-plan details.repli[open]{padding-bottom:8px;}
 .plan-aide{font-size:12.5px;color:var(--ink-soft);margin:8px 0 0;}
 .piece-trait{fill:none;stroke:var(--ink);}
 .piece-fond{fill:var(--sheet);cursor:grab;}
@@ -626,28 +646,34 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
     <div class="feuille plan-edition">
       <div class="surtitre">Le plan du lieu</div>
       <p class="discret">Dessinez comme sur une feuille pour un collègue : seules comptent les tailles et les voisinages. L'échelle est facultative (en bas). Plusieurs étages ? « ＋ Niveau… » ajoute un étage ou un sous-sol.</p>
-      <div class="niveaux no-print" id="plan-niveaux">
-        <div id="niveaux-onglets"></div>
-        <select class="bt petit" style="width:auto;min-height:28px;padding:0 8px" aria-label="Ajouter un niveau" onchange="ajouterNiveau(this.value); this.value=''"><option value="">＋ Niveau…</option><option value="haut">Un étage au-dessus</option><option value="bas">Un sous-sol</option></select>
-        <span class="discret" id="niveaux-fantome"></span>
-      </div>
-      <div class="plan-outils">
-        <button type="button" class="bt plein petit" onclick="ajouterPiece()">＋ Pièce</button>
-        <button type="button" class="bt petit" onclick="ajouterMural('porte')" title="Sur un mur de la pièce choisie ; elle glisse ensuite le long des murs">＋ Porte</button>
-        <button type="button" class="bt petit" onclick="ajouterMural('fenetre')" title="Sur un mur de la pièce choisie ; elle glisse ensuite le long des murs">＋ Fenêtre</button>
-        <select class="bt petit" style="width:auto;min-height:28px;padding:0 8px" aria-label="Ajouter une baie vitrée, un escalier ou un ascenseur" onchange="ajouterAutre(this.value); this.value=''"><option value="">＋ Baie, escalier…</option><option value="baie">Baie vitrée</option><option value="escalier">Escalier</option><option value="ascenseur">Ascenseur</option></select>
-        <select class="bt petit" style="width:auto;min-height:28px;padding:0 8px" aria-label="Ajouter un meuble" onchange="ajouterMeuble(this.value); this.value=''"><option value="">＋ Meuble…</option></select>
-        <button type="button" class="bt petit" onclick="ajouterLegende()" title="Un texte libre sur le plan : Entrée principale, Vers le centre-ville… avec une flèche si l'on veut">＋ Légende</button>
-        <span class="sep"></span>
-        <button type="button" class="bt petit" id="btn-annuler" onclick="annuler()" title="Annuler (Ctrl+Z)">↶ Annuler</button>
-        <button type="button" class="bt petit" id="btn-refaire" onclick="refaire()" title="Rétablir (Ctrl+Y)">↷ Rétablir</button>
-        <span class="sep"></span>
-        <button type="button" class="bt petit" id="btn-lecture" aria-pressed="false" onclick="basculerCalqueLecture()" title="Voir sur le plan ce que la BASE lit : murs communs, passages, vues">👁 Lecture</button>
-        <span class="sep"></span>
-        <select class="bt petit" style="width:auto;min-height:28px;padding:0 8px" aria-label="Télécharger le plan vierge" title="Le plan seul, sans épisode : à imprimer, à annoter, à glisser dans un document" onchange="exporterPlanVierge(this.value); this.value=''"><option value="">⬇ Plan vierge…</option><option value="png">Image PNG</option><option value="svg">Image SVG</option></select>
-      </div>
       <div class="plan-cadre" id="plan-edition-cadre">
+        <div class="plan-barre no-print" id="plan-barre">
+          <div class="barre-outils" id="barre-outils">
+            <div class="niveaux no-print" id="plan-niveaux">
+              <div id="niveaux-onglets"></div>
+              <select class="bt petit" style="width:106px;min-height:28px;padding:0 8px" aria-label="Ajouter un niveau" onchange="ajouterNiveau(this.value); this.value=''"><option value="">＋ Niveau…</option><option value="haut">Un étage au-dessus</option><option value="bas">Un sous-sol</option></select>
+            </div>
+            <div class="plan-outils">
+              <button type="button" class="bt plein petit" onclick="ajouterPiece()">＋ Pièce</button>
+              <button type="button" class="bt petit" onclick="ajouterMural('porte')" title="Sur un mur de la pièce choisie ; elle glisse ensuite le long des murs">＋ Porte</button>
+              <button type="button" class="bt petit" onclick="ajouterMural('fenetre')" title="Sur un mur de la pièce choisie ; elle glisse ensuite le long des murs">＋ Fenêtre</button>
+              <select class="bt petit" style="width:auto;min-height:28px;padding:0 8px" aria-label="Ajouter une baie vitrée, un escalier ou un ascenseur" onchange="ajouterAutre(this.value); this.value=''"><option value="">＋ Baie, escalier…</option><option value="baie">Baie vitrée</option><option value="escalier">Escalier</option><option value="ascenseur">Ascenseur</option></select>
+              <select class="bt petit" style="width:auto;min-height:28px;padding:0 8px" aria-label="Ajouter un meuble" onchange="ajouterMeuble(this.value); this.value=''"><option value="">＋ Meuble…</option></select>
+              <button type="button" class="bt petit" onclick="ajouterLegende()" title="Un texte libre sur le plan : Entrée principale, Vers le centre-ville… avec une flèche si l'on veut">＋ Légende</button>
+              <span class="sep"></span>
+              <button type="button" class="bt petit" id="btn-annuler" onclick="annuler()" title="Annuler (Ctrl+Z)" aria-label="Annuler">↶</button>
+              <button type="button" class="bt petit" id="btn-refaire" onclick="refaire()" title="Rétablir (Ctrl+Y)" aria-label="Rétablir">↷</button>
+            </div>
+          </div>
+          <button type="button" class="barre-bascule" id="barre-bascule" aria-controls="barre-outils" aria-expanded="true" title="Replier la barre d'outils" onclick="basculerBarre()">▴</button>
+        </div>
+        <div class="plan-vue-outils no-print" id="plan-vue-outils">
+          <button type="button" class="bt petit" id="btn-lecture" aria-pressed="false" onclick="basculerCalqueLecture()" title="Voir sur le plan ce que la BASE lit : murs communs, passages, vues">👁 Lecture</button>
+          <select class="bt petit" style="width:auto;min-height:28px;padding:0 8px" aria-label="Télécharger le plan vierge" title="Le plan seul, sans épisode : à imprimer, à annoter, à glisser dans un document" onchange="exporterPlanVierge(this.value); this.value=''"><option value="">⬇ Plan vierge…</option><option value="png">Image PNG</option><option value="svg">Image SVG</option></select>
+          <span class="discret plan-filigrane" id="niveaux-fantome"></span>
+        </div>
         <svg id="plan-edition" xmlns="http://www.w3.org/2000/svg"></svg>
+        <div class="vide plan-vide" id="plan-vide" hidden></div>
         <div class="plan-zoom no-print">
           <button type="button" onclick="zoomer(1.25)" aria-label="Zoomer">＋</button>
           <button type="button" onclick="zoomer(0.8)" aria-label="Dézoomer">－</button>
@@ -655,8 +681,8 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
         </div>
       </div>
       <p class="plan-aide" id="lecture-legende" hidden><b>Lecture</b> — traits verts épais : murs communs ; points verts : passages (portes) ; tirets bleus : ce qu'on voit par une fenêtre (en rouge vers une route ou un parking).</p>
-      <p class="plan-aide">Glisser une pièce pour la déplacer, ses poignées pour l'agrandir ; glisser le fond pour se déplacer ; molette ou ＋ / － pour zoomer. Double-clic (ou appui long au doigt) sur une pièce pour la nommer. La flèche ronde au-dessus de ce qui est choisi (ou la touche R) le tourne d'un quart de tour, avec ce que la pièce contient ; Suppr le supprime, Échap le lâche. « ＋ Légende » pose un texte libre (« Entrée principale », « Vers le centre-ville ») qui se glisse où l'on veut. Les portes, fenêtres et baies se posent sur un mur de la pièce choisie, les meubles et les escaliers dedans ; les zones de dehors (cour, route, parking) se choisissent dans « Type de zone ».</p>
-      <div class="plan-panneau" id="plan-panneau"></div>
+      <p class="plan-aide">Glisser une pièce pour la déplacer, ses poignées pour l'agrandir ; glisser le fond pour se déplacer ; molette ou ＋ / － pour zoomer. Double-clic (ou appui long au doigt) sur une pièce pour la nommer. La flèche ronde au-dessus de ce qui est choisi (ou la touche R) le tourne d'un quart de tour, avec ce que la pièce contient ; Suppr le supprime, Échap le lâche. Les outils flottent sur le plan (▴ les replie) ; ce qui est choisi a sa petite carte à côté de lui. « ＋ Légende » pose un texte libre (« Entrée principale », « Vers le centre-ville ») qui se glisse où l'on veut. Les portes, fenêtres et baies se posent sur un mur de la pièce choisie, les meubles et les escaliers dedans ; les zones de dehors (cour, route, parking) se choisissent dans « Type de zone ».</p>
+      <div id="plan-panneau-place"><div class="plan-panneau" id="plan-panneau"></div></div>
       <details class="repli" style="margin-top:12px"><summary>Échelle du plan (facultative)</summary>
         <p class="discret" id="echelle-texte"></p>
         <label class="champ" style="max-width:280px"><span>Une case de la grille mesure (en mètres)</span><input type="number" id="b1-echelle" min=".2" max="5" step=".05" placeholder="ex. : 0,8" inputmode="decimal" onchange="majEchelle(this.value)"></label>
@@ -866,7 +892,7 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
    chose lue de la BAF, en lecture : le choix clair / sombre, pour s'ouvrir dans le même thème.
    ══════════════════════════════════════════════════════════════════════════════════════════════ */
 
-const VERSION_BASE = 'BASE v2026.10.13-6';
+const VERSION_BASE = 'BASE v2026.10.13-7';
 const CLE_SOCLE = 'base-dossier-v1', CLE_DECL = 'base-declarant-v1', CLE_MODE = 'base-mode', CLE_THEME = 'base-theme';
 const TYPES_ZONE = [['activite', "Salle d'activité"], ['sejour', 'Séjour, salon'], ['repas', 'Repas'], ['accueil', 'Accueil'], ['circulation', 'Circulation'],
   ['chambre', 'Chambre'], ['repos', 'Salle de repos'], ['calme', 'Salle de mise au calme'], ['snoezelen', 'Salle multisensorielle'], ['soins', 'Soins, infirmerie'],
@@ -1162,10 +1188,10 @@ function boite(ps) {
 }
 function cadreEdition() { const c = $('plan-edition-cadre'); return {w: c.clientWidth || 800, h: c.clientHeight || 500}; }
 function ajusterVue() {
-  const b = boiteTout(), c = cadreEdition(), marge = 3;
-  vueEdition.k = Math.max(8, Math.min(60, Math.min(c.w / (b.w + 2 * marge), c.h / (b.h + 2 * marge))));
-  vueEdition.x = b.x - marge - ((c.w / vueEdition.k) - (b.w + 2 * marge)) / 2;
-  vueEdition.y = b.y - marge - ((c.h / vueEdition.k) - (b.h + 2 * marge)) / 2;
+  const b = boiteTout(), c = cadreEdition(), marge = 3, haut = hautBarre();
+  vueEdition.k = Math.max(8, Math.min(60, Math.min(c.w / (b.w + 2 * marge), Math.max(60, c.h - haut) / (b.h + 2 * marge))));
+  vueEdition.x = b.x + b.w / 2 - c.w / (2 * vueEdition.k);
+  vueEdition.y = b.y + b.h / 2 - (haut + c.h) / (2 * vueEdition.k);   // le plan est centré dans la partie qu'on voit, sous la barre d'outils
   rendrePlanEdition();
 }
 function zoomer(f, cx, cy) {
@@ -1178,8 +1204,8 @@ function zoomer(f, cx, cy) {
 
 /* ── Les pièces ── */
 function ajouterPiece() {
-  const c = cadreEdition(), w = 6, h = 4, n = niveauActif();
-  let x = Math.round(vueEdition.x + c.w / vueEdition.k / 2 - w / 2), y = Math.round(vueEdition.y + c.h / vueEdition.k / 2 - h / 2);
+  const ce = centreVue(), w = 6, h = 4, n = niveauActif();
+  let x = Math.round(ce.x - w / 2), y = Math.round(ce.y - h / 2);
   while (piecesNiveau(n).some(p => p.rects.some(r => r.x === x && r.y === y))) { x += 2; y += 2; }
   const id = nouvelId('p');
   modifierPlan(() => pieces().push({id, nom: 'Pièce ' + (pieces().length + 1), type: 'activite', niveau: n, rects: [{x, y, w, h}]}));
@@ -1325,8 +1351,8 @@ function dessinLegendes(o) {
   }).join('') + '</g>';
 }
 function ajouterLegende() {
-  const c = cadreEdition(), n = niveauActif(), id = nouvelId('l');
-  const x = arrondi(vueEdition.x + c.w / vueEdition.k / 2, .5), y = arrondi(vueEdition.y + c.h / vueEdition.k / 2, .5);
+  const ce = centreVue(), n = niveauActif(), id = nouvelId('l');
+  const x = arrondi(ce.x, .5), y = arrondi(ce.y, .5);
   modifierPlan(() => legendes().push({id, niveau: n, x, y, texte: 'Légende', taille: 'm', fleche: ''}));
   selection = {legende: id}; rendrePlanEdition();
   setTimeout(() => focaliserSiVisible($('pl-texte'), true), 30);
@@ -1342,7 +1368,7 @@ function tailleDeLegende(v) { modifierLegende(l => { l.taille = TAILLES_LEGENDE[
 function supprimerLegende() { const id = selection && selection.legende; if (!id) return; modifierPlan(() => { D.b1.plan.legendes = legendes().filter(l => l.id !== id); }); selection = null; rendrePlanEdition(); }
 function panneauLegende(lg, fini) {
   return '<p class="discret"><b>La légende</b> se glisse où l\'on veut, même hors des pièces. Elle ne change rien à la lecture du plan : elle sert à se repérer.</p>' +
-    '<div class="grille2"><label class="champ"><span>Le texte</span><input type="text" id="pl-texte" value="' + esc(lg.texte) + '" maxlength="60" onchange="texteLegende(this.value)"></label>' +
+    '<div class="grille2"><label class="champ"><span>Le texte</span><input type="text" id="pl-texte" value="' + esc(lg.texte) + '" maxlength="60" onchange="texteLegende(this.value)" onkeydown="champFini(event, this)"></label>' +
     '<label class="champ"><span>La flèche</span>' + selectHtml('pl-fleche', lg.fleche || '', FLECHES_LEGENDE, 'flecheLegende(this.value)') + '</label></div>' +
     '<div class="grille2"><label class="champ"><span>La taille</span>' + selectHtml('pl-taille', lg.taille || 'm', [['p', 'Petite'], ['m', 'Moyenne'], ['g', 'Grande']], 'tailleDeLegende(this.value)') + '</label></div>' +
     '<div class="boutons"><button type="button" class="bt petit danger" onclick="supprimerLegende()">Supprimer</button>' + fini + '</div>';
@@ -1423,7 +1449,7 @@ function ajouterMeuble(type) {
   const m = MEUBLES.find(x => x[0] === type) || MEUBLES[MEUBLES.length - 1];
   const p = selection && selection.piece && pieceParId(selection.piece), c = cadreEdition();
   const r = p ? p.rects[selection.morceau || 0] : null;
-  const cx = r ? r.x + r.w / 2 : vueEdition.x + c.w / vueEdition.k / 2, cy = r ? r.y + r.h / 2 : vueEdition.y + c.h / vueEdition.k / 2;
+  const ce = centreVue(), cx = r ? r.x + r.w / 2 : ce.x, cy = r ? r.y + r.h / 2 : ce.y;
   const el = {id: nouvelId('e'), cat: 'meuble', type: m[0], niveau: p ? niveauDe(p) : niveauActif(), x: arrondi(cx - m[2] / 2, .5), y: arrondi(cy - m[3] / 2, .5), w: m[2], h: m[3]};
   modifierPlan(() => elements().push(el));
   selection = {elem: el.id}; rendrePlanEdition();
@@ -1439,7 +1465,7 @@ function ajouterEscalier(type) {
   const cur = niveauActif(), i = rangNiveau(cur), autre = ns[i + 1] ? ns[i + 1].id : ns[i - 1].id;
   const p = selection && selection.piece && pieceParId(selection.piece), c = cadreEdition();
   const r = p ? p.rects[selection.morceau || 0] : null, w = type === 'ascenseur' ? 1.5 : 2, h = type === 'ascenseur' ? 1.5 : 3;
-  const cx = r ? r.x + r.w / 2 : vueEdition.x + c.w / vueEdition.k / 2, cy = r ? r.y + r.h / 2 : vueEdition.y + c.h / vueEdition.k / 2;
+  const ce = centreVue(), cx = r ? r.x + r.w / 2 : ce.x, cy = r ? r.y + r.h / 2 : ce.y;
   const lies = rangNiveau(cur) < rangNiveau(autre) ? [cur, autre] : [autre, cur];
   const el = {id: nouvelId('e'), cat: 'escalier', type, niveau: lies[0], niveaux: lies, x: arrondi(cx - w / 2, .5), y: arrondi(cy - h / 2, .5), w, h};
   modifierPlan(() => elements().push(el));
@@ -1483,7 +1509,7 @@ function tournerSelection() {
 // La flèche ronde : au-dessus du milieu du haut de ce qui est choisi (au-dessous si le haut touche le bord du cadre). Un appui dessus fait un quart de tour.
 function boutonRotation(m, k) {
   const x = m.x + m.w / 2; let y = m.y - 30 / k;
-  if ((y - vueEdition.y) * k < 18) y = m.y + m.h + 30 / k;
+  if ((y - vueEdition.y) * k < Math.max(18, hautBarre() + 14)) y = m.y + m.h + 30 / k;
   return '<g class="rotation" transform="translate(' + x + ' ' + y + ') scale(' + 1 / k + ')"><title>Tourner d\'un quart de tour (touche R)</title><circle data-rotation="1" r="13"/><text>↻</text></g>';
 }
 // Un champ où l'on écrit : une zone de texte, ou une ligne de texte (pas une case, un bouton, un curseur ni un menu).
@@ -1501,6 +1527,93 @@ function focaliserSiVisible(el, tout) {
 function supprimerSelection() {
   if (!selection) return;
   if (selection.legende) supprimerLegende(); else if (selection.elem) supprimerElement(); else supprimerPiece();
+}
+
+/* ══ Le plan, un espace de travail (passe 233, Arthur et Émilie) ══
+   Tout se fait sur le plan, sans aller chercher des options plus haut ni plus bas :
+   · la barre d'outils flotte sur le plan (▴ la replie ; repliée d'office sur un petit écran, sauf choix contraire gardé) ;
+   · ce qui est choisi (pièce, meuble, escalier, porte, fenêtre, légende) a sa petite carte posée à côté de lui : au-dessous, sinon au-dessus (en laissant
+     la place de la flèche ronde), sinon à droite ou à gauche, sinon contre le bas du cadre. Elle se range pendant un geste, suit la vue quand on zoome ;
+   · rien de choisi : la carte retourne sous le plan (nom du niveau, retirer le niveau) ; un plan ou un niveau vide dit quoi faire au milieu du plan. */
+let barreRepliee = null;   // null : pas encore décidé
+function barreEstRepliee() {
+  if (barreRepliee === null) {
+    let v = null; try { v = localStorage.getItem('base-barre'); } catch (e) { /* rien */ }
+    barreRepliee = v === '1' ? true : v === '0' ? false : cadreEdition().w < 640;
+  }
+  return barreRepliee;
+}
+function basculerBarre() {
+  barreRepliee = !barreEstRepliee();
+  try { localStorage.setItem('base-barre', barreRepliee ? '1' : '0'); } catch (e) { /* rien */ }
+  rendrePlanEdition();
+}
+function appliquerBarre() {
+  const b = $('plan-barre'), t = $('barre-bascule'); if (!b || !t) return;
+  const rep = barreEstRepliee(); b.classList.toggle('repliee', rep);
+  t.setAttribute('aria-expanded', String(!rep)); t.textContent = rep ? '🛠 Outils' : '▴'; t.title = rep ? 'Déplier la barre d\'outils' : 'Replier la barre d\'outils';
+}
+// Le bas de la barre d'outils, en pixels du cadre : ce qui est au-dessus est caché par elle.
+function hautBarre() { const b = $('plan-barre'); return b && b.offsetHeight ? b.offsetTop + b.offsetHeight + 6 : 0; }
+// Le centre de la partie du plan qu'on voit (sous la barre d'outils), en unités du plan : là où se posent une pièce, une légende, un meuble.
+function centreVue() { const c = cadreEdition(), k = vueEdition.k; return {x: vueEdition.x + c.w / k / 2, y: vueEdition.y + (hautBarre() + c.h) / k / 2}; }
+// Où poser la carte. obj : ce qui est choisi, carte : sa taille, cadre : {w, h}, haut : le bas de la barre d'outils (tout en pixels du cadre).
+function placerCarte(obj, carte, cadre, haut) {
+  const m = 8, droite = cadre.w - m - 44;   // 44 : la colonne des boutons de zoom
+  const cx = obj.x + obj.w / 2, x = Math.max(m, Math.min(droite - carte.w, cx - carte.w / 2)), cy = obj.y + obj.h / 2;
+  const yc = Math.max(haut + 4, Math.min(cadre.h - m - carte.h, cy - carte.h / 2));
+  const libre = r => r.x >= m - .5 && r.y >= haut + 3.5 && r.x + r.w <= droite + .5 && r.y + r.h <= cadre.h - m + .5;
+  const essais = [['dessous', {x, y: obj.y + obj.h + 12, w: carte.w, h: carte.h}], ['dessus', {x, y: obj.y - 46 - carte.h, w: carte.w, h: carte.h}],
+    ['droite', {x: obj.x + obj.w + 12, y: yc, w: carte.w, h: carte.h}], ['gauche', {x: obj.x - 12 - carte.w, y: yc, w: carte.w, h: carte.h}]];   // 46 : la place de la flèche ronde
+  const ok = essais.find(e => libre(e[1]));
+  if (ok) return {x: ok[1].x, y: ok[1].y, cote: ok[0]};
+  return {x, y: Math.max(haut + 4, cadre.h - m - carte.h), cote: 'bas'};
+}
+// Le rectangle de ce qui est choisi, en unités du plan.
+function boiteSelection() {
+  if (!selection) return null;
+  if (selection.legende) { const l = legendeParId(selection.legende); return l ? boiteLegende(l) : null; }
+  if (selection.elem) {
+    const e = elemParId(selection.elem); if (!e) return null;
+    if (estRect(e)) return {x: e.x, y: e.y, w: e.w, h: e.h};
+    return e.o === 'h' ? {x: e.x - e.long / 2, y: e.y - .35, w: e.long, h: .7} : {x: e.x - .35, y: e.y - e.long / 2, w: .7, h: e.long};
+  }
+  const p = selection.piece && pieceParId(selection.piece); return p ? boite([p]) : null;
+}
+// La carte est sur le plan quand quelque chose est choisi, sous le plan sinon.
+function poserPanneau(sur) {
+  const el = $('plan-panneau'), cadre = $('plan-edition-cadre'), place = $('plan-panneau-place'); if (!el || !cadre || !place) return;
+  if (sur && el.parentNode !== cadre) cadre.appendChild(el); else if (!sur && el.parentNode !== place) place.appendChild(el);
+  el.classList.toggle('carte-plan', !!sur); el.classList.toggle('no-print', !!sur);
+  if (!sur) { el.hidden = false; el.style.cssText = ''; delete el.dataset.cote; }
+}
+function placerPanneau() {
+  const el = $('plan-panneau'); if (!el || !el.classList.contains('carte-plan')) return;
+  const b = boiteSelection(); if (!b) { el.hidden = true; return; }
+  const k = vueEdition.k, c = cadreEdition();
+  el.hidden = false; el.style.visibility = 'hidden'; el.style.left = '0px'; el.style.top = '0px';
+  const pos = placerCarte({x: (b.x - vueEdition.x) * k, y: (b.y - vueEdition.y) * k, w: b.w * k, h: b.h * k}, {w: el.offsetWidth, h: el.offsetHeight}, c, hautBarre());
+  el.style.left = Math.round(pos.x) + 'px'; el.style.top = Math.round(pos.y) + 'px'; el.style.visibility = ''; el.dataset.cote = pos.cote;
+}
+function rendrePanneauPiece() {
+  const el = $('plan-panneau'); if (!el) return;
+  const choisi = !!(selection && ((selection.legende && legendeParId(selection.legende)) || (selection.elem && elemParId(selection.elem)) || (selection.piece && pieceParId(selection.piece))));
+  poserPanneau(choisi);
+  if (choisi && geste) { el.hidden = true; return; }   // la carte se range pendant un geste, et revient à la fin
+  remplirPanneau();
+  if (choisi) placerPanneau();
+}
+// Entrée valide le champ et le lâche (Suppr et R retrouvent alors le plan) ; Échap rend l'ancienne valeur.
+function champFini(ev, el) {
+  if (ev.key === 'Enter') { ev.preventDefault(); el.blur(); }
+  else if (ev.key === 'Escape') { ev.preventDefault(); el.value = el.defaultValue; el.blur(); }
+}
+// Un plan ou un niveau vide dit quoi faire, au milieu du plan.
+function majVidePlan(n) {
+  const v = $('plan-vide'); if (!v) return;
+  const ici = piecesNiveau(n).length; v.hidden = !!ici;
+  if (!ici) v.innerHTML = !pieces().length ? 'Le plan est vide. « ＋ Pièce » pose une première pièce au centre.'
+    : 'Ce niveau est vide. « ＋ Pièce » en pose une première' + (niveaux().length > 1 ? ' ; le niveau d\'à côté apparaît en filigrane pour aligner les pièces' : '') + '.';
 }
 function tailleElement(champ, delta) {
   modifierElement(e => {
@@ -1661,6 +1774,7 @@ function dessinLecture(L, n, k) {
 
 function rendrePlanEdition() {
   const svg = $('plan-edition'); if (!svg || !$('vue-preambule').classList.contains('show')) return;
+  appliquerBarre();
   const n = niveauActif(), c = cadreEdition(), v = vueEdition, k = v.k, vw = c.w / k, vh = c.h / k;
   svg.setAttribute('viewBox', v.x + ' ' + v.y + ' ' + vw + ' ' + vh);
   const pas = 1, r = Math.max(.04, 1.2 / k);
@@ -1681,6 +1795,7 @@ function rendrePlanEdition() {
   }
   if (e && estRect(e)) { h += poignees(e); if (!geste) h += boutonRotation(e, k); }
   svg.innerHTML = h;
+  majVidePlan(n);
   rendrePanneauPiece();
   majBoutonsHistorique();
   if (!geste) { rendreNiveaux(); planifierLecture(); }
@@ -1689,7 +1804,7 @@ function selectHtml(id, valeur, options, onchange) {
   return '<select id="' + id + '" onchange="' + onchange + '">' + options.map(o => '<option value="' + o[0] + '"' + (valeur === o[0] ? ' selected' : '') + '>' + esc(o[1]) + '</option>').join('') + '</select>';
 }
 const ETIQ = t => '<span style="display:block;margin:0 0 4px;font-size:12.5px;font-weight:700;color:var(--ink-soft)">' + t + '</span>';
-function rendrePanneauPiece() {
+function remplirPanneau() {
   const el = $('plan-panneau'); if (!el) return;
   const actif = document.activeElement && document.activeElement.id;
   const e = selection && selection.elem && elemParId(selection.elem);
@@ -1706,7 +1821,7 @@ function rendrePanneauPiece() {
         const cur = niveauActif(), autres = niveaux().filter(n => n.id !== cur), vers = (e.niveaux || []).filter(id => id !== cur)[0] || '';
         el.innerHTML = '<div class="grille2"><label class="champ"><span>Ce qui relie les niveaux</span>' + selectHtml('pe-type', e.type || 'escalier', [['escalier', 'Escalier'], ['ascenseur', 'Ascenseur']], 'typerEscalier(this.value)') + '</label>' +
           '<label class="champ"><span>Relie « ' + esc(nomNiveau(cur)) + ' » à</span>' + selectHtml('pe-vers', vers, autres.map(n => [n.id, n.nom]), 'relierEscalier(this.value)') + '</label></div>' +
-          '<p class="discret" style="margin:-4px 0 8px">Il se dessine sur les deux niveaux : il doit tomber dans une pièce de chacun (par exemple un couloir).</p>' + taille + fin;
+          '<p class="discret" style="margin:-4px 0 8px">Il doit tomber dans une pièce de chaque niveau.</p>' + taille + fin;
       } else {
         el.innerHTML = '<div class="grille2"><label class="champ"><span>Le meuble</span>' + selectHtml('pm-type', e.type, MEUBLES.map(m => [m[0], m[1]]), 'typerMeuble(this.value)') + '</label>' + taille + '</div>' + fin;
       }
@@ -1727,24 +1842,23 @@ function rendrePanneauPiece() {
   const p = selection && selection.piece && pieceParId(selection.piece);
   if (!p) {
     const ici = piecesNiveau(niveauActif()).length;
-    let h = !pieces().length ? '<div class="vide">Le plan est vide. « ＋ Pièce » pose une première pièce au centre.</div>'
-      : !ici ? '<div class="vide">Ce niveau est vide. « ＋ Pièce » en pose une première' + (niveaux().length > 1 ? ' ; le niveau d\'à côté apparaît en filigrane pour aligner les pièces' : '') + '.</div>'
-      : '<p class="discret">Touchez une pièce pour la nommer, la typer, lui ajouter un morceau, une porte, une fenêtre ou un meuble, la dupliquer ou la supprimer.</p>';
+    let h = ici ? '<p class="discret">Touchez une pièce pour la nommer, la typer, lui ajouter un morceau, une porte, une fenêtre ou un meuble, la dupliquer ou la supprimer.</p>' : '';
     if (niveaux().length > 1) h += '<div class="grille2"><label class="champ"><span>Nom du niveau</span><input type="text" id="pn-nom" value="' + esc(nomNiveau(niveauActif())) + '" onchange="renommerNiveau(this.value)"></label>' +
       '<div class="champ">' + ETIQ('&nbsp;') + '<button type="button" class="bt petit danger" onclick="retirerNiveau()">Retirer ce niveau</button></div></div>';
     el.innerHTML = h;
     if (actif === 'pn-nom') { const n = $(actif); if (n) n.focus({preventScroll: true}); }
     return;
   }
-  el.innerHTML = '<div class="grille2"><label class="champ"><span>Nom de la pièce</span><input type="text" id="pp-nom" value="' + esc(p.nom) + '" onchange="renommerPiece(this.value)"></label>' +
+  const plus = !!($('pp-plus') && $('pp-plus').open);
+  el.innerHTML = '<div class="grille2"><label class="champ"><span>Nom de la pièce</span><input type="text" id="pp-nom" value="' + esc(p.nom) + '" onchange="renommerPiece(this.value)" onkeydown="champFini(event, this)"></label>' +
     '<label class="champ"><span>Type de zone</span><select id="pp-type" onchange="typerPiece(this.value)">' + optionsTypesZone(p.type) + '</select></label></div>' +
-    blocEnclave(p) +
+    '<div class="boutons"><button type="button" class="bt petit" onclick="pivoterPiece()" title="Un quart de tour (touche R), avec ce que la pièce contient : meubles, portes, fenêtres, enclaves">↻ Tourner</button>' +
+    '<button type="button" class="bt petit" onclick="dupliquerPiece()">⧉ Dupliquer</button>' +
+    '<button type="button" class="bt petit danger" onclick="supprimerPiece()">Supprimer</button>' + fini + '</div>' +
+    '<details class="repli" id="pp-plus"' + (plus ? ' open' : '') + '><summary>Plus : un morceau, l\'enclave, la fiche</summary>' + blocEnclave(p) +
     '<div class="boutons"><button type="button" class="bt petit" onclick="ajouterMorceau()" title="Pour une pièce en L ou en T : un rectangle collé à celui-ci">＋ Un morceau à cette pièce</button>' +
     (p.rects.length > 1 ? '<button type="button" class="bt petit" onclick="retirerMorceau()">Retirer ce morceau</button>' : '') +
-    (ficheOuverte(p) ? '<button type="button" class="bt petit" onclick="ouvrirFiche()">📋 Fiche de la pièce</button>' + chipFiche(completudeFiche(p)) + ' ' : '') +
-    '<button type="button" class="bt petit" onclick="pivoterPiece()" title="Un quart de tour (touche R), avec ce que la pièce contient : meubles, portes, fenêtres, enclaves">↻ Tourner</button>' +
-    '<button type="button" class="bt petit" onclick="dupliquerPiece()">⧉ Dupliquer</button>' +
-    '<button type="button" class="bt petit danger" onclick="supprimerPiece()">Supprimer</button>' + fini + '</div>';
+    (ficheOuverte(p) ? '<button type="button" class="bt petit" onclick="ouvrirFiche()">📋 Fiche de la pièce</button>' + chipFiche(completudeFiche(p)) : '') + '</div></details>';
   if (actif && /^pp-/.test(actif)) { const n = $(actif); if (n) n.focus({preventScroll: true}); }
 }
 // Les onglets des niveaux (dès qu'il y en a deux), et le niveau d'à côté qui apparaît en filigrane.
@@ -3781,6 +3895,11 @@ document.addEventListener('click', ev => {
 
 /* ══ Les notes de version ══ */
 const NOTES_BASE = [
+  {version: 'BASE v2026.10.13-7', titre: 'Le plan, un espace de travail : des outils qui flottent sur le plan', corps: '<p><b>Rester sur le plan pour faire son plan</b> (Arthur et Émilie) : plus besoin d\'aller chercher des options plus haut ou plus bas.</p><ul>' +
+    '<li><b>La barre d\'outils flotte sur le plan</b>. « ＋ Pièce », « ＋ Porte », « ＋ Fenêtre », les menus (niveau, baie ou escalier, meuble), « ＋ Légende », annuler et rétablir sont dans le cadre du plan, et « Voir tout le plan » cadre le plan sous elle. Le bouton ▴ la replie en un bouton « 🛠 Outils » ; elle se replie d\'office sur un petit écran, et le choix est gardé sur l\'appareil. La lecture, le plan vierge et le niveau en filigrane sont en bas à gauche du plan, les zooms en bas à droite. Le cadre est plus haut, pour travailler sans défiler.</li>' +
+    '<li><b>Ce qui est choisi a sa petite carte à côté de lui</b>. Pour une pièce : le nom, le type, « Tourner », « Dupliquer », « Supprimer » ; « Plus » garde le morceau en plus, l\'enclave et la fiche. La carte se pose au-dessous de la pièce, sinon au-dessus (en laissant la place de la flèche ronde), sinon à côté, sans jamais la recouvrir ; elle se range pendant qu\'on déplace ou qu\'on agrandit, et suit quand on zoome. Même chose pour une porte, une fenêtre, une baie, un meuble, un escalier, une légende. Dans un nom, Entrée valide et lâche le champ (Suppr et R retrouvent alors le plan), Échap rend l\'ancien nom.</li>' +
+    '<li>Rien n\'est choisi : la carte retourne sous le plan (nom du niveau, retirer le niveau). Un plan ou un niveau vide dit quoi faire au milieu du plan. Une nouvelle pièce, une légende, un meuble se posent au centre de ce qu\'on voit, sous la barre d\'outils.</li>' +
+    '<li>Annuler et rétablir deviennent ↶ et ↷ (leurs infobulles disent « Annuler (Ctrl+Z) » et « Rétablir (Ctrl+Y) »).</li></ul>'},
   {version: 'BASE v2026.10.13-6', titre: 'Tourner, supprimer au clavier, une page qui ne saute plus', corps: '<p><b>Le plan se dessine plus facilement</b> (Arthur et Émilie) : trois petits manques relevés en dessinant un vrai plan.</p><ul>' +
     '<li><b>Tourner</b>. Une pièce, un meuble ou un escalier se tourne d\'un quart de tour : par la flèche ronde posée au-dessus de ce qui est choisi, par la touche R, ou par le bouton « ↻ Tourner » du panneau. Une pièce tourne avec ce qu\'elle contient (ses meubles, ses portes, ses fenêtres, ses enclaves) ; les croix déjà posées dans ses épisodes la suivent, elles restent au même endroit de la pièce quel que soit son sens, et le déclarant qui reçoit le plan tourné pose les siennes au même endroit. Une porte, une fenêtre ou une baie ne tourne pas : elle prend la direction du mur où elle est posée.</li>' +
     '<li><b>Supprimer au clavier</b>. Suppr (ou Retour arrière) supprime la pièce, le meuble, l\'escalier ou la légende choisis ; Échap les lâche. Cela marche aussi quand un menu de la barre d\'outils a gardé le clavier (c\'était le cas juste après avoir ajouté un escalier) ; cela ne marche pas pendant qu\'on écrit dans un champ ou qu\'une fenêtre est ouverte. Une pièce qui a déjà un épisode ne se supprime toujours pas.</li>' +
@@ -4503,12 +4622,12 @@ function verifierBASE() {
         // 7. La flèche ronde sur le plan
         nouveau([pie('S', 2, 3, 6, 4)], [{id: 'st', cat: 'escalier', type: 'escalier', niveau: 'n0', niveaux: ['n0', 'n1'], x: 3, y: 1.5, w: 2, h: 3}, {id: 'dp', cat: 'porte', niveau: 'n0', long: 1, retourne: false, x: 5, y: 7, o: 'h', cote: -1}]);
         D.b1.plan.legendes = [{id: 'lg1', niveau: 'n0', x: 1, y: 8, texte: 'Entrée', taille: 'm', fleche: ''}];
-        Object.assign(vueEdition, {x: -2, y: -2, k: 26});
+        Object.assign(vueEdition, {x: -2, y: -8, k: 26});
         const nFleches = sel => { selection = sel; rendrePlanEdition(); return $('plan-edition').querySelectorAll('circle[data-rotation]').length; };
         const nPiece = nFleches({piece: 'S', morceau: 0}), posFl = (() => { const m = /translate\(([-\d.]+) ([-\d.]+)\)/.exec($('plan-edition').querySelector('.rotation').getAttribute('transform')); return {x: +m[1], y: +m[2]}; })();
         Object.assign(vueEdition, {x: -2, y: 2.8, k: 26}); nFleches({piece: 'S', morceau: 0});
         const posBas = (() => { const m = /translate\(([-\d.]+) ([-\d.]+)\)/.exec($('plan-edition').querySelector('.rotation').getAttribute('transform')); return {x: +m[1], y: +m[2]}; })();
-        Object.assign(vueEdition, {x: -2, y: -2, k: 26});
+        Object.assign(vueEdition, {x: -2, y: -8, k: 26});
         const nEsc = nFleches({elem: 'st'}), nPorte = nFleches({elem: 'dp'}), nLeg = nFleches({legende: 'lg1'}), nRien = nFleches(null);
         geste = {type: 'vue'}; const nGeste = nFleches({piece: 'S', morceau: 0}); geste = null;
         ok('La flèche ronde se pose au-dessus de la pièce ou du meuble choisi (au-dessous si le haut touche le bord du cadre) ; ni pour une porte, ni pour une légende, ni sans sélection, ni pendant un geste',
@@ -4524,6 +4643,83 @@ function verifierBASE() {
       } finally {
         toast = vraiToast15; Object.assign(vueEdition, vue15); geste = null; selection = null; temp.forEach(x => x.remove()); vp.classList.toggle('show', avait); historique = []; refaites = [];
         if (!$('fen-calme').hidden) fermerFenetre('fen-calme');
+      }
+    }
+    // 16. Le plan, un espace de travail : la barre d'outils et la carte de ce qui est choisi flottent sur le plan (passe 233)
+    {
+      const vp = $('vue-preambule'), avait = vp.classList.contains('show'), vue16 = Object.assign({}, vueEdition), vraiCadre = cadreEdition, barre16 = barreRepliee, vraiToast16 = toast;
+      let cleBarre = null; try { cleBarre = localStorage.getItem('base-barre'); } catch (e) { /* rien */ }
+      try {
+        vp.classList.add('show'); toast = () => {};
+        const pie = (id, x, y, w, h, extra) => Object.assign({id, nom: id, type: 'sejour', niveau: 'n0', rects: [{x, y, w, h}]}, extra || {});
+        const nouveau = (ps, els) => { D = dossierVide(); D.b1.plan = {niveaux: [{id: 'n0', nom: 'Rez-de-chaussée'}], pieces: ps, elements: els || [], legendes: []}; mode = 'socle'; historique = []; refaites = []; selection = null; niveauCourant = 'n0'; return D; };
+        const proche = (a, b) => Math.abs(a - b) < 1e-6, cadre = $('plan-edition-cadre'), rect = el => el.getBoundingClientRect(), dans = (a, b) => a.left >= b.left - 1 && a.right <= b.right + 1 && a.top >= b.top - 1 && a.bottom <= b.bottom + 1;
+        const touche = (a, b) => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+        // 1. La barre d'outils est sur le plan
+        const outils = ['ajouterPiece()', "ajouterMural('porte')", "ajouterMural('fenetre')", 'ajouterLegende()', 'annuler()', 'refaire()'].every(f => !!$('plan-barre').querySelector('button[onclick="' + f + '"]'));
+        ok('La barre d\'outils flotte sur le plan : elle est dans le cadre, avec ses boutons (pièce, porte, fenêtre, légende, annuler, rétablir), ses menus (niveau, baie ou escalier, meuble) et un bouton qui la replie ; la lecture, le plan vierge et le niveau en filigrane sont en bas à gauche, les zooms en bas à droite',
+          cadre.contains($('plan-barre')) && outils && $('plan-barre').querySelectorAll('select').length === 3 && !!$('barre-bascule') && cadre.contains($('plan-vue-outils')) && $('plan-vue-outils').contains($('btn-lecture')) && !!$('plan-vue-outils').querySelector('select[aria-label="Télécharger le plan vierge"]') &&
+          $('plan-vue-outils').contains($('niveaux-fantome')) && !!cadre.querySelector('.plan-zoom') && !$('plan-barre').contains($('btn-lecture')), '');
+        // 2. Où poser la carte (fonction pure)
+        const C = {w: 900, h: 600}, K = {w: 370, h: 160}, H = 90;
+        const sous = placerCarte({x: 300, y: 150, w: 120, h: 80}, K, C, H), dessus = placerCarte({x: 300, y: 480, w: 120, h: 80}, K, C, H);
+        const droit = placerCarte({x: 100, y: 100, w: 150, h: 480}, K, C, H), gauche = placerCarte({x: 600, y: 100, w: 150, h: 480}, K, C, H);
+        const plein = placerCarte({x: 0, y: 0, w: 900, h: 600}, K, C, H), coin = placerCarte({x: 700, y: 150, w: 100, h: 80}, K, C, H);
+        const inscrite = (p, k = K) => p.x >= 8 - .5 && p.x + k.w <= C.w - 8 - 44 + .5 && p.y >= H + 3.5 && p.y + k.h <= C.h - 8 + .5;
+        ok('La carte se pose au-dessous de ce qui est choisi, centrée sur lui ; sinon au-dessus (en laissant la place de la flèche ronde), sinon à droite ou à gauche, sinon contre le bas du cadre ; elle reste dans le cadre, sous la barre d\'outils, et ne recouvre jamais ce qui est choisi (sauf contre le bas)',
+          sous.cote === 'dessous' && proche(sous.x + K.w / 2, 360) && sous.y === 150 + 80 + 12 && dessus.cote === 'dessus' && dessus.y + K.h <= 480 - 46 + .5 && droit.cote === 'droite' && droit.x === 100 + 150 + 12 && gauche.cote === 'gauche' && gauche.x + K.w <= 600 - 12 + .5 &&
+          plein.cote === 'bas' && plein.y + K.h === C.h - 8 && coin.x + K.w <= C.w - 8 - 44 + .5 && [sous, dessus, droit, gauche, plein, coin].every(p => inscrite(p)), JSON.stringify([sous, dessus, droit, gauche, plein, coin]));
+        // 3. La carte suit ce qui est choisi : sur le plan quand quelque chose est choisi, sous le plan sinon
+        nouveau([pie('S', 0, 0, 8, 5), pie('T', 10, 0, 6, 5)], [{id: 'dp', cat: 'porte', niveau: 'n0', long: 1, retourne: false, x: 4, y: 5, o: 'h', cote: -1}]);
+        ajusterVue(); selection = null; rendrePlanEdition();
+        const sousLePlan = !cadre.contains($('plan-panneau')) && !$('plan-panneau').classList.contains('carte-plan') && $('plan-panneau-place').contains($('plan-panneau')) && !$('plan-panneau').hidden;
+        selection = {piece: 'S', morceau: 0}; rendrePlanEdition();
+        const cr = rect(cadre), pr = rect($('plan-panneau')), br = rect($('plan-barre').querySelector('.barre-outils')), cases = [...document.querySelectorAll('#plan-edition .piece-fond[data-piece="S"]')].map(rect), pS = cases[0];
+        ok('Une pièce choisie a sa carte sur le plan, à côté d\'elle : dans le cadre, sous la barre d\'outils, sans recouvrir la pièce ; rien de choisi, la carte retourne sous le plan',
+          sousLePlan && cadre.contains($('plan-panneau')) && $('plan-panneau').classList.contains('carte-plan') && !!$('plan-panneau').dataset.cote && dans(pr, cr) && !touche(pr, br) && !touche(pr, pS) &&
+          (selection = null, rendrePlanEdition(), !cadre.contains($('plan-panneau')) && $('plan-panneau-place').contains($('plan-panneau'))), JSON.stringify([$('plan-panneau').dataset.cote, pr, br, pS]));
+        selection = {elem: 'dp'}; rendrePlanEdition(); const prD = rect($('plan-panneau'));
+        ok('La carte d\'une porte (ou d\'un meuble, d\'un escalier, d\'une légende) se pose de la même façon, dans le cadre', cadre.contains($('plan-panneau')) && dans(prD, cr) && /po-vit/.test($('plan-panneau').innerHTML));
+        // 4. Le contenu de la carte d'une pièce : le nom, le type, les gestes courants ; le reste derrière « Plus »
+        selection = {piece: 'S', morceau: 0}; rendrePlanEdition();
+        const plus = $('pp-plus'), ferme = !!plus && !plus.open, contient = ['pivoterPiece()', 'dupliquerPiece()', 'supprimerPiece()'].every(f => !!$('plan-panneau').querySelector(':scope > .boutons button[onclick="' + f + '"]')) && !!$('pp-nom') && !!$('pp-type');
+        const dedansPlus = ['ajouterMorceau()'].every(f => !!plus.querySelector('button[onclick="' + f + '"]')) && !!plus.querySelector('#pp-dans');
+        plus.open = true; rendrePlanEdition(); const resteOuvert = !!$('pp-plus').open; $('pp-plus').open = false;
+        ok('La carte d\'une pièce : nom, type, « Tourner », « Dupliquer », « Supprimer » ; « Plus » (replié) garde le morceau, l\'enclave et la fiche, et reste ouvert d\'un dessin à l\'autre', ferme && contient && dedansPlus && resteOuvert);
+        // 5. Pendant un geste, la carte se range ; elle revient à la fin
+        geste = {type: 'deplacer'}; rendrePlanEdition(); const cachee = $('plan-panneau').hidden; geste = null; rendrePlanEdition();
+        ok('Pendant un geste (déplacer, agrandir) la carte se range ; elle revient à la fin, au bon endroit', cachee && !$('plan-panneau').hidden && !!$('plan-panneau').dataset.cote);
+        // 6. Entrée valide le champ et le lâche ; Échap rend l'ancienne valeur
+        const champ = document.createElement('input'); champ.type = 'text'; champ.value = 'Ancien'; champ.setAttribute('value', 'Ancien'); document.body.appendChild(champ); champ.focus(); champ.value = 'Nouveau';
+        champFini({key: 'Enter', preventDefault() {}}, champ); const apresEntree = [champ.value, document.activeElement === champ];
+        champ.focus(); champ.value = 'Pas ça'; champFini({key: 'Escape', preventDefault() {}}, champ); const apresEchap = [champ.value, document.activeElement === champ]; champ.remove();
+        ok('Dans le nom d\'une pièce ou le texte d\'une légende, Entrée valide et lâche le champ (Suppr et R retrouvent le plan) ; Échap rend l\'ancienne valeur',
+          apresEntree[0] === 'Nouveau' && !apresEntree[1] && apresEchap[0] === 'Ancien' && !apresEchap[1] && /onkeydown="champFini\(event, this\)"/.test((selection = {piece: 'S', morceau: 0}, rendrePlanEdition(), $('plan-panneau').innerHTML)));
+        // 7. Le plan est cadré sous la barre d'outils ; ce qui se pose, se pose au centre de ce qu'on voit
+        nouveau([pie('S', 0, 0, 8, 5), pie('T', 10, 0, 14, 12)], []); ajusterVue();
+        const hb = hautBarre(), b = boiteTout(), kk = vueEdition.k, c2 = cadreEdition();
+        const hautPx = (b.y - vueEdition.y) * kk, basPx = (b.y + b.h - vueEdition.y) * kk, gauchePx = (b.x - vueEdition.x) * kk, droitePx = (b.x + b.w - vueEdition.x) * kk;
+        ok('« Voir tout le plan » cadre le plan sous la barre d\'outils (rien n\'est caché par elle) et dans le cadre', hb > 30 && hautPx >= hb - 1 && basPx <= c2.h + 1 && gauchePx >= -1 && droitePx <= c2.w + 1, JSON.stringify([hb, hautPx, basPx, c2]));
+        nouveau([], []); Object.assign(vueEdition, {x: -2, y: -2, k: 26}); selection = null; ajouterPiece(); const nv = pieces()[0], nvHaut = (nv.rects[0].y - vueEdition.y) * 26, nvBas = (nv.rects[0].y + nv.rects[0].h - vueEdition.y) * 26;
+        ok('« ＋ Pièce » pose la nouvelle pièce au centre de ce qu\'on voit, sous la barre d\'outils, et son nom est prêt à être écrit dans la carte', nvHaut >= hautBarre() - 1 && nvBas <= cadreEdition().h && !!$('pp-nom') && cadre.contains($('pp-nom')) && selection && selection.piece === nv.id && Math.abs((nv.rects[0].x + 3 - centreVue().x)) <= 1);
+        // 8. Un plan ou un niveau vide dit quoi faire, au milieu du plan
+        nouveau([], []); rendrePlanEdition(); const videPlan = [!$('plan-vide').hidden, $('plan-vide').textContent];
+        nouveau([pie('S', 0, 0, 8, 5)], []); D.b1.plan.niveaux.push({id: 'n1', nom: 'Étage'}); niveauCourant = 'n1'; rendrePlanEdition(); const videNiveau = [!$('plan-vide').hidden, $('plan-vide').textContent];
+        niveauCourant = 'n0'; rendrePlanEdition(); const pasVide = $('plan-vide').hidden;
+        ok('Un plan vide, ou un niveau vide, le dit au milieu du plan (et parle du filigrane quand il y a deux niveaux) ; dès qu\'il y a une pièce, le message disparaît', videPlan[0] && /Le plan est vide/.test(videPlan[1]) && videNiveau[0] && /Ce niveau est vide/.test(videNiveau[1]) && /filigrane/.test(videNiveau[1]) && pasVide);
+        // 9. La barre se replie ; la décision est gardée ; repliée d'office sur un petit écran
+        try { localStorage.removeItem('base-barre'); } catch (e) { /* rien */ }
+        barreRepliee = null; cadreEdition = () => ({w: 500, h: 500}); const petit = barreEstRepliee(); barreRepliee = null; cadreEdition = () => ({w: 900, h: 500}); const grand = barreEstRepliee(); cadreEdition = vraiCadre;
+        barreRepliee = false; appliquerBarre(); const ouverte = [!$('plan-barre').classList.contains('repliee'), $('barre-bascule').getAttribute('aria-expanded'), $('barre-bascule').textContent];
+        basculerBarre(); const repliee = [$('plan-barre').classList.contains('repliee'), $('barre-bascule').getAttribute('aria-expanded'), $('barre-bascule').textContent, localStorage.getItem('base-barre'), getComputedStyle($('barre-outils')).display, getComputedStyle($('plan-vue-outils')).display];
+        basculerBarre(); const rouverte = [!$('plan-barre').classList.contains('repliee'), localStorage.getItem('base-barre')];
+        barreRepliee = null; try { localStorage.setItem('base-barre', '0'); } catch (e) { /* rien */ } cadreEdition = () => ({w: 500, h: 500}); const choixGarde = barreEstRepliee(); cadreEdition = vraiCadre;
+        ok('La barre d\'outils se replie (▴) en un bouton « 🛠 Outils » qui la rouvre, avec les outils de vue ; le choix est gardé ; sur un petit écran elle est repliée d\'office, sauf choix contraire',
+          petit === true && grand === false && ouverte[0] && ouverte[1] === 'true' && repliee[0] && repliee[1] === 'false' && /Outils/.test(repliee[2]) && repliee[3] === '1' && repliee[4] === 'none' && repliee[5] === 'none' && rouverte[0] && rouverte[1] === '0' && choixGarde === false, JSON.stringify([petit, grand, ouverte, repliee, rouverte, choixGarde]));
+      } finally {
+        cadreEdition = vraiCadre; toast = vraiToast16; Object.assign(vueEdition, vue16); geste = null; selection = null; barreRepliee = barre16;
+        try { if (cleBarre === null) localStorage.removeItem('base-barre'); else localStorage.setItem('base-barre', cleBarre); } catch (e) { /* rien */ }
+        vp.classList.toggle('show', avait); historique = []; refaites = [];
       }
     }
   } catch (e) { ok('Les vérifications ont planté', false, e.message); }
