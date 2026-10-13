@@ -465,6 +465,11 @@ table.croise td.n{white-space:normal;}
 .case-croix{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-soft);}
 .chaleur .piece-nom,.chaleur .piece-type,.chaleur .piece-sous{paint-order:stroke;stroke:var(--sheet);stroke-width:.22px;stroke-linejoin:round;}
 .croix-point{fill:var(--slate-deep);stroke:var(--sheet);stroke-width:.06px;opacity:.9;pointer-events:none;}
+/* ── Pédagogie (passe 231) : autour de l'épisode, questions pour l'équipe ── */
+.ctx-famille{margin:8px 0 0;}
+.ctx-nom{display:block;margin:0 0 4px;font-size:12px;font-weight:700;color:var(--ink-soft);}
+.questions{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:10px;}
+.questions li{font-size:14px;line-height:1.55;}
 /* ── Listes du préambule ── */
 .liste-edit{display:flex;flex-direction:column;gap:6px;margin:0 0 10px;}
 .liste-edit .ligne{display:grid;grid-template-columns:minmax(0,1fr) 92px 92px 34px;gap:6px;align-items:center;}
@@ -689,6 +694,7 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
   <section class="vue" id="vue-recueillir">
     <div class="tete"><h2>Recueillir</h2><div class="sous" id="recueillir-sous"></div></div>
     <div id="recueillir-alerte"></div>
+    <div id="pronostic-carte"></div>
     <div class="feuille">
       <div class="boutons">
         <button type="button" class="bt plein" onclick="ouvrirFormulaire()">＋ Un épisode</button>
@@ -705,6 +711,8 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
   <!-- ═══ Synthèse ═══ -->
   <section class="vue" id="vue-synthese">
     <div class="tete"><h2>Synthèse</h2><div class="sous">Où et quand les épisodes ont été déclarés. La carte compte, elle n'explique pas : les pistes se discutent en équipe.</div></div>
+    <div class="feuille referent-seul" id="pronostic-porte" hidden></div>
+    <div id="synthese-resultats">
     <div class="feuille">
       <div class="filtres">
         <label class="champ"><span>Moment</span><select id="f-moment" onchange="majSynthese()"></select></label>
@@ -731,7 +739,20 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
       <div class="surtitre">Le plan et les épisodes, ensemble</div>
       <div id="croisements"></div>
     </div>
+    <div class="feuille referent-seul" id="pronostic-feuille" hidden>
+      <div class="surtitre">Ce que l'équipe pensait, et ce que montrent les épisodes</div>
+      <div id="pronostic-synthese"></div>
+    </div>
+    <div class="feuille referent-seul" id="contexte-feuille">
+      <div class="surtitre">Ce qu'on a remarqué autour des épisodes</div>
+      <div id="contexte-synthese"></div>
+    </div>
     <div class="repartitions" id="repartitions"></div>
+    <div class="feuille referent-seul" id="questions-feuille">
+      <div class="surtitre">Questions pour l'équipe</div>
+      <div id="questions-synthese"></div>
+    </div>
+    </div>
   </section>
 
   <!-- ═══ Notes de version ═══ -->
@@ -769,6 +790,10 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
       <label class="champ"><span>Combien de professionnels étaient présents ?</span><input type="number" id="e-pros" min="0" max="50" step="1" inputmode="numeric"></label>
       <div class="champ"><span style="display:block;margin:0 0 4px;font-size:12.5px;font-weight:700;color:var(--ink-soft);">Qui déclare</span><div id="e-qui" class="discret" style="padding-top:8px;"></div></div>
     </div>
+    <details class="repli" id="e-ctx-det"><summary>Autour de l'épisode (facultatif, vingt secondes)</summary>
+      <p class="discret">Ce que vous avez remarqué autour, sans chercher de cause. Une case non cochée ne veut pas dire « non ».</p>
+      <div id="e-ctx"></div>
+    </details>
     <label class="champ"><span>Ce qui s'est passé (facultatif)</span><textarea id="e-com" placeholder="Décrivez ce que vous avez vu, comme une caméra l'aurait filmé."></textarea></label>
     <p class="erreur" id="e-erreur" hidden></p>
     <div class="pied"><button type="button" class="bt" onclick="fermerFenetre('fen-episode')">Annuler</button><button type="button" class="bt plein" onclick="enregistrerEpisode()">Enregistrer l'épisode</button></div>
@@ -838,7 +863,7 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
    chose lue de la BAF, en lecture : le choix clair / sombre, pour s'ouvrir dans le même thème.
    ══════════════════════════════════════════════════════════════════════════════════════════════ */
 
-const VERSION_BASE = 'BASE v2026.10.13-4';
+const VERSION_BASE = 'BASE v2026.10.13-5';
 const CLE_SOCLE = 'base-dossier-v1', CLE_DECL = 'base-declarant-v1', CLE_MODE = 'base-mode', CLE_THEME = 'base-theme';
 const TYPES_ZONE = [['activite', "Salle d'activité"], ['sejour', 'Séjour, salon'], ['repas', 'Repas'], ['accueil', 'Accueil'], ['circulation', 'Circulation'],
   ['chambre', 'Chambre'], ['repos', 'Salle de repos'], ['calme', 'Salle de mise au calme'], ['snoezelen', 'Salle multisensorielle'], ['soins', 'Soins, infirmerie'],
@@ -887,7 +912,7 @@ function dossierVide() {
     b1: {lieu: '', dates: {debut: '', fin: ''}, echelle: null, fiches: {}, plan: {niveaux: [{id: 'n0', nom: 'Rez-de-chaussée'}], pieces: [], elements: []},
       moments: MOMENTS_DEFAUT.map(m => ({id: nouvelId('m'), nom: m[0], debut: m[1], fin: m[2]})), typesCD: []},
     b2: {episodes: [], calmes: []},
-    contributions: {}, exporte: ''
+    contributions: {}, pronostics: {}, exporte: ''
   };
 }
 function lireStockage(cle) { try { const t = localStorage.getItem(cle); return t ? JSON.parse(t) : null; } catch (e) { return null; } }
@@ -925,6 +950,7 @@ function normaliserPlan(d) {
   if (!d.b1.fiches || typeof d.b1.fiches !== 'object' || Array.isArray(d.b1.fiches)) d.b1.fiches = {};
   const pids = new Set((pl.pieces || []).map(p => p.id));
   Object.keys(d.b1.fiches).forEach(id => { if (!pids.has(id) || !d.b1.fiches[id] || typeof d.b1.fiches[id] !== 'object') delete d.b1.fiches[id]; });
+  if (d.idContribution === undefined && (!d.pronostics || typeof d.pronostics !== 'object' || Array.isArray(d.pronostics))) d.pronostics = {};   // les pronostics du référent (passe 231)
   return d;
 }
 function changerMode(m) {
@@ -981,7 +1007,7 @@ function transmettreDeclarant() {
 // Le fichier du déclarant, à jour : ses épisodes, son rôle.
 function contenuDeclarant() {
   return {baf: enveloppe('base-declarant', {idContribution: D.idContribution, envoye: new Date().toISOString()}),
-    b1: clone(D.b1), b2: clone(D.b2), declarant: clone(D.declarant || {})};
+    b1: clone(D.b1), b2: clone(D.b2), declarant: clone(D.declarant || {}), pronostic: D.pronostic ? clone(D.pronostic) : null};
 }
 function sauverDeclarant() {
   if (mode !== 'declarant' || !D) return;
@@ -1020,7 +1046,7 @@ function ouvrirDeclarant(r) {
   changerMode('declarant');
   const c = clone(r.contenu);
   D = {idDossier: r.env.idDossier, idContribution: r.env.idContribution || nouvelId('ctr'), b1: c.b1, b2: c.b2 || {episodes: [], calmes: []},
-    declarant: c.declarant || null, modifie: '', exporte: r.env.vierge ? '' : (r.env.envoye || '')};
+    declarant: c.declarant || null, pronostic: c.pronostic || null, modifie: '', exporte: r.env.vierge ? '' : (r.env.envoye || '')};
   if (!D.b2.calmes) D.b2.calmes = [];
   normaliserPlan(D);
   persister(); aller('recueillir');
@@ -1060,6 +1086,11 @@ function fusionnerContribution(r) {
       else { D.b2.episodes[i] = e; bilan.remplaces++; }
     } else { parId.set(e.id, D.b2.episodes.length); D.b2.episodes.push(e); bilan.ajoutes++; }
   });
+  // Le pronostic du déclarant (passe 231) : un par contribution, remplacé par celui d'un fichier plus récent
+  if (c.pronostic && typeof c.pronostic === 'object' && !neRienRemplacer) {
+    D.pronostics = D.pronostics || {};
+    D.pronostics[idC] = {provenance: prov, pieces: (Array.isArray(c.pronostic.pieces) ? c.pronostic.pieces : []).filter(id => pieceParId(id)).slice(0, MAX_PRONOSTIC), passe: !!c.pronostic.passe, le: String(c.pronostic.le || '')};
+  }
   const calmesIds = new Set(D.b2.calmes.map(x => x.id));
   (c.b2.calmes || []).forEach(x => { if (!calmesIds.has(x.id)) { D.b2.calmes.push(Object.assign(clone(x), {source: idC, provenance: prov})); calmesIds.add(x.id); bilan.calmes++; } });
   if (!plusAncien) D.contributions[idC] = {provenance: prov, envoye: env.envoye || '', recu: new Date().toISOString(), nbEpisodes: (c.b2.episodes || []).length};
@@ -2518,7 +2549,7 @@ function majEnteteFiche() {
 function rendreFiche() {
   const p = pieceParId(pieceFiche), el = $('fiche-corps'); if (!p || !el) return;
   const f = fiches()[p.id] || {carac: {}}, autres = pieces().filter(x => x.id !== p.id && fiches()[x.id] && ficheOuverte(x));
-  el.innerHTML = '<div id="fiche-entete" style="margin:0 0 8px"></div>' + htmlLuPiece(p) +
+  el.innerHTML = '<div id="fiche-entete" style="margin:0 0 8px"></div>' + htmlLuPiece(p) + htmlRegarderPiece() +
     '<div class="fiche-mode"><div class="segment" role="tablist" aria-label="Façon de remplir"><button type="button" role="tab" class="' + (modeFiche === 'rapide' ? 'on' : '') + '" aria-selected="' + (modeFiche === 'rapide') + '" onclick="choisirModeFiche(\'rapide\')">Rapide · à cocher</button>' +
     '<button type="button" role="tab" class="' + (modeFiche === 'detaille' ? 'on' : '') + '" aria-selected="' + (modeFiche === 'detaille') + '" onclick="choisirModeFiche(\'detaille\')">Détaillé · grille complète</button></div>' +
     (autres.length ? '<select class="bt petit" style="width:auto;min-height:30px" aria-label="Reprendre la fiche d\'une autre pièce" onchange="reprendreFiche(this.value); this.value=\'\'"><option value="">Reprendre la fiche de…</option>' + autres.map(x => '<option value="' + x.id + '">' + esc(x.nom) + '</option>').join('') + '</select>' : '') + '</div>' +
@@ -2578,6 +2609,7 @@ const nomType = id => ((D.b1.typesCD.find(t => t.id === id)) || {}).nom || '';
 function texteTypes(e) { return (e.types || []).map(nomType).filter(Boolean).concat(e.autre ? ['autre : ' + e.autre] : []).join(' · '); }
 function peutModifier(e) { return mode === 'declarant' || !e.source; }
 function rendreRecueillir() {
+  rendrePronostic();
   const pret = D.b1.plan.pieces.length && D.b1.typesCD.length;
   $('recueillir-sous').textContent = mode === 'declarant'
     ? 'Vous participez au recueil de « ' + (D.b1.lieu || 'ce lieu') + ' ». Un épisode = un comportement-défi observé : où, quand, quoi, en moins d\'une minute.'
@@ -2595,7 +2627,7 @@ function rendreRecueillir() {
     eps.filter(e => e.date === j).map(e => '<div class="episode"><div>' +
       '<div class="quand">' + esc(e.heure) + ' · ' + esc(nomMoment(e.moment)) + ' · <b>' + esc(nomPiece(e.piece)) + '</b>' + (posValide(e.pos) ? ' <span class="discret">(un endroit précis)</span>' : '') + ' · ' + nb(+e.nbPros || 0, 'professionnel') + '</div>' +
       '<div class="quoi">' + esc(texteTypes(e)) + '</div>' +
-      (e.commentaire ? '<div class="com">' + esc(e.commentaire) + '</div>' : '') +
+      (contexteDe(e).length ? '<div class="com">Autour : ' + esc(texteContexte(e)) + '</div>' : '') + (e.commentaire ? '<div class="com">' + esc(e.commentaire) + '</div>' : '') +
       (e.provenance ? '<div class="prov">Déclaré par ' + esc(e.provenance) + '</div>' : '') + '</div>' +
       '<div class="actions">' + (peutModifier(e) ? '<button type="button" class="bt petit" onclick="ouvrirFormulaire(\'' + e.id + '\')">Modifier</button><button type="button" class="bt petit danger" onclick="supprimerEpisode(\'' + e.id + '\')" aria-label="Supprimer">✕</button>' : '') + '</div></div>').join('')).join('')
     : '<div class="vide">' + (pret ? '« ＋ Un épisode » pour déclarer ce que vous avez observé, ou « Rien à signaler aujourd\'hui ».' : 'Le recueil commence quand le préambule est prêt.') + '</div>';
@@ -2618,6 +2650,7 @@ function ouvrirFormulaire(id) {
   $('e-autre').value = e ? (e.autre || '') : ''; $('e-autre').hidden = !(e && e.autre);
   $('e-pros').value = e ? e.nbPros : '';
   $('e-com').value = e ? (e.commentaire || '') : '';
+  $('e-ctx').innerHTML = htmlChoixContexte(e ? contexteDe(e) : []); $('e-ctx-det').open = !!(e && contexteDe(e).length);
   $('e-qui').textContent = mode === 'declarant' ? provenanceDe(D.declarant) : (e && e.provenance ? e.provenance : 'Le référent, dans le dossier');
   $('e-erreur').hidden = true;
   pieceChoisie = e ? e.piece : null; niveauChoix = null;
@@ -2750,8 +2783,9 @@ function enregistrerEpisode() {
   const champs = {date: $('e-date').value, heure: $('e-heure').value, moment: $('e-moment').value, piece: pieceChoisie, types, autre,
     nbPros: Math.round(+pros), commentaire: $('e-com').value};
   const place = modePos === 'endroit' && posChoisie ? {u: posChoisie.u, v: posChoisie.v} : null;   // sans croix : toute la pièce
-  if (episodeEdite) { const ep = D.b2.episodes.find(x => x.id === episodeEdite); Object.assign(ep, champs); if (place) ep.pos = place; else delete ep.pos; }
-  else D.b2.episodes.push(Object.assign({id: nouvelId('ep')}, champs, place ? {pos: place} : {}, mode === 'declarant' ? {role: D.declarant.role, declarant: D.declarant.prenom || ''} : {provenance: ''}));
+  const ctx = choisisContexte();   // « Autour de l'épisode » : ce qu'on a remarqué
+  if (episodeEdite) { const ep = D.b2.episodes.find(x => x.id === episodeEdite); Object.assign(ep, champs); if (place) ep.pos = place; else delete ep.pos; if (ctx.length) ep.contexte = ctx; else delete ep.contexte; }
+  else D.b2.episodes.push(Object.assign({id: nouvelId('ep')}, champs, place ? {pos: place} : {}, ctx.length ? {contexte: ctx} : {}, mode === 'declarant' ? {role: D.declarant.role, declarant: D.declarant.prenom || ''} : {provenance: ''}));
   persister(); fermerFenetre('fen-episode'); rendreRecueillir();
   toast(episodeEdite ? 'Épisode modifié.' : 'Épisode enregistré.' + (mode === 'declarant' ? ' Pensez à télécharger votre fichier.' : ''));
 }
@@ -2773,6 +2807,221 @@ function enregistrerCalme() {
   persister(); fermerFenetre('fen-calme'); rendreRecueillir(); toast('Journée notée « rien à signaler ».');
 }
 function retirerCalme(id) { D.b2.calmes = D.b2.calmes.filter(c => c.id !== id); persister(); rendreRecueillir(); }
+
+/* ══ Autour de l'épisode (passe 231, Arthur et Émilie) ══
+   Le but de la BASE n'est pas seulement de mesurer : c'est d'aider celui qui remplit à regarder autrement — de « la personne a eu un
+   comportement » à « que se passait-il autour d'elle ? ». Après le où, le quand et le quoi, vingt secondes pour dire ce qu'on a remarqué
+   autour de l'épisode : des observations, pas des causes (une case non cochée ne veut pas dire « non »). Facultatif, replié par défaut.
+   Données : episode.contexte = [identifiants du catalogue] ; « rien » (rien de particulier remarqué) et « pas-vu » (on n'a pas pu regarder)
+   s'excluent des autres. L'épisode porte ce qu'on a remarqué ; la synthèse en fait la part, sans jamais en faire une cause. */
+const CONTEXTE = [
+  ['Les sons', [['bruit-fort', 'Beaucoup de bruit'], ['bruit-soudain', 'Un bruit soudain (porte, chaise, cri, sonnerie…)'], ['bruit-continu', 'Un bruit continu (ventilation, machine, télévision…)']]],
+  ['La lumière, l\'air', [['lumiere', 'Une lumière vive, un reflet, une lumière qui scintille'], ['odeurs', 'Des odeurs fortes (repas, produits…)'], ['chaud-froid', 'Trop chaud, trop froid, un courant d\'air']]],
+  ['Les autres', [['monde', 'Beaucoup de monde dans la pièce'], ['arrivee-depart', 'Quelqu\'un est arrivé ou parti'], ['adulte-nouveau', 'Un adulte inhabituel ou un remplaçant'], ['proximite', 'Quelqu\'un tout près, un contact']]],
+  ['Ce qui se passait', [['transition', 'Un changement d\'activité, un déplacement'], ['attente', 'Une attente'], ['consigne', 'Une consigne, une demande, un refus'], ['imprevu', 'Quelque chose d\'imprévu (horaire, objet déplacé…)']]],
+  ['L\'espace', [['passage', 'Un passage fréquent, des allées et venues'], ['etroit', 'Un endroit étroit ou encombré'], ['porte', 'Une porte ouverte, qui claque, ou fermée à clé']]],
+  ['La personne', [['fatigue', 'Fatigue, faim ou douleur observée ou dite']]]
+];
+const CONTEXTE_RIEN = [['rien', 'Rien de particulier remarqué'], ['pas-vu', 'Je n\'ai pas pu regarder autour']];
+const CONTEXTE_LIB = Object.fromEntries(CONTEXTE.flatMap(([, l]) => l).concat(CONTEXTE_RIEN));
+const contexteDe = e => (Array.isArray(e && e.contexte) ? e.contexte : []).filter(id => CONTEXTE_LIB[id]);
+const texteContexte = e => contexteDe(e).map(id => CONTEXTE_LIB[id]).join(' · ');
+// Les cases du formulaire, rangées par famille.
+function htmlChoixContexte(choisis) {
+  const case_ = ([id, lib]) => '<label><input type="checkbox" value="' + id + '"' + (choisis.indexOf(id) >= 0 ? ' checked' : '') + ' onchange="cocherContexte(this)">' + esc(lib) + '</label>';
+  return CONTEXTE.map(([fam, l]) => '<div class="ctx-famille"><span class="ctx-nom">' + esc(fam) + '</span><div class="cases">' + l.map(case_).join('') + '</div></div>').join('') +
+    '<div class="ctx-famille"><span class="ctx-nom">Sinon</span><div class="cases">' + CONTEXTE_RIEN.map(case_).join('') + '</div></div>';
+}
+// « Rien de particulier » et « pas pu regarder » excluent tout le reste, et inversement.
+function cocherContexte(c) {
+  if (!c.checked) return;
+  const exclusif = CONTEXTE_RIEN.some(x => x[0] === c.value);
+  $('e-ctx').querySelectorAll('input[type=checkbox]').forEach(i => { if (i !== c && (exclusif || CONTEXTE_RIEN.some(x => x[0] === i.value))) i.checked = false; });
+}
+const choisisContexte = () => [...$('e-ctx').querySelectorAll('input[type=checkbox]:checked')].map(i => i.value);
+// Ce qu'on a remarqué autour des épisodes (la synthèse) : pour chaque point, combien d'épisodes, parmi ceux qui ont rempli cette partie.
+function bilanContexte(eps) {
+  const remplis = eps.filter(e => contexteDe(e).length), n = {};
+  remplis.forEach(e => new Set(contexteDe(e)).forEach(id => { n[id] = (n[id] || 0) + 1; }));
+  const lignes = CONTEXTE.flatMap(([fam, l]) => l.map(([id, lib]) => ({id, lib, fam, n: n[id] || 0}))).filter(x => x.n).sort((a, b) => b.n - a.n || a.lib.localeCompare(b.lib, 'fr'));
+  return {total: eps.length, remplis: remplis.length, lignes, rien: n.rien || 0, pasVu: n['pas-vu'] || 0};
+}
+function htmlContexte(eps) {
+  const b = bilanContexte(eps);
+  if (!b.total) return '<div class="vide">Rien à regarder tant qu\'aucun épisode n\'est déclaré (ou que les filtres n\'en laissent aucun).</div>';
+  if (!b.remplis) return '<div class="vide">Personne n\'a encore rempli « Autour de l\'épisode » : c\'est facultatif, vingt secondes pour dire ce qu\'on a remarqué autour (le bruit, le monde, une attente…).</div>';
+  const pct = x => Math.round(x / b.remplis * 100) + ' %';
+  return '<p class="discret" style="margin:0 0 10px">' + nb(b.remplis, 'épisode') + ' sur ' + b.total + ' ' + (b.remplis > 1 ? 'ont' : 'a') + ' leur « Autour de l\'épisode » rempli' + (b.rien ? ' · ' + b.rien + ' « rien de particulier »' : '') + (b.pasVu ? ' · ' + b.pasVu + ' « pas pu regarder »' : '') + '.</p>' +
+    (b.lignes.length ? '<table class="rep">' + b.lignes.map(l => '<tr><td>' + esc(l.lib) + '<div class="barre-mini" style="width:' + Math.round(l.n / b.remplis * 100) + '%"></div></td><td class="n">' + l.n + '</td><td class="n">' + pct(l.n) + '</td></tr>').join('') + '</table>' : '') +
+    '<p class="lecture">Ce sont des observations de professionnels, pas des causes. Ce qui est remarqué souvent peut l\'être tout le temps au même endroit (le bruit d\'une cantine) : la bonne question est ce qui change entre les moments calmes et les épisodes — et personne ne regarde les moments calmes si l\'on ne se le demande pas.</p>';
+}
+function rendreContexteSynthese(eps) { const el = $('contexte-synthese'); if (el) el.innerHTML = htmlContexte(eps); }
+
+/* ══ Mon pronostic (passe 231, Arthur et Émilie) ══
+   Avant de déclarer le premier épisode, ou avant de voir la carte, dire où l'on pense qu'il y en aura le plus : trois pièces au plus. L'écart avec
+   ce que montrent ensuite les épisodes est ce qu'on apprend — pas une erreur, et rien n'est noté. Chez le déclarant : D.pronostic = {pieces, passe, le}
+   (un seul, avant son premier épisode ; il voyage dans son fichier). Chez le référent : D.pronostics = {idContribution: {provenance, pieces, le},
+   referent: {...}} ; le sien se donne en ouvrant la synthèse, avant la carte (« Voir directement » l'écarte pour de bon). */
+const MAX_PRONOSTIC = 3;
+const piecesCitees = p => (p && Array.isArray(p.pieces) ? p.pieces : []).filter(id => pieceParId(id)).slice(0, MAX_PRONOSTIC);
+// Les pièces à choisir, en cases (trois au plus).
+function htmlChoixPieces(idConteneur, choisies) {
+  const multi = niveaux().length > 1;
+  return '<div class="cases" id="' + idConteneur + '">' + pieces().map(p => '<label><input type="checkbox" value="' + p.id + '"' + (choisies.indexOf(p.id) >= 0 ? ' checked' : '') + ' onchange="cocherPieces(this)">' + esc(p.nom) + (multi ? ' <span class="discret">(' + esc(nomNiveau(niveauDe(p))) + ')</span>' : '') + '</label>').join('') + '</div>';
+}
+function cocherPieces(c) {
+  if (!c.checked) return;
+  const conteneur = c.closest('.cases');
+  if (conteneur && conteneur.querySelectorAll('input:checked').length > MAX_PRONOSTIC) { c.checked = false; toast('Trois pièces au plus.'); }
+}
+const piecesChoisies = idConteneur => [...$(idConteneur).querySelectorAll('input:checked')].map(i => i.value);
+// Chez le déclarant : la carte « Mon pronostic », en haut de « Recueillir ». Elle ne se donne qu'avant le premier épisode.
+function rendrePronostic() {
+  const el = $('pronostic-carte'); if (!el) return;
+  if (mode !== 'declarant' || !D || !pieces().length) { el.innerHTML = ''; return; }
+  const pro = D.pronostic, libre = !D.b2.episodes.length, noms = piecesCitees(pro).map(nomPiece);
+  if (!pro && !libre) { el.innerHTML = ''; return; }   // trop tard : un pronostic se donne avant le premier épisode
+  if (pro) {
+    el.innerHTML = '<div class="feuille"><div class="surtitre">Mon pronostic</div><p class="discret" style="margin:0">' + (noms.length ? 'Vous pensiez que ce serait surtout : <b>' + noms.map(esc).join(', ') + '</b>.' : 'Vous avez préféré ne pas en donner.') +
+      (libre ? ' <button type="button" class="bt-lien" onclick="modifierPronostic()">Modifier</button>' : ' Il est gardé pour être comparé à ce que montreront les épisodes.') + '</p></div>';
+    return;
+  }
+  el.innerHTML = '<div class="feuille"><div class="surtitre">Mon pronostic (facultatif)</div>' +
+    '<p class="discret">Avant de déclarer le premier épisode : à votre avis, dans quelles pièces y aura-t-il le plus d\'épisodes ? Trois au plus. Se tromper est utile : l\'écart avec ce que montreront les épisodes est ce qu\'on apprend.</p>' +
+    htmlChoixPieces('p-pieces', []) + '<div class="boutons" style="margin-top:10px"><button type="button" class="bt plein petit" onclick="enregistrerPronostic(false)">Enregistrer mon pronostic</button><button type="button" class="bt-lien" onclick="enregistrerPronostic(true)">Je préfère ne pas en donner</button></div></div>';
+}
+function enregistrerPronostic(passe) {
+  const choisies = passe ? [] : piecesChoisies('p-pieces');
+  if (!passe && !choisies.length) { toast('Choisissez au moins une pièce, ou « Je préfère ne pas en donner ».'); return; }
+  D.pronostic = {pieces: choisies, passe: !!passe, le: new Date().toISOString()}; persister(); rendrePronostic();
+  toast(passe ? 'Noté.' : 'Pronostic enregistré. Pensez à télécharger votre fichier.');
+}
+function modifierPronostic() { if (D.b2.episodes.length) return; D.pronostic = null; persister(); rendrePronostic(); }
+// Chez le référent : tous les pronostics reçus (et le sien), et la porte qui précède la carte.
+const pronosticsDuDossier = () => Object.keys(D.pronostics || {}).map(cle => ({cle, p: D.pronostics[cle]})).filter(x => piecesCitees(x.p).length);
+const porteActive = () => mode === 'socle' && !!D && !D.exemple && !adminActif() && D.b2.episodes.length > 0 && pieces().length > 0 && !(D.pronostics && D.pronostics.referent);
+function rendrePorte() {
+  const porte = $('pronostic-porte'), reste = $('synthese-resultats'); if (!porte || !reste) return;
+  const active = porteActive(); porte.hidden = !active; reste.hidden = active;
+  if (!active) { porte.innerHTML = ''; return; }
+  porte.innerHTML = '<div class="surtitre">Avant de voir la carte</div><p class="lecture">À votre avis, dans quelles pièces y a-t-il le plus d\'épisodes ? Choisissez-en trois au plus : vous comparerez ensuite avec ce que montrent les épisodes. Se tromper est utile : l\'écart est ce qu\'on apprend, il se discute en équipe, il ne se juge pas.</p>' +
+    htmlChoixPieces('porte-pieces', []) + '<div class="boutons" style="margin-top:12px"><button type="button" class="bt plein" onclick="validerPorte()">Voir la carte</button><button type="button" class="bt-lien" onclick="passerPorte()">Voir directement, sans pronostic</button></div>';
+}
+function validerPorte() {
+  const c = piecesChoisies('porte-pieces'); if (!c.length) { toast('Choisissez au moins une pièce, ou « Voir directement ».'); return; }
+  D.pronostics = D.pronostics || {}; D.pronostics.referent = {provenance: 'Le référent', pieces: c, le: new Date().toISOString()}; persister(); majSynthese();
+}
+function passerPorte() { D.pronostics = D.pronostics || {}; D.pronostics.referent = {pieces: [], passe: true, le: new Date().toISOString()}; persister(); majSynthese(); }
+// Ce que l'équipe pensait, contre ce que montrent les épisodes : les pièces citées, les trois plus chargées (ex æquo compris), les confirmées, les surprises, les calmes.
+function comparaisonPronostics(eps) {
+  const recus = pronosticsDuDossier(); if (!recus.length) return null;
+  const cit = {}; recus.forEach(x => piecesCitees(x.p).forEach(id => { cit[id] = (cit[id] || 0) + 1; }));
+  const comptes = comptesParPiece(eps), tri = pieces().map(p => ({id: p.id, n: comptes[p.id] || 0})).filter(x => x.n >= 2).sort((a, b) => b.n - a.n);
+  const seuil = tri.length ? tri[Math.min(2, tri.length - 1)].n : 0, hauts = tri.filter(x => x.n >= seuil).map(x => x.id);
+  const citees = Object.keys(cit).map(id => ({id, citations: cit[id], eps: comptes[id] || 0})).sort((a, b) => b.citations - a.citations || b.eps - a.eps);
+  return {nbPros: recus.length, total: eps.length, citees, hauts, comptes, confirmes: hauts.filter(id => cit[id]), surprises: hauts.filter(id => !cit[id]), calmes: citees.filter(c => hauts.indexOf(c.id) < 0 && c.eps <= 2).map(c => c.id)};
+}
+function htmlPronostics(eps) {
+  const c = comparaisonPronostics(eps); if (!c) return '';
+  const nm = id => '<b>' + esc(nomPiece(id)) + '</b>', liste = l => l.map(nm).join(', ');
+  return '<p class="discret" style="margin:0 0 10px">' + nb(c.nbPros, 'pronostic donné', 'pronostics donnés') + ' (trois pièces au plus chacun), avant de voir les épisodes.</p>' +
+    '<div class="defile"><table class="rep croise"><thead><tr><th>Pièce citée</th><th>Citée par</th><th>Épisodes</th></tr></thead><tbody>' + c.citees.map(x => '<tr><td>' + esc(nomPiece(x.id)) + '</td><td class="n">' + x.citations + '</td><td class="n">' + x.eps + '</td></tr>').join('') + '</tbody></table></div>' +
+    '<ul class="regle-liste" style="margin-top:10px">' +
+    (c.hauts.length ? '<li>Les pièces où il y a le plus d\'épisodes : ' + c.hauts.map(id => nm(id) + ' (' + c.comptes[id] + ')').join(', ') + '.</li>' : '<li>Pas encore assez d\'épisodes pour dire où il y en a le plus.</li>') +
+    (c.confirmes.length ? '<li>Citées, et c\'est bien là : ' + liste(c.confirmes) + '.</li>' : '') +
+    (c.surprises.length ? '<li>Personne n\'y pensait : ' + liste(c.surprises) + '. Qu\'est-ce qui nous échappait ?</li>' : '') +
+    (c.calmes.length ? '<li>Citées, mais peu d\'épisodes : ' + liste(c.calmes) + '. Qu\'est-ce qui faisait penser le contraire ?</li>' : '') + '</ul>' +
+    '<p class="lecture">Un pronostic n\'est pas un test : se tromper est ce qui apprend. Un écart se discute — qu\'est-ce qu\'on ne voyait pas ? —, il ne se juge pas.</p>';
+}
+function rendrePronosticsSynthese(eps) {
+  const el = $('pronostic-synthese'), feuille = $('pronostic-feuille'); if (!el || !feuille) return;
+  const h = htmlPronostics(eps); feuille.hidden = !h; el.innerHTML = h;
+}
+
+/* ══ Questions pour l'équipe (passe 231, Arthur et Émilie) ══
+   La synthèse montre où et combien ; elle n'explique pas. Pour la réunion d'équipe, la BASE propose des QUESTIONS, pas des conclusions : chacune part
+   d'un constat de la carte (une pièce chaude comme le plan le laissait attendre, une pièce chaude sans alerte, une alerte calme, un endroit où les
+   épisodes se rassemblent dans une pièce, un écart avec le pronostic, ce qu'on remarque le plus souvent autour des épisodes) et demande ce que ceux
+   qui sont dans les pièces en savent. Huit au plus, toujours la même dernière. À copier dans le compte rendu. */
+// Où, dans une pièce, se trouve un point : près d'une enclave, d'une porte ou d'une fenêtre de cette pièce, sinon dans quelle partie du plan.
+function decrireEndroit(p, x, y, L) {
+  const cand = [];
+  enclavesDe(p).forEach(c => c.rects.forEach(r => cand.push({d: Math.hypot(Math.max(r.x - x, 0, x - r.x - r.w), Math.max(r.y - y, 0, y - r.y - r.h)), t: 'près de « ' + c.nom + ' »'})));
+  elements().forEach(e => {
+    if (!murale(e) || niveauDe(e) !== niveauDe(p) || !bordsDe(e, [p]).length) return;
+    const q = e.cat === 'porte' && L.passages.find(z => z.e.id === e.id), autre = q ? (q.a === p.id ? q.b : q.a) : null;
+    const t = e.cat === 'porte' ? (autre ? 'près de la porte vers « ' + L.pieces[autre].nom + ' »' : 'près d\'une porte sur le dehors') : e.cat === 'baie' ? 'près d\'une baie vitrée' : 'près d\'une fenêtre';
+    cand.push({d: Math.hypot(e.x - x, e.y - y), t});
+  });
+  cand.sort((a, b) => a.d - b.d);
+  if (cand.length && cand[0].d <= 2.5) return cand[0].t;
+  const b = boite([p]), u = (x - b.x) / Math.max(b.w, EPS), v = (y - b.y) / Math.max(b.h, EPS), h = u < .34 ? 'à gauche' : u > .66 ? 'à droite' : '', haut = v < .34 ? 'en haut' : v > .66 ? 'en bas' : '';
+  return haut && h ? haut + ' ' + h + ' de la pièce (sur le plan)' : haut || h ? (haut || h) + ' de la pièce (sur le plan)' : 'au milieu de la pièce';
+}
+// Là où les épisodes se rassemblent : dans une pièce, au moins trois croix (et la moitié de celles de la pièce) tiennent dans un même rayon autour de la case la plus chaude
+// (deux cases et demie, ou un cinquième de la racine de la surface). Des croix dispersées, même nombreuses, ne rassemblent rien.
+function concentrations(eps) {
+  const champ = champThermique(eps), out = [];
+  pieces().forEach(p => {
+    const croix = eps.filter(e => e.piece === p.id && posValide(e.pos)).map(e => pointDepuisPos(p, e.pos)); if (croix.length < 3) return;
+    const cases = Object.values(champ.niveaux).flat().filter(c => c.piece === p.id); if (!cases.length) return;
+    const chaud = cases.reduce((a, c) => c.d > a.d ? c : a), x = (chaud.i + .5) * champ.pas, y = (chaud.j + .5) * champ.pas, R = Math.max(2.5, .2 * Math.sqrt(aireDe(p)));
+    const n = croix.filter(a => Math.hypot(a.x - x, a.y - y) <= R).length;
+    if (n >= 3 && n >= croix.length / 2) out.push({id: p.id, n, sur: croix.length, x, y});
+  });
+  return out.sort((a, b) => b.n / b.sur - a.n / a.sur || b.n - a.n);
+}
+function questionsEquipe(eps) {
+  const q = [], nm = id => '« ' + nomPiece(id) + ' »', cr = croisementsDuLieu(eps); if (!cr.T) return q;
+  const L = lectureDuPlan(D.b1);
+  cr.attendus.slice(0, 2).forEach(p => q.push('Dans ' + nm(p.id) + ', ' + nb(p.eps, 'épisode') + ', et le plan y lit : ' + p.titres.slice(0, 3).map(t => t.charAt(0).toLowerCase() + t.slice(1)).join(' ; ') + '. Que se passe-t-il là juste avant que ça monte ? Qu\'y essayer cette semaine, sans rien acheter ?'));
+  cr.surprises.slice(0, 2).forEach(p => q.push('Dans ' + nm(p.id) + ', ' + nb(p.eps, 'épisode') + ' et rien que le plan ou les fiches expliquent. Qu\'est-ce que le plan ne montre pas ici : qui est là, à quelle heure, ce qu\'on y attend, ce qu\'on y entend de la pièce d\'à côté ? Et si l\'on y passait dix minutes, à hauteur de la personne ?'));
+  cr.calmes.slice(0, 1).forEach(p => q.push(nm(p.id) + ' : le plan y lit des points de vigilance, et aucun épisode n\'y est déclaré. Qu\'est-ce qui protège cette pièce (un adulte présent, un temps court, un choix possible) ? Qu\'en retenir pour les autres ? Ou n\'y déclare-t-on simplement pas ?'));
+  concentrations(eps).slice(0, 2).forEach(c => { const p = pieceParId(c.id); q.push('Dans ' + nm(c.id) + ', les épisodes se rassemblent ' + decrireEndroit(p, c.x, c.y, L) + '. Qu\'y a-t-il à cet endroit (une file, un bruit, un passage, un regard) ? Et à l\'autre bout de la pièce, qu\'est-ce qui est différent ?'); });
+  const pr = comparaisonPronostics(eps);
+  if (pr) {
+    pr.surprises.slice(0, 1).forEach(id => q.push('Personne n\'avait cité ' + nm(id) + ', et il y a ' + nb(pr.comptes[id], 'épisode') + '. Qu\'est-ce qui nous échappait : qui y est, quand, ce qu\'on y fait ?'));
+    pr.calmes.slice(0, 1).forEach(id => q.push(nm(id) + ' était cité par ' + nb(pr.citees.find(c => c.id === id).citations, 'professionnel') + ', et il y a peu d\'épisodes. Qu\'est-ce qui nous faisait penser le contraire, et que peut-on en apprendre ?'));
+  }
+  const cx = bilanContexte(eps);
+  if (cx.remplis >= 5 && cx.lignes.length) q.push('Ce qui est le plus souvent remarqué autour des épisodes : ' + cx.lignes.slice(0, 2).map(l => '« ' + l.lib.charAt(0).toLowerCase() + l.lib.slice(1).replace(/ \(.*$/, '') + ' » (' + Math.round(l.n / cx.remplis * 100) + ' %)').join(', ') + '. Et dans les moments calmes, au même endroit : est-ce aussi présent ?');
+  q.push('Si l\'on ne devait essayer qu\'un seul changement d\'environnement cette semaine, dans quelle pièce, et lequel ? Comment verra-t-on, dans trois semaines, si quelque chose a bougé ?');
+  return q.length > 8 ? q.slice(0, 7).concat(q.slice(-1)) : q;   // huit au plus : la dernière question reste toujours
+}
+function htmlQuestions(eps) {
+  const q = questionsEquipe(eps);
+  if (!q.length) return '<div class="vide">Les questions viennent des épisodes : elles apparaîtront dès qu\'il y en aura.</div>';
+  return '<p class="lecture" style="margin:0 0 8px">Pour la réunion d\'équipe : des questions, pas des conclusions. Chacune part d\'un constat de la carte et demande ce que ceux qui sont dans les pièces en savent.</p>' +
+    '<ol class="questions">' + q.map(t => '<li>' + esc(t) + '</li>').join('') + '</ol>' +
+    '<div class="boutons no-print" style="margin-top:8px"><button type="button" class="bt petit" onclick="copierQuestions()">📋 Copier les questions</button></div>';
+}
+function texteQuestions(eps) {
+  const f = filtres(), fil = [f.moment && nomMoment(f.moment), f.type && (f.type === '_autre' ? 'Autre' : nomType(f.type)), (f.debut || f.fin) && ((f.debut ? 'du ' + dateFr(f.debut) : '') + (f.fin ? ' au ' + dateFr(f.fin) : ''))].filter(Boolean).join(' · ');
+  return 'Questions pour l\'équipe — ' + (D.b1.lieu || 'le lieu') + ' (' + nb(eps.length, 'épisode') + (fil ? ' · ' + fil : '') + ')\n\n' + questionsEquipe(eps).map((t, i) => (i + 1) + '. ' + t).join('\n\n') + '\n\nDes questions, pas des conclusions : la carte compte, elle n\'explique pas. BASE, outil 3 de la BAF (EMIA35).';
+}
+function copierSecours(texte, fait) {
+  const t = document.createElement('textarea'); t.value = texte; t.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(t); t.select();
+  try { document.execCommand('copy'); fait(); } catch (e) { toast('La copie a échoué : sélectionnez les questions à la main.'); }
+  t.remove();
+}
+function copierQuestions() {
+  const texte = texteQuestions(episodesFiltres(filtres())), fait = () => toast('Les questions sont copiées : collez-les dans votre compte rendu.');
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(texte).then(fait).catch(() => copierSecours(texte, fait)); else copierSecours(texte, fait);
+}
+function rendreQuestionsSynthese(eps) { const el = $('questions-synthese'); if (el) el.innerHTML = htmlQuestions(eps); }
+function viderSupplements() { rendrePorte(); ['pronostic-synthese', 'contexte-synthese', 'questions-synthese', 'mode-carte'].forEach(id => { const el = $(id); if (el) el.innerHTML = ''; }); const f = $('pronostic-feuille'); if (f) f.hidden = true; }
+// Regarder une pièce : des gestes d'observation, proposés par la BASE (ce ne sont pas des règles du guide), dans la fiche de la pièce.
+function htmlRegarderPiece() {
+  return '<details class="repli"><summary>Comment regarder une pièce (cinq minutes)</summary><ul class="regle-liste">' +
+    '<li><b>Venez à l\'heure où ça se passe</b>, un jour ordinaire, sans rien faire d\'autre que regarder.</li>' +
+    '<li><b>Fermez les yeux trente secondes</b> : qu\'entendez-vous, et d\'où cela vient-il ? (Le guide fait du bruit le premier facteur d\'aménagement.)</li>' +
+    '<li><b>Debout au milieu, tournez lentement</b> : qu\'est-ce qui attire l\'œil en premier ? Qu\'est-ce qui brille, bouge, scintille ?</li>' +
+    '<li><b>Mettez-vous à hauteur d\'une personne assise</b> : que voit-elle de la porte, de la fenêtre, des autres ?</li>' +
+    '<li><b>Suivez un trajet</b>, de la porte à l\'endroit où l\'on s\'installe : combien de personnes frôlées, de portes, d\'attentes ?</li>' +
+    '<li><b>Cherchez où l\'on peut se mettre à l\'écart</b> sans disparaître.</li>' +
+    '<li><b>Revenez à une autre heure</b> : qu\'est-ce qui change (le monde, le bruit, la lumière) ?</li></ul>' +
+    '<p class="discret">Ces gestes sont une proposition de la BASE, pas une règle du guide : ils servent à regarder l\'environnement avant de regarder la personne.</p></details>';
+}
 
 /* ══ La synthèse ══ */
 // L'échelle de la carte (ajout à la charte, passe BASE-A) : du sable à la brique, une clarté qui décroît régulièrement
@@ -3010,7 +3259,7 @@ function rendreCroisements(eps) { const el = $('croisements'); if (el) el.innerH
 function majSynthese() {
   if (!$('vue-synthese').classList.contains('show')) return;
   const f = filtres(), eps = episodesFiltres(f), tous = D.b2.episodes;
-  if (!pieces().length) { $('carte-cadre').innerHTML = '<div class="vide" style="margin:14px">Le plan est vide : dessinez le lieu dans le préambule.</div>'; $('legende').innerHTML = ''; $('chiffres').innerHTML = ''; $('repartitions').innerHTML = ''; $('calques').innerHTML = ''; $('croisements').innerHTML = ''; return; }
+  if (!pieces().length) { $('carte-cadre').innerHTML = '<div class="vide" style="margin:14px">Le plan est vide : dessinez le lieu dans le préambule.</div>'; $('legende').innerHTML = ''; $('chiffres').innerHTML = ''; $('repartitions').innerHTML = ''; $('calques').innerHTML = ''; $('croisements').innerHTML = ''; viderSupplements(); return; }
   rendreCalques(); rendreModeCarte();
   const chaleur = calque === 'episodes' && modeCarte === 'chaleur', c = svgCarte(eps, {calque, chaleur, croix: montrerCroix}), sombre = themeSombre(), filtreActif = f.moment || f.type || f.debut || f.fin;
   $('carte-cadre').innerHTML = c.niveaux.map(n => '<div class="carte-niveau">' + (c.niveaux.length > 1 ? '<div class="carte-niveau-nom">' + esc(n.nom) + '</div>' : '') +
@@ -3042,7 +3291,7 @@ function majSynthese() {
   $('repartitions').innerHTML = tableau('Par pièce', parPiece, notePieces) +
     tableau('Par moment de la journée', parMoment) +
     tableau('Par comportement', parType, 'Un épisode peut porter plusieurs comportements : le total peut dépasser 100 %.');
-  rendreCroisements(eps);
+  rendreCroisements(eps); rendrePronosticsSynthese(eps); rendreContexteSynthese(eps); rendreQuestionsSynthese(eps); rendrePorte();
 }
 // Les styles des images exportées (toujours claires : elles partent dans un document). Le plan vierge et la carte les partagent.
 function styleExport() {
@@ -3215,6 +3464,7 @@ function effacer() {
 const LIEUX_SIMULES = [
   {nom: 'Bâtiment provisoire', desc: 'Un IME déménagé dans des bureaux, dessiné sans échelle : un hall unique où tout le monde arrive, un long couloir aveugle, des salles sans fenêtre, une cour non clôturée contre la route, et le parking devant la porte. Ses fiches de pièces sont remplies en mode rapide. Son réfectoire, très grand, contient trois petites pièces : un office, un local chariots et un coin calme. Les sanitaires, un ancien bureau, ont gardé leur porte vitrée.', graine: 7,
     legendes: [['Entrée principale', -4.2, 2.2, 'm', 'e'], ['Vers le centre-ville', -10.5, -4.6, 'm', 'n']],
+    pronostics: [['AES / AMP', [0, 2, 4]], ['Éducateur·rice spécialisé·e', [0, 4, 9]], ['Moniteur·rice-éducateur·rice', [0, 8]]],
     dates: ['2026-09-07', '2026-09-25'], moments: null,
     pieces: [['Hall d\'accueil', 'accueil', [[0, 0, 10, 6]]], ['Couloir', 'circulation', [[10, 2, 14, 2], [22, 4, 2, 8]]], ['Salle bleue', 'activite', [[10, 4, 7, 6]]],
       ['Salle verte', 'activite', [[17, 4, 5, 6]]], ['Réfectoire', 'repas', [[0, 6, 10, 8], [10, 10, 6, 4]]], ['Salle calme', 'calme', [[16, 10, 6, 4]]], ['Sanitaires', 'sanitaires', [[24, 0, 4, 5]]],
@@ -3242,6 +3492,7 @@ const LIEUX_SIMULES = [
     commentaires: ['Arrivée de tous les jeunes en même temps, le hall résonne.', 'S\'est bouché les oreilles puis est sorti en courant.', 'Bruit des chaises au réfectoire.', 'Descendu du taxi, a couru vers la route.']},
   {nom: 'Foyer d\'hébergement', desc: 'Une unité de vie sur deux niveaux : salon avec baie vitrée sur le jardin, salle à manger et chambres au rez-de-chaussée ; à l\'étage, des chambres au-dessus de la salle à manger, qui voient le parking, et une salle de mise au calme. Un escalier et un ascenseur relient les deux. Deux fiches détaillées, les autres rapides. Un abri de jardin s\'ouvre sur le jardin (une pièce enclavée dans une pièce de dehors). La salle d\'eau de l\'étage a une porte vitrée.', graine: 19,
     legendes: [['Entrée principale', 11.5, -1.8, 'm', 's'], ['Vers le centre-ville', -1, -10.5, 'm', 'o']],
+    pronostics: [['Éducateur·rice spécialisé·e', [2, 4]], ['AES / AMP', [2, 8]], ['Infirmier·e', [4, 5]]],
     dates: ['2026-09-14', '2026-10-02'],
     moments: [['Lever', '07:00', '08:00'], ['Petit-déjeuner', '08:00', '09:00'], ['Matinée', '09:00', '12:00'], ['Déjeuner', '12:00', '13:15'], ['Temps calme', '13:15', '14:30'],
       ['Après-midi', '14:30', '18:30'], ['Dîner', '18:30', '19:45'], ['Coucher', '19:45', '21:30']],
@@ -3282,6 +3533,7 @@ const LIEUX_SIMULES = [
     commentaires: ['Attente du repas, bruit de la vaisselle.', 'A frappé la porte de la chambre voisine au moment du coucher.', 'Salle de bain occupée, a dû attendre dans le couloir.', 'Voiture sur le parking : s\'est collé à la fenêtre, puis n\'a plus voulu se coucher.']},
   {nom: 'Externat, groupe des grands', desc: 'Un IME en journée, plan à l\'échelle (1 case = 0,8 m) : classe, atelier, cantine, une salle multisensorielle trop petite, une salle de repli à porte à hublot, une cour avec un petit préau ; le parking des taxis à côté. Ses fiches disent la salle multisensorielle, la cantine, la salle de repli. Un coin de retrait est cloisonné dans la classe, contre l\'atelier ; la porte des sanitaires est vitrée ; la salle multisensorielle, toujours accompagnée, ne reçoit aucun épisode.', graine: 31,
     legendes: [['Entrée des taxis', 23.4, 6.3, 'm', 'o'], ['Vers le centre-ville', 28.5, -3.4, 'm', 'n']],
+    pronostics: [['Éducateur·rice spécialisé·e', [4, 7, 2]], ['AES / AMP', [4, 7]], ['Moniteur·rice-éducateur·rice', [7, 11]]],
     dates: ['2026-09-21', '2026-10-09'], echelle: .8,
     moments: [['Arrivée', '08:45', '09:15'], ['Matinée', '09:15', '10:30'], ['Récréation', '10:30', '10:50'], ['Fin de matinée', '10:50', '12:00'], ['Cantine', '12:00', '13:00'],
       ['Temps de cour', '13:00', '13:30'], ['Après-midi', '13:30', '15:45'], ['Départ', '15:45', '16:15']],
@@ -3320,6 +3572,16 @@ function positionSimulee(p, foyers, pieces, alea) {
   const a = projeterPoint(p.rects, pieces.filter(q => q.dans === p.id).flatMap(q => q.rects), b.x + f[0] * b.w + f[2] * g(), b.y + f[1] * b.h + f[2] * g());
   return {u: r3(Math.min(1, Math.max(0, (a.x - b.x) / b.w))), v: r3(Math.min(1, Math.max(0, (a.y - b.y) / b.h)))};
 }
+// Ce qu'on remarque autour d'un épisode, selon le type de la pièce : quelques observations, ou « rien de particulier ».
+const PROFILS_CONTEXTE = {accueil: ['monde', 'bruit-fort', 'arrivee-depart', 'bruit-soudain', 'attente'], repas: ['bruit-fort', 'bruit-soudain', 'odeurs', 'attente', 'monde', 'proximite'], exterieur: ['arrivee-depart', 'transition', 'monde', 'bruit-soudain'],
+  parking: ['arrivee-depart', 'attente', 'bruit-soudain'], route: ['bruit-soudain', 'arrivee-depart', 'transition'], circulation: ['passage', 'bruit-soudain', 'etroit', 'attente', 'monde'], chambre: ['bruit-soudain', 'fatigue', 'consigne', 'bruit-continu'],
+  sanitaires: ['attente', 'odeurs', 'porte', 'bruit-soudain'], activite: ['consigne', 'transition', 'bruit-continu', 'imprevu'], defaut: ['bruit-fort', 'consigne', 'transition', 'imprevu']};
+function contexteSimule(profil, alea) {
+  if (alea() < .12) return ['rien'];
+  const n = 1 + Math.floor(alea() * 3), choix = [];
+  while (choix.length < Math.min(n, profil.length)) { const id = profil[Math.floor(alea() * profil.length)]; if (choix.indexOf(id) < 0) choix.push(id); }
+  return choix;
+}
 function construireLieu(i) {
   const L = LIEUX_SIMULES[i] || LIEUX_SIMULES[0], d = dossierVide();
   d.exemple = true; d.b1.lieu = L.nom + ' (simulé)'; d.b1.dates = {debut: L.dates[0], fin: L.dates[1]}; d.b1.echelle = L.echelle || null;
@@ -3346,6 +3608,7 @@ function construireLieu(i) {
   });
   let s = L.graine; const alea = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
   let s2 = L.graine * 7919 + 13; const alea2 = () => { s2 = (s2 * 9301 + 49297) % 233280; return s2 / 233280; };   // un second tirage pour les croix : le reste ne change pas
+  let s3 = L.graine * 104729 + 7; const alea3 = () => { s3 = (s3 * 9301 + 49297) % 233280; return s3 / 233280; };   // un troisième pour ce qu'on remarque autour
   const roles = ['Éducateur·rice spécialisé·e', 'AES / AMP', 'Moniteur·rice-éducateur·rice', 'Infirmier·e'];
   // Les couples pièce × moment : les points chauds pèsent lourd, tous les autres un peu (du bruit de fond)
   const couples = [];
@@ -3366,9 +3629,11 @@ function construireLieu(i) {
       commentaire: alea() < .2 ? L.commentaires[Math.floor(alea() * L.commentaires.length)] : '', provenance: roles[Math.floor(alea() * roles.length)], source: 'simulation'});
     const foyers = (L.croix || []).find(x => d.b1.plan.pieces[x[0]] === c.p);   // dans les grandes pièces, la plupart des épisodes ont leur croix
     if (foyers && alea2() < .85) d.b2.episodes[d.b2.episodes.length - 1].pos = positionSimulee(c.p, foyers[1], d.b1.plan.pieces, alea2);
+    if (alea3() < .62) d.b2.episodes[d.b2.episodes.length - 1].contexte = contexteSimule(PROFILS_CONTEXTE[c.p.type] || PROFILS_CONTEXTE.defaut, alea3);   // un peu plus d'un épisode sur deux a rempli « Autour de l'épisode »
   }
   d.b2.episodes.sort((a, b) => (a.date + a.heure).localeCompare(b.date + b.heure));
   calmes.sort().forEach(c => d.b2.calmes.push({id: nouvelId('calme'), date: c, provenance: roles[1], source: 'simulation'}));
+  (L.pronostics || []).forEach(([role, idx], k) => { d.pronostics['sim' + (k + 1)] = {provenance: role, pieces: idx.map(j => d.b1.plan.pieces[j].id), passe: false, le: L.dates[0] + 'T07:30:00.000Z'}; });   // avant le premier épisode
   return d;
 }
 function exempleFictif() { return construireLieu(0); }
@@ -3450,6 +3715,12 @@ document.addEventListener('click', ev => {
 
 /* ══ Les notes de version ══ */
 const NOTES_BASE = [
+  {version: 'BASE v2026.10.13-5', titre: 'Regarder autrement : autour de l\'épisode, un pronostic, des questions pour l\'équipe', corps: '<p><b>Aider celui qui remplit à regarder autrement</b> (Arthur et Émilie) : la BASE ne mesure pas seulement où et quand ; elle invite à regarder ce qui se passe autour de la personne.</p><ul>' +
+    '<li><b>Autour de l\'épisode</b>. Dans le formulaire d\'un épisode, une partie repliée et facultative (vingt secondes) : ce qu\'on a remarqué autour — les sons, la lumière et l\'air, les autres, ce qui se passait, l\'espace, la personne —, avec « rien de particulier remarqué » et « je n\'ai pas pu regarder » comme réponses à part entière. Des observations, jamais des causes : une case non cochée ne veut pas dire « non ». La synthèse en donne la part parmi les épisodes qui l\'ont remplie, avec un rappel : ce qu\'on remarque souvent l\'est peut-être tout le temps au même endroit, et la question est ce qui change entre les moments calmes et les épisodes.</li>' +
+    '<li><b>Mon pronostic</b>. Le déclarant peut, avant son premier épisode, dire dans quelles pièces il pense qu\'il y en aura le plus (trois au plus) ; le pronostic se garde, ne se modifie plus après le premier épisode, voyage dans son fichier et arrive chez le référent avec sa provenance. Le référent donne le sien en ouvrant la synthèse, avant de voir la carte (« Voir directement, sans pronostic » l\'écarte pour de bon ; rien de cela ne s\'ouvre sur les lieux simulés). La synthèse compare : les pièces citées, celles que les épisodes confirment, celles que personne n\'avait citées, celles qui sont citées mais calmes. Un écart se discute, il ne se juge pas.</li>' +
+    '<li><b>Questions pour l\'équipe</b>. Au bas de la synthèse, huit questions au plus, tirées de la carte : une pièce chaude comme le plan le laissait attendre, une pièce chaude sans alerte, une alerte calme, un endroit où les épisodes se rassemblent dans une pièce (décrit près d\'une porte, d\'une fenêtre ou d\'une enclave, sinon dans quelle partie du plan), un écart avec les pronostics, ce qu\'on remarque le plus souvent autour des épisodes. La dernière est toujours la même : un seul changement d\'environnement cette semaine, et comment verra-t-on s\'il a compté. « Copier les questions » les met dans le presse-papiers, pour le compte rendu.</li>' +
+    '<li><b>Comment regarder une pièce</b>. Dans la fiche d\'une pièce, un repli de gestes d\'observation en cinq minutes (fermer les yeux trente secondes, se mettre à hauteur d\'une personne assise, suivre un trajet…), donné comme une proposition de la BASE et non comme une règle du guide.</li>' +
+    '<li>Le déclarant ne voit jamais ce que la BASE lit dans le plan, ni avant ni pendant ses déclarations. Les trois lieux simulés ont des pronostics et des « Autour de l\'épisode ».</li></ul>'},
   {version: 'BASE v2026.10.13-4', titre: 'La carte thermique', corps: '<p><b>Une vraie carte thermique</b> (Arthur et Émilie) : dans le calque des épisodes, « Carte thermique » colore la carte selon l\'endroit où se sont tenus les épisodes, d\'un point à l\'autre d\'une même pièce. « Par pièce » reste la carte d\'avant.</p><ul>' +
     '<li><b>Comment elle se calcule</b>. Chaque épisode compte pour 1. Avec une croix, il est étalé autour d\'elle (un noyau d\'environ un dixième de la racine de la surface de la pièce, entre une et trois cases, borné à la pièce et sans entrer dans ses enclaves) ; sans croix, « toute la pièce », il est étalé sur toute sa pièce. La couleur est la densité, en épisodes par case, sur une seule échelle sable → brique pour tous les niveaux ; le zéro garde le ton neutre de la pièce. Le nombre d\'épisodes de chaque pièce reste écrit.</li>' +
     '<li><b>À lire avec prudence</b>. À nombre égal d\'épisodes, une petite pièce paraît plus chaude qu\'une grande, puisque la couleur est un nombre par case ; la carte lisse les croix, elle montre des zones et non des points exacts ; sans aucune croix, chaque pièce est d\'un seul ton, et la légende le dit. La même mise en garde accompagne la carte et l\'image.</li>' +
@@ -3961,6 +4232,120 @@ function verifierBASE() {
         ok('L\'image exportée en carte thermique : un SVG valide, titrée « carte thermique des épisodes », avec la chaleur, les croix, sa légende et sa note ; « Par pièce » donne l\'image d\'avant',
           !xml.querySelector('parsererror') && /carte thermique des épisodes/.test(ex.svg) && /chaleur-cases/.test(ex.svg) && /croix-point/.test(ex.svg) && /plus d'épisodes \(par case\)/.test(ex.svg) && /\.chaleur \.piece-nom/.test(ex.svg) && !/chaleur-cases/.test(exPiece.svg) && /épisodes déclarés par pièce/.test(exPiece.svg));
       } finally { modeCarte = sauveMode; montrerCroix = sauveCroix; calque = sauveCq; }
+    }
+    // 14. La pédagogie : autour de l'épisode, mon pronostic, les questions pour l'équipe (passe 231)
+    {
+      const sauveClip = Object.getOwnPropertyDescriptor(navigator, 'clipboard');
+      try {
+        const pie = (id, x, y, w, h, dans) => Object.assign({id, nom: id, type: 'sejour', niveau: 'n0', rects: [{x, y, w, h}]}, dans ? {dans} : {});
+        const ep = (id, piece, extra) => Object.assign({id, piece, date: '2026-10-05', heure: '10:00', moment: 'm1', types: ['t1'], autre: '', nbPros: 1, commentaire: ''}, extra || {});
+        const nouveau = (ps, episodes, els) => { D = dossierVide(); D.b1.plan = {niveaux: [{id: 'n0', nom: 'Rez-de-chaussée'}], pieces: ps, elements: els || []}; D.b1.typesCD = [{id: 't1', nom: 'Crie'}]; D.b1.moments = [{id: 'm1', nom: 'Matin', debut: '08:00', fin: '12:00'}]; D.b2.episodes = episodes; mode = 'socle'; D.pronostics = {}; return D; };
+        // 1. Autour de l'épisode : le catalogue, le formulaire, l'enregistrement
+        const ids = CONTEXTE.flatMap(([, l]) => l.map(x => x[0])).concat(CONTEXTE_RIEN.map(x => x[0]));
+        ok('Le catalogue « Autour de l\'épisode » : des identifiants uniques, chacun avec son libellé, six familles, et deux choix à part (« rien de particulier », « pas pu regarder ») ; un identifiant inconnu est ignoré',
+          new Set(ids).size === ids.length && ids.every(i => CONTEXTE_LIB[i]) && CONTEXTE.length === 6 && CONTEXTE_RIEN.map(x => x[0]).join() === 'rien,pas-vu' && contexteDe({contexte: ['bruit-fort', 'inconnu', 3]}).join() === 'bruit-fort' && contexteDe({}).length === 0 && contexteDe(null).length === 0);
+        nouveau([pie('A', 0, 0, 6, 4), pie('B', 8, 0, 6, 4)], []);
+        ouvrirFormulaire(); const nbCases = $('e-ctx').querySelectorAll('input[type=checkbox]').length, replie = !$('e-ctx-det').open;
+        const coche = v => { const c = $('e-ctx').querySelector('input[value="' + v + '"]'); c.checked = true; cocherContexte(c); };
+        coche('bruit-fort'); coche('attente'); const deux = choisisContexte().join(); coche('rien'); const apresRien = choisisContexte().join(); coche('monde'); const apresMonde = choisisContexte().join(); coche('pas-vu'); const apresPasVu = choisisContexte().join();
+        ok('Le formulaire propose les points du catalogue (replié) ; « rien de particulier » et « pas pu regarder » excluent tout le reste, et inversement', nbCases === ids.length && replie && deux === 'bruit-fort,attente' && apresRien === 'rien' && apresMonde === 'monde' && apresPasVu === 'pas-vu', deux + ' | ' + apresRien + ' | ' + apresMonde + ' | ' + apresPasVu);
+        const rempli = () => { $('e-date').value = '2026-10-05'; $('e-heure').value = '09:00'; $('e-moment').value = 'm1'; $('e-types').querySelector('input').checked = true; $('e-pros').value = 1; };
+        ouvrirFormulaire(); choisirPiece('A'); rempli(); coche('bruit-soudain'); coche('attente'); enregistrerEpisode(); const e1 = D.b2.episodes[0];
+        ouvrirFormulaire(); choisirPiece('A'); rempli(); enregistrerEpisode(); const e2 = D.b2.episodes[1];
+        ok('Un épisode garde ce qu\'on a remarqué autour (dans l\'ordre des familles) ; sans rien de coché, il n\'a pas de champ « contexte »', !!e1 && e1.contexte.join() === 'bruit-soudain,attente' && !!e2 && e2.contexte === undefined);
+        ouvrirFormulaire(e1.id); const reprise = $('e-ctx-det').open && $('e-ctx').querySelector('input[value="attente"]').checked && !$('e-ctx').querySelector('input[value="monde"]').checked;
+        $('e-ctx').querySelectorAll('input:checked').forEach(c => { c.checked = false; }); coche('rien'); enregistrerEpisode();
+        ouvrirFormulaire(e2.id); const ferme = !$('e-ctx-det').open; fermerFenetre('fen-episode');
+        ok('Modifier un épisode : ses cases reviennent (et le repli s\'ouvre) ; on peut les changer ; un épisode sans contexte garde le repli fermé', reprise && D.b2.episodes[0].contexte.join() === 'rien' && ferme);
+        rendreRecueillir(); const liste = $('liste-episodes').textContent.replace(/\s+/g, ' ');
+        ok('La liste des épisodes dit « Autour : … » pour ceux qui ont rempli cette partie, et pour eux seuls', (liste.match(/Autour :/g) || []).length === 1 && /Autour : Rien de particulier remarqué/.test(liste), liste.slice(0, 120));
+        // 2. Ce qu'on a remarqué, dans la synthèse
+        nouveau([pie('A', 0, 0, 6, 4)], [ep('1', 'A', {contexte: ['bruit-fort', 'monde']}), ep('2', 'A', {contexte: ['bruit-fort']}), ep('3', 'A', {contexte: ['rien']}), ep('4', 'A', {contexte: ['pas-vu']}), ep('5', 'A'), ep('6', 'A', {contexte: ['inconnu']})]);
+        const bc = bilanContexte(D.b2.episodes), h0 = htmlContexte(D.b2.episodes);
+        ok('Ce qu\'on a remarqué : parmi les 4 épisodes qui ont rempli la partie (les autres ne comptent pas), « beaucoup de bruit » 2 fois (50 %), « beaucoup de monde » 1 fois ; un « rien de particulier », un « pas pu regarder » ; la synthèse dit que ce ne sont pas des causes',
+          bc.total === 6 && bc.remplis === 4 && bc.lignes[0].id === 'bruit-fort' && bc.lignes[0].n === 2 && bc.lignes[1].id === 'monde' && bc.lignes.length === 2 && bc.rien === 1 && bc.pasVu === 1 && /50 %/.test(h0) && /pas des causes/.test(h0) && /4 épisodes sur 6/.test(h0), bc.remplis + ' remplis');
+        ok('Sans épisode, ou sans que personne ait rempli cette partie, la synthèse l\'explique au lieu de rester vide', /Rien à regarder/.test(htmlContexte([])) && /Personne n.a encore rempli/.test(htmlContexte([ep('9', 'A')])));
+        // 3. Mon pronostic : le déclarant
+        nouveau([pie('A', 0, 0, 6, 4), pie('B', 8, 0, 6, 4), pie('C', 16, 0, 6, 4), pie('V', 24, 0, 6, 4)], []);
+        mode = 'declarant'; D.declarant = {role: 'AES / AMP', prenom: 'Zoé'}; D.idContribution = 'ctr_test'; delete D.pronostics; D.pronostic = null;
+        ok('Un pronostic se garde au plus trois pièces, parmi celles qui existent', piecesCitees({pieces: ['A', 'B', 'C', 'V']}).join() === 'A,B,C' && piecesCitees({pieces: ['A', 'fantome']}).join() === 'A' && piecesCitees(null).length === 0 && piecesCitees({}).length === 0);
+        rendrePronostic(); const chooser = $('pronostic-carte').innerHTML;
+        ['A', 'B', 'C', 'V'].forEach(id => { const c = $('p-pieces').querySelector('input[value="' + id + '"]'); c.checked = true; cocherPieces(c); }); const quatre = piecesChoisies('p-pieces').join();
+        const nada = (() => { $('p-pieces').querySelectorAll('input').forEach(c => { c.checked = false; }); enregistrerPronostic(false); return D.pronostic; })();
+        ok('Chez le déclarant, avant son premier épisode : la carte « Mon pronostic » propose les pièces ; la quatrième est refusée ; enregistrer sans pièce est refusé', /Mon pronostic/.test(chooser) && /Trois au plus/.test(chooser) && quatre === 'A,B,C' && nada === null);
+        ['B', 'C'].forEach(id => { const c = $('p-pieces').querySelector('input[value="' + id + '"]'); c.checked = true; }); enregistrerPronostic(false);
+        const vu1 = $('pronostic-carte').textContent;
+        ok('Enregistré : il se relit (« Vous pensiez que ce serait surtout : B, C »), se modifie tant qu\'il n\'y a pas d\'épisode', D.pronostic.pieces.join() === 'B,C' && !D.pronostic.passe && /B, C/.test(vu1) && /Modifier/.test(vu1) && (modifierPronostic(), D.pronostic === null) && /Mon pronostic \(facultatif\)/.test($('pronostic-carte').textContent));
+        enregistrerPronostic(true); const passe = clone(D.pronostic);
+        D.b2.episodes.push(ep('x1', 'A')); rendrePronostic(); const verrou = $('pronostic-carte').textContent; modifierPronostic();
+        ok('« Je préfère ne pas en donner » est noté ; dès le premier épisode, le pronostic est gardé tel quel (plus de bouton « Modifier », rien ne change) : on le donne avant de voir', passe.passe === true && passe.pieces.length === 0 && /préféré ne pas en donner/.test(verrou) && !/Modifier/.test(verrou) && D.pronostic.passe === true);
+        D.pronostic = null; rendrePronostic(); const tropTard = $('pronostic-carte').innerHTML;
+        ok('Sans pronostic et avec des épisodes déjà déclarés, on ne le demande plus (trop tard) ; ni chez le référent (carte vide)', tropTard === '' && (mode = 'socle', rendrePronostic(), $('pronostic-carte').innerHTML === ''));
+        // 4. Mon pronostic : le fichier du déclarant, la fusion chez le référent
+        mode = 'declarant'; D.pronostic = {pieces: ['B', 'C'], passe: false, le: '2026-10-04T08:00:00.000Z'}; const cd = contenuDeclarant();
+        ok('Le fichier du déclarant emporte son pronostic', cd.pronostic && cd.pronostic.pieces.join() === 'B,C' && JSON.parse(JSON.stringify(cd)).pronostic.le === '2026-10-04T08:00:00.000Z');
+        nouveau([pie('A', 0, 0, 6, 4), pie('B', 8, 0, 6, 4), pie('C', 16, 0, 6, 4)], []);
+        const fichierP = (idC, envoye, pieces) => ({baf: {outil: 'base', type: 'base-declarant', idDossier: D.idDossier, idContribution: idC, envoye}, b1: clone(D.b1), b2: {episodes: [ep(idC + '_e', 'A')], calmes: []}, declarant: {role: 'AES / AMP', prenom: idC}, pronostic: pieces ? {pieces, passe: false, le: '2026-10-04T08:00:00.000Z'} : null});
+        fusionnerContribution(lireFichierBASE(fichierP('Z', '2026-10-06T10:00', ['B', 'C']), ['base-declarant']));
+        const apresUn = clone(D.pronostics.Z); fusionnerContribution(lireFichierBASE(fichierP('Z', '2026-10-06T10:00', ['A']), ['base-declarant']));   // le même envoi : rien ne change
+        const memeEnvoi = D.pronostics.Z.pieces.join(); fusionnerContribution(lireFichierBASE(fichierP('Z', '2026-10-05T10:00', ['A']), ['base-declarant']));   // un envoi plus ancien : rien ne change
+        const ancien = D.pronostics.Z.pieces.join(); fusionnerContribution(lireFichierBASE(fichierP('Z', '2026-10-09T10:00', ['A', 'fantome']), ['base-declarant']));   // un envoi plus récent : le remplace, sans la pièce fantôme
+        fusionnerContribution(lireFichierBASE(fichierP('Y', '2026-10-06T10:00', null), ['base-declarant']));
+        ok('La fusion garde le pronostic de chaque déclarant, avec sa provenance : le même fichier ou un plus ancien ne change rien, un plus récent le remplace, une pièce qui n\'existe pas est écartée, pas de pronostic = rien de noté',
+          apresUn.pieces.join() === 'B,C' && /AES/.test(apresUn.provenance) && memeEnvoi === 'B,C' && ancien === 'B,C' && D.pronostics.Z.pieces.join() === 'A' && D.pronostics.Y === undefined && pronosticsDuDossier().length === 1);
+        // 5. Mon pronostic : la porte du référent, avant la carte
+        nouveau([pie('A', 0, 0, 6, 4), pie('B', 8, 0, 6, 4)], [ep('1', 'A'), ep('2', 'B')]);
+        const avant = porteActive(); rendrePorte(); const cachee = $('synthese-resultats').hidden && !$('pronostic-porte').hidden && /Avant de voir la carte/.test($('pronostic-porte').textContent);
+        validerPorte(); const refuse = porteActive();   // aucune pièce choisie : refusé
+        const cp = $('porte-pieces').querySelector('input[value="B"]'); cp.checked = true; validerPorte(); const apresValider = porteActive(); rendrePorte();
+        ok('Chez le référent, une synthèse avec des épisodes s\'ouvre sur « Avant de voir la carte » : les résultats sont cachés ; sans pièce choisie, on ne passe pas ; avec, on passe, et le pronostic est gardé', avant && cachee && refuse && !apresValider && D.pronostics.referent.pieces.join() === 'B' && !$('synthese-resultats').hidden && $('pronostic-porte').hidden);
+        nouveau([pie('A', 0, 0, 6, 4)], [ep('1', 'A')]); passerPorte(); const passeur = porteActive(); nouveau([pie('A', 0, 0, 6, 4)], [ep('1', 'A')]); D.exemple = true; const exemple = porteActive(); nouveau([pie('A', 0, 0, 6, 4)], []); const sansEp = porteActive();
+        ok('« Voir directement » écarte la porte pour de bon ; elle ne s\'ouvre pas sur un lieu simulé, ni sans épisode', passeur === false && D.pronostics !== undefined && exemple === false && sansEp === false);
+        // 6. Ce que l'équipe pensait, contre ce que montrent les épisodes
+        nouveau([pie('A', 0, 0, 6, 4), pie('B', 8, 0, 6, 4), pie('C', 16, 0, 6, 4), pie('V', 24, 0, 6, 4), pie('W', 32, 0, 6, 4)], []);
+        const rep = (id, n) => Array.from({length: n}, (_, i) => ep(id + i, id));
+        D.b2.episodes = [].concat(rep('A', 6), rep('B', 4), rep('C', 3), rep('V', 1), rep('W', 0));
+        D.pronostics = {s1: {pieces: ['A', 'V'], provenance: 'AES / AMP'}, s2: {pieces: ['A', 'V', 'W'], provenance: 'Infirmier·e'}, referent: {pieces: ['A'], provenance: 'Le référent'}, vide: {pieces: [], passe: true}};
+        const cp6 = comparaisonPronostics(D.b2.episodes), h6 = htmlPronostics(D.b2.episodes);
+        ok('Le pronostic contre les épisodes : trois pronostics (le passé ne compte pas), les trois pièces les plus chargées (A, B, C), A confirmée, B et C que personne n\'avait citées, V et W citées mais calmes ; le texte le dit et ne juge pas',
+          cp6.nbPros === 3 && cp6.hauts.join() === 'A,B,C' && cp6.confirmes.join() === 'A' && cp6.surprises.join() === 'B,C' && cp6.calmes.sort().join() === 'V,W' && cp6.citees[0].id === 'A' && cp6.citees[0].citations === 3 &&
+          /3 pronostics donnés/.test(h6) && /Personne n.y pensait/.test(h6) && /Citées, mais peu d.épisodes/.test(h6) && /ne se juge pas/.test(h6));
+        D.pronostics = {}; rendrePronosticsSynthese(D.b2.episodes); const sansPro = $('pronostic-feuille').hidden && htmlPronostics(D.b2.episodes) === '';
+        D.pronostics = {s1: {pieces: ['A']}}; rendrePronosticsSynthese(D.b2.episodes); const avecPro = !$('pronostic-feuille').hidden && /Pièce citée/.test($('pronostic-synthese').textContent);
+        ok('La feuille « Ce que l\'équipe pensait » n\'existe que s\'il y a des pronostics', sansPro && avecPro);
+        // 7. Où, dans une pièce : décrire un endroit, repérer là où les épisodes se rassemblent
+        nouveau([pie('G', 0, 0, 20, 12), pie('E', 12, 6, 4, 4, 'G'), pie('H', 20, 0, 6, 6)], [], [{id: 'd1', cat: 'porte', niveau: 'n0', x: 20, y: 3, o: 'v', long: 1, cote: 1, retourne: false}, {id: 'f1', cat: 'fenetre', niveau: 'n0', x: 6, y: 0, o: 'h', long: 1.5, cote: 1, retourne: false}]);
+        const L7 = lectureDuPlan(D.b1), G7 = pieceParId('G');
+        ok('Décrire un endroit : près d\'une enclave, d\'une porte (avec la pièce qu\'elle dessert), d\'une fenêtre ; sinon la partie de la pièce, sur le plan',
+          decrireEndroit(G7, 11, 8, L7) === 'près de « E »' && decrireEndroit(G7, 19, 3, L7) === 'près de la porte vers « H »' && decrireEndroit(G7, 6, 1, L7) === 'près d\'une fenêtre' && decrireEndroit(G7, 3, 11, L7) === 'en bas à gauche de la pièce (sur le plan)' && decrireEndroit(G7, 7, 5, L7) === 'au milieu de la pièce' && /près de/.test(decrireEndroit(G7, 11, 8, L7)));
+        const serres = ['1', '2', '3', '4'].map((k, i) => ep('s' + k, 'G', {pos: {u: .3 + i * .01, v: .3}})), epars = [{u: .1, v: .1}, {u: .9, v: .1}, {u: .1, v: .9}, {u: .9, v: .9}, {u: .5, v: .5}].map((p, i) => ep('p' + i, 'G', {pos: p}));
+        const c1 = concentrations(serres), c2 = concentrations(epars), c3 = concentrations([ep('u1', 'G'), ep('u2', 'G'), ep('u3', 'G')]), c4 = concentrations(serres.slice(0, 2));
+        ok('Là où les épisodes se rassemblent : quatre croix voisines dans la grande pièce font ressortir un endroit ; des croix dispersées, des épisodes « toute la pièce » ou moins de trois croix, non',
+          c1.length === 1 && c1[0].id === 'G' && c1[0].n === 4 && c1[0].sur === 4 && Math.abs(c1[0].x - 6.2) < 2 && c2.length === 0 && c3.length === 0 && c4.length === 0, c1.length + ' / ' + c2.length + ' / ' + c3.length + ' / ' + c4.length);
+        // 8. Les questions pour l'équipe
+        ok('Sans épisode, pas de question ; la synthèse le dit', questionsEquipe([]).length === 0 && /dès qu.il y en aura/.test(htmlQuestions([])));
+        const L8 = [0, 1, 2].map(i => construireLieu(i));
+        ok('Sur les trois lieux simulés : de cinq à huit questions, chacune une vraie question (elle se termine par « ? ») qui nomme des pièces du lieu ; la dernière est toujours la même', L8.every(l => { D = l; const q = questionsEquipe(l.b2.episodes); return q.length >= 5 && q.length <= 8 && q.every(t => /\?$/.test(t)) && /un seul changement d.environnement/.test(q[q.length - 1]) && q.slice(0, -1).filter(t => /«/.test(t)).length >= 3; }),
+          L8.map(l => { D = l; return questionsEquipe(l.b2.episodes).length; }).join(' / '));
+        D = L8[0]; const q0 = questionsEquipe(D.b2.episodes).join(' | ');
+        ok('Chaque pièce chaude, chaque alerte calme, chaque écart avec le pronostic est un point de départ : le bâtiment provisoire pose la question de la pièce attendue, de la cour calme, de la pièce que personne n\'avait citée, et de l\'endroit où ça se rassemble',
+          /Dans «.Hall d.accueil.», \d+ épisodes/.test(q0) && /«.Cour \(sans clôture\).» : le plan y lit des points de vigilance, et aucun épisode/.test(q0) && /Personne n.avait cité/.test(q0) && /se rassemblent/.test(q0) && /était cité par/.test(q0));
+        D = nouveau([pie('A', 0, 0, 6, 4)], [ep('1', 'A'), ep('2', 'A'), ep('3', 'A'), ep('4', 'A'), ep('5', 'A', {contexte: ['bruit-fort']}), ep('6', 'A', {contexte: ['bruit-fort', 'monde']}), ep('7', 'A', {contexte: ['bruit-fort']}), ep('8', 'A', {contexte: ['monde']}), ep('9', 'A', {contexte: ['attente']})]);
+        const q9 = questionsEquipe(D.b2.episodes).join(' | ');
+        ok('Quand au moins cinq épisodes ont leur « Autour de l\'épisode », une question demande si ce qu\'on remarque le plus souvent l\'est aussi dans les moments calmes', /remarqué autour des épisodes : «.beaucoup de bruit.» \(60 %\)/.test(q9) && /moments calmes/.test(q9), q9.slice(0, 200));
+        // La copie : le texte part dans le presse-papiers (ou, à défaut, par la sélection)
+        D = L8[1]; effacerFiltres(); let copie = ''; Object.defineProperty(navigator, 'clipboard', {value: {writeText: t => { copie = t; return Promise.resolve(); }}, configurable: true});
+        copierQuestions();
+        ok('« Copier les questions » : un texte numéroté, avec le lieu et le nombre d\'épisodes, qui rappelle que ce sont des questions et pas des conclusions', /^Questions pour l.équipe — Foyer/.test(copie) && /\n1\. /.test(copie) && /\n8\. |\n7\. |\n6\. |\n5\. /.test(copie) && /pas des conclusions/.test(copie) && copie.indexOf('44 épisodes') > 0, copie.slice(0, 90));
+        // 9. Regarder une pièce
+        D = L8[0]; mode = 'socle'; ouvrirFiche(pieces()[0].id); const fiche9 = $('fiche-corps').innerHTML; fermerFiche();
+        ok('La fiche d\'une pièce propose « Comment regarder une pièce (cinq minutes) » — une proposition de la BASE, qui dit n\'être pas une règle du guide', /Comment regarder une pièce/.test(fiche9) && /pas une règle du guide/.test(fiche9) && /Fermez les yeux trente secondes/.test(fiche9) && /<details/.test(htmlRegarderPiece()));
+        // 10. Le déclarant ne voit jamais la lecture du plan avant de déclarer
+        mode = 'declarant'; D = clone(L8[0]); D.idContribution = 'ctr9'; D.declarant = {role: 'AES / AMP'}; D.b2.episodes = []; delete D.pronostics; D.pronostic = null;
+        rendreRecueillir(); ouvrirFormulaire(); choisirPiece(pieces().find(p => /Hall/.test(p.nom)).id, {x: 3, y: 3}); const visible = ($('pronostic-carte').textContent + ' ' + $('fen-episode').textContent).replace(/\s+/g, ' '); fermerFenetre('fen-episode');
+        ok('Côté déclarant : on voit le pronostic, le plan, les croix, « Autour de l\'épisode » — jamais ce que la BASE lit dans le plan (aucun point de vigilance ni d\'appui, aucune question)', /Mon pronostic/.test(visible) && /Autour de l.épisode/.test(visible) && !/vigilance|point d.appui|Questions pour|Que se passe-t-il/.test(visible));
+        mode = 'socle';
+      } finally { if (sauveClip) Object.defineProperty(navigator, 'clipboard', sauveClip); else delete navigator.clipboard; }
     }
   } catch (e) { ok('Les vérifications ont planté', false, e.message); }
   finally { calque = sauveCalque; persister = vraiPersister; toast = vraiToast; window.confirm = vraiConfirm; modeFiche = sauveModeFiche; pieceFiche = null; niveauCourant = sauveNiveau; D = sauveD; mode = sauveMode; selection = null; historique = []; refaites = []; }
