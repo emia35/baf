@@ -369,7 +369,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--slate);}
 .ouverture{stroke:var(--sheet);pointer-events:none;}
 .porte{stroke:var(--ink);pointer-events:none;}
 .porte-arc{fill:none;stroke:var(--ink-soft);pointer-events:none;}
-.fenetre{stroke:var(--vol-contexte-deep);pointer-events:none;}
+.ouv-fenetre{stroke:var(--vol-contexte-deep);pointer-events:none;}
 .elem-zone{fill:transparent;stroke:none;cursor:grab;}
 .elem-zone.selection{stroke:var(--slate);stroke-dasharray:.15 .1;}
 .meuble-fond{fill:var(--paper-deep);stroke:var(--ink-faint);cursor:grab;}
@@ -818,7 +818,7 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
    chose lue de la BAF, en lecture : le choix clair / sombre, pour s'ouvrir dans le même thème.
    ══════════════════════════════════════════════════════════════════════════════════════════════ */
 
-const VERSION_BASE = 'BASE v2026.10.12-6';
+const VERSION_BASE = 'BASE v2026.10.13-1';
 const CLE_SOCLE = 'base-dossier-v1', CLE_DECL = 'base-declarant-v1', CLE_MODE = 'base-mode', CLE_THEME = 'base-theme';
 const TYPES_ZONE = [['activite', "Salle d'activité"], ['sejour', 'Séjour, salon'], ['repas', 'Repas'], ['accueil', 'Accueil'], ['circulation', 'Circulation'],
   ['chambre', 'Chambre'], ['repos', 'Salle de repos'], ['calme', 'Salle de mise au calme'], ['snoezelen', 'Salle multisensorielle'], ['soins', 'Soins, infirmerie'],
@@ -1331,9 +1331,9 @@ function dessinElements(o) {
         '<line class="baie" x1="' + (x2 - bx) + '" y1="' + (y2 - by) + '" x2="' + (x2 + bx) + '" y2="' + (y2 + by) + '" stroke-width="' + ep * 1.1 + '"/>';
     } else {
       const d = ep * .9, dx = h ? 0 : d, dy = h ? d : 0;
-      g += '<line class="fenetre" x1="' + (x1 - dx) + '" y1="' + (y1 - dy) + '" x2="' + (x2 - dx) + '" y2="' + (y2 - dy) + '" stroke-width="' + ep * .55 + '"/>' +
-        '<line class="fenetre" x1="' + (x1 + dx) + '" y1="' + (y1 + dy) + '" x2="' + (x2 + dx) + '" y2="' + (y2 + dy) + '" stroke-width="' + ep * .55 + '"/>' +
-        '<line class="fenetre" x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke-width="' + ep * .35 + '"/>';
+      g += '<line class="ouv-fenetre" x1="' + (x1 - dx) + '" y1="' + (y1 - dy) + '" x2="' + (x2 - dx) + '" y2="' + (y2 - dy) + '" stroke-width="' + ep * .55 + '"/>' +
+        '<line class="ouv-fenetre" x1="' + (x1 + dx) + '" y1="' + (y1 + dy) + '" x2="' + (x2 + dx) + '" y2="' + (y2 + dy) + '" stroke-width="' + ep * .55 + '"/>' +
+        '<line class="ouv-fenetre" x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke-width="' + ep * .35 + '"/>';
     }
     if (o.edition) {
       const z = .7, zx = h ? x1 : e.x - z / 2, zy = h ? e.y - z / 2 : y1;
@@ -2629,7 +2629,7 @@ function svgExport() {
   const fil = [f.moment && nomMoment(f.moment), f.type && (f.type === '_autre' ? 'Autre' : nomType(f.type)), (f.debut || f.fin) && ((f.debut ? 'du ' + dateFr(f.debut) : '') + (f.fin ? ' au ' + dateFr(f.fin) : ''))].filter(Boolean).join(' · ');
   const echelle = ECHELLES[cq] || ECHELLE;
   let deg = '<defs><linearGradient id="lg">' + echelle.map((col, i) => '<stop offset="' + (i / (echelle.length - 1)) + '" stop-color="' + col + '"/>').join('') + '</linearGradient></defs>';
-  const style = '<style>.piece-trait{fill:none;stroke:#2C2416}.exterieur .piece-trait{stroke:#6E8F6A}.piece-fond{fill:#FFFDF8}.ouverture{stroke:#FFFDF8}.porte{stroke:#2C2416}.porte.vitree{stroke:#5A6D8B}.hublot{fill:#FFFDF8;stroke:#5A6D8B}.porte-arc{fill:none;stroke:#6B6152}.fenetre{stroke:#5A6D8B}.baie{stroke:#5A6D8B}.escalier-fond{fill:#F5E8C8;stroke:#82692D}.escalier-trait{stroke:#82692D}.escalier-nom{font-weight:700;fill:#82692D;text-anchor:middle;dominant-baseline:middle;paint-order:stroke;stroke:#F5E8C8;stroke-width:.14px}.meuble-fond{fill:#EDE7D9;stroke:#746B5B}.meuble.filigrane{opacity:.35}.piece-nom{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;font-weight:700;text-anchor:middle;dominant-baseline:middle}.piece-type{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;text-anchor:middle;dominant-baseline:middle}.piece-sous{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;text-anchor:middle;dominant-baseline:middle}text{font-family:Space Grotesk,Segoe UI,Arial,sans-serif}</style>';
+  const style = '<style>.piece-trait{fill:none;stroke:#2C2416}.exterieur .piece-trait{stroke:#6E8F6A}.piece-fond{fill:#FFFDF8}.ouverture{stroke:#FFFDF8}.porte{stroke:#2C2416}.porte.vitree{stroke:#5A6D8B}.hublot{fill:#FFFDF8;stroke:#5A6D8B}.porte-arc{fill:none;stroke:#6B6152}.ouv-fenetre{stroke:#5A6D8B}.baie{stroke:#5A6D8B}.escalier-fond{fill:#F5E8C8;stroke:#82692D}.escalier-trait{stroke:#82692D}.escalier-nom{font-weight:700;fill:#82692D;text-anchor:middle;dominant-baseline:middle;paint-order:stroke;stroke:#F5E8C8;stroke-width:.14px}.meuble-fond{fill:#EDE7D9;stroke:#746B5B}.meuble.filigrane{opacity:.35}.piece-nom{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;font-weight:700;text-anchor:middle;dominant-baseline:middle}.piece-type{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;text-anchor:middle;dominant-baseline:middle}.piece-sous{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;text-anchor:middle;dominant-baseline:middle}text{font-family:Space Grotesk,Segoe UI,Arial,sans-serif}</style>';
   let y0 = haut;
   const plans = c.niveaux.map((n, i) => {
     const [wi, hi] = tailles[i], y1 = y0; y0 += hi + ent + ecart;
@@ -2952,6 +2952,9 @@ document.addEventListener('click', ev => {
 
 /* ══ Les notes de version ══ */
 const NOTES_BASE = [
+  {version: 'BASE v2026.10.13-1', titre: 'Correctif : les fenêtres se laissent cliquer', corps: '<p><b>Un défaut corrigé</b> (Arthur et Émilie). Depuis la passe 224 (le dessin des portes et des fenêtres), les fenêtres de dialogue de la BASE — « Un épisode », « Rien à signaler », la fiche d\'une pièce, le choix du rôle, le mode administrateur — laissaient passer les clics : toucher un champ fermait la fenêtre. Le nom de la classe qui dessine une fenêtre dans un mur était aussi celui des fenêtres de dialogue, et sa règle (« ne reçoit pas les clics », un contour bleu) s\'appliquait aux deux. Les deux classes ont maintenant chacune leur nom.</p><ul>' +
+    '<li>Le plan du choix de la pièce, dans « Un épisode », reprend ses traits fins : il héritait du contour bleu, qui l\'encadrait de bandes épaisses.</li>' +
+    '<li>Les contrôles de la BASE vérifient désormais qu\'aucune fenêtre de dialogue n\'est insensible aux clics ni ne transmet un contour à son contenu.</li></ul>'},
   {version: 'BASE v2026.10.12-6', titre: 'La synthèse lit le plan : calques, et le plan croisé avec les épisodes', corps: '<p><b>La synthèse ne se contente plus de compter</b> (Arthur et Émilie) : elle superpose à la carte des épisodes ce que le plan et les fiches disent de chaque pièce.</p><ul>' +
     '<li><b>Quatre calques</b> sur la carte : les <b>épisodes</b> (comme avant), les <b>points de vigilance</b> (prune), les <b>points d\'appui</b> (sauge), les <b>fiches des pièces</b> (ardoise : pas de fiche, rapide, détaillée). Sur les trois derniers, le nombre d\'épisodes reste écrit sous le nom de la pièce. Un plan par niveau, et l\'image exportée est celle du calque choisi.</li>' +
     '<li><b>Le plan et les épisodes, ensemble</b> : les pièces <b>chaudes comme le plan le laissait attendre</b> (des points de vigilance et des épisodes), les pièces <b>chaudes sans alerte au plan</b> (des épisodes que rien dans le plan ou les fiches n\'explique : à explorer, ou à compléter par la fiche), et les pièces qui <b>alertent mais restent calmes</b>.</li>' +
@@ -3219,6 +3222,9 @@ function verifierBASE() {
     choisirCalque('vigilance'); const apresChoix = calque; rendreCalques(); const boutons227 = document.querySelectorAll('#calques button'); choisirCalque('nimportequoi');
     ok('Le sélecteur de calque : quatre calques, celui qu\'on choisit est celui qui reste, un calque inconnu ramène aux épisodes', apresChoix === 'vigilance' && boutons227.length === 4 && calque === 'episodes' && boutons227[1].classList.contains('on') === true);
     calque = sauveCalque227;
+    // 10. Un correctif (13/10) : une règle du dessin du plan atteignait aussi les fenêtres de dialogue, qui ne laissaient plus passer les clics
+    const dialogues = [...document.querySelectorAll('.voile .fenetre')], styles = dialogues.map(d => getComputedStyle(d));
+    ok('Les fenêtres de dialogue se laissent cliquer, et ne transmettent à leur contenu aucun contour (aucune règle du dessin du plan ne les atteint)', dialogues.length >= 5 && styles.every(c => c.pointerEvents !== 'none' && c.stroke === 'none'), dialogues.length + ' fenêtres');
   } catch (e) { ok('Les vérifications ont planté', false, e.message); }
   finally { calque = sauveCalque; persister = vraiPersister; toast = vraiToast; window.confirm = vraiConfirm; modeFiche = sauveModeFiche; pieceFiche = null; niveauCourant = sauveNiveau; D = sauveD; mode = sauveMode; selection = null; historique = []; refaites = []; }
   return r;
