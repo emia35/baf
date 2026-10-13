@@ -459,6 +459,12 @@ table.croise td.n{white-space:normal;}
 .leg-texte{font-family:var(--police-interface);font-style:italic;font-weight:600;fill:var(--ink-soft);text-anchor:middle;paint-order:stroke;stroke:var(--sheet);stroke-linejoin:round;pointer-events:none;}
 .leg-zone{fill:transparent;stroke:none;cursor:grab;}
 .leg-zone.selection{stroke:var(--slate);stroke-dasharray:.25 .18;fill:var(--slate-pale);fill-opacity:.3;}
+/* ── La carte thermique (passe 230) ── */
+.mode-carte{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin:0 0 10px;}
+.mode-carte:empty{display:none;}
+.case-croix{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-soft);}
+.chaleur .piece-nom,.chaleur .piece-type,.chaleur .piece-sous{paint-order:stroke;stroke:var(--sheet);stroke-width:.22px;stroke-linejoin:round;}
+.croix-point{fill:var(--slate-deep);stroke:var(--sheet);stroke-width:.06px;opacity:.9;pointer-events:none;}
 /* ── Listes du préambule ── */
 .liste-edit{display:flex;flex-direction:column;gap:6px;margin:0 0 10px;}
 .liste-edit .ligne{display:grid;grid-template-columns:minmax(0,1fr) 92px 92px 34px;gap:6px;align-items:center;}
@@ -712,6 +718,7 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
     <div class="feuille">
       <div class="surtitre" id="carte-titre">La carte des épisodes</div>
       <div class="segment calques no-print" id="calques" role="tablist" aria-label="Calques de la carte"></div>
+      <div class="mode-carte no-print" id="mode-carte"></div>
       <div class="carte-cadre plan-carte" id="carte-cadre"></div>
       <div class="legende" id="legende"></div>
       <p class="avertissement" id="avertissement">Cette carte montre où des épisodes ont été déclarés, pas pourquoi. Une pièce très fréquentée, ou occupée longtemps, recueille mécaniquement plus d'épisodes : c'est le taux de base, que la carte ne corrige pas. Une pièce froide peut aussi être une pièce où personne ne remplit, et un point chaud peut tenir à une seule personne. Les pistes se discutent en équipe.</p>
@@ -831,7 +838,7 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
    chose lue de la BAF, en lecture : le choix clair / sombre, pour s'ouvrir dans le même thème.
    ══════════════════════════════════════════════════════════════════════════════════════════════ */
 
-const VERSION_BASE = 'BASE v2026.10.13-3';
+const VERSION_BASE = 'BASE v2026.10.13-4';
 const CLE_SOCLE = 'base-dossier-v1', CLE_DECL = 'base-declarant-v1', CLE_MODE = 'base-mode', CLE_THEME = 'base-theme';
 const TYPES_ZONE = [['activite', "Salle d'activité"], ['sejour', 'Séjour, salon'], ['repas', 'Repas'], ['accueil', 'Accueil'], ['circulation', 'Circulation'],
   ['chambre', 'Chambre'], ['repos', 'Salle de repos'], ['calme', 'Salle de mise au calme'], ['snoezelen', 'Salle multisensorielle'], ['soins', 'Soins, infirmerie'],
@@ -1539,7 +1546,7 @@ function dessinPlan(ps, o) {
     return {texte, g: '<g class="' + cl + '" data-piece="' + p.id + '">' + traits + fonds + marques + '</g>'};
   });
   // Les pièces, puis les meubles et les ouvertures, puis les noms par-dessus tout.
-  return corps.map(c => c.g).join('') + (o.elements === false ? '' : dessinElements(o)) + '<g class="noms">' + corps.map(c => c.texte).join('') + '</g>' + dessinLegendes(o);
+  return corps.map(c => c.g).join('') + (o.chaleur || '') + (o.elements === false ? '' : dessinElements(o)) + '<g class="noms">' + corps.map(c => c.texte).join('') + '</g>' + (o.surcouche || '') + dessinLegendes(o);
 }
 // Le niveau d'à côté (celui du dessous, sinon celui du dessus), en filigrane, pour aligner les pièces.
 function niveauFantome(n) { const ns = niveaux(), i = rangNiveau(n); return ns[i - 1] || ns[i + 1] || null; }
@@ -2820,19 +2827,115 @@ function valeursCalque(cq, eps) {
   });
   return {valeurs: v, etiquettes: et, sous, max: Math.max(0, ...Object.values(v))};
 }
+/* ══ La carte thermique (passe 230, Arthur et Émilie) ══
+   Dans le calque des épisodes, on peut passer de « Par pièce » (chaque pièce d'une couleur, selon son nombre d'épisodes) à « Carte thermique » :
+   une densité continue, qui change de couleur d'un endroit à l'autre d'une même pièce. Chaque épisode compte pour 1 : étalé autour de sa croix
+   (un noyau gaussien d'environ un dixième de la racine de la surface de la pièce, entre 1 et 3 cases, borné à la pièce et hors de ses enclaves),
+   ou, sans croix, étalé sur toute sa pièce. La couleur est la densité (des épisodes par case) ; une même échelle sert à toutes les pièces et à
+   tous les niveaux. À nombre égal d'épisodes, une petite pièce paraît donc plus chaude qu'une grande : le nombre écrit dans chaque pièce dit combien
+   il y en a. La grille est alignée sur l'origine du plan (0,25 case pour un petit lieu, 0,5 puis 1 pour un grand). Rien n'est mémorisé : c'est un calcul. */
+const GAMMA_CHALEUR = .75, NIVEAUX_CHALEUR = 32;
+let modeCarte = 'piece', montrerCroix = false;   // « piece » | « chaleur » ; les croix des épisodes par-dessus
+function pasThermique() { const A = pieces().reduce((a, p) => a + aireDe(p), 0); return A <= 800 ? .25 : A <= 3000 ? .5 : 1; }
+const sigmaPiece = p => Math.min(3, Math.max(1, .09 * Math.sqrt(aireDe(p))));
+// Les cases de la grille dont le centre est dans la pièce, hors de ses enclaves.
+function casesDePiece(p, obstacles, pas) {
+  const out = [], vus = new Set();
+  p.rects.forEach(r => {
+    for (let i = Math.round(r.x / pas); i < Math.round((r.x + r.w) / pas); i++) for (let j = Math.round(r.y / pas); j < Math.round((r.y + r.h) / pas); j++) {
+      const cle = i + ',' + j; if (vus.has(cle)) continue;
+      const cx = (i + .5) * pas, cy = (j + .5) * pas;
+      if (obstacles.some(o => cx > o.x && cx < o.x + o.w && cy > o.y && cy < o.y + o.h)) continue;
+      vus.add(cle); out.push({i, j, cx, cy});
+    }
+  });
+  return out;
+}
+// Le champ de densité : la masse de chaque épisode (1) répartie sur les cases libres de sa pièce. Rend les cases par niveau (densité en épisodes par case),
+// le maximum, la grille, et le nombre d'épisodes qui ont une croix.
+function champThermique(eps, pas) {
+  pas = pas || pasThermique();
+  const parPiece = {}; eps.forEach(e => { (parPiece[e.piece] = parPiece[e.piece] || []).push(e); });
+  const niveaux = {}; let max = 0, nbCroix = 0, nbTotal = 0;
+  pieces().forEach(p => {
+    const liste = parPiece[p.id]; if (!liste || !liste.length) return;
+    const cases = casesDePiece(p, obstaclesDe(p), pas), n = cases.length; if (!n) return;
+    const sigma = sigmaPiece(p), masse = new Float64Array(n); let uniforme = 0;
+    liste.forEach(e => {
+      nbTotal++;
+      if (!posValide(e.pos)) { uniforme++; return; }
+      const a = pointDepuisPos(p, e.pos), poids = new Float64Array(n); let S = 0;
+      for (let k = 0; k < n; k++) { const dx = cases[k].cx - a.x, dy = cases[k].cy - a.y, d2 = dx * dx + dy * dy; if (d2 <= 9 * sigma * sigma) { poids[k] = Math.exp(-d2 / (2 * sigma * sigma)); S += poids[k]; } }
+      if (S <= 0) { uniforme++; return; }
+      nbCroix++;
+      for (let k = 0; k < n; k++) masse[k] += poids[k] / S;
+    });
+    const l = (niveaux[niveauDe(p)] = niveaux[niveauDe(p)] || []);
+    for (let k = 0; k < n; k++) { const d = (masse[k] + uniforme / n) / (pas * pas); if (d > max) max = d; l.push({i: cases[k].i, j: cases[k].j, d, piece: p.id}); }
+  });
+  return {niveaux, max, pas, nbCroix, nbTotal};
+}
+// Une couleur de l'échelle sable → brique, de façon continue (t de 0 à 1).
+function couleurChaleur(t) {
+  const pos = Math.min(1, Math.max(0, t)) * (ECHELLE.length - 1), i = Math.min(ECHELLE.length - 2, Math.floor(pos)), f = pos - i, a = hexRgb(ECHELLE[i]), b = hexRgb(ECHELLE[i + 1]);
+  return 'rgb(' + a.map((x, c) => Math.round(x + (b[c] - x) * f)).join(',') + ')';
+}
+// La densité d'une case, ramenée à un palier de 0 (rien : la pièce garde son ton neutre) à NIVEAUX_CHALEUR.
+const palierChaleur = (d, max) => max > 0 ? Math.round(Math.pow(Math.min(1, d / max), GAMMA_CHALEUR) * NIVEAUX_CHALEUR) : 0;
+// Les cases d'un niveau, fondues en rectangles : sur une ligne, les cases voisines de même palier ne font qu'un rectangle.
+function svgChaleur(champ, niveau) {
+  const cases = champ && champ.niveaux[niveau]; if (!cases || !champ.max) return '';
+  const pas = champ.pas, lignes = {};
+  cases.forEach(c => { const v = palierChaleur(c.d, champ.max); if (v > 0) (lignes[c.j] = lignes[c.j] || []).push({i: c.i, v}); });
+  let s = '<g class="chaleur-cases" shape-rendering="crispEdges">';
+  Object.keys(lignes).forEach(j => {
+    const l = lignes[j].sort((a, b) => a.i - b.i); let debut = l[0].i, prec = l[0].i, v = l[0].v;
+    const ferme = () => { s += '<rect x="' + debut * pas + '" y="' + j * pas + '" width="' + (prec - debut + 1) * pas + '" height="' + pas + '" fill="' + couleurChaleur(v / NIVEAUX_CHALEUR) + '"/>'; };
+    for (let k = 1; k < l.length; k++) { if (l[k].i === prec + 1 && l[k].v === v) prec = l[k].i; else { ferme(); debut = prec = l[k].i; v = l[k].v; } }
+    ferme();
+  });
+  return s + '</g>';
+}
+// Les croix des épisodes d'un niveau, à leur place exacte.
+function svgCroixCarte(eps, niveau) {
+  let s = '<g class="carte-croix">';
+  eps.forEach(e => { const p = pieceParId(e.piece); if (!p || niveauDe(p) !== niveau || !posValide(e.pos)) return; const a = pointDepuisPos(p, e.pos); s += '<circle class="croix-point" cx="' + a.x + '" cy="' + a.y + '" r=".17"/>'; });
+  return s + '</g>';
+}
+function choisirModeCarte(m) { modeCarte = m === 'chaleur' ? 'chaleur' : 'piece'; majSynthese(); }
+function basculerCroixCarte(b) { montrerCroix = !!b; majSynthese(); }
+// Sous les calques : « Par pièce » ou « Carte thermique » (pour le calque des épisodes), et les croix.
+function rendreModeCarte() {
+  const el = $('mode-carte'); if (!el) return;
+  if (calque !== 'episodes') { el.innerHTML = ''; return; }
+  const bouton = (m, nom) => '<button type="button" role="tab" class="' + (modeCarte === m ? 'on' : '') + '" aria-selected="' + (modeCarte === m) + '" onclick="choisirModeCarte(\'' + m + '\')">' + nom + '</button>';
+  el.innerHTML = '<div class="segment" role="tablist" aria-label="Façon de colorer la carte">' + bouton('piece', 'Par pièce') + bouton('chaleur', 'Carte thermique') + '</div>' +
+    (modeCarte === 'chaleur' ? '<label class="case-croix"><input type="checkbox"' + (montrerCroix ? ' checked' : '') + ' onchange="basculerCroixCarte(this.checked)"> Montrer les croix</label>' : '');
+}
+function legendeChaleur(champ, sombre) {
+  const zero = sombre ? ZERO_SOMBRE : ZERO_CLAIR, degrade = 'linear-gradient(90deg,' + ECHELLE.join(',') + ')';
+  return '<span><i class="zero" style="background:' + zero + '"></i> aucun épisode</span>' + (champ.max ? '<span>moins <i class="degrade" style="background:' + degrade + '"></i> plus d\'épisodes (par case)</span>' : '') +
+    '<span>Chaque épisode compte pour 1 : étalé autour de sa croix (sur une à trois cases), ou, sans croix, sur toute sa pièce. Le nombre écrit dans chaque pièce est son nombre d\'épisodes.</span>' +
+    (champ.nbTotal && !champ.nbCroix ? '<span><b>Aucun épisode n\'a de croix</b> : chaque pièce est d\'un seul ton, et une grande pièce paraît plus froide qu\'une petite. La croix se pose à la déclaration, surtout dans les grandes pièces.</span>' : '');
+}
+const NOTE_CHALEUR = 'La carte thermique étale chaque épisode autour de sa croix : elle montre des zones, pas des points exacts ; et, à nombre égal, une petite pièce paraît plus chaude qu\'une grande, puisque la couleur est un nombre d\'épisodes par case.';
+
 function svgCarte(eps, opts) {
   const sombre = !opts.export && themeSombre(), cq = opts.calque || 'episodes', vc = valeursCalque(cq, eps), comptes = comptesParPiece(eps), max = vc.max;
+  const chaleur = cq === 'episodes' && !!opts.chaleur, champ = chaleur ? champThermique(eps) : null;   // carte thermique : les pièces gardent leur ton neutre, la densité se pose par-dessus
   const couleurs = {}, encre = {};
   pieces().forEach(p => {
     const n = vc.valeurs[p.id];
-    couleurs[p.id] = cq === 'fiches' ? couleurFiche(n, sombre) : couleurCarte(n, max, sombre, ECHELLES[cq]);
-    encre[p.id] = n > 0 ? encreSur(couleurs[p.id]) : (sombre ? '#E9E4D8' : '#6B6152');
+    couleurs[p.id] = chaleur ? (sombre ? ZERO_SOMBRE : ZERO_CLAIR) : cq === 'fiches' ? couleurFiche(n, sombre) : couleurCarte(n, max, sombre, ECHELLES[cq]);
+    encre[p.id] = chaleur ? (sombre ? '#F3EEE2' : '#2C2416') : n > 0 ? encreSur(couleurs[p.id]) : (sombre ? '#E9E4D8' : '#6B6152');
   });
   // Un plan par niveau, cadré sur ses propres pièces ; les couleurs, elles, se comparent d'un niveau à l'autre (même échelle de couleur).
   const m = 1.2, k = 30;
   const niv = niveaux().filter(n => piecesNiveau(n.id).length).map(n => { const b = boiteNiveau(n.id);
-    return {id: n.id, nom: n.nom, vb: [b.x - m, b.y - m, b.w + 2 * m, b.h + 2 * m], corps: dessinPlan(piecesNiveau(n.id), {k, couleurs, comptes: vc.valeurs, etiquettes: vc.etiquettes, sous: vc.sous, encre, filigrane: true, niveau: n.id})}; });
-  return {comptes, valeurs: vc.valeurs, max, calque: cq, vb: niv.length ? niv[0].vb : [0, 0, 24, 16], niveaux: niv, corps: niv.map(n => n.corps).join('')};
+    const plan = dessinPlan(piecesNiveau(n.id), {k, couleurs, comptes: vc.valeurs, etiquettes: vc.etiquettes, sous: vc.sous, encre, filigrane: true, niveau: n.id,
+      chaleur: champ ? svgChaleur(champ, n.id) : '', surcouche: champ && opts.croix ? svgCroixCarte(eps, n.id) : ''});
+    return {id: n.id, nom: n.nom, vb: [b.x - m, b.y - m, b.w + 2 * m, b.h + 2 * m], corps: chaleur ? '<g class="chaleur">' + plan + '</g>' : plan}; });
+  return {comptes, valeurs: vc.valeurs, max, calque: cq, chaleur: champ, vb: niv.length ? niv[0].vb : [0, 0, 24, 16], niveaux: niv, corps: niv.map(n => n.corps).join('')};
 }
 function rendreCalques() {
   const el = $('calques'); if (!el) return;
@@ -2840,7 +2943,8 @@ function rendreCalques() {
 }
 function choisirCalque(c) { calque = CALQUES.some(x => x[0] === c) ? c : 'episodes'; majSynthese(); }
 const NOM_CALQUE = {episodes: 'épisodes déclarés par pièce', vigilance: 'points de vigilance par pièce', appui: 'points d\'appui par pièce', fiches: 'fiches des pièces'};
-function legendeCalque(cq, max, sombre) {
+function legendeCalque(cq, max, sombre, champ) {
+  if (cq === 'episodes' && champ) return legendeChaleur(champ, sombre);
   const case_ = fond => '<i class="zero" style="background:' + fond + '"></i> ', zero = sombre ? ZERO_SOMBRE : ZERO_CLAIR;
   const degrade = e => 'linear-gradient(90deg,' + e.join(',') + ')', dehors = pieces().some(p => estExterieur(p.type)) ? '<span>Contour en pointillés : dehors.</span>' : '';
   if (cq === 'episodes') return '<span>' + case_(zero) + 'aucun épisode</span>' + (max ? '<span>1 <i class="degrade" style="background:' + degrade(ECHELLE) + '"></i> ' + max + ' épisode' + (max > 1 ? 's' : '') + '</span>' : '') + '<span>Le nombre écrit dans chaque pièce est l\'effectif.</span>' + dehors;
@@ -2849,7 +2953,8 @@ function legendeCalque(cq, max, sombre) {
   return '<span>' + case_(zero) + 'aucun ' + mot + '</span>' + (max ? '<span>1 <i class="degrade" style="background:' + degrade(ECHELLES[cq]) + '"></i> ' + max + ' ' + (max > 1 ? pluriel : mot) + '</span>' : '') +
     '<span>Le nombre écrit dans chaque pièce est le nombre de points différents (lus dans le plan ou déclarés dans la fiche). Sous le nom : le nombre d\'épisodes.</span>' + dehors;
 }
-function avertissementCalque(cq) {
+function avertissementCalque(cq, chaleur) { return avertissementDeBase(cq) + (cq === 'episodes' && chaleur ? ' ' + NOTE_CHALEUR : ''); }
+function avertissementDeBase(cq) {
   if (cq === 'episodes') return 'Cette carte montre où des épisodes ont été déclarés, pas pourquoi. Une pièce très fréquentée, ou occupée longtemps, recueille mécaniquement plus d\'épisodes : c\'est le taux de base, que la carte ne corrige pas. Une pièce froide peut aussi être une pièce où personne ne remplit, et un point chaud peut tenir à une seule personne. Les pistes se discutent en équipe.';
   return 'Cette carte ne montre pas des épisodes mais ce que le plan et les fiches disent de chaque pièce, d\'après le guide « Autisme & sensorialité » (CRA Alsace, 2017). Un point est une piste à discuter, pas un constat : un même stimulus n\'agit pas dans le même sens pour tous, et le nombre de points n\'est pas une mesure de gravité.' +
     (cq === 'fiches' ? ' Une pièce sans fiche n\'a simplement pas été renseignée : ses points ne sont alors connus que par le plan.' : '');
@@ -2906,14 +3011,14 @@ function majSynthese() {
   if (!$('vue-synthese').classList.contains('show')) return;
   const f = filtres(), eps = episodesFiltres(f), tous = D.b2.episodes;
   if (!pieces().length) { $('carte-cadre').innerHTML = '<div class="vide" style="margin:14px">Le plan est vide : dessinez le lieu dans le préambule.</div>'; $('legende').innerHTML = ''; $('chiffres').innerHTML = ''; $('repartitions').innerHTML = ''; $('calques').innerHTML = ''; $('croisements').innerHTML = ''; return; }
-  rendreCalques();
-  const c = svgCarte(eps, {calque}), sombre = themeSombre(), filtreActif = f.moment || f.type || f.debut || f.fin;
+  rendreCalques(); rendreModeCarte();
+  const chaleur = calque === 'episodes' && modeCarte === 'chaleur', c = svgCarte(eps, {calque, chaleur, croix: montrerCroix}), sombre = themeSombre(), filtreActif = f.moment || f.type || f.debut || f.fin;
   $('carte-cadre').innerHTML = c.niveaux.map(n => '<div class="carte-niveau">' + (c.niveaux.length > 1 ? '<div class="carte-niveau-nom">' + esc(n.nom) + '</div>' : '') +
-    '<svg viewBox="' + n.vb.join(' ') + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Carte : ' + esc(NOM_CALQUE[calque]) + (c.niveaux.length > 1 ? ' — ' + esc(n.nom) : '') + '">' + n.corps + '</svg></div>').join('');
-  $('carte-titre').textContent = calque === 'episodes' ? 'La carte des épisodes' + (filtreActif ? ' — filtrée : ' + nb(eps.length, 'épisode') + ' sur ' + tous.length : ' — ' + nb(eps.length, 'épisode'))
+    '<svg viewBox="' + n.vb.join(' ') + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Carte : ' + esc(chaleur ? 'carte thermique des épisodes' : NOM_CALQUE[calque]) + (c.niveaux.length > 1 ? ' — ' + esc(n.nom) : '') + '">' + n.corps + '</svg></div>').join('');
+  $('carte-titre').textContent = calque === 'episodes' ? (chaleur ? 'La carte thermique des épisodes' : 'La carte des épisodes') + (filtreActif ? ' — filtrée : ' + nb(eps.length, 'épisode') + ' sur ' + tous.length : ' — ' + nb(eps.length, 'épisode'))
     : 'La carte du plan : ' + NOM_CALQUE[calque] + (filtreActif ? ' (épisodes filtrés)' : '');
-  $('legende').innerHTML = legendeCalque(calque, c.max, sombre);
-  $('avertissement').textContent = avertissementCalque(calque);
+  $('legende').innerHTML = legendeCalque(calque, c.max, sombre, c.chaleur);
+  $('avertissement').textContent = avertissementCalque(calque, chaleur);
   // Les chiffres clés
   const dates = eps.map(e => e.date).sort(), provs = new Set(eps.map(e => e.provenance || (e.source ? e.source : 'le référent')));
   const calmes = D.b2.calmes.filter(x => (!f.debut || x.date >= f.debut) && (!f.fin || x.date <= f.fin));
@@ -2941,15 +3046,15 @@ function majSynthese() {
 }
 // Les styles des images exportées (toujours claires : elles partent dans un document). Le plan vierge et la carte les partagent.
 function styleExport() {
-  return '<style>.piece-trait{fill:none;stroke:#2C2416}.exterieur .piece-trait{stroke:#6E8F6A}.piece-fond{fill:#FFFDF8}.ouverture{stroke:#FFFDF8}.porte{stroke:#2C2416}.porte.vitree{stroke:#5A6D8B}.hublot{fill:#FFFDF8;stroke:#5A6D8B}.porte-arc{fill:none;stroke:#6B6152}.ouv-fenetre{stroke:#5A6D8B}.baie{stroke:#5A6D8B}.escalier-fond{fill:#F5E8C8;stroke:#82692D}.escalier-trait{stroke:#82692D}.escalier-nom{font-weight:700;fill:#82692D;text-anchor:middle;dominant-baseline:middle;paint-order:stroke;stroke:#F5E8C8;stroke-width:.14px}.meuble-fond{fill:#EDE7D9;stroke:#746B5B}.meuble.filigrane{opacity:.35}.piece-nom{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;font-weight:700;text-anchor:middle;dominant-baseline:middle}.piece-type{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;text-anchor:middle;dominant-baseline:middle}.piece-sous{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;text-anchor:middle;dominant-baseline:middle}text{font-family:Space Grotesk,Segoe UI,Arial,sans-serif}.zone-exterieur .piece-fond,.zone-preau .piece-fond{fill:#E3ECD6}.zone-route .piece-fond,.zone-parking .piece-fond{fill:#D9D6CF}.route-ligne,.parking-ligne{stroke:#FFFFFF;opacity:.85}.piece-sous{font-family:Space Grotesk,Segoe UI,Arial,sans-serif}.leg-texte{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;font-style:italic;font-weight:600;fill:#6B6152;text-anchor:middle;paint-order:stroke;stroke:#FFFDF8;stroke-linejoin:round}</style>';
+  return '<style>.piece-trait{fill:none;stroke:#2C2416}.exterieur .piece-trait{stroke:#6E8F6A}.piece-fond{fill:#FFFDF8}.ouverture{stroke:#FFFDF8}.porte{stroke:#2C2416}.porte.vitree{stroke:#5A6D8B}.hublot{fill:#FFFDF8;stroke:#5A6D8B}.porte-arc{fill:none;stroke:#6B6152}.ouv-fenetre{stroke:#5A6D8B}.baie{stroke:#5A6D8B}.escalier-fond{fill:#F5E8C8;stroke:#82692D}.escalier-trait{stroke:#82692D}.escalier-nom{font-weight:700;fill:#82692D;text-anchor:middle;dominant-baseline:middle;paint-order:stroke;stroke:#F5E8C8;stroke-width:.14px}.meuble-fond{fill:#EDE7D9;stroke:#746B5B}.meuble.filigrane{opacity:.35}.piece-nom{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;font-weight:700;text-anchor:middle;dominant-baseline:middle}.piece-type{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;text-anchor:middle;dominant-baseline:middle}.piece-sous{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;text-anchor:middle;dominant-baseline:middle}text{font-family:Space Grotesk,Segoe UI,Arial,sans-serif}.zone-exterieur .piece-fond,.zone-preau .piece-fond{fill:#E3ECD6}.zone-route .piece-fond,.zone-parking .piece-fond{fill:#D9D6CF}.route-ligne,.parking-ligne{stroke:#FFFFFF;opacity:.85}.piece-sous{font-family:Space Grotesk,Segoe UI,Arial,sans-serif}.chaleur .piece-nom,.chaleur .piece-type,.chaleur .piece-sous{paint-order:stroke;stroke:#FFFDF8;stroke-width:.22;stroke-linejoin:round}.croix-point{fill:#2D3B52;stroke:#FFFDF8;stroke-width:.06;opacity:.9}.leg-texte{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;font-style:italic;font-weight:600;fill:#6B6152;text-anchor:middle;paint-order:stroke;stroke:#FFFDF8;stroke-linejoin:round}</style>';
 }
 // L'image de la carte : toujours claire (elle part dans un document), avec son titre, sa légende et l'avertissement. Celle du calque choisi.
 function svgExport() {
-  const f = filtres(), eps = episodesFiltres(f), c = svgCarte(eps, {export: true, calque}), k = 30, cq = c.calque;
+  const f = filtres(), eps = episodesFiltres(f), c = svgCarte(eps, {export: true, calque, chaleur: calque === 'episodes' && modeCarte === 'chaleur', croix: montrerCroix}), k = 30, cq = c.calque;
   const multi = c.niveaux.length > 1, ent = multi ? 26 : 0, ecart = 8, haut = 64, bas = 86;
   const tailles = c.niveaux.map(n => [Math.round(n.vb[2] * k), Math.round(n.vb[3] * k)]);
   const W = Math.max(720, ...tailles.map(t => t[0])), H = tailles.reduce((a, t) => a + t[1] + ent, 0) + (c.niveaux.length - 1) * ecart;
-  const titre = (D.b1.lieu || 'Le lieu') + ' — ' + NOM_CALQUE[cq];
+  const titre = (D.b1.lieu || 'Le lieu') + ' — ' + (c.chaleur ? 'carte thermique des épisodes' : NOM_CALQUE[cq]);
   const fil = [f.moment && nomMoment(f.moment), f.type && (f.type === '_autre' ? 'Autre' : nomType(f.type)), (f.debut || f.fin) && ((f.debut ? 'du ' + dateFr(f.debut) : '') + (f.fin ? ' au ' + dateFr(f.fin) : ''))].filter(Boolean).join(' · ');
   const echelle = ECHELLES[cq] || ECHELLE;
   let deg = '<defs><linearGradient id="lg">' + echelle.map((col, i) => '<stop offset="' + (i / (echelle.length - 1)) + '" stop-color="' + col + '"/>').join('') + '</linearGradient></defs>';
@@ -2964,9 +3069,10 @@ function svgExport() {
   const legende = cq === 'fiches'
     ? gris(16, 22, ZERO_CLAIR) + '<text x="44" y="' + (bs + 25) + '" font-size="12" fill="#6B6152">○ pas de fiche</text>' + gris(150, 22, couleurFiche(1, false)) + '<text x="178" y="' + (bs + 25) + '" font-size="12" fill="#6B6152">◐ rapide</text>' + gris(260, 22, couleurFiche(2, false)) + '<text x="288" y="' + (bs + 25) + '" font-size="12" fill="#6B6152">● détaillée</text>'
     : gris(16, 22, ZERO_CLAIR) + '<text x="44" y="' + (bs + 25) + '" font-size="12" fill="#6B6152">aucun ' + (cq === 'episodes' ? 'épisode' : mot) + '</text>' +
-      (c.max ? '<text x="170" y="' + (bs + 25) + '" font-size="12" fill="#6B6152">1</text><rect x="182" y="' + (bs + 14) + '" width="160" height="14" rx="3" fill="url(#lg)"/><text x="350" y="' + (bs + 25) + '" font-size="12" fill="#6B6152">' + c.max + '</text>' : '');
+      (c.max ? (c.chaleur ? '<text x="170" y="' + (bs + 25) + '" font-size="12" fill="#6B6152">moins</text><rect x="208" y="' + (bs + 14) + '" width="160" height="14" rx="3" fill="url(#lg)"/><text x="376" y="' + (bs + 25) + '" font-size="12" fill="#6B6152">plus d\'épisodes (par case)</text>'
+      : '<text x="170" y="' + (bs + 25) + '" font-size="12" fill="#6B6152">1</text><rect x="182" y="' + (bs + 14) + '" width="160" height="14" rx="3" fill="url(#lg)"/><text x="350" y="' + (bs + 25) + '" font-size="12" fill="#6B6152">' + c.max + '</text>') : '');
   const note = cq === 'episodes'
-    ? ['La carte montre où des épisodes ont été déclarés, pas pourquoi. Une pièce occupée longtemps en recueille mécaniquement plus ;', 'une pièce froide peut être une pièce où personne ne remplit. Les pistes se discutent en équipe.']
+    ? ['La carte montre où des épisodes ont été déclarés, pas pourquoi. Une pièce occupée longtemps en recueille mécaniquement plus ;', (c.chaleur ? 'la couleur est une densité d\'épisodes : chaque épisode est étalé autour de sa croix (ou sur toute sa pièce) ; à nombre égal, une petite pièce paraît plus chaude.' : 'une pièce froide peut être une pièce où personne ne remplit. Les pistes se discutent en équipe.')]
     : ['Ce que le plan et les fiches disent de chaque pièce (guide « Autisme & sensorialité », CRA Alsace, 2017) : des pistes, pas des constats.', 'Le nombre de points n\'est pas une mesure de gravité. Sous le nom de chaque pièce : le nombre d\'épisodes déclarés.'];
   const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + (H + haut + bas) + '" viewBox="0 0 ' + W + ' ' + (H + haut + bas) + '">' + style + deg +
     '<rect width="100%" height="100%" fill="#F5F0E8"/>' +
@@ -3344,6 +3450,11 @@ document.addEventListener('click', ev => {
 
 /* ══ Les notes de version ══ */
 const NOTES_BASE = [
+  {version: 'BASE v2026.10.13-4', titre: 'La carte thermique', corps: '<p><b>Une vraie carte thermique</b> (Arthur et Émilie) : dans le calque des épisodes, « Carte thermique » colore la carte selon l\'endroit où se sont tenus les épisodes, d\'un point à l\'autre d\'une même pièce. « Par pièce » reste la carte d\'avant.</p><ul>' +
+    '<li><b>Comment elle se calcule</b>. Chaque épisode compte pour 1. Avec une croix, il est étalé autour d\'elle (un noyau d\'environ un dixième de la racine de la surface de la pièce, entre une et trois cases, borné à la pièce et sans entrer dans ses enclaves) ; sans croix, « toute la pièce », il est étalé sur toute sa pièce. La couleur est la densité, en épisodes par case, sur une seule échelle sable → brique pour tous les niveaux ; le zéro garde le ton neutre de la pièce. Le nombre d\'épisodes de chaque pièce reste écrit.</li>' +
+    '<li><b>À lire avec prudence</b>. À nombre égal d\'épisodes, une petite pièce paraît plus chaude qu\'une grande, puisque la couleur est un nombre par case ; la carte lisse les croix, elle montre des zones et non des points exacts ; sans aucune croix, chaque pièce est d\'un seul ton, et la légende le dit. La même mise en garde accompagne la carte et l\'image.</li>' +
+    '<li><b>Les croix</b> peuvent se montrer par-dessus (« Montrer les croix »). Les filtres de la synthèse (moment, comportement, dates) valent aussi pour la carte thermique ; l\'image exportée (PNG ou SVG) a sa légende et sa note. Le calque est un calcul : rien de plus n\'est enregistré dans les fichiers.</li>' +
+    '<li><b>Les trois lieux simulés</b> ont leurs croix dans les grandes pièces : la carte thermique y montre des points chauds (la porte d\'entrée, la file devant l\'office, le bout du couloir…).</li></ul>'},
   {version: 'BASE v2026.10.13-3', titre: 'Des légendes sur le plan, et le plan vierge à télécharger', corps: '<p><b>Se repérer sur le plan</b> (Arthur et Émilie) : on peut écrire sur le plan, et en sortir une image du plan seul.</p><ul>' +
     '<li><b>Les légendes</b>. « ＋ Légende » pose un texte libre (« Entrée principale », « Vers le centre-ville ») au centre de la vue. On le glisse où l\'on veut, même hors des pièces ; le panneau donne le texte, une flèche facultative (vers le haut, le bas, la gauche ou la droite) et trois tailles. Une légende appartient à un niveau, se défait avec « Annuler », se supprime avec « Supprimer » ou en vidant son texte. Elle se voit sur le plan du préambule, sur le plan où l\'on touche la pièce, sur la carte de la synthèse et sur les images exportées, et elle voyage dans les fichiers (socle et déclarant). La BASE ne s\'en sert pas pour lire le plan : elles servent à se repérer.</li>' +
     '<li><b>Le plan vierge</b>. « ⬇ Plan vierge… », dans le préambule, télécharge l\'image du plan seul — les pièces, les niveaux, les portes, les fenêtres, les meubles, les légendes, et une barre d\'échelle si l\'échelle est renseignée — sans épisode ni calque : en PNG (deux fois plus fin) ou en SVG, toujours sur fond clair, à imprimer, à annoter à la main ou à glisser dans un document.</li>' +
@@ -3787,6 +3898,69 @@ function verifierBASE() {
         const selVierge = document.querySelector('select[aria-label="Télécharger le plan vierge"]');
         ok('Le préambule propose « ＋ Légende » et « ⬇ Plan vierge… » (PNG ou SVG)', !!document.querySelector('button[onclick="ajouterLegende()"]') && !!selVierge && [...selVierge.options].map(o => o.value).join() === ',png,svg');
       } finally { telechargerImage = sauveTI; window.alert = sauveAlert; }
+    }
+    // 13. La carte thermique (passe 230)
+    {
+      const sauveMode = modeCarte, sauveCroix = montrerCroix, sauveCq = calque;
+      try {
+        const pie = (id, x, y, w, h, dans) => Object.assign({id, nom: id, type: 'sejour', niveau: 'n0', rects: [{x, y, w, h}]}, dans ? {dans} : {});
+        const ep = (id, piece, pos, moment) => Object.assign({id, piece, date: '2026-10-05', heure: '10:00', moment: moment || 'm1', types: [], autre: '', nbPros: 1}, pos ? {pos} : {});
+        const nouveau = (ps, episodes) => { D = dossierVide(); D.b1.plan = {niveaux: [{id: 'n0', nom: 'Rez-de-chaussée'}], pieces: ps, elements: []}; D.b1.fiches = {}; D.b1.echelle = null; D.b2.episodes = episodes; mode = 'socle'; return D; };
+        const masseDe = (ch, id) => Object.values(ch.niveaux).flat().filter(c => c.piece === id).reduce((a, c) => a + c.d * ch.pas * ch.pas, 0);
+        // La masse : chaque épisode compte pour 1, où qu'il soit
+        nouveau([pie('A', 0, 0, 10, 4), pie('B', 12, 0, 4, 4), pie('V', 20, 0, 4, 4)], [ep('1', 'A', {u: .1, v: .5}), ep('2', 'A', {u: 0, v: 0}), ep('3', 'A', null), ep('4', 'A', {u: 1, v: 1}), ep('5', 'B', null)]);
+        const ch1 = champThermique(D.b2.episodes);
+        ok('Chaque épisode compte pour 1, avec ou sans croix, croix dans un coin comprise : la somme des densités d\'une pièce fois la surface d\'une case est son nombre d\'épisodes ; une pièce sans épisode n\'a aucune case',
+          Math.abs(masseDe(ch1, 'A') - 4) < 1e-9 && Math.abs(masseDe(ch1, 'B') - 1) < 1e-9 && masseDe(ch1, 'V') === 0 && ch1.nbCroix === 3 && ch1.nbTotal === 5, masseDe(ch1, 'A') + ' / ' + masseDe(ch1, 'B'));
+        // Sans croix : la même densité partout (épisodes ÷ surface), donc un seul ton ; une pièce plus petite paraît plus chaude
+        nouveau([pie('A', 0, 0, 10, 4), pie('B', 12, 0, 2, 2)], [ep('1', 'A', null), ep('2', 'A', null), ep('3', 'B', null)]);
+        const ch2 = champThermique(D.b2.episodes), dA = ch2.niveaux.n0.filter(c => c.piece === 'A').map(c => c.d), dB = ch2.niveaux.n0.filter(c => c.piece === 'B').map(c => c.d);
+        ok('Sans croix, un épisode s\'étale sur toute sa pièce : même densité partout (2 épisodes sur 40 cases = 0,05) ; une petite pièce (1 épisode sur 4 cases = 0,25) paraît plus chaude qu\'une grande ; une seule ligne de rectangles par rangée de cases',
+          dA.every(d => Math.abs(d - .05) < 1e-9) && dB.every(d => Math.abs(d - .25) < 1e-9) && ch2.max === .25 && (svgChaleur(ch2, 'n0').match(/<rect /g) || []).length === 16 + 8, (svgChaleur(ch2, 'n0').match(/<rect /g) || []).length + ' rectangles');
+        // Avec une croix : la case la plus chaude est contre elle, la densité décroît avec la distance, et un épisode à l'écart d'une enclave ne coule pas dedans
+        nouveau([pie('A', 0, 0, 10, 4)], [ep('1', 'A', {u: .1, v: .5})]);
+        const ch3 = champThermique(D.b2.episodes), cs = ch3.niveaux.n0, chaud = cs.reduce((m, c) => c.d > m.d ? c : m), dist = c => Math.hypot((c.i + .5) * ch3.pas - 1, (c.j + .5) * ch3.pas - 2);
+        const proche = cs.filter(c => dist(c) < .4).reduce((a, c) => a + c.d, 0) / cs.filter(c => dist(c) < .4).length, loin = cs.filter(c => dist(c) > 6).reduce((a, c) => a + c.d, 0) / cs.filter(c => dist(c) > 6).length;
+        ok('Avec une croix à (1 ; 2) : la case la plus chaude en est tout près, et la densité est bien plus forte contre la croix que loin d\'elle (et rien au-delà de trois fois la largeur du noyau)', dist(chaud) < .4 && proche > 10 * loin && cs.filter(c => dist(c) > 3 * sigmaPiece(D.b1.plan.pieces[0]) + .5).every(c => c.d === 0), dist(chaud).toFixed(2) + ' ; ' + proche.toFixed(3) + ' contre ' + loin.toFixed(5));
+        nouveau([pie('G', 0, 0, 12, 8), pie('E', 4, 3, 3, 2, 'G')], [ep('1', 'G', {u: .4, v: .5}), ep('2', 'G', null), ep('3', 'E', null)]);
+        const ch4 = champThermique(D.b2.episodes), dansE = ch4.niveaux.n0.filter(c => c.piece === 'G' && (c.i + .5) * ch4.pas > 4 && (c.i + .5) * ch4.pas < 7 && (c.j + .5) * ch4.pas > 3 && (c.j + .5) * ch4.pas < 5);
+        ok('Une enclave n\'est pas dans la chaleur de sa grande pièce (aucune case dessous), et chacune garde sa masse : 2 épisodes pour la grande pièce, 1 pour l\'enclave', !dansE.length && Math.abs(masseDe(ch4, 'G') - 2) < 1e-9 && Math.abs(masseDe(ch4, 'E') - 1) < 1e-9);
+        ok('Toutes les cases sont dans une pièce : jamais de chaleur sur le dehors du plan ou sur le vide entre les pièces', (() => { nouveau([pie('A', 0, 0, 6, 4), pie('B', 10, 0, 6, 4)], [ep('1', 'A', {u: .5, v: .5}), ep('2', 'B', {u: .9, v: .1})]);
+          const c5 = champThermique(D.b2.episodes); return c5.niveaux.n0.every(c => { const x = (c.i + .5) * c5.pas, y = (c.j + .5) * c5.pas; return (x > 0 && x < 6 || x > 10 && x < 16) && y > 0 && y < 4; }); })());
+        // Les couleurs : zéro neutre, le plus chaud au plus foncé de l'échelle, une seule échelle pour tous les niveaux
+        ok('Les paliers et les couleurs : zéro ne colore rien (la pièce garde son ton neutre), le plus chaud est au dernier palier et à la couleur la plus foncée, la montée est régulière',
+          palierChaleur(0, 5) === 0 && palierChaleur(5, 5) === NIVEAUX_CHALEUR && palierChaleur(2, 5) < palierChaleur(3, 5) && couleurChaleur(1) === 'rgb(' + hexRgb(ECHELLE[5]).join(',') + ')' && couleurChaleur(0) === 'rgb(' + hexRgb(ECHELLE[0]).join(',') + ')' && palierChaleur(1, 0) === 0);
+        // La carte : les pièces restent neutres, la chaleur se pose par-dessus, les nombres restent écrits, les croix en option
+        const L13 = [0, 1, 2].map(i => construireLieu(i));
+        D = L13[1]; const e1 = D.b2.episodes, cartePiece = svgCarte(e1, {calque: 'episodes'}), carteChaleur = svgCarte(e1, {calque: 'episodes', chaleur: true}), carteCroix = svgCarte(e1, {calque: 'episodes', chaleur: true, croix: true}), carteVig = svgCarte(e1, {calque: 'vigilance', chaleur: true});
+        const nb13 = e1.filter(e => e.pos).length, nombres13 = c => [...c.corps.matchAll(/class="piece-nom"[^>]*>([^<]*)</g)].map(x => x[1]).join();
+        ok('Le foyer en carte thermique : un plan par niveau, la chaleur posée par-dessus des pièces neutres, les nombres d\'épisodes toujours écrits (les mêmes que « Par pièce »), les croix seulement si on les demande, et pas de chaleur sur les autres calques',
+          carteChaleur.niveaux.length === 2 && /class="chaleur"/.test(carteChaleur.corps) && /chaleur-cases/.test(carteChaleur.corps) && !/chaleur-cases/.test(cartePiece.corps) && nombres13(carteChaleur) === nombres13(cartePiece) && !/carte-croix/.test(carteChaleur.corps) &&
+          (carteCroix.corps.match(/class="croix-point"/g) || []).length === nb13 && nb13 > 0 && !/chaleur/.test(carteVig.corps) && !!carteChaleur.chaleur && !carteVig.chaleur && /style="fill:rgb/.test(cartePiece.corps) && !/style="fill:rgb/.test(carteChaleur.corps), nb13 + ' croix');
+        // Les filtres valent aussi pour la carte thermique
+        const mom = D.b1.moments[5].id, filtres13 = episodesFiltres({moment: mom}), chF = champThermique(filtres13), total13 = pieces().reduce((a, p) => a + masseDe(chF, p.id), 0);
+        ok('Les filtres de la synthèse valent aussi pour la carte thermique : la masse totale est le nombre d\'épisodes filtrés', Math.abs(total13 - filtres13.filter(e => pieceParId(e.piece)).length) < 1e-6 && filtres13.length < e1.length, total13.toFixed(3) + ' / ' + filtres13.length);
+        // Le plan sert à tous les niveaux : un seul maximum, un seul code de couleur
+        const chAll = champThermique(e1), tousLesMax = Object.values(chAll.niveaux).map(l => Math.max(...l.map(c => c.d)));
+        ok('Une seule échelle pour tous les niveaux : le maximum du lieu est atteint dans l\'un d\'eux, et aucune case ne le dépasse', tousLesMax.some(m => Math.abs(m - chAll.max) < 1e-12) && tousLesMax.every(m => m <= chAll.max + 1e-12));
+        // Les trois lieux simulés : la masse tient, la case la plus chaude d'une pièce à croix est près de l'une de ses croix
+        ok('Sur les trois lieux simulés : la masse de chaque pièce est son nombre d\'épisodes, et la case la plus chaude d\'une pièce où l\'on a posé des croix est à moins de trois cases de l\'une d\'elles', L13.every(l => { D = l; const ch = champThermique(l.b2.episodes); return pieces().every(p => {
+          const eps = l.b2.episodes.filter(e => e.piece === p.id), m = masseDe(ch, p.id); if (Math.abs(m - eps.length) > 1e-6) return false;
+          const croix = eps.filter(e => e.pos).map(e => pointDepuisPos(p, e.pos)); if (croix.length < 3) return true;
+          const cases = Object.values(ch.niveaux).flat().filter(c => c.piece === p.id), chaud = cases.reduce((a, c) => c.d > a.d ? c : a);
+          return croix.some(a => Math.hypot((chaud.i + .5) * ch.pas - a.x, (chaud.j + .5) * ch.pas - a.y) < 3); }); }));
+        // L'écran : le choix « Par pièce / Carte thermique », la légende, l'avertissement, l'image exportée
+        D = L13[0]; mode = 'socle'; calque = 'episodes'; modeCarte = 'piece'; montrerCroix = false; rendreModeCarte(); const htmlPiece = $('mode-carte').innerHTML;
+        choisirModeCarte('chaleur'); const apresChoix = modeCarte; rendreModeCarte(); const htmlChaleur = $('mode-carte').innerHTML; basculerCroixCarte(true); const croixOn = montrerCroix; choisirModeCarte('nimportequoi'); const retombe = modeCarte; calque = 'vigilance'; rendreModeCarte(); const htmlVig = $('mode-carte').innerHTML; calque = 'episodes';
+        ok('Sous les calques : « Par pièce » et « Carte thermique » (et « Montrer les croix » en carte thermique) pour le calque des épisodes seulement ; un mode inconnu ramène à « Par pièce »',
+          /Par pièce/.test(htmlPiece) && /Carte thermique/.test(htmlPiece) && !/Montrer les croix/.test(htmlPiece) && apresChoix === 'chaleur' && /Montrer les croix/.test(htmlChaleur) && croixOn === true && retombe === 'piece' && htmlVig === '');
+        const chD = champThermique(D.b2.episodes), leg = legendeChaleur(chD, false), legSans = legendeChaleur({max: .3, nbTotal: 5, nbCroix: 0}, false), legVide = legendeChaleur({max: 0, nbTotal: 0, nbCroix: 0}, false);
+        ok('La légende dit « moins » et « plus d\'épisodes (par case) » ; sans aucune croix, elle le dit et explique pourquoi une grande pièce paraît plus froide ; sans épisode, il n\'y a rien à graduer',
+          /moins/.test(leg) && /plus d'épisodes \(par case\)/.test(leg) && !/Aucun épisode n.a de croix/.test(leg) && /Aucun épisode n.a de croix/.test(legSans) && !/plus d'épisodes/.test(legVide) && /carte thermique/.test(avertissementCalque('episodes', true)) && !/carte thermique/.test(avertissementCalque('episodes', false)) && !/carte thermique/.test(avertissementCalque('vigilance', true)));
+        modeCarte = 'chaleur'; montrerCroix = true; const ex = svgExport(), xml = new DOMParser().parseFromString(ex.svg, 'image/svg+xml'); modeCarte = 'piece'; montrerCroix = false; const exPiece = svgExport();
+        ok('L\'image exportée en carte thermique : un SVG valide, titrée « carte thermique des épisodes », avec la chaleur, les croix, sa légende et sa note ; « Par pièce » donne l\'image d\'avant',
+          !xml.querySelector('parsererror') && /carte thermique des épisodes/.test(ex.svg) && /chaleur-cases/.test(ex.svg) && /croix-point/.test(ex.svg) && /plus d'épisodes \(par case\)/.test(ex.svg) && /\.chaleur \.piece-nom/.test(ex.svg) && !/chaleur-cases/.test(exPiece.svg) && /épisodes déclarés par pièce/.test(exPiece.svg));
+      } finally { modeCarte = sauveMode; montrerCroix = sauveCroix; calque = sauveCq; }
     }
   } catch (e) { ok('Les vérifications ont planté', false, e.message); }
   finally { calque = sauveCalque; persister = vraiPersister; toast = vraiToast; window.confirm = vraiConfirm; modeFiche = sauveModeFiche; pieceFiche = null; niveauCourant = sauveNiveau; D = sauveD; mode = sauveMode; selection = null; historique = []; refaites = []; }
