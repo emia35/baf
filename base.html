@@ -356,6 +356,9 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--slate);}
 .piece-type{font-family:var(--police-interface);fill:var(--ink-soft);text-anchor:middle;dominant-baseline:middle;pointer-events:none;}
 .poignee{fill:var(--sheet);stroke:var(--slate);}
 .morceau-actif{fill:none;stroke:var(--slate);stroke-dasharray:.3 .2;pointer-events:none;}
+.rotation circle{fill:var(--slate);stroke:var(--sheet);stroke-width:2;cursor:pointer;}
+.rotation:hover circle{fill:var(--slate-deep);}
+.rotation text{fill:var(--sheet);font:700 17px/1 var(--police-interface);text-anchor:middle;dominant-baseline:central;pointer-events:none;}
 
 /* ── Dehors, ouvertures, meubles (passe 224) — ajouts à la charte : le vert d'une cour, l'asphalte d'une route ── */
 :root{--ext-vert:#E3ECD6;--ext-trait:#6E8F6A;--asphalte:#D9D6CF;}
@@ -652,7 +655,7 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
         </div>
       </div>
       <p class="plan-aide" id="lecture-legende" hidden><b>Lecture</b> — traits verts épais : murs communs ; points verts : passages (portes) ; tirets bleus : ce qu'on voit par une fenêtre (en rouge vers une route ou un parking).</p>
-      <p class="plan-aide">Glisser une pièce pour la déplacer, ses poignées pour l'agrandir ; glisser le fond pour se déplacer ; molette ou ＋ / － pour zoomer. Double-clic (ou appui long) sur une pièce pour la nommer. « ＋ Légende » pose un texte libre (« Entrée principale », « Vers le centre-ville ») qui se glisse où l'on veut. Les portes, fenêtres et baies se posent sur un mur de la pièce choisie, les meubles et les escaliers dedans ; les zones de dehors (cour, route, parking) se choisissent dans « Type de zone ».</p>
+      <p class="plan-aide">Glisser une pièce pour la déplacer, ses poignées pour l'agrandir ; glisser le fond pour se déplacer ; molette ou ＋ / － pour zoomer. Double-clic (ou appui long au doigt) sur une pièce pour la nommer. La flèche ronde au-dessus de ce qui est choisi (ou la touche R) le tourne d'un quart de tour, avec ce que la pièce contient ; Suppr le supprime, Échap le lâche. « ＋ Légende » pose un texte libre (« Entrée principale », « Vers le centre-ville ») qui se glisse où l'on veut. Les portes, fenêtres et baies se posent sur un mur de la pièce choisie, les meubles et les escaliers dedans ; les zones de dehors (cour, route, parking) se choisissent dans « Type de zone ».</p>
       <div class="plan-panneau" id="plan-panneau"></div>
       <details class="repli" style="margin-top:12px"><summary>Échelle du plan (facultative)</summary>
         <p class="discret" id="echelle-texte"></p>
@@ -863,7 +866,7 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
    chose lue de la BAF, en lecture : le choix clair / sombre, pour s'ouvrir dans le même thème.
    ══════════════════════════════════════════════════════════════════════════════════════════════ */
 
-const VERSION_BASE = 'BASE v2026.10.13-5';
+const VERSION_BASE = 'BASE v2026.10.13-6';
 const CLE_SOCLE = 'base-dossier-v1', CLE_DECL = 'base-declarant-v1', CLE_MODE = 'base-mode', CLE_THEME = 'base-theme';
 const TYPES_ZONE = [['activite', "Salle d'activité"], ['sejour', 'Séjour, salon'], ['repas', 'Repas'], ['accueil', 'Accueil'], ['circulation', 'Circulation'],
   ['chambre', 'Chambre'], ['repos', 'Salle de repos'], ['calme', 'Salle de mise au calme'], ['snoezelen', 'Salle multisensorielle'], ['soins', 'Soins, infirmerie'],
@@ -933,6 +936,7 @@ function normaliserPlan(d) {
   if (!Array.isArray(pl.niveaux) || !pl.niveaux.length) pl.niveaux = [{id: 'n0', nom: 'Rez-de-chaussée'}];
   const defaut = (pl.niveaux.find(n => n.id === 'n0') || pl.niveaux[0]).id, ids = new Set(pl.niveaux.map(n => n.id));
   (pl.pieces || []).forEach(p => { if (!p.niveau || !ids.has(p.niveau)) p.niveau = defaut; });
+  (pl.pieces || []).forEach(p => { if (p.rot === undefined) return; const r = ((Math.trunc(+p.rot) || 0) % 4 + 4) % 4; if (r) p.rot = r; else delete p.rot; });   // les quarts de tour d'une pièce (passe 232)
   // Les pièces enclavées (passe 228) : « dans » désigne une autre pièce du même niveau ; un parent absent, soi-même ou une boucle sont écartés.
   const parId = {}; (pl.pieces || []).forEach(p => { parId[p.id] = p; });
   (pl.pieces || []).forEach(p => { if (p.dans === undefined) return; const q = parId[p.dans]; if (!q || q === p || q.niveau !== p.niveau) delete p.dans; });
@@ -1180,7 +1184,7 @@ function ajouterPiece() {
   const id = nouvelId('p');
   modifierPlan(() => pieces().push({id, nom: 'Pièce ' + (pieces().length + 1), type: 'activite', niveau: n, rects: [{x, y, w, h}]}));
   selection = {piece: id, morceau: 0}; rendrePlanEdition();
-  setTimeout(() => { const nom = $('pp-nom'); if (nom) { nom.focus(); nom.select(); } }, 30);
+  setTimeout(() => focaliserSiVisible($('pp-nom'), true), 30);
 }
 function ajouterMorceau() {
   const p = selection && pieceParId(selection.piece); if (!p) return;
@@ -1325,7 +1329,7 @@ function ajouterLegende() {
   const x = arrondi(vueEdition.x + c.w / vueEdition.k / 2, .5), y = arrondi(vueEdition.y + c.h / vueEdition.k / 2, .5);
   modifierPlan(() => legendes().push({id, niveau: n, x, y, texte: 'Légende', taille: 'm', fleche: ''}));
   selection = {legende: id}; rendrePlanEdition();
-  setTimeout(() => { const i = $('pl-texte'); if (i) { i.focus(); i.select(); } }, 30);
+  setTimeout(() => focaliserSiVisible($('pl-texte'), true), 30);
 }
 function modifierLegende(fn) { const l = selection && selection.legende && legendeParId(selection.legende); if (!l) return; modifierPlan(() => fn(l)); }
 function texteLegende(v) {
@@ -1444,6 +1448,60 @@ function ajouterEscalier(type) {
 function modifierElement(fn) { const e = selection && selection.elem && elemParId(selection.elem); if (!e) return; modifierPlan(() => fn(e)); }
 function supprimerElement() { const id = selection && selection.elem; if (!id) return; modifierPlan(() => { D.b1.plan.elements = elements().filter(e => e.id !== id); }); selection = null; rendrePlanEdition(); }
 function tournerMeuble() { modifierElement(e => { const cx = e.x + e.w / 2, cy = e.y + e.h / 2, w = e.w; e.w = e.h; e.h = w; e.x = arrondi(cx - e.w / 2, .25); e.y = arrondi(cy - e.h / 2, .25); }); }
+
+/* ══ Tourner, supprimer au clavier, ne pas faire sauter la page (passe 232, Arthur et Émilie) ══
+   · Une pièce, un meuble ou un escalier se tourne d'un quart de tour : flèche ronde posée au-dessus de ce qui est choisi, touche R, bouton « ↻ Tourner »
+     du panneau. Une pièce tourne avec ce qu'elle contient (meubles, portes, fenêtres, enclaves) ; elle retient combien de quarts de tour elle a faits
+     (piece.rot) : les croix des épisodes sont rangées dans son repère d'origine, elles restent donc là où on les a posées, quel que soit le sens du plan.
+   · Suppr (ou Retour arrière) supprime ce qui est choisi, R le tourne, Échap le lâche : sauf quand on écrit dans un champ, ou qu'une fenêtre est
+     ouverte. Un menu déroulant n'est pas un champ où l'on écrit : il ne garde plus le clavier pour lui.
+   · La fenêtre ne saute plus : un clic sur le plan lâche le champ resté actif (qui aurait gardé Suppr, et ramené la page vers lui à chaque dessin),
+     le panneau ne reprend plus le focus en faisant défiler la page, une pièce ou une légende ajoutée ne prend le focus que si son champ est déjà à
+     l'écran, et l'appui long (nommer) ne se fait qu'au doigt — à la souris, c'est le double-clic. */
+// Un quart de tour de plus, dans le sens des aiguilles d'une montre : la place (u, v) d'une croix dans la boîte d'une pièce tournée r fois.
+const tourner01 = (u, v, r) => { r = ((r % 4) + 4) % 4; return r === 1 ? [1 - v, u] : r === 2 ? [1 - u, 1 - v] : r === 3 ? [v, 1 - u] : [u, v]; };
+const rotDe = p => ((p && p.rot) | 0) & 3;
+const n6 = v => Math.round(v * 1e6) / 1e6;
+// Tourne d'un quart de tour la pièce choisie, avec ses enclaves et tout ce qui est posé dedans, autour du centre de l'ensemble.
+function pivoterPiece() {
+  const p = selection && selection.piece && pieceParId(selection.piece); if (!p) return;
+  const groupe = [p].concat(toutesEnclavesDe(p)), b = boite(groupe), cx = Math.round(b.x + b.w / 2), cy = Math.round(b.y + b.h / 2), els = new Set();
+  groupe.forEach(q => elementsDeLaPiece(q).forEach(e => els.add(e)));
+  modifierPlan(() => {
+    groupe.forEach(q => { q.rects = q.rects.map(r => ({x: cx + cy - r.y - r.h, y: cy - cx + r.x, w: r.h, h: r.w})); q.rot = (rotDe(q) + 1) & 3; if (!q.rot) delete q.rot; });
+    els.forEach(e => {
+      if (estRect(e)) { const x = n6(cx + cy - e.y - e.h), y = n6(cy - cx + e.x), w = e.h; e.x = x; e.y = y; e.h = e.w; e.w = w; }
+      else { const x = n6(cx + cy - e.y), y = n6(cy - cx + e.x); e.x = x; e.y = y; if (e.o === 'h') { e.o = 'v'; e.cote = -(e.cote || 1); } else { e.o = 'h'; e.cote = e.cote || 1; } }   // le mur tourne, le sens du battant avec lui
+    });
+  });
+}
+function tournerSelection() {
+  if (!selection) return;
+  if (selection.elem) { const e = elemParId(selection.elem); if (e && estRect(e)) tournerMeuble(); else if (e) toast('Une porte, une fenêtre ou une baie prend la direction du mur où elle est posée : on la fait glisser.'); }
+  else if (selection.piece) pivoterPiece();
+}
+// La flèche ronde : au-dessus du milieu du haut de ce qui est choisi (au-dessous si le haut touche le bord du cadre). Un appui dessus fait un quart de tour.
+function boutonRotation(m, k) {
+  const x = m.x + m.w / 2; let y = m.y - 30 / k;
+  if ((y - vueEdition.y) * k < 18) y = m.y + m.h + 30 / k;
+  return '<g class="rotation" transform="translate(' + x + ' ' + y + ') scale(' + 1 / k + ')"><title>Tourner d\'un quart de tour (touche R)</title><circle data-rotation="1" r="13"/><text>↻</text></g>';
+}
+// Un champ où l'on écrit : une zone de texte, ou une ligne de texte (pas une case, un bouton, un curseur ni un menu).
+const saisieEnCours = a => !!a && (a.tagName === 'TEXTAREA' || !!a.isContentEditable || (a.tagName === 'INPUT' && !/^(checkbox|radio|button|submit|reset|range|color|file|image)$/.test(a.type || 'text')));
+const fenetreOuverte = () => !!document.querySelector('.voile[id^="fen-"]:not([hidden])');
+// Lâche le champ resté actif : le menu choisi dans la barre d'outils, le nom d'une pièce en cours de frappe (sa valeur est enregistrée au passage).
+function lacherChamp() { const a = document.activeElement; if (a && a !== document.body && /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName) && a.blur) a.blur(); }
+// Donner le focus à un champ sans faire défiler la page, et seulement s'il est déjà à l'écran (sinon on tape dans le vide).
+function focaliserSiVisible(el, tout) {
+  if (!el) return;
+  const r = el.getBoundingClientRect();
+  if (r.top < 0 || r.bottom > (window.innerHeight || document.documentElement.clientHeight)) return;
+  el.focus({preventScroll: true}); if (tout && el.select) el.select();
+}
+function supprimerSelection() {
+  if (!selection) return;
+  if (selection.legende) supprimerLegende(); else if (selection.elem) supprimerElement(); else supprimerPiece();
+}
 function tailleElement(champ, delta) {
   modifierElement(e => {
     if (estRect(e)) e[champ] = Math.max(.5, Math.min(12, +(e[champ] + delta).toFixed(2)));
@@ -1619,8 +1677,9 @@ function rendrePlanEdition() {
     const m = p.rects[selection.morceau];
     if (p.rects.length > 1) h += '<rect class="morceau-actif" x="' + m.x + '" y="' + m.y + '" width="' + m.w + '" height="' + m.h + '" stroke-width="' + (1.5 / k) + '"/>';
     h += poignees(m);
+    if (!geste) h += boutonRotation(boite([p]), k);
   }
-  if (e && estRect(e)) h += poignees(e);
+  if (e && estRect(e)) { h += poignees(e); if (!geste) h += boutonRotation(e, k); }
   svg.innerHTML = h;
   rendrePanneauPiece();
   majBoutonsHistorique();
@@ -1636,13 +1695,13 @@ function rendrePanneauPiece() {
   const e = selection && selection.elem && elemParId(selection.elem);
   const fini = '<button type="button" class="bt-lien" style="margin-left:auto" onclick="selection=null;rendrePlanEdition()">Fini</button>';
   const lg = selection && selection.legende && legendeParId(selection.legende);
-  if (lg) { el.innerHTML = panneauLegende(lg, fini); if (actif && /^pl-/.test(actif)) { const n = $(actif); if (n) n.focus(); } return; }
+  if (lg) { el.innerHTML = panneauLegende(lg, fini); if (actif && /^pl-/.test(actif)) { const n = $(actif); if (n) n.focus({preventScroll: true}); } return; }
   if (e) {
     if (estRect(e)) {
       const taille = '<div class="champ">' + ETIQ('Sa taille') + '<div class="boutons">' +
         '<button type="button" class="bt petit" onclick="tailleElement(\'w\',-.5)" aria-label="Moins large">◂ ▸ −</button><button type="button" class="bt petit" onclick="tailleElement(\'w\',.5)" aria-label="Plus large">◂ ▸ ＋</button>' +
         '<button type="button" class="bt petit" onclick="tailleElement(\'h\',-.5)" aria-label="Moins profond">▴ ▾ −</button><button type="button" class="bt petit" onclick="tailleElement(\'h\',.5)" aria-label="Plus profond">▴ ▾ ＋</button></div></div>';
-      const fin = '<div class="boutons"><button type="button" class="bt petit" onclick="tournerMeuble()">↻ Tourner</button><button type="button" class="bt petit danger" onclick="supprimerElement()">Supprimer</button>' + fini + '</div>';
+      const fin = '<div class="boutons"><button type="button" class="bt petit" onclick="tournerMeuble()" title="Un quart de tour (touche R)">↻ Tourner</button><button type="button" class="bt petit danger" onclick="supprimerElement()">Supprimer</button>' + fini + '</div>';
       if (e.cat === 'escalier') {
         const cur = niveauActif(), autres = niveaux().filter(n => n.id !== cur), vers = (e.niveaux || []).filter(id => id !== cur)[0] || '';
         el.innerHTML = '<div class="grille2"><label class="champ"><span>Ce qui relie les niveaux</span>' + selectHtml('pe-type', e.type || 'escalier', [['escalier', 'Escalier'], ['ascenseur', 'Ascenseur']], 'typerEscalier(this.value)') + '</label>' +
@@ -1662,7 +1721,7 @@ function rendrePanneauPiece() {
         '<div class="boutons"><button type="button" class="bt petit" onclick="tailleElement(\'long\',-.5)">Plus étroite</button><button type="button" class="bt petit" onclick="tailleElement(\'long\',.5)">Plus large</button>' +
         '<button type="button" class="bt petit danger" onclick="supprimerElement()">Supprimer</button>' + fini + '</div>';
     }
-    if (actif && /^p[a-z]-/.test(actif)) { const n = $(actif); if (n) n.focus(); }
+    if (actif && /^p[a-z]-/.test(actif)) { const n = $(actif); if (n) n.focus({preventScroll: true}); }
     return;
   }
   const p = selection && selection.piece && pieceParId(selection.piece);
@@ -1674,7 +1733,7 @@ function rendrePanneauPiece() {
     if (niveaux().length > 1) h += '<div class="grille2"><label class="champ"><span>Nom du niveau</span><input type="text" id="pn-nom" value="' + esc(nomNiveau(niveauActif())) + '" onchange="renommerNiveau(this.value)"></label>' +
       '<div class="champ">' + ETIQ('&nbsp;') + '<button type="button" class="bt petit danger" onclick="retirerNiveau()">Retirer ce niveau</button></div></div>';
     el.innerHTML = h;
-    if (actif === 'pn-nom') { const n = $(actif); if (n) n.focus(); }
+    if (actif === 'pn-nom') { const n = $(actif); if (n) n.focus({preventScroll: true}); }
     return;
   }
   el.innerHTML = '<div class="grille2"><label class="champ"><span>Nom de la pièce</span><input type="text" id="pp-nom" value="' + esc(p.nom) + '" onchange="renommerPiece(this.value)"></label>' +
@@ -1683,9 +1742,10 @@ function rendrePanneauPiece() {
     '<div class="boutons"><button type="button" class="bt petit" onclick="ajouterMorceau()" title="Pour une pièce en L ou en T : un rectangle collé à celui-ci">＋ Un morceau à cette pièce</button>' +
     (p.rects.length > 1 ? '<button type="button" class="bt petit" onclick="retirerMorceau()">Retirer ce morceau</button>' : '') +
     (ficheOuverte(p) ? '<button type="button" class="bt petit" onclick="ouvrirFiche()">📋 Fiche de la pièce</button>' + chipFiche(completudeFiche(p)) + ' ' : '') +
+    '<button type="button" class="bt petit" onclick="pivoterPiece()" title="Un quart de tour (touche R), avec ce que la pièce contient : meubles, portes, fenêtres, enclaves">↻ Tourner</button>' +
     '<button type="button" class="bt petit" onclick="dupliquerPiece()">⧉ Dupliquer</button>' +
     '<button type="button" class="bt petit danger" onclick="supprimerPiece()">Supprimer</button>' + fini + '</div>';
-  if (actif && /^pp-/.test(actif)) { const n = $(actif); if (n) n.focus(); }
+  if (actif && /^pp-/.test(actif)) { const n = $(actif); if (n) n.focus({preventScroll: true}); }
 }
 // Les onglets des niveaux (dès qu'il y en a deux), et le niveau d'à côté qui apparaît en filigrane.
 function rendreNiveaux() {
@@ -1703,8 +1763,10 @@ function brancherEditeur() {
   const svg = $('plan-edition');
   svg.addEventListener('pointerdown', ev => {
     if (ev.button > 0) return;
+    lacherChamp();   // un champ resté actif garderait Suppr, et ramènerait la page vers lui à chaque dessin
     const pt = pointDuMonde(ev), cible = ev.target, at = n => cible.getAttribute && cible.getAttribute(n);
     const poignee = at('data-poignee'), idE = at('data-elem'), idP = at('data-piece'), idLeg = at('data-legende');
+    if (at('data-rotation')) { geste = null; tournerSelection(); ev.preventDefault(); return; }   // la flèche ronde : un quart de tour
     svg.setPointerCapture(ev.pointerId);
     if (poignee && selection && selection.elem) {
       const e = elemParId(selection.elem);
@@ -1725,7 +1787,7 @@ function brancherEditeur() {
       selection = {piece: idP, morceau: +at('data-morceau') || 0};
       const p = pieceParId(idP);
       geste = {type: 'deplacer', depart: pt, rects0: clone(p.rects), elems0: clone(elementsDeLaPiece(p)), enfants0: enfantsAvant(p), avant: etatPlan(), bouge: false};
-      geste.long = setTimeout(() => { if (geste && !geste.bouge) { geste = null; nommerSelection(); } }, 600);
+      if (ev.pointerType === 'touch' || ev.pointerType === 'pen') geste.long = setTimeout(() => { if (geste && !geste.bouge) { geste = null; nommerSelection(); } }, 600);   // appui long au doigt ; à la souris, c'est le double-clic
       rendrePlanEdition();
     } else {
       if (selection) { selection = null; rendrePlanEdition(); }
@@ -1772,11 +1834,14 @@ function brancherEditeur() {
   });
   svg.addEventListener('wheel', ev => { ev.preventDefault(); const pt = pointDuMonde(ev); zoomer(ev.deltaY < 0 ? 1.12 : 1 / 1.12, pt.px, pt.py); }, {passive: false});
   document.addEventListener('keydown', ev => {
-    if (!$('vue-preambule').classList.contains('show')) return;
-    const champ = /^(INPUT|SELECT|TEXTAREA)$/.test((document.activeElement || {}).tagName || '');
-    if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'z' && !champ) { ev.preventDefault(); if (ev.shiftKey) refaire(); else annuler(); }
-    else if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'y' && !champ) { ev.preventDefault(); refaire(); }
-    else if ((ev.key === 'Delete' || ev.key === 'Backspace') && selection && !champ) { ev.preventDefault(); if (selection.legende) supprimerLegende(); else if (selection.elem) supprimerElement(); else supprimerPiece(); }
+    if (!$('vue-preambule').classList.contains('show') || fenetreOuverte() || saisieEnCours(document.activeElement)) return;
+    const liste = (document.activeElement || {}).tagName === 'SELECT', cmd = ev.ctrlKey || ev.metaKey, touche = String(ev.key || '').toLowerCase();
+    if (cmd && touche === 'z') { ev.preventDefault(); if (ev.shiftKey) refaire(); else annuler(); }
+    else if (cmd && touche === 'y') { ev.preventDefault(); refaire(); }
+    else if (!selection || cmd || ev.altKey) return;
+    else if (ev.key === 'Delete' || ev.key === 'Backspace') { ev.preventDefault(); supprimerSelection(); }
+    else if (ev.key === 'Escape') { selection = null; rendrePlanEdition(); }
+    else if (touche === 'r' && !liste) { ev.preventDefault(); tournerSelection(); }   // R dans un menu déroulant choisirait « R… » : on la laisse au menu
   });
   window.addEventListener('resize', () => { rendrePlanEdition(); });
 }
@@ -2668,7 +2733,7 @@ function proposerMoment() {
    Une pièce peut être très grande (une cour, un réfectoire, un couloir de vingt cases) : « dans la pièce » ne dit alors pas grand-chose.
    Un épisode se situe donc dans toute la pièce, ou À UN ENDROIT PRÉCIS (une croix posée sur le plan). Le champ `pos` d'un épisode :
    {u, v}, de 0 à 1, dans le rectangle qui entoure la pièce (0, 0 : en haut à gauche) — il suit la pièce quand on la déplace ou qu'on
-   la redessine. Pas de `pos` : toute la pièce (ou on ne sait pas). La croix est conseillée dans les grandes pièces, jamais imposée. */
+   la redessine, et quand on la tourne (piece.rot : le nombre de quarts de tour, la croix reste rangée dans le repère d'origine). Pas de `pos` : toute la pièce (ou on ne sait pas). La croix est conseillée dans les grandes pièces, jamais imposée. */
 const r3 = v => Math.round(v * 1000) / 1000;
 // Le point de la pièce (dans l'un de ses morceaux, hors de ses enclaves) le plus proche de (x, y).
 function projeterPoint(rects, obstacles, x, y) {
@@ -2687,9 +2752,10 @@ function projeterPoint(rects, obstacles, x, y) {
 const obstaclesDe = p => enclavesDe(p).flatMap(c => c.rects);
 function posDepuisPoint(p, pt) {
   const a = projeterPoint(p.rects, obstaclesDe(p), pt.x, pt.y), b = boite([p]);
-  return {u: r3(Math.min(1, Math.max(0, (a.x - b.x) / Math.max(b.w, EPS)))), v: r3(Math.min(1, Math.max(0, (a.y - b.y) / Math.max(b.h, EPS))))};
+  const uv = tourner01(Math.min(1, Math.max(0, (a.x - b.x) / Math.max(b.w, EPS))), Math.min(1, Math.max(0, (a.y - b.y) / Math.max(b.h, EPS))), 4 - rotDe(p));   // retour au repère d'origine de la pièce (passe 232)
+  return {u: r3(uv[0]), v: r3(uv[1])};
 }
-function pointDepuisPos(p, pos) { const b = boite([p]); return projeterPoint(p.rects, obstaclesDe(p), b.x + pos.u * b.w, b.y + pos.v * b.h); }
+function pointDepuisPos(p, pos) { const b = boite([p]), uv = tourner01(pos.u, pos.v, rotDe(p)); return projeterPoint(p.rects, obstaclesDe(p), b.x + uv[0] * b.w, b.y + uv[1] * b.h); }
 const posValide = pos => !!pos && typeof pos === 'object' && Number.isFinite(pos.u) && Number.isFinite(pos.v) && pos.u >= 0 && pos.u <= 1 && pos.v >= 0 && pos.v <= 1;
 // Dans quelles pièces la croix est-elle conseillée d'emblée ? Les très grandes : un dehors de 40 cases ou plus, un couloir de 12 cases ou plus, une pièce qui
 // en contient d'autres, une pièce « très grande » parmi celles du lieu (au moins deux fois la médiane), ou 80 cases et plus. Ailleurs, on peut la poser quand même.
@@ -3715,6 +3781,10 @@ document.addEventListener('click', ev => {
 
 /* ══ Les notes de version ══ */
 const NOTES_BASE = [
+  {version: 'BASE v2026.10.13-6', titre: 'Tourner, supprimer au clavier, une page qui ne saute plus', corps: '<p><b>Le plan se dessine plus facilement</b> (Arthur et Émilie) : trois petits manques relevés en dessinant un vrai plan.</p><ul>' +
+    '<li><b>Tourner</b>. Une pièce, un meuble ou un escalier se tourne d\'un quart de tour : par la flèche ronde posée au-dessus de ce qui est choisi, par la touche R, ou par le bouton « ↻ Tourner » du panneau. Une pièce tourne avec ce qu\'elle contient (ses meubles, ses portes, ses fenêtres, ses enclaves) ; les croix déjà posées dans ses épisodes la suivent, elles restent au même endroit de la pièce quel que soit son sens, et le déclarant qui reçoit le plan tourné pose les siennes au même endroit. Une porte, une fenêtre ou une baie ne tourne pas : elle prend la direction du mur où elle est posée.</li>' +
+    '<li><b>Supprimer au clavier</b>. Suppr (ou Retour arrière) supprime la pièce, le meuble, l\'escalier ou la légende choisis ; Échap les lâche. Cela marche aussi quand un menu de la barre d\'outils a gardé le clavier (c\'était le cas juste après avoir ajouté un escalier) ; cela ne marche pas pendant qu\'on écrit dans un champ ou qu\'une fenêtre est ouverte. Une pièce qui a déjà un épisode ne se supprime toujours pas.</li>' +
+    '<li><b>La page ne saute plus</b>. Saisir la poignée d\'une pièce, ou ajouter une pièce, ne fait plus descendre la fenêtre vers le panneau : toucher le plan lâche le champ resté actif (le nom en cours de frappe est enregistré au passage), le panneau ne reprend plus le focus en faisant défiler la page, une pièce ou une légende ajoutée ne prend le focus que si son champ est déjà à l\'écran, et l\'appui long pour nommer ne se fait plus qu\'au doigt — à la souris, c\'est le double-clic.</li></ul>'},
   {version: 'BASE v2026.10.13-5', titre: 'Regarder autrement : autour de l\'épisode, un pronostic, des questions pour l\'équipe', corps: '<p><b>Aider celui qui remplit à regarder autrement</b> (Arthur et Émilie) : la BASE ne mesure pas seulement où et quand ; elle invite à regarder ce qui se passe autour de la personne.</p><ul>' +
     '<li><b>Autour de l\'épisode</b>. Dans le formulaire d\'un épisode, une partie repliée et facultative (vingt secondes) : ce qu\'on a remarqué autour — les sons, la lumière et l\'air, les autres, ce qui se passait, l\'espace, la personne —, avec « rien de particulier remarqué » et « je n\'ai pas pu regarder » comme réponses à part entière. Des observations, jamais des causes : une case non cochée ne veut pas dire « non ». La synthèse en donne la part parmi les épisodes qui l\'ont remplie, avec un rappel : ce qu\'on remarque souvent l\'est peut-être tout le temps au même endroit, et la question est ce qui change entre les moments calmes et les épisodes.</li>' +
     '<li><b>Mon pronostic</b>. Le déclarant peut, avant son premier épisode, dire dans quelles pièces il pense qu\'il y en aura le plus (trois au plus) ; le pronostic se garde, ne se modifie plus après le premier épisode, voyage dans son fichier et arrive chez le référent avec sa provenance. Le référent donne le sien en ouvrant la synthèse, avant de voir la carte (« Voir directement, sans pronostic » l\'écarte pour de bon ; rien de cela ne s\'ouvre sur les lieux simulés). La synthèse compare : les pièces citées, celles que les épisodes confirment, celles que personne n\'avait citées, celles qui sont citées mais calmes. Un écart se discute, il ne se juge pas.</li>' +
@@ -4346,6 +4416,115 @@ function verifierBASE() {
         ok('Côté déclarant : on voit le pronostic, le plan, les croix, « Autour de l\'épisode » — jamais ce que la BASE lit dans le plan (aucun point de vigilance ni d\'appui, aucune question)', /Mon pronostic/.test(visible) && /Autour de l.épisode/.test(visible) && !/vigilance|point d.appui|Questions pour|Que se passe-t-il/.test(visible));
         mode = 'socle';
       } finally { if (sauveClip) Object.defineProperty(navigator, 'clipboard', sauveClip); else delete navigator.clipboard; }
+    }
+    // 15. Tourner, supprimer au clavier, ne pas faire sauter la page (passe 232)
+    {
+      const vp = $('vue-preambule'), avait = vp.classList.contains('show'), vraiToast15 = toast, vue15 = Object.assign({}, vueEdition), temp = [], messages = [];
+      try {
+        vp.classList.add('show'); toast = m => { messages.push(m); };
+        const pie = (id, x, y, w, h, extra) => Object.assign({id, nom: id, type: 'sejour', niveau: 'n0', rects: [{x, y, w, h}]}, extra || {});
+        const nouveau = (ps, els) => { D = dossierVide(); D.b1.plan = {niveaux: [{id: 'n0', nom: 'Rez-de-chaussée'}, {id: 'n1', nom: 'Étage 1'}], pieces: ps, elements: els || [], legendes: []}; mode = 'socle'; historique = []; refaites = []; selection = null; niveauCourant = 'n0'; return D; };
+        const proche = (a, b) => Math.abs(a - b) < 1e-6, rectEgal = (r, x, y, w, h) => !!r && proche(r.x, x) && proche(r.y, y) && proche(r.w, w) && proche(r.h, h);
+        const surUnMur = e => murs().some(m => m.o === e.o && proche(m.c, e.o === 'h' ? e.y : e.x) && (e.o === 'h' ? e.x : e.y) - e.long / 2 >= m.a - 1e-6 && (e.o === 'h' ? e.x : e.y) + e.long / 2 <= m.b + 1e-6 && e.cote === m.int * (e.retourne ? -1 : 1));
+        // 1. Les quarts de tour de la boîte d'une pièce
+        const t0 = [.9, .2], t1 = tourner01(t0[0], t0[1], 1), t2 = tourner01(t0[0], t0[1], 2), t3 = tourner01(t0[0], t0[1], 3), t5 = tourner01(t0[0], t0[1], 5), tm = tourner01(t0[0], t0[1], -1);
+        let t4 = t0; for (let i = 0; i < 4; i++) t4 = tourner01(t4[0], t4[1], 1);
+        ok('Un quart de tour de la boîte d\'une pièce envoie (u, v) en (1 − v, u) ; quatre ramènent au départ ; 5 quarts valent 1, −1 vaut 3',
+          proche(t1[0], .8) && proche(t1[1], .9) && proche(t2[0], .1) && proche(t2[1], .8) && proche(t3[0], .2) && proche(t3[1], .1) && proche(t4[0], .9) && proche(t4[1], .2) && proche(t5[0], .8) && proche(tm[0], .2) && rotDe({rot: 5}) === 1 && rotDe({rot: -1}) === 3 && rotDe({}) === 0 && rotDe(null) === 0);
+        // 2. Tourner une pièce emporte ses enclaves et ce qui est posé dedans ; la porte reste sur un mur, son battant du bon côté
+        const lesEls = () => [
+          {id: 'd1', cat: 'porte', niveau: 'n0', long: 1, retourne: false, x: 5, y: 7, o: 'h', cote: -1},
+          {id: 'w1', cat: 'fenetre', niveau: 'n0', long: 1.5, retourne: false, x: 2, y: 4.5, o: 'v', cote: 1},
+          {id: 't1', cat: 'meuble', type: 'table', niveau: 'n0', x: 3, y: 4, w: 2, h: 1.2},
+          {id: 'c1', cat: 'meuble', type: 'chaise', niveau: 'n0', x: 6.5, y: 3.5, w: .7, h: .7}];
+        nouveau([pie('S', 2, 3, 6, 4), pie('E', 6, 3, 2, 2, {dans: 'S'}), pie('T', 9, 3, 4, 4)], lesEls());
+        const depart15 = etatPlan(); selection = {piece: 'S', morceau: 0}; pivoterPiece();
+        const S = pieceParId('S'), E = pieceParId('E'), T = pieceParId('T'), g = id => elemParId(id);
+        ok('Tourner une pièce d\'un quart de tour : elle pivote autour du centre de l\'ensemble (6 × 4 devient 4 × 6), son enclave avec elle, une autre pièce ne bouge pas ; chacune retient son quart de tour',
+          rectEgal(S.rects[0], 3, 2, 4, 6) && rectEgal(E.rects[0], 5, 6, 2, 2) && rectEgal(T.rects[0], 9, 3, 4, 4) && S.rot === 1 && E.rot === 1 && T.rot === undefined && E.dans === 'S', JSON.stringify([S.rects, E.rects, S.rot]));
+        ok('Les portes, fenêtres et meubles de la pièce tournent avec elle : la porte (en bas) passe sur le mur de gauche, la fenêtre (à gauche) sur celui du haut, chacune reste sur un mur avec son battant du bon côté ; la table reste dans la pièce, la chaise dans l\'enclave',
+          g('d1').o === 'v' && proche(g('d1').x, 3) && proche(g('d1').y, 5) && surUnMur(g('d1')) && g('w1').o === 'h' && proche(g('w1').x, 5.5) && proche(g('w1').y, 2) && surUnMur(g('w1')) &&
+          rectEgal(g('t1'), 4.8, 3, 1.2, 2) && rectEgal(g('c1'), 5.8, 6.5, .7, .7) && elementsDeLaPiece(S).some(e => e.id === 't1') && elementsDeLaPiece(E).some(e => e.id === 'c1') && !elementsDeLaPiece(S).some(e => e.id === 'c1'), JSON.stringify(lesEls().map(e => g(e.id))));
+        const Lr = lectureDuPlan(D.b1), pasHistorique = historique.length, apresUn = etatPlan();
+        annuler(); const defait = etatPlan() === depart15; refaire();
+        ok('Après la rotation, l\'enclave reste dans sa pièce (aucune alerte « dépasse de sa pièce ») ; un seul pas d\'historique, que « Annuler » défait exactement et « Rétablir » refait',
+          Lr.regles.filter(r => r.id === 'enclave-hors').length === 0 && pasHistorique === 1 && defait && etatPlan() === apresUn);
+        pivoterPiece(); pivoterPiece(); pivoterPiece();
+        ok('Quatre quarts de tour ramènent exactement le plan de départ, sans trace de rotation (même les mesures décimales)', etatPlan() === depart15 && pieceParId('S').rot === undefined && pieceParId('E').rot === undefined, etatPlan().slice(0, 120));
+        // 3. Les croix suivent la pièce tournée
+        nouveau([pie('S', 2, 3, 6, 4), pie('E', 6, 3, 2, 2, {dans: 'S'})], []);
+        const S2 = pieceParId('S'), posA = {u: .1, v: .8}, avantP = pointDepuisPos(S2, posA);
+        selection = {piece: 'S', morceau: 0}; pivoterPiece();
+        const apresP = pointDepuisPos(S2, posA), retour = posDepuisPoint(S2, apresP);
+        pivoterPiece(); pivoterPiece(); pivoterPiece();
+        const apres4P = pointDepuisPos(S2, posA);
+        ok('Une croix posée dans une pièce suit la pièce quand on la tourne : le point tourne avec elle (même coin), sa position enregistrée ne change pas ; poser une croix sur la pièce tournée la range dans le repère d\'origine ; quatre quarts de tour la ramènent',
+          proche(avantP.x, 2.6) && proche(avantP.y, 6.2) && proche(apresP.x, 10 - avantP.y) && proche(apresP.y, avantP.x) && proche(apresP.x, 3.8) && proche(apresP.y, 2.6) && retour.u === .1 && retour.v === .8 && proche(apres4P.x, 2.6) && proche(apres4P.y, 6.2) && posA.u === .1 && posA.v === .8);
+        // 4. Un dossier d'avant ou abîmé : les quarts de tour sont remis d'équerre
+        const brut = {b1: {plan: {niveaux: [{id: 'n0', nom: 'RdC'}], pieces: [pie('a', 0, 0, 2, 2, {rot: 5}), pie('b', 3, 0, 2, 2, {rot: -1}), pie('c', 6, 0, 2, 2, {rot: 'x'}), pie('d', 9, 0, 2, 2, {rot: 4}), pie('e', 12, 0, 2, 2, {rot: 2.7}), pie('f', 15, 0, 2, 2)], elements: []}}};
+        normaliserPlan(brut); const rots = brut.b1.plan.pieces.map(p => p.rot);
+        ok('Un dossier abîmé ou d\'avant la rotation : les quarts de tour sont ramenés entre 1 et 3, ou retirés (5 → 1, −1 → 3, 4 et « x » → aucun, 2,7 → 2)', rots.join() === '1,3,,,2,' && !('rot' in brut.b1.plan.pieces[2]) && !('rot' in brut.b1.plan.pieces[3]), JSON.stringify(rots));
+        // 5. Tourner un escalier ou un meuble ; une porte, une fenêtre ne tournent pas
+        const posePlan = () => { nouveau([pie('S', 0, 0, 8, 6), pie('U', 10, 0, 4, 4)], [{id: 'st', cat: 'escalier', type: 'escalier', niveau: 'n0', niveaux: ['n0', 'n1'], x: 3, y: 1.5, w: 2, h: 3}, {id: 'dp', cat: 'porte', niveau: 'n0', long: 1, retourne: false, x: 4, y: 6, o: 'h', cote: -1}]); D.b1.plan.legendes = [{id: 'lg1', niveau: 'n0', x: 1, y: 8, texte: 'Entrée', taille: 'm', fleche: ''}]; selection = {elem: 'st'}; };
+        posePlan(); tournerSelection(); const st = elemParId('st'), a1 = st.w + 'x' + st.h, x1 = st.x; tournerSelection(); const a2 = st.w + 'x' + st.h;
+        messages.length = 0; selection = {elem: 'dp'}; const avantPorte = etatPlan(); tournerSelection();
+        let planteLegende = false; try { selection = {legende: 'lg1'}; tournerSelection(); } catch (e) { planteLegende = true; }
+        ok('Tourner un escalier ou un meuble échange sa largeur et sa profondeur autour de son centre (deux fois : retour au départ) ; une porte ne tourne pas (on dit pourquoi), une légende non plus',
+          a1 === '3x2' && proche(x1, 2.5) && a2 === '2x3' && proche(st.x, 3) && proche(st.y, 1.5) && etatPlan() === avantPorte && messages.length === 1 && /direction du mur/.test(messages[0]) && !planteLegende);
+        // 6. Le clavier
+        const menu = document.createElement('select'); menu.innerHTML = '<option>a</option>';
+        const texte = document.createElement('input'); texte.type = 'text';
+        const case15 = document.createElement('input'); case15.type = 'checkbox';
+        [menu, texte, case15].forEach(x => { x.style.cssText = 'position:fixed;top:2px;left:2px;width:10px'; document.body.appendChild(x); temp.push(x); });
+        const touche = (key, opts) => { const ev = new KeyboardEvent('keydown', Object.assign({key, bubbles: true, cancelable: true}, opts || {})); document.dispatchEvent(ev); return ev.defaultPrevented; };
+        const larg = () => (elemParId('st') || {}).w;
+        posePlan(); menu.focus(); const focusMenu = document.activeElement === menu;
+        const rMenu = touche('r'), wMenu = larg();
+        texte.focus(); const supprTexte = touche('Delete'), rTexte = touche('r'), backTexte = touche('Backspace'); const toujours = !!elemParId('st') && larg() === 2;
+        document.activeElement.blur(); const rLibre = touche('r'), w1 = larg(), rMaj = touche('R', {shiftKey: true}), w2 = larg(), rCtrl = touche('r', {ctrlKey: true}), w3 = larg();
+        case15.focus(); const rCase = touche('r'), wCase = larg(); document.activeElement.blur(); touche('r');
+        ok('Au clavier : R tourne ce qui est choisi (Maj+R aussi), pas Ctrl+R ; R est laissée à un menu déroulant ouvert à la frappe, et Suppr, Retour arrière et R à un champ de texte ; une case à cocher n\'est pas un champ de texte',
+          focusMenu && !rMenu && wMenu === 2 && !supprTexte && !rTexte && !backTexte && toujours && rLibre && w1 === 3 && rMaj && w2 === 2 && !rCtrl && w3 === 2 && rCase && wCase === 3, JSON.stringify([focusMenu, rMenu, wMenu, supprTexte, rTexte, backTexte, toujours, rLibre, w1, rMaj, w2, rCtrl, w3, rCase, wCase]));
+        posePlan(); menu.focus();
+        const supprMenu = touche('Delete'), apresSuppr = elements().filter(e => e.cat === 'escalier').length, selApres = selection;
+        const defaireMenu = touche('z', {ctrlKey: true}), revenu = elements().filter(e => e.cat === 'escalier').length;
+        ok('Suppr supprime l\'escalier choisi même quand le menu « ＋ Baie, escalier… » a gardé le focus (le cas d\'Arthur) ; Ctrl+Z, avec le focus encore sur le menu, le ramène',
+          supprMenu && apresSuppr === 0 && selApres === null && defaireMenu && revenu === 1, JSON.stringify([supprMenu, apresSuppr, selApres, defaireMenu, revenu]));
+        posePlan(); document.activeElement.blur(); ouvrirFenetre('fen-calme'); const pendantFenetre = touche('Delete'), rFenetre = touche('r'); fermerFenetre('fen-calme');
+        const restait = !!elemParId('st') && larg() === 2; selection = {piece: 'U', morceau: 0}; ouvrirFenetre('fen-calme'); touche('Escape'); const gardee = !!selection; fermerFenetre('fen-calme');
+        touche('Escape'); const lachee = selection === null;
+        ok('Pendant qu\'une fenêtre est ouverte, ni Suppr, ni R, ni Échap n\'agissent sur le plan ; Échap lâche ensuite ce qui est choisi', !pendantFenetre && !rFenetre && restait && gardee && lachee);
+        posePlan(); selection = {piece: 'U', morceau: 0}; touche('Backspace'); const sansU = pieces().length === 1 && !pieceParId('U');
+        selection = {legende: 'lg1'}; touche('Delete'); const sansLegende = legendes().length === 0;
+        selection = null; const rien = touche('Delete') || touche('r') || touche('Escape');
+        ok('Suppr (ou Retour arrière) supprime la pièce, l\'escalier ou la légende choisis ; sans rien de choisi, les touches ne font rien (la page garde Retour arrière et R)', sansU && sansLegende && !rien);
+        texte.focus(); lacherChamp(); const lache = document.activeElement !== texte; menu.focus(); lacherChamp(); const lacheMenu = document.activeElement !== menu;
+        ok('Toucher le plan lâche le champ resté actif (le menu de la barre d\'outils, le nom en cours de frappe) : il ne garde plus le clavier et ne ramène plus la page vers lui', lache && lacheMenu);
+        // 7. La flèche ronde sur le plan
+        nouveau([pie('S', 2, 3, 6, 4)], [{id: 'st', cat: 'escalier', type: 'escalier', niveau: 'n0', niveaux: ['n0', 'n1'], x: 3, y: 1.5, w: 2, h: 3}, {id: 'dp', cat: 'porte', niveau: 'n0', long: 1, retourne: false, x: 5, y: 7, o: 'h', cote: -1}]);
+        D.b1.plan.legendes = [{id: 'lg1', niveau: 'n0', x: 1, y: 8, texte: 'Entrée', taille: 'm', fleche: ''}];
+        Object.assign(vueEdition, {x: -2, y: -2, k: 26});
+        const nFleches = sel => { selection = sel; rendrePlanEdition(); return $('plan-edition').querySelectorAll('circle[data-rotation]').length; };
+        const nPiece = nFleches({piece: 'S', morceau: 0}), posFl = (() => { const m = /translate\(([-\d.]+) ([-\d.]+)\)/.exec($('plan-edition').querySelector('.rotation').getAttribute('transform')); return {x: +m[1], y: +m[2]}; })();
+        Object.assign(vueEdition, {x: -2, y: 2.8, k: 26}); nFleches({piece: 'S', morceau: 0});
+        const posBas = (() => { const m = /translate\(([-\d.]+) ([-\d.]+)\)/.exec($('plan-edition').querySelector('.rotation').getAttribute('transform')); return {x: +m[1], y: +m[2]}; })();
+        Object.assign(vueEdition, {x: -2, y: -2, k: 26});
+        const nEsc = nFleches({elem: 'st'}), nPorte = nFleches({elem: 'dp'}), nLeg = nFleches({legende: 'lg1'}), nRien = nFleches(null);
+        geste = {type: 'vue'}; const nGeste = nFleches({piece: 'S', morceau: 0}); geste = null;
+        ok('La flèche ronde se pose au-dessus de la pièce ou du meuble choisi (au-dessous si le haut touche le bord du cadre) ; ni pour une porte, ni pour une légende, ni sans sélection, ni pendant un geste',
+          nPiece === 1 && proche(posFl.x, 5) && posFl.y < 3 && posBas.y > 7 && nEsc === 1 && nPorte === 0 && nLeg === 0 && nRien === 0 && nGeste === 0, JSON.stringify([nPiece, posFl, posBas, nEsc, nPorte, nLeg, nRien, nGeste]));
+        ok('Le panneau de la pièce propose « ↻ Tourner » (avec son raccourci), celui de l\'escalier aussi',
+          (selection = {piece: 'S', morceau: 0}, rendrePanneauPiece(), /pivoterPiece\(\)/.test($('plan-panneau').innerHTML) && /touche R/.test($('plan-panneau').innerHTML)) && (selection = {elem: 'st'}, rendrePanneauPiece(), /tournerMeuble\(\)/.test($('plan-panneau').innerHTML) && /touche R/.test($('plan-panneau').innerHTML)));
+        // 8. Le focus sans faire défiler la page
+        const visible = document.createElement('input'), cache = document.createElement('input');
+        visible.style.cssText = 'position:fixed;top:4px;left:4px;width:40px'; cache.style.cssText = 'position:fixed;top:-600px;left:4px;width:40px';
+        [visible, cache].forEach(x => { document.body.appendChild(x); temp.push(x); });
+        document.activeElement.blur(); const sy = window.scrollY; focaliserSiVisible(cache, true); const apresCache = document.activeElement === cache; focaliserSiVisible(visible, true); const apresVisible = document.activeElement === visible;
+        ok('Une pièce ou une légende ajoutée ne prend le focus que si son champ est déjà à l\'écran, et sans faire défiler la page', !apresCache && apresVisible && window.scrollY === sy && (focaliserSiVisible(null), true));
+      } finally {
+        toast = vraiToast15; Object.assign(vueEdition, vue15); geste = null; selection = null; temp.forEach(x => x.remove()); vp.classList.toggle('show', avait); historique = []; refaites = [];
+        if (!$('fen-calme').hidden) fermerFenetre('fen-calme');
+      }
     }
   } catch (e) { ok('Les vérifications ont planté', false, e.message); }
   finally { calque = sauveCalque; persister = vraiPersister; toast = vraiToast; window.confirm = vraiConfirm; modeFiche = sauveModeFiche; pieceFiche = null; niveauCourant = sauveNiveau; D = sauveD; mode = sauveMode; selection = null; historique = []; refaites = []; }
