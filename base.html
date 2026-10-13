@@ -896,7 +896,7 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
    chose lue de la BAF, en lecture : le choix clair / sombre, pour s'ouvrir dans le même thème.
    ══════════════════════════════════════════════════════════════════════════════════════════════ */
 
-const VERSION_BASE = 'BASE v2026.10.13-8';
+const VERSION_BASE = 'BASE v2026.10.13-9';
 const CLE_SOCLE = 'base-dossier-v1', CLE_DECL = 'base-declarant-v1', CLE_MODE = 'base-mode', CLE_THEME = 'base-theme';
 const TYPES_ZONE = [['activite', "Salle d'activité"], ['sejour', 'Séjour, salon'], ['repas', 'Repas'], ['accueil', 'Accueil'], ['circulation', 'Circulation'],
   ['chambre', 'Chambre'], ['repos', 'Salle de repos'], ['calme', 'Salle de mise au calme'], ['snoezelen', 'Salle multisensorielle'], ['soins', 'Soins, infirmerie'],
@@ -3726,7 +3726,8 @@ function majBarre() {
     el.innerHTML = 'Déclarant · <b>' + esc(D.b1.lieu || 'lieu sans nom') + '</b> · ' + nb(D.b2.episodes.length, 'épisode') + (nonSauve ? ' · <span style="color:var(--ocre-deep)">pas encore téléchargé</span>' : '');
     $('btn-sauver-decl').classList.toggle('non-sauve', !!nonSauve);
   } else {
-    el.innerHTML = 'Référent · <b>' + esc(D.b1.lieu || 'lieu sans nom') + '</b> · ' + nb(pieces().length, 'pièce') + ' · ' + nb(D.b2.episodes.length, 'épisode') + (D.exemple ? ' · exemple fictif' : '');
+    el.innerHTML = 'Référent · <b>' + esc(D.b1.lieu || 'lieu sans nom') + '</b> · ' + nb(pieces().length, 'pièce') + ' · ' + nb(D.b2.episodes.length, 'épisode') + (D.exemple ? ' · exemple fictif' : '') +
+      (simPerimee() ? ' · <button type="button" class="bt-lien" style="color:var(--ocre-deep);font-weight:700" onclick="majSimulation()" title="Ce lieu simulé date d\'avant les dernières nouveautés (croix dans les pièces, pièces tournées…)">↻ Remettre à jour ce lieu simulé</button>' : '');
   }
   $('pied-version').textContent = VERSION_BASE + ' · notes de version';
 }
@@ -3753,8 +3754,14 @@ function effacer() {
    autour de quels endroits les épisodes se tiennent : [numéro de la pièce, [[u, v, dispersion en cases, poids], …]] (u, v : 0 à 1 dans le rectangle
    qui entoure la pièce). Le bâtiment provisoire a trois enclaves dans son réfectoire (un office, un local chariots, un coin calme), le foyer un abri
    dans son jardin, l'externat un coin de retrait dans sa classe. */
+/* Passe 235 : chaque lieu simulé porte le numéro de la version des simulations qui l'a fabriqué (d.sim = {i, v}). Quand on change les lieux simulés, on
+   augmente VERSION_SIMULATION : un lieu simulé gardé dans le navigateur (le bac à sable de l'administrateur, ou « Voir un exemple ») le dit dans la barre du
+   haut et propose de se remettre à jour — sans quoi il garde, des jours après, les données d'avant les nouveautés. Une spécification de croix peut avoir un
+   troisième élément : la part des épisodes qui posent leur croix (0,85 par défaut) ; le premier épisode de chaque pièce a toujours la sienne. « rot » :
+   [[numéro de la pièce, quarts de tour déjà faits]], pour que les simulations passent aussi par les pièces tournées. */
+const VERSION_SIMULATION = 2;
 const LIEUX_SIMULES = [
-  {nom: 'Bâtiment provisoire', desc: 'Un IME déménagé dans des bureaux, dessiné sans échelle : un hall unique où tout le monde arrive, un long couloir aveugle, des salles sans fenêtre, une cour non clôturée contre la route, et le parking devant la porte. Ses fiches de pièces sont remplies en mode rapide. Son réfectoire, très grand, contient trois petites pièces : un office, un local chariots et un coin calme. Les sanitaires, un ancien bureau, ont gardé leur porte vitrée.', graine: 7,
+  {nom: 'Bâtiment provisoire', desc: 'Un IME déménagé dans des bureaux, dessiné sans échelle : un hall unique où tout le monde arrive, un long couloir aveugle, des salles sans fenêtre, une cour non clôturée contre la route, et le parking devant la porte. Ses fiches de pièces sont remplies en mode rapide. Son réfectoire, très grand, contient trois petites pièces : un office, un local chariots et un coin calme. Les sanitaires, un ancien bureau, ont gardé leur porte vitrée. Presque toutes ses pièces ont leurs croix (au moins une par pièce qui a des épisodes), et la salle bleue est dessinée tournée d\'un quart de tour : de quoi voir ce que la carte thermique sait faire.', graine: 7,
     legendes: [['Entrée principale', -4.2, 2.2, 'm', 'e'], ['Vers le centre-ville', -10.5, -4.6, 'm', 'n']],
     pronostics: [['AES / AMP', [0, 2, 4]], ['Éducateur·rice spécialisé·e', [0, 4, 9]], ['Moniteur·rice-éducateur·rice', [0, 8]]],
     dates: ['2026-09-07', '2026-09-25'], moments: null,
@@ -3780,9 +3787,13 @@ const LIEUX_SIMULES = [
     chauds: [[0, 0, 9], [0, 6, 5], [4, 3, 14], [2, 1, 5], [1, 2, 4], [3, 5, 2], [5, 4, 1], [8, 0, 3], [8, 6, 2], [9, 2, 2], [10, 3, 2], [11, 3, 1], [12, 3, 3], [12, 4, 1]], n: 40,
     // Où, dans les grandes pièces : la porte d'entrée et celle du réfectoire dans le hall, la file devant l'office et le coin calme dans le réfectoire, le bout du couloir, le parking devant la porte, la cour côté route
     croix: [[0, [[.06, .5, .8, 5], [.5, .93, .9, 3], [.5, .45, 1.8, 2]]], [4, [[.16, .55, .7, 5], [.31, .12, .8, 3], [.04, .75, .6, 2], [.71, .75, .5, 3], [.37, .3, 1.4, 2]]],
-      [1, [[.04, .1, .6, 3], [.93, .8, .6, 4], [.43, .1, 1.2, 1]]], [8, [[.89, .375, .8, 5], [.5, .5, 2, 1]]], [9, [[.89, .8, .8, 4], [.05, .4, .7, 3], [.5, .5, 2, 1]]]],
+      [1, [[.04, .1, .6, 3], [.93, .8, .6, 4], [.43, .1, 1.2, 1]]], [8, [[.89, .375, .8, 5], [.5, .5, 2, 1]]], [9, [[.89, .8, .8, 4], [.05, .4, .7, 3], [.5, .5, 2, 1]]],
+      // Les autres pièces, à leur échelle : la porte, le fond, le milieu. La salle bleue est dessinée tournée d'un quart de tour (rot).
+      [2, [[.43, .1, .7, 3], [.5, .55, 1.6, 3]], .7], [3, [[.4, .1, .6, 3], [.5, .6, 1.2, 2]], .7], [5, [[.93, .25, .5, 3], [.5, .6, 1, 2]], .7], [6, [[.1, .6, .5, 4], [.85, .4, .5, 1]], .7], [7, [[.5, .33, 2, 2]], .7],
+      [10, [[.5, .12, .4, 4], [.5, .7, .6, 1]], .7], [11, [[.5, .12, .4, 3], [.3, .75, .6, 2]], .7], [12, [[.12, .5, .4, 3], [.6, .12, .5, 2]], .7]],
+    rot: [[2, 1]],
     commentaires: ['Arrivée de tous les jeunes en même temps, le hall résonne.', 'S\'est bouché les oreilles puis est sorti en courant.', 'Bruit des chaises au réfectoire.', 'Descendu du taxi, a couru vers la route.']},
-  {nom: 'Foyer d\'hébergement', desc: 'Une unité de vie sur deux niveaux : salon avec baie vitrée sur le jardin, salle à manger et chambres au rez-de-chaussée ; à l\'étage, des chambres au-dessus de la salle à manger, qui voient le parking, et une salle de mise au calme. Un escalier et un ascenseur relient les deux. Deux fiches détaillées, les autres rapides. Un abri de jardin s\'ouvre sur le jardin (une pièce enclavée dans une pièce de dehors). La salle d\'eau de l\'étage a une porte vitrée.', graine: 19,
+  {nom: 'Foyer d\'hébergement', desc: 'Une unité de vie sur deux niveaux : salon avec baie vitrée sur le jardin, salle à manger et chambres au rez-de-chaussée ; à l\'étage, des chambres au-dessus de la salle à manger, qui voient le parking, et une salle de mise au calme. Un escalier et un ascenseur relient les deux. Deux fiches détaillées, les autres rapides. Un abri de jardin s\'ouvre sur le jardin (une pièce enclavée dans une pièce de dehors). La salle d\'eau de l\'étage a une porte vitrée. Presque toutes les pièces ont leurs croix, et la chambre 1 est dessinée tournée.', graine: 19,
     legendes: [['Entrée principale', 11.5, -1.8, 'm', 's'], ['Vers le centre-ville', -1, -10.5, 'm', 'o']],
     pronostics: [['Éducateur·rice spécialisé·e', [2, 4]], ['AES / AMP', [2, 8]], ['Infirmier·e', [4, 5]]],
     dates: ['2026-09-14', '2026-10-02'],
@@ -3821,9 +3832,16 @@ const LIEUX_SIMULES = [
     types: ['Crie', 'Frappe les portes', 'Se tape la tête', 'Refuse de quitter sa chambre', 'Jette la vaisselle'],
     chauds: [[2, 3, 7], [2, 6, 8], [4, 0, 6], [4, 7, 7], [5, 7, 15], [6, 0, 3], [8, 0, 4], [1, 5, 2], [0, 5, 1], [12, 5, 1], [13, 7, 6], [17, 7, 3], [16, 4, 3], [18, 5, 2]], n: 44,
     // Où : le jardin devant la porte du salon, autour de la table de la salle à manger, devant la porte de la salle de bain au bout du couloir et devant les chambres
-    croix: [[0, [[.9, .35, .8, 3], [.5, .8, 1.8, 1]]], [2, [[.5, .45, 1, 5], [.93, .33, .5, 3], [.07, .5, .5, 2]]], [4, [[.95, .4, .5, 5], [.13, .1, .4, 2], [.39, .1, .4, 2], [.66, .1, .4, 2]]]],
+    croix: [[0, [[.9, .35, .8, 3], [.5, .8, 1.8, 1]]], [2, [[.5, .45, 1, 5], [.93, .33, .5, 3], [.07, .5, .5, 2]]], [4, [[.95, .4, .5, 5], [.13, .1, .4, 2], [.39, .1, .4, 2], [.66, .1, .4, 2]]],
+      // Les autres pièces : les portes, les fenêtres, le lit ou le canapé. La chambre 1 est dessinée tournée de trois quarts de tour (rot).
+      [1, [[.1, .75, .6, 3], [.9, .5, .5, 2], [.12, .22, .7, 2], [.45, .6, 1.5, 1]], .7], [3, [[.1, .5, .4, 3], [.5, .1, .8, 3], [.9, .5, .4, 1]], .7],
+      [5, [[.5, .1, .5, 3], [.5, .9, .5, 2], [.3, .5, .7, 1]], .7], [6, [[.5, .1, .5, 3], [.5, .9, .5, 2], [.3, .5, .7, 1]], .7], [7, [[.5, .1, .5, 3], [.5, .9, .5, 2], [.3, .5, .7, 1]], .7],
+      [8, [[.12, .5, .4, 3], [.88, .5, .4, 1]], .7], [9, [[.12, .5, .4, 3], [.88, .5, .4, 1]], .7], [10, [[.85, .5, .5, 3], [.5, .3, .5, 1]], .7], [11, [[.6, .5, 3, 2]], .7], [12, [[.32, .92, 1, 4], [.8, .5, 1.5, 2]], .7],
+      [13, [[.5, .88, .6, 3], [.5, .1, .7, 3], [.25, .45, .6, 1]], .7], [14, [[.5, .88, .6, 3], [.5, .1, .7, 3], [.25, .45, .6, 1]], .7], [15, [[.5, .9, .5, 3], [.5, .12, .5, 1]], .7],
+      [16, [[.5, .88, .5, 3], [.1, .5, .6, 1], [.5, .4, 1, 2]], .7], [17, [[.12, .5, .8, 2], [.9, .5, .8, 2], [.74, .5, .6, 3]], .7], [18, [[.5, .15, .4, 3], [.2, .7, .4, 1]], .7]],
+    rot: [[5, 3]],
     commentaires: ['Attente du repas, bruit de la vaisselle.', 'A frappé la porte de la chambre voisine au moment du coucher.', 'Salle de bain occupée, a dû attendre dans le couloir.', 'Voiture sur le parking : s\'est collé à la fenêtre, puis n\'a plus voulu se coucher.']},
-  {nom: 'Externat, groupe des grands', desc: 'Un IME en journée, plan à l\'échelle (1 case = 0,8 m) : classe, atelier, cantine, une salle multisensorielle trop petite, une salle de repli à porte à hublot, une cour avec un petit préau ; le parking des taxis à côté. Ses fiches disent la salle multisensorielle, la cantine, la salle de repli. Un coin de retrait est cloisonné dans la classe, contre l\'atelier ; la porte des sanitaires est vitrée ; la salle multisensorielle, toujours accompagnée, ne reçoit aucun épisode.', graine: 31,
+  {nom: 'Externat, groupe des grands', desc: 'Un IME en journée, plan à l\'échelle (1 case = 0,8 m) : classe, atelier, cantine, une salle multisensorielle trop petite, une salle de repli à porte à hublot, une cour avec un petit préau ; le parking des taxis à côté. Ses fiches disent la salle multisensorielle, la cantine, la salle de repli. Un coin de retrait est cloisonné dans la classe, contre l\'atelier ; la porte des sanitaires est vitrée ; la salle multisensorielle, toujours accompagnée, ne reçoit aucun épisode. Presque toutes les pièces ont leurs croix, et la salle de classe est dessinée tournée.', graine: 31,
     legendes: [['Entrée des taxis', 23.4, 6.3, 'm', 'o'], ['Vers le centre-ville', 28.5, -3.4, 'm', 'n']],
     pronostics: [['Éducateur·rice spécialisé·e', [4, 7, 2]], ['AES / AMP', [4, 7]], ['Moniteur·rice-éducateur·rice', [7, 11]]],
     dates: ['2026-09-21', '2026-10-09'], echelle: .8,
@@ -3853,7 +3871,11 @@ const LIEUX_SIMULES = [
     types: ['Crie', 'Se bouche les oreilles', 'Sort de la salle en courant', 'Pousse un camarade', 'Renverse le mobilier'],
     chauds: [[7, 2, 11], [7, 5, 10], [4, 4, 8], [1, 1, 3], [3, 0, 2], [3, 7, 2], [0, 3, 2], [9, 7, 3], [8, 2, 2], [11, 4, 3], [12, 1, 2], [12, 6, 2]], sansEpisode: [2], n: 42,
     // Où : la cour devant la porte de la cantine, sous le préau et près du parking ; la cantine devant le service ; le bout du couloir ; l'attente du taxi
-    croix: [[7, [[.22, .62, .9, 4], [.035, .77, .6, 3], [.9, .18, .8, 2], [.5, .6, 2.5, 3]]], [4, [[.5, .13, .8, 4], [.5, .7, 1.8, 3]]], [3, [[.95, .5, .4, 3], [.5, .5, 3, 1]]], [9, [[.14, .88, .7, 4], [.5, .5, 1.5, 1]]]],
+    croix: [[7, [[.22, .62, .9, 4], [.035, .77, .6, 3], [.9, .18, .8, 2], [.5, .6, 2.5, 3]]], [4, [[.5, .13, .8, 4], [.5, .7, 1.8, 3]]], [3, [[.95, .5, .4, 3], [.5, .5, 3, 1]]], [9, [[.14, .88, .7, 4], [.5, .5, 1.5, 1]]],
+      // Les autres pièces : la porte, la fenêtre, l'établi. La salle de classe est dessinée tournée de deux quarts de tour (rot).
+      [0, [[.5, .9, .7, 3], [.5, .12, 1.2, 2], [.22, .42, 1, 2]], .7], [1, [[.5, .9, .7, 2], [.47, .2, 1.6, 3]], .7], [5, [[.5, .1, .5, 4], [.5, .7, .6, 1]], .7], [6, [[.5, .1, .6, 3], [.6, .6, .8, 1]], .7],
+      [8, [[.5, .5, 1, 3], [.85, .2, .7, 2]], .7], [10, [[.5, .4, 2.5, 2]], .7], [11, [[.88, .25, .5, 3], [.3, .7, .7, 2]], .7], [12, [[.12, .35, .4, 4], [.7, .7, .5, 2]], .7]],
+    rot: [[0, 2]],
     commentaires: ['Sonnerie de la récréation, tout le monde sort en même temps.', 'Cantine très bruyante, a renversé son plateau.', 'S\'est réfugié sous le préau.', 'Attente du taxi sur le parking, a voulu partir vers la route.', 'Est allé de lui-même à la salle de repli.']}
 ];
 // Un endroit dans une grande pièce, tiré autour d'un des « foyers » [u, v, dispersion en cases, poids], puis ramené dans la pièce, hors de ses enclaves.
@@ -3862,7 +3884,8 @@ function positionSimulee(p, foyers, pieces, alea) {
   for (const x of foyers) { r -= x[3]; if (r < 0) { f = x; break; } }
   const g = () => Math.sqrt(-2 * Math.log(1 - alea())) * Math.cos(2 * Math.PI * alea()), b = boite([p]);
   const a = projeterPoint(p.rects, pieces.filter(q => q.dans === p.id).flatMap(q => q.rects), b.x + f[0] * b.w + f[2] * g(), b.y + f[1] * b.h + f[2] * g());
-  return {u: r3(Math.min(1, Math.max(0, (a.x - b.x) / b.w))), v: r3(Math.min(1, Math.max(0, (a.y - b.y) / b.h)))};
+  const uv = tourner01(Math.min(1, Math.max(0, (a.x - b.x) / b.w)), Math.min(1, Math.max(0, (a.y - b.y) / b.h)), 4 - rotDe(p));   // les foyers sont écrits dans le plan tel qu'on le voit ; la croix est rangée dans le repère d'origine de la pièce
+  return {u: r3(uv[0]), v: r3(uv[1])};
 }
 // Ce qu'on remarque autour d'un épisode, selon le type de la pièce : quelques observations, ou « rien de particulier ».
 const PROFILS_CONTEXTE = {accueil: ['monde', 'bruit-fort', 'arrivee-depart', 'bruit-soudain', 'attente'], repas: ['bruit-fort', 'bruit-soudain', 'odeurs', 'attente', 'monde', 'proximite'], exterieur: ['arrivee-depart', 'transition', 'monde', 'bruit-soudain'],
@@ -3881,6 +3904,8 @@ function construireLieu(i) {
   const ns = (L.niveaux || ['Rez-de-chaussée']).map((nom, k) => ({id: k === 0 ? 'n0' : nouvelId('n'), nom})), niv = k => ns[k || 0].id;
   d.b1.plan.niveaux = ns;
   d.b1.plan.pieces = L.pieces.map(([nom, type, rects, k]) => ({id: nouvelId('p'), nom, type, niveau: niv(k), rects: rects.map(([x, y, w, h]) => ({x, y, w, h}))}));
+  (L.rot || []).forEach(([k, n]) => { if (n & 3) d.b1.plan.pieces[k].rot = n & 3; });   // des pièces dessinées tournées (passe 232)
+  d.sim = {i: LIEUX_SIMULES[i] ? i : 0, v: VERSION_SIMULATION};   // quelle simulation, de quelle version (passe 235)
   L.pieces.forEach((t, k) => { if (t[4] !== undefined) d.b1.plan.pieces[k].dans = d.b1.plan.pieces[t[4]].id; });   // une enclave : le numéro de la pièce qui la contient
   d.b1.typesCD = L.types.map(nom => ({id: nouvelId('t'), nom}));
   d.b1.plan.elements = (L.portes || []).map(([x, y, o, long, cote, k, vitrage]) => Object.assign({id: nouvelId('e'), cat: 'porte', niveau: niv(k), x, y, o, long, cote, retourne: cote < 0}, vitrage ? {vitrage} : {}))
@@ -3913,14 +3938,15 @@ function construireLieu(i) {
   const calmes = []; while (calmes.length < 3 && ouvres.length > 6) { const c = ouvres[1 + Math.floor(alea() * (ouvres.length - 2))]; if (calmes.indexOf(c) < 0) calmes.push(c); }
   const jourOuvre = () => { const libres = ouvres.filter(o => calmes.indexOf(o) < 0); return libres[Math.floor(alea() * libres.length)]; };
   const hm = (a, b) => { const v = t => +t.slice(0, 2) * 60 + +t.slice(3); const x = v(a) + Math.floor(alea() * Math.max(1, v(b) - v(a))); return String(Math.floor(x / 60)).padStart(2, '0') + ':' + String(x % 60).padStart(2, '0'); };
+  const croixDeja = new Set();
   for (let i2 = 0; i2 < L.n; i2++) {
     let r = alea() * total, c = couples[0];
     for (const x of couples) { r -= x.w; if (r < 0) { c = x; break; } }
     const t1 = d.b1.typesCD[Math.floor(alea() * d.b1.typesCD.length)].id, types = alea() < .25 ? [...new Set([t1, d.b1.typesCD[Math.floor(alea() * d.b1.typesCD.length)].id])] : [t1];
     d.b2.episodes.push({id: nouvelId('ep'), date: jourOuvre(), heure: hm(c.m.debut, c.m.fin), moment: c.m.id, piece: c.p.id, types, autre: '', nbPros: 1 + Math.floor(alea() * 3),
       commentaire: alea() < .2 ? L.commentaires[Math.floor(alea() * L.commentaires.length)] : '', provenance: roles[Math.floor(alea() * roles.length)], source: 'simulation'});
-    const foyers = (L.croix || []).find(x => d.b1.plan.pieces[x[0]] === c.p);   // dans les grandes pièces, la plupart des épisodes ont leur croix
-    if (foyers && alea2() < .85) d.b2.episodes[d.b2.episodes.length - 1].pos = positionSimulee(c.p, foyers[1], d.b1.plan.pieces, alea2);
+    const spec = (L.croix || []).find(x => d.b1.plan.pieces[x[0]] === c.p);   // dans presque toutes les pièces, la plupart des épisodes ont leur croix, et le premier de chaque pièce a toujours la sienne
+    if (spec) { const premier = !croixDeja.has(c.p.id); croixDeja.add(c.p.id); if (premier || alea2() < (spec[2] || .85)) d.b2.episodes[d.b2.episodes.length - 1].pos = positionSimulee(c.p, spec[1], d.b1.plan.pieces, alea2); }
     if (alea3() < .62) d.b2.episodes[d.b2.episodes.length - 1].contexte = contexteSimule(PROFILS_CONTEXTE[c.p.type] || PROFILS_CONTEXTE.defaut, alea3);   // un peu plus d'un épisode sur deux a rempli « Autour de l'épisode »
   }
   d.b2.episodes.sort((a, b) => (a.date + a.heure).localeCompare(b.date + b.heure));
@@ -3929,6 +3955,19 @@ function construireLieu(i) {
   return d;
 }
 function exempleFictif() { return construireLieu(0); }
+// Le numéro de la simulation d'un lieu simulé gardé dans le navigateur (par son nom si le dossier date d'avant la version des simulations), ou -1.
+function simIndex() {
+  if (!D || !D.exemple) return -1;
+  if (D.sim && LIEUX_SIMULES[D.sim.i]) return D.sim.i;
+  return LIEUX_SIMULES.findIndex(L => D.b1.lieu === L.nom + ' (simulé)');
+}
+const simPerimee = () => simIndex() >= 0 && (!D.sim || D.sim.v !== VERSION_SIMULATION);
+// Remet le lieu simulé à jour : il est refait, avec les dernières nouveautés (c'est un lieu fictif : ce qu'on y avait changé est perdu).
+function majSimulation() {
+  const i = simIndex(); if (i < 0) return;
+  if (!confirm('Remettre « ' + LIEUX_SIMULES[i].nom + ' » à jour ?\n\nLe lieu simulé est refait avec les dernières nouveautés (croix dans les pièces, pièces tournées…). Ce que vous y aviez changé est perdu : c\'est un lieu fictif.')) return;
+  D = construireLieu(i); persister(); rendreVue.vu = false; aller(vueCourante); toast('Lieu simulé remis à jour : ' + LIEUX_SIMULES[i].nom + '.');
+}
 function simulerLieu(i) {
   if (!adminActif()) return;
   changerMode('socle'); D = construireLieu(i); persister(); rendreVue.vu = false; fermerFenetre('fen-admin'); aller('synthese');
@@ -4007,6 +4046,10 @@ document.addEventListener('click', ev => {
 
 /* ══ Les notes de version ══ */
 const NOTES_BASE = [
+  {version: 'BASE v2026.10.13-9', titre: 'Les lieux simulés : des croix partout, et ils se remettent à jour', corps: '<p><b>La carte thermique a de quoi montrer ce qu\'elle sait faire</b> (Arthur et Émilie) : les trois lieux simulés n\'avaient des croix que dans leurs grandes pièces.</p><ul>' +
+    '<li><b>Des croix dans presque toutes les pièces</b>. Chaque pièce qui a des épisodes a au moins une croix (la première est toujours posée), et la plupart des épisodes ont la leur — près de la porte, de la fenêtre, du lit ou de l\'établi, selon la pièce. La chaleur se lit donc dans les petites pièces aussi, pas seulement dans les grandes (bâtiment provisoire : 38 épisodes sur 40 ont leur croix, foyer : 36 sur 44, externat : 35 sur 42 ; avant, 26, 11 et 21).</li>' +
+    '<li><b>Une pièce dessinée tournée dans chaque lieu</b> (la salle bleue, la chambre 1, la salle de classe) : leurs croix passent par la rotation des pièces.</li>' +
+    '<li><b>Un lieu simulé gardé dans le navigateur se remet à jour</b>. Chaque lieu simulé porte le numéro de la version des simulations qui l\'a fabriqué. Quand les simulations changent, un lieu simulé d\'avant — le bac à sable de l\'administrateur, ou « Voir un exemple » resté dans le navigateur — le dit dans la barre du haut (« ↻ Remettre à jour ce lieu simulé ») et se refait d\'un clic, après confirmation : c\'est un lieu fictif, ce qu\'on y avait changé est perdu. Avant, il gardait pour toujours les données d\'avant les nouveautés.</li></ul>'},
   {version: 'BASE v2026.10.13-8', titre: 'Plusieurs pièces à la fois : choisir avec Ctrl, déplacer, tourner, supprimer ensemble', corps: '<p><b>Plusieurs pièces d\'un coup</b> (Arthur et Émilie) : on déplace une aile entière sans reprendre les pièces une à une.</p><ul>' +
     '<li><b>Choisir</b>. Ctrl+clic (ou Maj+clic) ajoute une pièce à ce qui est choisi, ou l\'en retire ; Ctrl+glisser sur le fond trace un cadre qui prend les pièces qu\'il touche ; Ctrl+A prend toutes les pièces du niveau affiché. Au doigt, ou sans clavier : le bouton « ☑ Plusieurs » (en bas à gauche du plan), puis on touche les pièces l\'une après l\'autre. Les pièces choisies sont surlignées, entourées d\'un contour en pointillés, avec une seule flèche ronde.</li>' +
     '<li><b>Déplacer ensemble</b>. Glisser l\'une d\'elles les déplace toutes du même pas, avec leurs meubles, leurs portes et leurs enclaves ; « Annuler » les ramène d\'un seul geste. Un simple clic sur l\'une d\'elles, sans glisser, ne garde qu\'elle.</li>' +
@@ -4923,6 +4966,48 @@ function verifierBASE() {
         ok('La carte choisit, parmi les places où elle tient, celle qui cache le moins de surface des autres pièces (à égalité : au-dessous, au-dessus, à droite, à gauche) ; si rien ne tient, contre le bas', sansAutres.cote === 'dessous' && avecAutres.cote !== 'dessous' && aVide.cote === 'dessous', [sansAutres.cote, avecAutres.cote, aVide.cote].join(' | '));
       } finally {
         toast = vraiToast17; window.alert = vraiAlert17; Object.assign(vueEdition, vue17); geste = null; selection = null; modePlusieurs = modeAvant; touchesChoix = false; temp.forEach(x => x.remove()); vp.classList.toggle('show', avait); historique = []; refaites = []; majBoutonPlusieurs();
+      }
+    }
+    // 18. Les lieux simulés : des croix dans toutes leurs pièces, une pièce tournée chacun, un numéro de version (passe 235)
+    {
+      const vraiConfirm18 = window.confirm, vraiToast18 = toast, vraiPersister18 = persister, vue18 = vueCourante, sauveD18 = D, mode18 = mode, aller18 = aller;
+      let persistes = 0;
+      try {
+        toast = () => {}; persister = () => { persistes++; };
+        const lieux = [0, 1, 2].map(i => construireLieu(i)), nomsP = (d, f) => d.b1.plan.pieces.filter(f).map(p => p.nom);
+        const rapport = lieux.map((d, i) => {
+          const L = LIEUX_SIMULES[i], eps = d.b2.episodes, par = {};
+          eps.forEach(e => { par[e.piece] = par[e.piece] || {n: 0, croix: 0}; par[e.piece].n++; if (e.pos) par[e.piece].croix++; });
+          const avecFoyers = d.b1.plan.pieces.filter((p, k) => (L.croix || []).some(x => x[0] === k) && par[p.id]);
+          return {sans: avecFoyers.filter(p => !par[p.id].croix).map(p => p.nom), deux: Object.values(par).filter(v => v.n >= 2).length, deuxSansCroix: d.b1.plan.pieces.filter(p => par[p.id] && par[p.id].n >= 2 && !par[p.id].croix).map(p => p.nom), total: eps.length, avec: eps.filter(e => e.pos).length};
+        });
+        ok('Dans les trois lieux simulés, chaque pièce qui a des épisodes a au moins une croix (la première de chaque pièce est toujours posée) ; aucune pièce de plusieurs épisodes n\'en est privée ; tous les épisodes n\'ont pas la leur',
+          rapport.every(r => r.sans.length === 0 && r.deuxSansCroix.length === 0 && r.avec < r.total && r.deux >= 6), JSON.stringify(rapport.map(r => [r.sans, r.deuxSansCroix, r.avec + '/' + r.total, r.deux])));
+        const parLieu = lieux.map(d => d.b2.episodes.filter(e => e.pos).length);
+        ok('Les lieux simulés ont beaucoup plus de croix qu\'avant (au moins la moitié des épisodes), toutes valides : dans la pièce, hors de ses enclaves', lieux.every((d, i) => { D = d; const n = d.b2.episodes.length; return parLieu[i] >= n / 2 && d.b2.episodes.filter(e => e.pos).every(e => { const p = pieceParId(e.piece), a = pointDepuisPos(p, e.pos); return posValide(e.pos) && p.rects.some(q => a.x >= q.x - 1e-6 && a.x <= q.x + q.w + 1e-6 && a.y >= q.y - 1e-6 && a.y <= q.y + q.h + 1e-6) && !obstaclesDe(p).some(o => a.x > o.x + 1e-6 && a.x < o.x + o.w - 1e-6 && a.y > o.y + 1e-6 && a.y < o.y + o.h - 1e-6); }); }), parLieu.join(' · '));
+        // Une pièce dessinée tournée dans chaque lieu : les croix, écrites dans le plan tel qu'on le voit, restent aux endroits prévus
+        const tournees = lieux.map(d => d.b1.plan.pieces.filter(p => p.rot).map(p => p.nom + ':' + p.rot).join());
+        const pres = lieux.map((d, i) => { D = d; return d.b1.plan.pieces.every((p, k) => { if (!p.rot) return true; const spec = LIEUX_SIMULES[i].croix.find(x => x[0] === k), b = boite([p]); const pts = d.b2.episodes.filter(e => e.piece === p.id && e.pos).map(e => pointDepuisPos(p, e.pos)); const foy = spec[1].map(f => ({x: b.x + f[0] * b.w, y: b.y + f[1] * b.h, s: f[2]})); return pts.length >= 1 && pts.every(a => foy.some(f => Math.hypot(a.x - f.x, a.y - f.y) <= 3.6 * f.s + 1.2)); }); });
+        ok('Chaque lieu simulé a une pièce dessinée tournée (rot) : Salle bleue, Chambre 1, Salle de classe ; ses croix sont rangées dans son repère d\'origine et reviennent, à l\'écran, autour des endroits prévus (la porte, le fond…)', tournees.join(' | ') === 'Salle bleue:1 | Chambre 1:3 | Salle de classe:2' && pres.every(Boolean), tournees.join(' | ') + ' ' + pres.join());
+        ok('Les lieux simulés ne changent pas d\'un jour à l\'autre : mêmes épisodes, mêmes croix, même numéro de version (VERSION_SIMULATION)', JSON.stringify(construireLieu(1).b2.episodes.map(e => [e.date, e.heure, e.pos, e.contexte])) === JSON.stringify(lieux[1].b2.episodes.map(e => [e.date, e.heure, e.pos, e.contexte])) && lieux.every((d, i) => d.sim && d.sim.i === i && d.sim.v === VERSION_SIMULATION));
+        ok('Les descriptions des lieux simulés disent qu\'ils ont leurs croix', LIEUX_SIMULES.every(L => /croix/.test(L.desc)) && LIEUX_SIMULES.every(L => (L.croix || []).every(x => !x[2] || (x[2] > 0 && x[2] <= 1)) && (L.rot || []).every(([k, n]) => L.pieces[k] && n >= 0 && n <= 3)));
+        // Un lieu simulé d'avant se reconnaît, et se remet à jour
+        mode = 'socle'; D = construireLieu(1); const frais = [simIndex(), simPerimee()];
+        D.sim.v = VERSION_SIMULATION - 1; const vieux = [simIndex(), simPerimee()];
+        delete D.sim; const sansNumero = [simIndex(), simPerimee()];
+        D.exemple = false; const vrai = [simIndex(), simPerimee()]; D.exemple = true;
+        ok('Un lieu simulé d\'une version précédente (ou d\'avant les numéros de version, reconnu à son nom) se reconnaît comme périmé ; un lieu à jour, un vrai dossier non',
+          frais[0] === 1 && frais[1] === false && vieux[0] === 1 && vieux[1] === true && sansNumero[0] === 1 && sansNumero[1] === true && vrai[0] === -1 && vrai[1] === false);
+        majBarre(); const bouton = /majSimulation\(\)/.test($('barre-etat').innerHTML) && /Remettre à jour/.test($('barre-etat').textContent);
+        D = construireLieu(1); majBarre(); const sansBouton = !/majSimulation/.test($('barre-etat').innerHTML);
+        ok('La barre du haut propose « ↻ Remettre à jour ce lieu simulé » pour un lieu périmé, et seulement pour lui', bouton && sansBouton);
+        // « Remettre à jour » refait le lieu (la question est posée ; refuser ne change rien)
+        D = construireLieu(2); delete D.sim; D.b2.episodes.pop(); const avantMaj = D.b2.episodes.length; persistes = 0; rendreVue.vu = true;
+        window.confirm = () => false; majSimulation(); const refuse = D.b2.episodes.length === avantMaj && persistes === 0 && !D.sim;
+        window.confirm = () => true; aller = () => {}; majSimulation(); aller = aller18;
+        ok('« Remettre à jour » demande confirmation (refuser ne change rien) ; accepter refait le lieu simulé avec ses croix et son numéro de version, et le garde', refuse && D.sim && D.sim.v === VERSION_SIMULATION && D.sim.i === 2 && D.b2.episodes.length === LIEUX_SIMULES[2].n && persistes === 1 && !simPerimee());
+      } finally {
+        window.confirm = vraiConfirm18; toast = vraiToast18; persister = vraiPersister18; aller = aller18; D = sauveD18; mode = mode18; vueCourante = vue18;
       }
     }
   } catch (e) { ok('Les vérifications ont planté', false, e.message); }
