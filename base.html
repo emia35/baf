@@ -455,6 +455,10 @@ table.croise td.n{white-space:normal;}
 .choix-pos p{flex:1 1 220px;margin:0;}
 .croix-halo{fill:var(--sheet);opacity:.92;}
 .croix-trait{stroke:var(--slate-deep);stroke-linecap:round;}
+/* ── Les légendes du plan (passe 229) ── */
+.leg-texte{font-family:var(--police-interface);font-style:italic;font-weight:600;fill:var(--ink-soft);text-anchor:middle;paint-order:stroke;stroke:var(--sheet);stroke-linejoin:round;pointer-events:none;}
+.leg-zone{fill:transparent;stroke:none;cursor:grab;}
+.leg-zone.selection{stroke:var(--slate);stroke-dasharray:.25 .18;fill:var(--slate-pale);fill-opacity:.3;}
 /* ── Listes du préambule ── */
 .liste-edit{display:flex;flex-direction:column;gap:6px;margin:0 0 10px;}
 .liste-edit .ligne{display:grid;grid-template-columns:minmax(0,1fr) 92px 92px 34px;gap:6px;align-items:center;}
@@ -619,11 +623,14 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
         <button type="button" class="bt petit" onclick="ajouterMural('fenetre')" title="Sur un mur de la pièce choisie ; elle glisse ensuite le long des murs">＋ Fenêtre</button>
         <select class="bt petit" style="width:auto;min-height:28px;padding:0 8px" aria-label="Ajouter une baie vitrée, un escalier ou un ascenseur" onchange="ajouterAutre(this.value); this.value=''"><option value="">＋ Baie, escalier…</option><option value="baie">Baie vitrée</option><option value="escalier">Escalier</option><option value="ascenseur">Ascenseur</option></select>
         <select class="bt petit" style="width:auto;min-height:28px;padding:0 8px" aria-label="Ajouter un meuble" onchange="ajouterMeuble(this.value); this.value=''"><option value="">＋ Meuble…</option></select>
+        <button type="button" class="bt petit" onclick="ajouterLegende()" title="Un texte libre sur le plan : Entrée principale, Vers le centre-ville… avec une flèche si l'on veut">＋ Légende</button>
         <span class="sep"></span>
         <button type="button" class="bt petit" id="btn-annuler" onclick="annuler()" title="Annuler (Ctrl+Z)">↶ Annuler</button>
         <button type="button" class="bt petit" id="btn-refaire" onclick="refaire()" title="Rétablir (Ctrl+Y)">↷ Rétablir</button>
         <span class="sep"></span>
         <button type="button" class="bt petit" id="btn-lecture" aria-pressed="false" onclick="basculerCalqueLecture()" title="Voir sur le plan ce que la BASE lit : murs communs, passages, vues">👁 Lecture</button>
+        <span class="sep"></span>
+        <select class="bt petit" style="width:auto;min-height:28px;padding:0 8px" aria-label="Télécharger le plan vierge" title="Le plan seul, sans épisode : à imprimer, à annoter, à glisser dans un document" onchange="exporterPlanVierge(this.value); this.value=''"><option value="">⬇ Plan vierge…</option><option value="png">Image PNG</option><option value="svg">Image SVG</option></select>
       </div>
       <div class="plan-cadre" id="plan-edition-cadre">
         <svg id="plan-edition" xmlns="http://www.w3.org/2000/svg"></svg>
@@ -634,7 +641,7 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
         </div>
       </div>
       <p class="plan-aide" id="lecture-legende" hidden><b>Lecture</b> — traits verts épais : murs communs ; points verts : passages (portes) ; tirets bleus : ce qu'on voit par une fenêtre (en rouge vers une route ou un parking).</p>
-      <p class="plan-aide">Glisser une pièce pour la déplacer, ses poignées pour l'agrandir ; glisser le fond pour se déplacer ; molette ou ＋ / － pour zoomer. Double-clic (ou appui long) sur une pièce pour la nommer. Les portes, fenêtres et baies se posent sur un mur de la pièce choisie, les meubles et les escaliers dedans ; les zones de dehors (cour, route, parking) se choisissent dans « Type de zone ».</p>
+      <p class="plan-aide">Glisser une pièce pour la déplacer, ses poignées pour l'agrandir ; glisser le fond pour se déplacer ; molette ou ＋ / － pour zoomer. Double-clic (ou appui long) sur une pièce pour la nommer. « ＋ Légende » pose un texte libre (« Entrée principale », « Vers le centre-ville ») qui se glisse où l'on veut. Les portes, fenêtres et baies se posent sur un mur de la pièce choisie, les meubles et les escaliers dedans ; les zones de dehors (cour, route, parking) se choisissent dans « Type de zone ».</p>
       <div class="plan-panneau" id="plan-panneau"></div>
       <details class="repli" style="margin-top:12px"><summary>Échelle du plan (facultative)</summary>
         <p class="discret" id="echelle-texte"></p>
@@ -824,7 +831,7 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
    chose lue de la BAF, en lecture : le choix clair / sombre, pour s'ouvrir dans le même thème.
    ══════════════════════════════════════════════════════════════════════════════════════════════ */
 
-const VERSION_BASE = 'BASE v2026.10.13-2';
+const VERSION_BASE = 'BASE v2026.10.13-3';
 const CLE_SOCLE = 'base-dossier-v1', CLE_DECL = 'base-declarant-v1', CLE_MODE = 'base-mode', CLE_THEME = 'base-theme';
 const TYPES_ZONE = [['activite', "Salle d'activité"], ['sejour', 'Séjour, salon'], ['repas', 'Repas'], ['accueil', 'Accueil'], ['circulation', 'Circulation'],
   ['chambre', 'Chambre'], ['repos', 'Salle de repos'], ['calme', 'Salle de mise au calme'], ['snoezelen', 'Salle multisensorielle'], ['soins', 'Soins, infirmerie'],
@@ -902,6 +909,10 @@ function normaliserPlan(d) {
     if (e.cat === 'escalier') { if (!Array.isArray(e.niveaux) || e.niveaux.length !== 2 || !e.niveaux.every(id => ids.has(id))) e.niveaux = [defaut, defaut]; if (!e.niveau || !ids.has(e.niveau)) e.niveau = e.niveaux[0]; }
     else if (!e.niveau || !ids.has(e.niveau)) e.niveau = defaut;
   });
+  // Les légendes du plan (passe 229) : du texte posé sur un niveau, avec une taille et une flèche facultative.
+  pl.legendes = (Array.isArray(pl.legendes) ? pl.legendes : []).filter(l => l && typeof l === 'object' && String(l.texte || '').trim() && Number.isFinite(+l.x) && Number.isFinite(+l.y))
+    .map((l, i) => ({id: l.id || 'l' + i + '_' + Date.now().toString(36), niveau: ids.has(l.niveau) ? l.niveau : defaut, x: +l.x, y: +l.y, texte: String(l.texte).replace(/\s+/g, ' ').trim().slice(0, 60),
+      taille: TAILLES_LEGENDE[l.taille] ? l.taille : 'm', fleche: ['n', 's', 'e', 'o'].indexOf(l.fleche) >= 0 ? l.fleche : ''}));
   if (!(d.b1.echelle > 0)) d.b1.echelle = null;
   // Les fiches des pièces (passe 226) : un objet par pièce ; celle d'une pièce qui n'existe plus est écartée.
   if (!d.b1.fiches || typeof d.b1.fiches !== 'object' || Array.isArray(d.b1.fiches)) d.b1.fiches = {};
@@ -1096,6 +1107,7 @@ function refaire() { if (!refaites.length) return; historique.push(etatPlan()); 
 function majBoutonsHistorique() { if ($('btn-annuler')) { $('btn-annuler').disabled = !historique.length; $('btn-refaire').disabled = !refaites.length; } }
 function verifierSelection() {
   if (!selection) return;
+  if (selection.legende) { if (!legendeParId(selection.legende)) selection = null; return; }
   if (selection.elem) { if (!elemParId(selection.elem)) selection = null; return; }
   const p = pieceParId(selection.piece); if (!p) selection = null; else selection.morceau = Math.min(selection.morceau, p.rects.length - 1);
 }
@@ -1108,7 +1120,7 @@ function boite(ps) {
 }
 function cadreEdition() { const c = $('plan-edition-cadre'); return {w: c.clientWidth || 800, h: c.clientHeight || 500}; }
 function ajusterVue() {
-  const b = boite(pieces()), c = cadreEdition(), marge = 3;
+  const b = boiteTout(), c = cadreEdition(), marge = 3;
   vueEdition.k = Math.max(8, Math.min(60, Math.min(c.w / (b.w + 2 * marge), c.h / (b.h + 2 * marge))));
   vueEdition.x = b.x - marge - ((c.w / vueEdition.k) - (b.w + 2 * marge)) / 2;
   vueEdition.y = b.y - marge - ((c.h / vueEdition.k) - (b.h + 2 * marge)) / 2;
@@ -1227,6 +1239,71 @@ function pointLibre(p, obstacles, meubles, long) {
     if (!best || score > best.score) best = {x, y, d: demi, score};
   } });
   return best || {x: cx, y: cy, d: 0};
+}
+
+/* ══ Les légendes du plan (passe 229, Arthur et Émilie) ══
+   Du texte libre posé sur le plan — « Entrée principale », « Vers le centre-ville » — avec, si l'on veut, une flèche. Une légende
+   se glisse où l'on veut, même hors des pièces, et appartient à un niveau. La BASE ne s'en sert pas pour lire le plan : elles
+   servent à se repérer (celui qui déclare, celui qui lit la carte). Données : D.b1.plan.legendes = [{id, niveau, x, y, texte,
+   taille 'p'|'m'|'g', fleche '' | 'n' | 's' | 'e' | 'o'}] ; elles suivent l'annulation du plan et voyagent dans les fichiers. */
+const TAILLES_LEGENDE = {p: .46, m: .62, g: .9};
+const FLECHES_LEGENDE = [['', 'Aucune'], ['n', '↑ vers le haut'], ['s', '↓ vers le bas'], ['o', '← vers la gauche'], ['e', '→ vers la droite']];
+function legendes() { if (!D.b1.plan.legendes) D.b1.plan.legendes = []; return D.b1.plan.legendes; }
+function legendeParId(id) { return legendes().find(l => l.id === id); }
+const legendesNiveau = n => legendes().filter(l => niveauDe(l) === n);
+// Le texte d'une légende, en lignes : la flèche à gauche ou à droite sur la même ligne, au-dessus ou au-dessous sur une autre.
+function lignesLegende(l) {
+  const t = String(l.texte || ''), f = l.fleche;
+  if (f === 'n') return ['↑', t];
+  if (f === 's') return [t, '↓'];
+  return [f === 'o' ? '← ' + t : f === 'e' ? t + ' →' : t];
+}
+const tailleLegende = l => TAILLES_LEGENDE[l.taille] || TAILLES_LEGENDE.m;
+// Le rectangle qu'occupe une légende, à peu près (pour la saisir, et pour cadrer le plan sur elle).
+function boiteLegende(l) {
+  const lg = lignesLegende(l), t = tailleLegende(l), w = Math.max(...lg.map(s => s.length)) * t * .58 + .3, h = lg.length * t * 1.25;
+  return {x: l.x - w / 2, y: l.y - h / 2, w, h};
+}
+function unionBoites(liste) {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  liste.forEach(b => { x0 = Math.min(x0, b.x); y0 = Math.min(y0, b.y); x1 = Math.max(x1, b.x + b.w); y1 = Math.max(y1, b.y + b.h); });
+  return isFinite(x0) ? {x: x0, y: y0, w: x1 - x0, h: y1 - y0} : {x: 0, y: 0, w: 24, h: 16};
+}
+// Le cadre d'un niveau : ses pièces et ses légendes (une légende peut se poser hors des pièces) ; celui de tout le plan.
+function boiteNiveau(n) { const ps = piecesNiveau(n), ls = legendesNiveau(n); return ls.length ? unionBoites((ps.length ? [boite(ps)] : []).concat(ls.map(boiteLegende))) : boite(ps); }
+function boiteTout() { const ps = pieces(), ls = legendes(); return ls.length ? unionBoites((ps.length ? [boite(ps)] : []).concat(ls.map(boiteLegende))) : boite(ps); }
+function dessinLegendes(o) {
+  const k = o.k || 26, n = o.niveau; if (n === undefined) return '';
+  const ls = legendesNiveau(n); if (!ls.length) return '';
+  return '<g class="leg-groupe">' + ls.map(l => {
+    const lg = lignesLegende(l), t = tailleLegende(l), h = lg.length * t * 1.25, y0 = l.y - h / 2 + t, b = boiteLegende(l);
+    const texte = '<text class="leg-texte" x="' + l.x + '" y="' + y0 + '" font-size="' + t + '" stroke-width="' + t * .28 + '">' + lg.map((s, i) => '<tspan x="' + l.x + '" dy="' + (i ? t * 1.25 : 0) + '">' + esc(s) + '</tspan>').join('') + '</text>';
+    const zone = o.edition ? '<rect class="leg-zone' + (o.selection === l.id ? ' selection' : '') + '" data-legende="' + l.id + '" x="' + (b.x - .25) + '" y="' + (b.y - .25) + '" width="' + (b.w + .5) + '" height="' + (b.h + .5) + '" rx=".15" stroke-width="' + 1.5 / k + '"/>' : '';
+    return texte + zone;
+  }).join('') + '</g>';
+}
+function ajouterLegende() {
+  const c = cadreEdition(), n = niveauActif(), id = nouvelId('l');
+  const x = arrondi(vueEdition.x + c.w / vueEdition.k / 2, .5), y = arrondi(vueEdition.y + c.h / vueEdition.k / 2, .5);
+  modifierPlan(() => legendes().push({id, niveau: n, x, y, texte: 'Légende', taille: 'm', fleche: ''}));
+  selection = {legende: id}; rendrePlanEdition();
+  setTimeout(() => { const i = $('pl-texte'); if (i) { i.focus(); i.select(); } }, 30);
+}
+function modifierLegende(fn) { const l = selection && selection.legende && legendeParId(selection.legende); if (!l) return; modifierPlan(() => fn(l)); }
+function texteLegende(v) {
+  const t = String(v || '').replace(/\s+/g, ' ').trim().slice(0, 60);
+  if (!t) { supprimerLegende(); return; }   // un texte vidé : la légende s'en va (« Annuler » la rend)
+  modifierLegende(l => { l.texte = t; });
+}
+function flecheLegende(v) { modifierLegende(l => { l.fleche = ['n', 's', 'e', 'o'].indexOf(v) >= 0 ? v : ''; }); }
+function tailleDeLegende(v) { modifierLegende(l => { l.taille = TAILLES_LEGENDE[v] ? v : 'm'; }); }
+function supprimerLegende() { const id = selection && selection.legende; if (!id) return; modifierPlan(() => { D.b1.plan.legendes = legendes().filter(l => l.id !== id); }); selection = null; rendrePlanEdition(); }
+function panneauLegende(lg, fini) {
+  return '<p class="discret"><b>La légende</b> se glisse où l\'on veut, même hors des pièces. Elle ne change rien à la lecture du plan : elle sert à se repérer.</p>' +
+    '<div class="grille2"><label class="champ"><span>Le texte</span><input type="text" id="pl-texte" value="' + esc(lg.texte) + '" maxlength="60" onchange="texteLegende(this.value)"></label>' +
+    '<label class="champ"><span>La flèche</span>' + selectHtml('pl-fleche', lg.fleche || '', FLECHES_LEGENDE, 'flecheLegende(this.value)') + '</label></div>' +
+    '<div class="grille2"><label class="champ"><span>La taille</span>' + selectHtml('pl-taille', lg.taille || 'm', [['p', 'Petite'], ['m', 'Moyenne'], ['g', 'Grande']], 'tailleDeLegende(this.value)') + '</label></div>' +
+    '<div class="boutons"><button type="button" class="bt petit danger" onclick="supprimerLegende()">Supprimer</button>' + fini + '</div>';
 }
 
 /* ── Intérieur, extérieur (passe 224) : les zones de dehors se dessinent autrement (contour en pointillés, cour verte,
@@ -1367,6 +1444,7 @@ function retirerNiveau() {
   modifierPlan(() => {
     D.b1.plan.pieces = pieces().filter(p => niveauDe(p) !== id);
     D.b1.plan.elements = elements().filter(e => e.cat === 'escalier' ? (e.niveaux || []).indexOf(id) < 0 : niveauDe(e) !== id);
+    D.b1.plan.legendes = legendes().filter(l => niveauDe(l) !== id);
     D.b1.plan.niveaux = ns.filter(x => x.id !== id);
   });
   niveauCourant = null; selection = null; rendrePlanEdition();
@@ -1376,7 +1454,7 @@ function retirerNiveau() {
 function dessinMeuble(e, o, ep) {
   const sel = o.selection === e.id ? ' selection' : '', t = Math.min(.36, e.w / Math.max(3, nomMeuble(e.type).length * .55));
   return '<g class="meuble' + sel + (o.filigrane ? ' filigrane' : '') + '"><rect class="meuble-fond" data-elem="' + e.id + '" x="' + e.x + '" y="' + e.y + '" width="' + e.w + '" height="' + e.h + '" rx="' + (e.type === 'chaise' ? .2 : .1) + '" stroke-width="' + ep * .7 + '"/>' +
-    (!o.filigrane && e.w >= 1 && e.h >= .55 ? '<text class="meuble-nom" x="' + (e.x + e.w / 2) + '" y="' + (e.y + e.h / 2) + '" font-size="' + t + '">' + esc(nomMeuble(e.type)) + '</text>' : '') + '</g>';
+    (!o.filigrane && !o.sansNomsMeubles && e.w >= 1 && e.h >= .55 ? '<text class="meuble-nom" x="' + (e.x + e.w / 2) + '" y="' + (e.y + e.h / 2) + '" font-size="' + t + '">' + esc(nomMeuble(e.type)) + '</text>' : '') + '</g>';
 }
 // Un escalier : des marches (ou deux diagonales pour un ascenseur) et une flèche vers le niveau relié.
 function dessinEscalier(e, o, ep) {
@@ -1461,7 +1539,7 @@ function dessinPlan(ps, o) {
     return {texte, g: '<g class="' + cl + '" data-piece="' + p.id + '">' + traits + fonds + marques + '</g>'};
   });
   // Les pièces, puis les meubles et les ouvertures, puis les noms par-dessus tout.
-  return corps.map(c => c.g).join('') + (o.elements === false ? '' : dessinElements(o)) + '<g class="noms">' + corps.map(c => c.texte).join('') + '</g>';
+  return corps.map(c => c.g).join('') + (o.elements === false ? '' : dessinElements(o)) + '<g class="noms">' + corps.map(c => c.texte).join('') + '</g>' + dessinLegendes(o);
 }
 // Le niveau d'à côté (celui du dessous, sinon celui du dessus), en filigrane, pour aligner les pièces.
 function niveauFantome(n) { const ns = niveaux(), i = rangNiveau(n); return ns[i - 1] || ns[i + 1] || null; }
@@ -1492,7 +1570,7 @@ function rendrePlanEdition() {
   const pas = 1, r = Math.max(.04, 1.2 / k);
   let h = '<defs><pattern id="grille" width="' + pas + '" height="' + pas + '" patternUnits="userSpaceOnUse"><circle cx="0" cy="0" r="' + r + '" fill="var(--line)"/></pattern></defs>' +
     '<rect class="plan-fond" x="' + v.x + '" y="' + v.y + '" width="' + vw + '" height="' + vh + '" fill="url(#grille)"/>';
-  h += dessinPlan(piecesNiveau(n), {k, selection: selection && (selection.piece || selection.elem), types: true, edition: true, niveau: n});
+  h += dessinPlan(piecesNiveau(n), {k, selection: selection && (selection.piece || selection.elem || selection.legende), types: true, edition: true, niveau: n});
   h += dessinFantome(n, k);   // par-dessus, comme un calque : les pièces du niveau d'à côté ont un fond opaque, il serait caché dessous
   if (lectureVisible && pieces().length) h += dessinLecture(lectureDuPlan(D.b1), n, k);
   const p = selection && selection.piece && pieceParId(selection.piece);
@@ -1519,6 +1597,8 @@ function rendrePanneauPiece() {
   const actif = document.activeElement && document.activeElement.id;
   const e = selection && selection.elem && elemParId(selection.elem);
   const fini = '<button type="button" class="bt-lien" style="margin-left:auto" onclick="selection=null;rendrePlanEdition()">Fini</button>';
+  const lg = selection && selection.legende && legendeParId(selection.legende);
+  if (lg) { el.innerHTML = panneauLegende(lg, fini); if (actif && /^pl-/.test(actif)) { const n = $(actif); if (n) n.focus(); } return; }
   if (e) {
     if (estRect(e)) {
       const taille = '<div class="champ">' + ETIQ('Sa taille') + '<div class="boutons">' +
@@ -1586,7 +1666,7 @@ function brancherEditeur() {
   svg.addEventListener('pointerdown', ev => {
     if (ev.button > 0) return;
     const pt = pointDuMonde(ev), cible = ev.target, at = n => cible.getAttribute && cible.getAttribute(n);
-    const poignee = at('data-poignee'), idE = at('data-elem'), idP = at('data-piece');
+    const poignee = at('data-poignee'), idE = at('data-elem'), idP = at('data-piece'), idLeg = at('data-legende');
     svg.setPointerCapture(ev.pointerId);
     if (poignee && selection && selection.elem) {
       const e = elemParId(selection.elem);
@@ -1594,6 +1674,10 @@ function brancherEditeur() {
     } else if (poignee && selection && selection.piece) {
       const p = pieceParId(selection.piece);
       geste = {type: 'taille', dir: poignee, depart: pt, r0: clone(p.rects[selection.morceau]), avant: etatPlan()};
+    } else if (idLeg) {
+      selection = {legende: idLeg}; const lg = legendeParId(idLeg);
+      geste = {type: 'legende', depart: pt, x0: lg.x, y0: lg.y, avant: etatPlan()};
+      rendrePlanEdition();
     } else if (idE) {
       selection = {elem: idE};
       const e = elemParId(idE);
@@ -1619,6 +1703,8 @@ function brancherEditeur() {
     if (geste.type === 'deplacer') {
       if (Math.abs(dx) + Math.abs(dy) > .3) geste.bouge = true;
       deplacerPiece(pieceParId(selection.piece), geste.rects0, geste.elems0, Math.round(dx), Math.round(dy), geste.enfants0);
+    } else if (geste.type === 'legende') {
+      const lg = legendeParId(selection.legende); if (lg) { lg.x = arrondi(geste.x0 + dx, .5); lg.y = arrondi(geste.y0 + dy, .5); }
     } else if (geste.type === 'element') {
       const e = elemParId(selection.elem);
       if (estRect(e)) { e.x = arrondi(geste.x0 + dx, .5); e.y = arrondi(geste.y0 + dy, .5); }
@@ -1642,14 +1728,17 @@ function brancherEditeur() {
     geste = null; rendrePlanEdition();
   };
   svg.addEventListener('pointerup', fin); svg.addEventListener('pointercancel', fin);
-  svg.addEventListener('dblclick', ev => { if (ev.target.getAttribute && ev.target.getAttribute('data-piece')) nommerSelection(); });
+  svg.addEventListener('dblclick', ev => {
+    const t = ev.target; if (!t || !t.getAttribute) return;
+    if (t.getAttribute('data-legende')) { const i = $('pl-texte'); if (i) { i.focus(); i.select(); } } else if (t.getAttribute('data-piece')) nommerSelection();
+  });
   svg.addEventListener('wheel', ev => { ev.preventDefault(); const pt = pointDuMonde(ev); zoomer(ev.deltaY < 0 ? 1.12 : 1 / 1.12, pt.px, pt.py); }, {passive: false});
   document.addEventListener('keydown', ev => {
     if (!$('vue-preambule').classList.contains('show')) return;
     const champ = /^(INPUT|SELECT|TEXTAREA)$/.test((document.activeElement || {}).tagName || '');
     if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'z' && !champ) { ev.preventDefault(); if (ev.shiftKey) refaire(); else annuler(); }
     else if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'y' && !champ) { ev.preventDefault(); refaire(); }
-    else if ((ev.key === 'Delete' || ev.key === 'Backspace') && selection && !champ) { ev.preventDefault(); if (selection.elem) supprimerElement(); else supprimerPiece(); }
+    else if ((ev.key === 'Delete' || ev.key === 'Backspace') && selection && !champ) { ev.preventDefault(); if (selection.legende) supprimerLegende(); else if (selection.elem) supprimerElement(); else supprimerPiece(); }
   });
   window.addEventListener('resize', () => { rendrePlanEdition(); });
 }
@@ -2623,7 +2712,7 @@ function rendrePlanChoix() {
   niveauChoix = n;
   $('choix-niveaux').innerHTML = ns.length > 1 ? '<div class="segment" role="tablist" aria-label="Niveaux du bâtiment">' + ns.map(x => '<button type="button" role="tab" aria-selected="' + (x.id === n) + '" class="' + (x.id === n ? 'on' : '') + '" onclick="choisirNiveauChoix(\'' + x.id + '\')">' + esc(x.nom) + '</button>').join('') + '</div>' : '';
   const pc = pieceChoisie ? pieceParId(pieceChoisie) : null, zoom = !!pc && zoomChoix && modePos === 'endroit' && niveauDe(pc) === n;
-  const b = zoom ? boite([pc]) : boite(piecesNiveau(n)), w = cadre.clientWidth || 560, h = cadre.clientHeight || 340, m = zoom ? 1 : 1.5;   // cadré sur les pièces du niveau (plus grandes, plus faciles à toucher), ou sur la pièce où l'on pose la croix
+  const b = zoom ? boite([pc]) : boiteNiveau(n), w = cadre.clientWidth || 560, h = cadre.clientHeight || 340, m = zoom ? 1 : 1.5;   // cadré sur les pièces du niveau (plus grandes, plus faciles à toucher), ou sur la pièce où l'on pose la croix
   const k = Math.min(w / (b.w + 2 * m), h / (b.h + 2 * m));
   svg.setAttribute('viewBox', (b.x - m - (w / k - b.w - 2 * m) / 2) + ' ' + (b.y - m - (h / k - b.h - 2 * m) / 2) + ' ' + (w / k) + ' ' + (h / k));
   let croix = '';
@@ -2741,7 +2830,7 @@ function svgCarte(eps, opts) {
   });
   // Un plan par niveau, cadré sur ses propres pièces ; les couleurs, elles, se comparent d'un niveau à l'autre (même échelle de couleur).
   const m = 1.2, k = 30;
-  const niv = niveaux().filter(n => piecesNiveau(n.id).length).map(n => { const b = boite(piecesNiveau(n.id));
+  const niv = niveaux().filter(n => piecesNiveau(n.id).length).map(n => { const b = boiteNiveau(n.id);
     return {id: n.id, nom: n.nom, vb: [b.x - m, b.y - m, b.w + 2 * m, b.h + 2 * m], corps: dessinPlan(piecesNiveau(n.id), {k, couleurs, comptes: vc.valeurs, etiquettes: vc.etiquettes, sous: vc.sous, encre, filigrane: true, niveau: n.id})}; });
   return {comptes, valeurs: vc.valeurs, max, calque: cq, vb: niv.length ? niv[0].vb : [0, 0, 24, 16], niveaux: niv, corps: niv.map(n => n.corps).join('')};
 }
@@ -2850,6 +2939,10 @@ function majSynthese() {
     tableau('Par comportement', parType, 'Un épisode peut porter plusieurs comportements : le total peut dépasser 100 %.');
   rendreCroisements(eps);
 }
+// Les styles des images exportées (toujours claires : elles partent dans un document). Le plan vierge et la carte les partagent.
+function styleExport() {
+  return '<style>.piece-trait{fill:none;stroke:#2C2416}.exterieur .piece-trait{stroke:#6E8F6A}.piece-fond{fill:#FFFDF8}.ouverture{stroke:#FFFDF8}.porte{stroke:#2C2416}.porte.vitree{stroke:#5A6D8B}.hublot{fill:#FFFDF8;stroke:#5A6D8B}.porte-arc{fill:none;stroke:#6B6152}.ouv-fenetre{stroke:#5A6D8B}.baie{stroke:#5A6D8B}.escalier-fond{fill:#F5E8C8;stroke:#82692D}.escalier-trait{stroke:#82692D}.escalier-nom{font-weight:700;fill:#82692D;text-anchor:middle;dominant-baseline:middle;paint-order:stroke;stroke:#F5E8C8;stroke-width:.14px}.meuble-fond{fill:#EDE7D9;stroke:#746B5B}.meuble.filigrane{opacity:.35}.piece-nom{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;font-weight:700;text-anchor:middle;dominant-baseline:middle}.piece-type{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;text-anchor:middle;dominant-baseline:middle}.piece-sous{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;text-anchor:middle;dominant-baseline:middle}text{font-family:Space Grotesk,Segoe UI,Arial,sans-serif}.zone-exterieur .piece-fond,.zone-preau .piece-fond{fill:#E3ECD6}.zone-route .piece-fond,.zone-parking .piece-fond{fill:#D9D6CF}.route-ligne,.parking-ligne{stroke:#FFFFFF;opacity:.85}.piece-sous{font-family:Space Grotesk,Segoe UI,Arial,sans-serif}.leg-texte{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;font-style:italic;font-weight:600;fill:#6B6152;text-anchor:middle;paint-order:stroke;stroke:#FFFDF8;stroke-linejoin:round}</style>';
+}
 // L'image de la carte : toujours claire (elle part dans un document), avec son titre, sa légende et l'avertissement. Celle du calque choisi.
 function svgExport() {
   const f = filtres(), eps = episodesFiltres(f), c = svgCarte(eps, {export: true, calque}), k = 30, cq = c.calque;
@@ -2860,7 +2953,7 @@ function svgExport() {
   const fil = [f.moment && nomMoment(f.moment), f.type && (f.type === '_autre' ? 'Autre' : nomType(f.type)), (f.debut || f.fin) && ((f.debut ? 'du ' + dateFr(f.debut) : '') + (f.fin ? ' au ' + dateFr(f.fin) : ''))].filter(Boolean).join(' · ');
   const echelle = ECHELLES[cq] || ECHELLE;
   let deg = '<defs><linearGradient id="lg">' + echelle.map((col, i) => '<stop offset="' + (i / (echelle.length - 1)) + '" stop-color="' + col + '"/>').join('') + '</linearGradient></defs>';
-  const style = '<style>.piece-trait{fill:none;stroke:#2C2416}.exterieur .piece-trait{stroke:#6E8F6A}.piece-fond{fill:#FFFDF8}.ouverture{stroke:#FFFDF8}.porte{stroke:#2C2416}.porte.vitree{stroke:#5A6D8B}.hublot{fill:#FFFDF8;stroke:#5A6D8B}.porte-arc{fill:none;stroke:#6B6152}.ouv-fenetre{stroke:#5A6D8B}.baie{stroke:#5A6D8B}.escalier-fond{fill:#F5E8C8;stroke:#82692D}.escalier-trait{stroke:#82692D}.escalier-nom{font-weight:700;fill:#82692D;text-anchor:middle;dominant-baseline:middle;paint-order:stroke;stroke:#F5E8C8;stroke-width:.14px}.meuble-fond{fill:#EDE7D9;stroke:#746B5B}.meuble.filigrane{opacity:.35}.piece-nom{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;font-weight:700;text-anchor:middle;dominant-baseline:middle}.piece-type{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;text-anchor:middle;dominant-baseline:middle}.piece-sous{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;text-anchor:middle;dominant-baseline:middle}text{font-family:Space Grotesk,Segoe UI,Arial,sans-serif}</style>';
+  const style = styleExport();
   let y0 = haut;
   const plans = c.niveaux.map((n, i) => {
     const [wi, hi] = tailles[i], y1 = y0; y0 += hi + ent + ecart;
@@ -2884,18 +2977,54 @@ function svgExport() {
     '<text x="16" y="' + (bs + 68) + '" font-size="11.5" fill="#6B6152">' + esc(note[1]) + '</text></svg>';
   return {svg, W, H: H + haut + bas};
 }
+// Les images qui sortent de la BASE : la carte de la synthèse, le plan vierge. Le SVG se télécharge tel quel ; le PNG se dessine d'abord dans un canevas (deux fois plus fin).
+function telechargerImage(blob, nom) { const u = URL.createObjectURL(blob), a = document.createElement('a'); a.href = u; a.download = nom; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 2000); }
+function svgVersPng(e) {
+  return new Promise((reussi, rate) => {
+    const img = new Image(), url = URL.createObjectURL(new Blob([e.svg], {type: 'image/svg+xml;charset=utf-8'}));
+    img.onload = () => {
+      const cv = document.createElement('canvas'); cv.width = e.W * 2; cv.height = e.H * 2;
+      const ctx = cv.getContext('2d'); ctx.scale(2, 2); ctx.drawImage(img, 0, 0); URL.revokeObjectURL(url);
+      cv.toBlob(b => { if (b) reussi(b); else rate(new Error('png')); }, 'image/png');
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rate(new Error('svg')); };
+    img.src = url;
+  });
+}
+function sortirImage(e, nom, format) {
+  if (format === 'svg') { telechargerImage(new Blob([e.svg], {type: 'image/svg+xml'}), nom + '.svg'); return; }
+  svgVersPng(e).then(b => telechargerImage(b, nom + '.png')).catch(() => alert('L\'image n\'a pas pu être fabriquée dans ce navigateur. Essayez le format SVG.'));
+}
 function exporterCarte(format) {
   if (!pieces().length) return;
-  const e = svgExport(), nom = 'BASE-carte_' + nomPropre(D.b1.lieu) + '_' + horodatage();
-  if (format === 'svg') { const u = URL.createObjectURL(new Blob([e.svg], {type: 'image/svg+xml'})); const a = document.createElement('a'); a.href = u; a.download = nom + '.svg'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 2000); return; }
-  const img = new Image(), url = URL.createObjectURL(new Blob([e.svg], {type: 'image/svg+xml;charset=utf-8'}));
-  img.onload = () => {
-    const cv = document.createElement('canvas'); cv.width = e.W * 2; cv.height = e.H * 2;
-    const ctx = cv.getContext('2d'); ctx.scale(2, 2); ctx.drawImage(img, 0, 0); URL.revokeObjectURL(url);
-    cv.toBlob(b => { const u = URL.createObjectURL(b), a = document.createElement('a'); a.href = u; a.download = nom + '.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 2000); }, 'image/png');
-  };
-  img.onerror = () => alert('L\'image n\'a pas pu être fabriquée dans ce navigateur. Essayez le format SVG.');
-  img.src = url;
+  sortirImage(svgExport(), 'BASE-carte_' + nomPropre(D.b1.lieu) + '_' + horodatage(), format);
+}
+/* ── Le plan vierge (passe 229) ── L'image du plan seul : pièces, niveaux, portes, fenêtres, meubles, légendes, échelle. Sans épisode ni calque :
+   à imprimer, à annoter à la main, à glisser dans un document. Toujours claire, comme la carte. */
+function svgPlanVierge() {
+  const niv = niveaux().filter(n => piecesNiveau(n.id).length), multi = niv.length > 1, k = 30, m = 1.2, ent = multi ? 26 : 0, ecart = 8, haut = 64, ech = D.b1.echelle, bas = ech ? 76 : 44;
+  const plans = niv.map(n => { const b = boiteNiveau(n.id), vb = [b.x - m, b.y - m, b.w + 2 * m, b.h + 2 * m]; return {nom: n.nom, vb, w: Math.round(vb[2] * k), h: Math.round(vb[3] * k), corps: dessinPlan(piecesNiveau(n.id), {k, niveau: n.id, sansNomsMeubles: true})}; });
+  const W = Math.max(720, ...plans.map(p => p.w)), H = plans.reduce((a, p) => a + p.h + ent, 0) + Math.max(0, plans.length - 1) * ecart;
+  let y0 = haut;
+  const corps = plans.map(p => {
+    const y1 = y0; y0 += p.h + ent + ecart;
+    return (multi ? '<text x="16" y="' + (y1 + 18) + '" font-size="13" font-weight="700" fill="#2C2416">' + esc(p.nom) + '</text>' : '') +
+      '<svg x="' + Math.round((W - p.w) / 2) + '" y="' + (y1 + ent) + '" width="' + p.w + '" height="' + p.h + '" viewBox="' + p.vb.join(' ') + '">' + p.corps + '</svg>';
+  }).join('');
+  const bs = H + haut, virgule = x => String(x).replace('.', ',');
+  const barre = ech ? '<line x1="16" y1="' + (bs + 18) + '" x2="' + (16 + 5 * k) + '" y2="' + (bs + 18) + '" stroke="#2C2416" stroke-width="2"/><line x1="16" y1="' + (bs + 12) + '" x2="16" y2="' + (bs + 24) + '" stroke="#2C2416" stroke-width="2"/>' +
+    '<line x1="' + (16 + 5 * k) + '" y1="' + (bs + 12) + '" x2="' + (16 + 5 * k) + '" y2="' + (bs + 24) + '" stroke="#2C2416" stroke-width="2"/><text x="' + (26 + 5 * k) + '" y="' + (bs + 23) + '" font-size="12" fill="#6B6152">' +
+    esc(virgule(Math.round(5 * ech * 10) / 10) + ' m (une case : ' + virgule(ech) + ' m)') + '</text>' : '';
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + (H + haut + bas) + '" viewBox="0 0 ' + W + ' ' + (H + haut + bas) + '">' + styleExport() + '<rect width="100%" height="100%" fill="#FFFDF8"/>' +
+    '<text x="16" y="28" font-size="18" font-weight="700" fill="#2C2416">' + esc((D.b1.lieu || 'Le lieu') + ' — plan vierge') + '</text>' +
+    '<text x="16" y="50" font-size="12.5" fill="#6B6152">' + esc(nb(pieces().length, 'pièce') + (multi ? ' sur ' + niv.length + ' niveaux' : '') + ' · BASE, outil 3 de la BAF (EMIA35)') + '</text>' +
+    corps + barre + '<text x="16" y="' + (bs + (ech ? 56 : 30)) + '" font-size="11.5" fill="#6B6152">Le plan seul, sans épisode : à imprimer, à annoter à la main, ou à glisser dans un document.</text></svg>';
+  return {svg, W, H: H + haut + bas};
+}
+function exporterPlanVierge(format) {
+  if (format !== 'png' && format !== 'svg') return;
+  if (!pieces().length) { toast('Le plan est vide : dessinez au moins une pièce.'); return; }
+  sortirImage(svgPlanVierge(), 'BASE-plan_' + nomPropre(D.b1.lieu) + '_' + horodatage(), format);
 }
 
 /* ══ L'accueil ══ */
@@ -2979,6 +3108,7 @@ function effacer() {
    dans son jardin, l'externat un coin de retrait dans sa classe. */
 const LIEUX_SIMULES = [
   {nom: 'Bâtiment provisoire', desc: 'Un IME déménagé dans des bureaux, dessiné sans échelle : un hall unique où tout le monde arrive, un long couloir aveugle, des salles sans fenêtre, une cour non clôturée contre la route, et le parking devant la porte. Ses fiches de pièces sont remplies en mode rapide. Son réfectoire, très grand, contient trois petites pièces : un office, un local chariots et un coin calme. Les sanitaires, un ancien bureau, ont gardé leur porte vitrée.', graine: 7,
+    legendes: [['Entrée principale', -4.2, 2.2, 'm', 'e'], ['Vers le centre-ville', -10.5, -4.6, 'm', 'n']],
     dates: ['2026-09-07', '2026-09-25'], moments: null,
     pieces: [['Hall d\'accueil', 'accueil', [[0, 0, 10, 6]]], ['Couloir', 'circulation', [[10, 2, 14, 2], [22, 4, 2, 8]]], ['Salle bleue', 'activite', [[10, 4, 7, 6]]],
       ['Salle verte', 'activite', [[17, 4, 5, 6]]], ['Réfectoire', 'repas', [[0, 6, 10, 8], [10, 10, 6, 4]]], ['Salle calme', 'calme', [[16, 10, 6, 4]]], ['Sanitaires', 'sanitaires', [[24, 0, 4, 5]]],
@@ -3005,6 +3135,7 @@ const LIEUX_SIMULES = [
       [1, [[.04, .1, .6, 3], [.93, .8, .6, 4], [.43, .1, 1.2, 1]]], [8, [[.89, .375, .8, 5], [.5, .5, 2, 1]]], [9, [[.89, .8, .8, 4], [.05, .4, .7, 3], [.5, .5, 2, 1]]]],
     commentaires: ['Arrivée de tous les jeunes en même temps, le hall résonne.', 'S\'est bouché les oreilles puis est sorti en courant.', 'Bruit des chaises au réfectoire.', 'Descendu du taxi, a couru vers la route.']},
   {nom: 'Foyer d\'hébergement', desc: 'Une unité de vie sur deux niveaux : salon avec baie vitrée sur le jardin, salle à manger et chambres au rez-de-chaussée ; à l\'étage, des chambres au-dessus de la salle à manger, qui voient le parking, et une salle de mise au calme. Un escalier et un ascenseur relient les deux. Deux fiches détaillées, les autres rapides. Un abri de jardin s\'ouvre sur le jardin (une pièce enclavée dans une pièce de dehors). La salle d\'eau de l\'étage a une porte vitrée.', graine: 19,
+    legendes: [['Entrée principale', 11.5, -1.8, 'm', 's'], ['Vers le centre-ville', -1, -10.5, 'm', 'o']],
     dates: ['2026-09-14', '2026-10-02'],
     moments: [['Lever', '07:00', '08:00'], ['Petit-déjeuner', '08:00', '09:00'], ['Matinée', '09:00', '12:00'], ['Déjeuner', '12:00', '13:15'], ['Temps calme', '13:15', '14:30'],
       ['Après-midi', '14:30', '18:30'], ['Dîner', '18:30', '19:45'], ['Coucher', '19:45', '21:30']],
@@ -3022,7 +3153,7 @@ const LIEUX_SIMULES = [
     fenetres: [[2.5, 13, 'h', 1.5], [7.5, 13, 'h', 1.5], [12.5, 13, 'h', 1.5], [4, 0, 'h', 2], [19, 2, 'v', 1], [23, 10, 'v', 1.5], [23, 14, 'v', 1.5], [13.5, 0, 'h', 1.5],
       [0, 1.5, 'v', 2, 0, 'baie'],
       [10.5, 0, 'h', 1.5, 1], [15.5, 0, 'h', 1.5, 1], [0, 3, 'v', 1.2, 1], [18, 3, 'v', 1.5, 1], [6.5, 0, 'h', 1, 1], [0, 7, 'v', 1.5, 1], [-4.5, 12, 'h', 1]],
-    escaliers: [[13, 6, 2, 2, 0, 1, 'escalier'], [11, 6, 1.5, 1.5, 0, 1, 'ascenseur']],
+    escaliers: [[13, 6, 2, 2, 0, 1, 'escalier'], [16.2, 6, 1.5, 1.5, 0, 1, 'ascenseur']],
     meubles: [['lit', .5, 9.5, 1.6, 3], ['lit', 5.5, 9.5, 1.6, 3], ['lit', 10.5, 9.5, 1.6, 3], ['armoire', 3, 12, 1.6, .7], ['armoire', 8, 12, 1.6, .7], ['armoire', 13, 12, 1.6, .7],
       ['canape', 1, 1, 2.6, 1], ['tapis', 2, 2.5, 2, 2], ['table', 9.5, 2, 4, 1.4], ['chaise', 10, 1, .7, .7], ['chaise', 12, 1, .7, .7], ['chaise', 10, 3.6, .7, .7], ['chaise', 12, 3.6, .7, .7],
       ['plan', 15.5, .5, 3, .8], ['bureau', 19.5, 13, 2, 1], ['banc', -5, 2, 2.5, .6],
@@ -3044,6 +3175,7 @@ const LIEUX_SIMULES = [
     croix: [[0, [[.9, .35, .8, 3], [.5, .8, 1.8, 1]]], [2, [[.5, .45, 1, 5], [.93, .33, .5, 3], [.07, .5, .5, 2]]], [4, [[.95, .4, .5, 5], [.13, .1, .4, 2], [.39, .1, .4, 2], [.66, .1, .4, 2]]]],
     commentaires: ['Attente du repas, bruit de la vaisselle.', 'A frappé la porte de la chambre voisine au moment du coucher.', 'Salle de bain occupée, a dû attendre dans le couloir.', 'Voiture sur le parking : s\'est collé à la fenêtre, puis n\'a plus voulu se coucher.']},
   {nom: 'Externat, groupe des grands', desc: 'Un IME en journée, plan à l\'échelle (1 case = 0,8 m) : classe, atelier, cantine, une salle multisensorielle trop petite, une salle de repli à porte à hublot, une cour avec un petit préau ; le parking des taxis à côté. Ses fiches disent la salle multisensorielle, la cantine, la salle de repli. Un coin de retrait est cloisonné dans la classe, contre l\'atelier ; la porte des sanitaires est vitrée ; la salle multisensorielle, toujours accompagnée, ne reçoit aucun épisode.', graine: 31,
+    legendes: [['Entrée des taxis', 23.4, 6.3, 'm', 'o'], ['Vers le centre-ville', 28.5, -3.4, 'm', 'n']],
     dates: ['2026-09-21', '2026-10-09'], echelle: .8,
     moments: [['Arrivée', '08:45', '09:15'], ['Matinée', '09:15', '10:30'], ['Récréation', '10:30', '10:50'], ['Fin de matinée', '10:50', '12:00'], ['Cantine', '12:00', '13:00'],
       ['Temps de cour', '13:00', '13:30'], ['Après-midi', '13:30', '15:45'], ['Départ', '15:45', '16:15']],
@@ -3095,6 +3227,7 @@ function construireLieu(i) {
     .concat((L.fenetres || []).map(([x, y, o, long, k, cat]) => ({id: nouvelId('e'), cat: cat || 'fenetre', niveau: niv(k), x, y, o, long, cote: 1, retourne: false})))
     .concat((L.meubles || []).map(([type, x, y, w, h, k]) => ({id: nouvelId('e'), cat: 'meuble', niveau: niv(k), type, x, y, w, h})))
     .concat((L.escaliers || []).map(([x, y, w, h, a, b, type]) => ({id: nouvelId('e'), cat: 'escalier', type: type || 'escalier', niveau: niv(a), niveaux: [niv(a), niv(b)], x, y, w, h})));
+  d.b1.plan.legendes = (L.legendes || []).map(([texte, x, y, taille, fleche, k]) => ({id: nouvelId('l'), niveau: niv(k), x, y, texte, taille: taille || 'm', fleche: fleche || ''}));   // [texte, x, y, taille, flèche, niveau]
   // Les fiches des pièces : « oui » / « non » (avec l'intensité après les deux-points), sens corrigés, chiffres ; « complet » : tout le reste est « non »
   d.b1.fiches = {};
   (L.fiches || []).forEach(([pi, sp]) => {
@@ -3211,6 +3344,10 @@ document.addEventListener('click', ev => {
 
 /* ══ Les notes de version ══ */
 const NOTES_BASE = [
+  {version: 'BASE v2026.10.13-3', titre: 'Des légendes sur le plan, et le plan vierge à télécharger', corps: '<p><b>Se repérer sur le plan</b> (Arthur et Émilie) : on peut écrire sur le plan, et en sortir une image du plan seul.</p><ul>' +
+    '<li><b>Les légendes</b>. « ＋ Légende » pose un texte libre (« Entrée principale », « Vers le centre-ville ») au centre de la vue. On le glisse où l\'on veut, même hors des pièces ; le panneau donne le texte, une flèche facultative (vers le haut, le bas, la gauche ou la droite) et trois tailles. Une légende appartient à un niveau, se défait avec « Annuler », se supprime avec « Supprimer » ou en vidant son texte. Elle se voit sur le plan du préambule, sur le plan où l\'on touche la pièce, sur la carte de la synthèse et sur les images exportées, et elle voyage dans les fichiers (socle et déclarant). La BASE ne s\'en sert pas pour lire le plan : elles servent à se repérer.</li>' +
+    '<li><b>Le plan vierge</b>. « ⬇ Plan vierge… », dans le préambule, télécharge l\'image du plan seul — les pièces, les niveaux, les portes, les fenêtres, les meubles, les légendes, et une barre d\'échelle si l\'échelle est renseignée — sans épisode ni calque : en PNG (deux fois plus fin) ou en SVG, toujours sur fond clair, à imprimer, à annoter à la main ou à glisser dans un document.</li>' +
+    '<li><b>Les trois lieux simulés</b> ont leurs légendes (l\'entrée, la route vers le centre-ville).</li></ul>'},
   {version: 'BASE v2026.10.13-2', titre: 'Une petite pièce dans une grande, et la croix dans les grandes pièces', corps: '<p><b>Le plan comprend les très grandes pièces</b> (Arthur et Émilie, pour l\'équipe du premier essai) : des petites pièces peuvent être enclavées dans une grande, et un épisode peut se situer à un endroit précis de la pièce.</p><ul>' +
     '<li><b>Les pièces enclavées</b>. Dans le panneau d\'une pièce, « Enclavée dans » la range dans une autre pièce du même niveau (la BASE le propose, « L\'enclaver », quand elle est entièrement dedans). Elle se dessine par-dessus ; ses portes et ses fenêtres donnent dans la grande pièce, et non plus sur le dehors ; la grande pièce ne compte plus la place de ses enclaves ; une enclave contre le mur du dehors garde ses portes sur le dehors. Déplacer la grande pièce emporte ses enclaves avec leurs portes ; la supprimer les laisse, libres.</li>' +
     '<li><b>Ce que la BASE en lit</b>. Les passages se comptent à travers la grande pièce (un lieu de retrait enclavé est à un passage) ; un vitrage entre une enclave et la grande pièce est un lien visuel ; un coin calme dans un réfectoire est « dans » une pièce bruyante ; la grande pièce n\'est pas « une pièce de passage » et se voit signalée, pour information, comme contenant ses enclaves. Une enclave qui dépasse de sa pièce est « à vérifier dans le plan ».</li>' +
@@ -3586,8 +3723,70 @@ function verifierBASE() {
         lieux228.map(l => l.b2.episodes.filter(e => e.pos).length + '/' + l.b2.episodes.length).join(' · '));
       ok('Les lieux simulés ne changent pas d\'un jour à l\'autre : mêmes épisodes, mêmes croix', JSON.stringify(construireLieu(0).b2.episodes.map(e => [e.date, e.heure, e.pos])) === JSON.stringify(lieux228[0].b2.episodes.map(e => [e.date, e.heure, e.pos])));
       D = lieux228[2]; const cr228 = croisementsDuLieu(lieux228[2].b2.episodes);
-      ok('Les lieux simulés montrent aussi : une porte vitrée là où l\'intimité compte (les trois), un ascenseur et un escalier (le foyer), une salle multisensorielle sans épisode mais pleine de points de vigilance (l\'externat : une « alerte calme »)',
+      ok('Les lieux simulés montrent aussi : une porte vitrée là où l\'intimité compte (les trois), un ascenseur et un escalier (le foyer), une salle multisensorielle sans épisode mais pleine de points de vigilance (l\'externat : une « alerte calme »)',
         lec228.every(Lx => Lx.regles.some(x => x.id === 'porte-vitree-intimite')) && lec228[1].escaliers.some(s => s.e.type === 'ascenseur') && lec228[1].escaliers.some(s => s.e.type === 'escalier') && cr228.calmes.some(x => x.nom === 'Salle multisensorielle'), cr228.calmes.map(x => x.nom).join());
+    }
+    // 12. Les légendes du plan et le plan vierge (passe 229)
+    {
+      const sauveTI = telechargerImage, sauveAlert = window.alert, sorties = [];
+      telechargerImage = (b, nom) => { sorties.push({b, nom}); }; window.alert = () => {};
+      try {
+        D = dossierVide(); mode = 'socle'; D.b1.lieu = 'Le lieu d\'essai'; historique = []; refaites = []; selection = null; niveauCourant = 'n0';
+        const pie = (id, x, y, w, h) => ({id, nom: id, type: 'sejour', niveau: 'n0', rects: [{x, y, w, h}]});
+        D.b1.plan = {niveaux: [{id: 'n0', nom: 'Rez-de-chaussée'}], pieces: [pie('A', 0, 0, 8, 6), pie('B', 8, 0, 6, 6)], elements: [{id: 'p1', cat: 'porte', niveau: 'n0', x: 8, y: 3, o: 'v', long: 1, cote: 1, retourne: false}]}; D.b1.fiches = {}; D.b1.echelle = null;
+        // Poser, modifier, annuler, rétablir
+        ajouterLegende(); const id1 = legendes()[0] && legendes()[0].id, l1 = legendeParId(id1);
+        ok('« ＋ Légende » pose un texte libre au centre de la vue, sur le niveau affiché, et le sélectionne', legendes().length === 1 && l1.texte === 'Légende' && l1.niveau === 'n0' && l1.taille === 'm' && l1.fleche === '' && selection && selection.legende === id1);
+        texteLegende('  Entrée   principale '); flecheLegende('e'); tailleDeLegende('g');
+        const apres = clone(legendeParId(id1));
+        ok('On change son texte (espaces nettoyés), sa flèche et sa taille', apres.texte === 'Entrée principale' && apres.fleche === 'e' && apres.taille === 'g');
+        annuler(); const sansTaille = clone(legendeParId(id1)); annuler(); annuler(); const sansTexte = clone(legendeParId(id1)); annuler(); const videApres = legendes().length;
+        ok('Annuler (↶) défait la taille, la flèche et le texte, puis la pose de la légende', sansTaille.taille === 'm' && sansTaille.fleche === 'e' && sansTexte.texte === 'Légende' && sansTexte.fleche === '' && videApres === 0);
+        refaire(); refaire(); refaire(); refaire();
+        ok('Rétablir (↷) la remet comme elle était', JSON.stringify(legendeParId(id1)) === JSON.stringify(apres));
+        selection = {legende: id1}; flecheLegende('x'); tailleDeLegende('?'); const retombe = clone(legendeParId(id1));
+        ok('Une flèche ou une taille inconnue retombe sur « aucune » et « moyenne »', retombe.fleche === '' && retombe.taille === 'm');
+        flecheLegende('e'); tailleDeLegende('g');
+        // Le dessin : sur son niveau, la flèche dans le texte, le texte protégé, la zone à saisir seulement en édition
+        D.b1.plan.niveaux.push({id: 'n1', nom: 'Étage'}); D.b1.plan.pieces.push({id: 'C', nom: 'C', type: 'sejour', niveau: 'n1', rects: [{x: 0, y: 0, w: 5, h: 5}]});
+        legendes().push({id: 'L2', niveau: 'n1', x: 3, y: -2, texte: 'Vers le <centre> & co', taille: 'p', fleche: 'n'});
+        const d0 = dessinPlan(piecesNiveau('n0'), {k: 26, niveau: 'n0'}), d1 = dessinPlan(piecesNiveau('n1'), {k: 26, niveau: 'n1'}), dEd = dessinPlan(piecesNiveau('n0'), {k: 26, niveau: 'n0', edition: true, selection: id1});
+        ok('Une légende se dessine sur son niveau seulement ; sa flèche se lit dans le texte (→ à droite, ↑ sur une ligne au-dessus) ; un texte qui ressemble à du code reste du texte',
+          /Entrée principale →/.test(d0) && !/centre/.test(d0) && /Vers le &lt;centre&gt; &amp; co/.test(d1) && /<tspan[^>]*>↑<\/tspan>/.test(d1) && !/Entrée principale/.test(d1) && !/<script|<centre>/.test(d0 + d1));
+        ok('En édition, la légende a sa zone à saisir (et se montre choisie) ; hors édition, elle ne se saisit pas ; sans niveau, aucune légende ne se dessine',
+          /data-legende="[^"]+"/.test(dEd) && /leg-zone selection/.test(dEd) && !/data-legende/.test(d0) && !/leg-texte/.test(dessinPlan(piecesNiveau('n0'), {k: 26})));
+        // Le cadre : une légende hors des pièces reste dans l'image
+        legendes().push({id: 'L3', niveau: 'n0', x: -10, y: -5, texte: 'Vers la gare', taille: 'm', fleche: 'o'});
+        const bn = boiteNiveau('n0'), bt = boiteTout(), vb = svgCarte([], {}).niveaux.find(n => n.id === 'n0').vb;
+        ok('Le cadre d\'un niveau et celui de tout le plan englobent aussi les légendes (la carte, le plan du choix et l\'image les montrent en entier)', bn.x < -10 && bn.y < -5 && bn.x + bn.w >= 14 && bn.y + bn.h >= 6 && bt.x < -10 && vb[0] < -10 && vb[1] < -5);
+        selection = {legende: 'L3'}; supprimerLegende(); const apresSuppr = !legendeParId('L3');
+        selection = {legende: id1}; texteLegende('   '); const videParTexte = !legendeParId(id1); annuler();
+        ok('Supprimer une légende, ou vider son texte, l\'enlève ; annuler la rend', apresSuppr && videParTexte && !!legendeParId(id1) && legendeParId(id1).texte === 'Entrée principale');
+        niveauCourant = 'n1'; retirerNiveau();
+        ok('Retirer un niveau emporte ses légendes, et seulement les siennes', !legendeParId('L2') && !!legendeParId(id1) && niveaux().length === 1);
+        // Les données : un ancien dossier, un fichier abîmé
+        const brut = normaliserPlan({b1: {plan: {pieces: [], legendes: [null, 3, {texte: ''}, {texte: 'ok', x: 'a', y: 1}, {texte: ' Bon ', x: 1, y: 2, taille: 'z', fleche: 'q', niveau: 'inconnu'}, {id: 'k', texte: 'x'.repeat(100), x: '3', y: 4, taille: 'g', fleche: 's'}]}}}).b1.plan.legendes;
+        ok('Un ancien dossier reçoit une liste vide ; dans un fichier abîmé, une légende sans texte ou sans place est écartée, les valeurs inconnues retombent sur le défaut, le texte est borné à 60 lettres',
+          !normaliserPlan({b1: {plan: {pieces: []}}}).b1.plan.legendes.length && brut.length === 2 && brut[0].texte === 'Bon' && brut[0].taille === 'm' && brut[0].fleche === '' && brut[0].niveau === 'n0' && brut[1].texte.length === 60 && brut[1].x === 3 && brut[1].id === 'k' && brut[1].fleche === 's' && brut[1].taille === 'g');
+        // Le plan vierge
+        const lx229 = [0, 1, 2].map(i => construireLieu(i)); D = lx229[1];
+        const vF = svgPlanVierge(), xF = new DOMParser().parseFromString(vF.svg, 'image/svg+xml');
+        ok('Le plan vierge du foyer : un SVG valide avec le titre « plan vierge », un plan par niveau (rez-de-chaussée, étage), les pièces, les légendes, les meubles en entier (sans leur nom) ; sans épisode, sans calque, sans échelle',
+          !xF.querySelector('parsererror') && /Foyer d.{1,6}hébergement \(simulé\) — plan vierge/.test(vF.svg) && /Rez-de-chaussée/.test(vF.svg) && /Étage/.test(vF.svg) && /Salle à manger/.test(vF.svg) && /Entrée principale/.test(vF.svg) && /Vers le centre-ville/.test(vF.svg) &&
+          /class="meuble"/.test(vF.svg) && !/meuble filigrane/.test(vF.svg) && !/class="meuble-nom"/.test(vF.svg) && !/linearGradient|class="piece-sous"|une case :/.test(vF.svg) && vF.W >= 720 && vF.H > 600);
+        D = lx229[2]; const vE = svgPlanVierge();
+        ok('Le plan vierge de l\'externat (à l\'échelle de 0,8 m) trace une barre d\'échelle : 4 m, une case : 0,8 m', /4 m \(une case : 0,8 m\)/.test(vE.svg) && !new DOMParser().parseFromString(vE.svg, 'image/svg+xml').querySelector('parsererror'));
+        D = lx229[1]; exporterPlanVierge('svg'); exporterPlanVierge('rien'); D = dossierVide(); exporterPlanVierge('svg');
+        ok('Télécharger le plan vierge en SVG : un fichier « BASE-plan_… .svg » ; un format inconnu ou un plan vide ne télécharge rien', sorties.length === 1 && /^BASE-plan_Foyer_d_h.bergement_simul.+\.svg$/.test(sorties[0].nom) && sorties[0].b.type === 'image/svg+xml', sorties.map(x => x.nom).join());
+        D = lx229[1]; mode = 'socle';
+        ok('La carte de la synthèse et son image exportée montrent aussi les légendes', /Entrée principale/.test(svgCarte(D.b2.episodes, {}).corps) && /Vers le centre-ville/.test(svgExport().svg) && /\.leg-texte\{/.test(svgExport().svg));
+        // Les trois lieux simulés ; le fichier déclarant les emporte ; le plan où l'on choisit la pièce les montre
+        ok('Les trois lieux simulés ont leurs légendes (une entrée, la route vers le centre-ville), toutes sur un niveau qui existe', lx229.every(l => l.b1.plan.legendes.length >= 2 && l.b1.plan.legendes.every(g => l.b1.plan.niveaux.some(n => n.id === g.niveau) && g.texte && ['p', 'm', 'g'].indexOf(g.taille) >= 0)) && lx229.every(l => l.b1.plan.legendes.some(g => /Entrée/.test(g.texte)) && l.b1.plan.legendes.some(g => /centre-ville/.test(g.texte))));
+        ok('Le fichier déclarant vierge emporte les légendes, et le plan où l\'on choisit la pièce les montre', JSON.parse(JSON.stringify(contenuDeclarantVierge())).b1.plan.legendes.length === D.b1.plan.legendes.length && (ouvrirFormulaire(), fermerFenetre('fen-episode'), /Vers le centre-ville|Entrée principale/.test($('plan-choix').innerHTML)));
+        // La barre d'outils du préambule
+        const selVierge = document.querySelector('select[aria-label="Télécharger le plan vierge"]');
+        ok('Le préambule propose « ＋ Légende » et « ⬇ Plan vierge… » (PNG ou SVG)', !!document.querySelector('button[onclick="ajouterLegende()"]') && !!selVierge && [...selVierge.options].map(o => o.value).join() === ',png,svg');
+      } finally { telechargerImage = sauveTI; window.alert = sauveAlert; }
     }
   } catch (e) { ok('Les vérifications ont planté', false, e.message); }
   finally { calque = sauveCalque; persister = vraiPersister; toast = vraiToast; window.confirm = vraiConfirm; modeFiche = sauveModeFiche; pieceFiche = null; niveauCourant = sauveNiveau; D = sauveD; mode = sauveMode; selection = null; historique = []; refaites = []; }
