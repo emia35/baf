@@ -379,6 +379,9 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--slate);}
 .groupe-actif{fill:none;stroke:var(--slate);stroke-dasharray:.3 .2;pointer-events:none;}
 .cadre-choix{fill:var(--slate-pale);fill-opacity:.4;stroke:var(--slate);stroke-dasharray:.25 .2;pointer-events:none;}
 .plan-panneau.carte-plan.en-sourdine{opacity:.14;pointer-events:none;}
+.poly-sommet{fill:var(--sheet);stroke:var(--slate);cursor:move;}
+.poly-sommet.actif{fill:var(--slate);}
+.poly-milieu{fill:var(--slate-pale);stroke:var(--slate);cursor:copy;}
 .rotation circle{fill:var(--slate);stroke:var(--sheet);stroke-width:2;cursor:pointer;}
 .rotation:hover circle{fill:var(--slate-deep);}
 .rotation text{fill:var(--sheet);font:700 17px/1 var(--police-interface);text-anchor:middle;dominant-baseline:central;pointer-events:none;}
@@ -685,7 +688,7 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
         </div>
       </div>
       <p class="plan-aide" id="lecture-legende" hidden><b>Lecture</b> — traits verts épais : murs communs ; points verts : passages (portes) ; tirets bleus : ce qu'on voit par une fenêtre (en rouge vers une route ou un parking).</p>
-      <p class="plan-aide">Glisser une pièce pour la déplacer, ses poignées pour l'agrandir ; glisser le fond pour se déplacer ; molette ou ＋ / － pour zoomer. Double-clic (ou appui long au doigt) sur une pièce pour la nommer. La flèche ronde au-dessus de ce qui est choisi (ou la touche R) le tourne d'un quart de tour, avec ce que la pièce contient ; Suppr le supprime, Échap le lâche. Ctrl+clic (ou Maj+clic, ou le bouton « Plusieurs ») choisit plusieurs pièces — Ctrl+A les prend toutes, un cadre tracé avec Ctrl en prend plusieurs d'un coup — et on les glisse ensemble. Les outils flottent sur le plan (▴ les replie) ; ce qui est choisi a sa petite carte à côté de lui. « ＋ Légende » pose un texte libre (« Entrée principale », « Vers le centre-ville ») qui se glisse où l'on veut. Les portes, fenêtres et baies se posent sur un mur de la pièce choisie, les meubles et les escaliers dedans ; les zones de dehors (cour, route, parking) se choisissent dans « Type de zone ».</p>
+      <p class="plan-aide">Glisser une pièce pour la déplacer, ses poignées pour l'agrandir ; glisser le fond pour se déplacer ; molette ou ＋ / － pour zoomer. Double-clic (ou appui long au doigt) sur une pièce pour la nommer. La flèche ronde au-dessus de ce qui est choisi (ou la touche R) le tourne d'un quart de tour, avec ce que la pièce contient ; Suppr le supprime, Échap le lâche. Ctrl+clic (ou Maj+clic, ou le bouton « Plusieurs ») choisit plusieurs pièces — Ctrl+A les prend toutes, un cadre tracé avec Ctrl en prend plusieurs d'un coup — et on les glisse ensemble. Une pièce peut prendre une autre forme (« Plus », puis « Forme » : trapèze, triangle, forme libre) : on tire ses sommets (ronds pleins), un petit rond creux au milieu d'un côté en ajoute un. Les outils flottent sur le plan (▴ les replie) ; ce qui est choisi a sa petite carte à côté de lui. « ＋ Légende » pose un texte libre (« Entrée principale », « Vers le centre-ville ») qui se glisse où l'on veut. Les portes, fenêtres et baies se posent sur un mur de la pièce choisie, les meubles et les escaliers dedans ; les zones de dehors (cour, route, parking) se choisissent dans « Type de zone ».</p>
       <div id="plan-panneau-place"><div class="plan-panneau" id="plan-panneau"></div></div>
       <details class="repli" style="margin-top:12px"><summary>Échelle du plan (facultative)</summary>
         <p class="discret" id="echelle-texte"></p>
@@ -896,7 +899,7 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
    chose lue de la BAF, en lecture : le choix clair / sombre, pour s'ouvrir dans le même thème.
    ══════════════════════════════════════════════════════════════════════════════════════════════ */
 
-const VERSION_BASE = 'BASE v2026.10.13-9';
+const VERSION_BASE = 'BASE v2026.10.13-10';
 const CLE_SOCLE = 'base-dossier-v1', CLE_DECL = 'base-declarant-v1', CLE_MODE = 'base-mode', CLE_THEME = 'base-theme';
 const TYPES_ZONE = [['activite', "Salle d'activité"], ['sejour', 'Séjour, salon'], ['repas', 'Repas'], ['accueil', 'Accueil'], ['circulation', 'Circulation'],
   ['chambre', 'Chambre'], ['repos', 'Salle de repos'], ['calme', 'Salle de mise au calme'], ['snoezelen', 'Salle multisensorielle'], ['soins', 'Soins, infirmerie'],
@@ -967,6 +970,7 @@ function normaliserPlan(d) {
   const defaut = (pl.niveaux.find(n => n.id === 'n0') || pl.niveaux[0]).id, ids = new Set(pl.niveaux.map(n => n.id));
   (pl.pieces || []).forEach(p => { if (!p.niveau || !ids.has(p.niveau)) p.niveau = defaut; });
   (pl.pieces || []).forEach(p => { if (p.rot === undefined) return; const r = ((Math.trunc(+p.rot) || 0) % 4 + 4) % 4; if (r) p.rot = r; else delete p.rot; });   // les quarts de tour d'une pièce (passe 232)
+  (pl.pieces || []).forEach(p => { if (p.poly === undefined) return; const a = nettoyerAnneau(p.poly); if (a) { p.poly = a; recaler(p); } else delete p.poly; });   // les pièces de forme libre (passe 236)
   // Les pièces enclavées (passe 228) : « dans » désigne une autre pièce du même niveau ; un parent absent, soi-même ou une boucle sont écartés.
   const parId = {}; (pl.pieces || []).forEach(p => { parId[p.id] = p; });
   (pl.pieces || []).forEach(p => { if (p.dans === undefined) return; const q = parId[p.dans]; if (!q || q === p || q.niveau !== p.niveau) delete p.dans; });
@@ -1183,6 +1187,7 @@ function verifierSelection() {
   if (selection.elem) { if (!elemParId(selection.elem)) selection = null; return; }
   const p = pieceParId(selection.piece); if (!p) { selection = null; return; }
   selection.morceau = Math.min(selection.morceau, p.rects.length - 1);
+  if (selection.sommet !== undefined && (!aPoly(p) || selection.sommet >= p.poly.length)) delete selection.sommet;
   if (selection.plus) { const n = niveauDe(p); selection.plus = selection.plus.filter(id => { const q = pieceParId(id); return q && id !== selection.piece && niveauDe(q) === n; }); if (!selection.plus.length) delete selection.plus; }
 }
 function modifierPlan(fn) { const avant = etatPlan(); fn(); if (etatPlan() !== avant) { memoriser(avant); persister(); } rendrePlanEdition(); }
@@ -1208,6 +1213,290 @@ function zoomer(f, cx, cy) {
   rendrePlanEdition();
 }
 
+
+/* ══ Des pièces de toute forme (passe 236, Arthur et Émilie) ══
+   Une pièce est faite de rectangles (comme avant : p.rects, des angles droits, des morceaux collés) ou d'UN polygone (p.poly : [[x, y], …], trois sommets ou plus, dans
+   le sens des aiguilles d'une montre à l'écran) : un trapèze, un triangle, un pan coupé, une forme libre. Un polygone garde aussi p.rects = [son rectangle englobant] :
+   tout ce qui ne regarde que l'emprise (cadrage, cadre de sélection, collisions grossières) marche sans rien savoir des polygones ; ce qui dépend de la forme (dessin,
+   surface, murs communs, portes et fenêtres, croix, chaleur, enclaves) passe par les fonctions ci-dessous. Les portes et les fenêtres se posent sur les murs droits
+   (horizontaux ou verticaux). Rien de tout cela ne change une pièce faite de rectangles : elle suit exactement les chemins d'avant. */
+const aPoly = p => !!p && Array.isArray(p.poly) && p.poly.length >= 3;
+const anneauRect = r => [[r.x, r.y], [r.x + r.w, r.y], [r.x + r.w, r.y + r.h], [r.x, r.y + r.h]];
+const anneauxDe = p => aPoly(p) ? [p.poly] : p.rects.map(anneauRect);
+function aireSignee(a) { let s = 0; for (let i = 0; i < a.length; i++) { const u = a[i], v = a[(i + 1) % a.length]; s += u[0] * v[1] - v[0] * u[1]; } return s / 2; }
+const aireAnneau = a => Math.abs(aireSignee(a));
+const orienter = a => aireSignee(a) < 0 ? a.slice().reverse() : a;
+function rectEnglobant(a) {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  a.forEach(([x, y]) => { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); });
+  return {x: x0, y: y0, w: x1 - x0, h: y1 - y0};
+}
+// Un polygone garde son rectangle englobant dans p.rects : à refaire après chaque changement de ses sommets.
+function recaler(p) { if (aPoly(p)) p.rects = [rectEnglobant(p.poly)]; }
+function distSegment(x, y, x1, y1, x2, y2) {
+  const dx = x2 - x1, dy = y2 - y1, l2 = dx * dx + dy * dy; let t = l2 ? ((x - x1) * dx + (y - y1) * dy) / l2 : 0; t = Math.max(0, Math.min(1, t));
+  return Math.hypot(x - (x1 + t * dx), y - (y1 + t * dy));
+}
+function surBord(a, x, y, tol) { for (let i = 0; i < a.length; i++) { const u = a[i], v = a[(i + 1) % a.length]; if (distSegment(x, y, u[0], u[1], v[0], v[1]) <= tol) return true; } return false; }
+// Le point est-il strictement dans l'anneau ? (le bord, lui, est ambigu : voir surBord)
+function dansAnneau(a, x, y) {
+  let dedans = false;
+  for (let i = 0, j = a.length - 1; i < a.length; j = i++) {
+    const xi = a[i][0], yi = a[i][1], xj = a[j][0], yj = a[j][1];
+    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) dedans = !dedans;
+  }
+  return dedans;
+}
+// Le point est dans la pièce, bord compris à « tol » près ; dansStrict : strictement dedans (à EPS du bord).
+function dansPiece(p, x, y, tol) {
+  tol = tol || 0;
+  if (!aPoly(p)) return p.rects.some(r => x >= r.x - tol && x <= r.x + r.w + tol && y >= r.y - tol && y <= r.y + r.h + tol);
+  return dansAnneau(p.poly, x, y) || surBord(p.poly, x, y, tol + 1e-9);
+}
+function dansStrict(p, x, y) {
+  if (!aPoly(p)) return p.rects.some(r => x > r.x + EPS && x < r.x + r.w - EPS && y > r.y + EPS && y < r.y + r.h - EPS);
+  return dansAnneau(p.poly, x, y) && !surBord(p.poly, x, y, EPS);
+}
+// Le polygone a-t-il tous ses angles dans le même sens ?
+function convexe(a) {
+  let signe = 0; const n = a.length;
+  for (let i = 0; i < n; i++) {
+    const u = a[i], v = a[(i + 1) % n], w = a[(i + 2) % n], c = (v[0] - u[0]) * (w[1] - v[1]) - (v[1] - u[1]) * (w[0] - v[0]);
+    if (Math.abs(c) < 1e-9) continue;
+    if (!signe) signe = Math.sign(c); else if (Math.sign(c) !== signe) return false;
+  }
+  return true;
+}
+// Sutherland–Hodgman : le sujet découpé par un coupeur convexe (tous deux dans le sens positif).
+function decouper(sujet, coupeur) {
+  let sortie = sujet;
+  for (let i = 0; i < coupeur.length && sortie.length; i++) {
+    const A = coupeur[i], B = coupeur[(i + 1) % coupeur.length], entree = sortie; sortie = [];
+    const cote = P => (B[0] - A[0]) * (P[1] - A[1]) - (B[1] - A[1]) * (P[0] - A[0]);
+    const croise = (P, Q) => { const a = cote(P), b = cote(Q), t = a / (a - b); return [P[0] + t * (Q[0] - P[0]), P[1] + t * (Q[1] - P[1])]; };
+    for (let k = 0; k < entree.length; k++) {
+      const P = entree[k], Q = entree[(k + 1) % entree.length], pDedans = cote(P) >= -1e-12, qDedans = cote(Q) >= -1e-12;
+      if (pDedans && qDedans) sortie.push(Q);
+      else if (pDedans && !qDedans) sortie.push(croise(P, Q));
+      else if (!pDedans && qDedans) { sortie.push(croise(P, Q)); sortie.push(Q); }
+    }
+  }
+  return sortie;
+}
+// La surface commune de deux anneaux : exacte si l'un des deux est convexe, sinon comptée par quarts de case.
+function aireInterAnneaux(A, B) {
+  const sa = aireSignee(A), sb = aireSignee(B); if (!sa || !sb) return 0;
+  const a = orienter(A), b = orienter(B);
+  if (convexe(b)) { const r = decouper(a, b); return r.length >= 3 ? aireAnneau(r) : 0; }
+  if (convexe(a)) { const r = decouper(b, a); return r.length >= 3 ? aireAnneau(r) : 0; }
+  const ra = rectEnglobant(a), rb = rectEnglobant(b), x0 = Math.max(ra.x, rb.x), x1 = Math.min(ra.x + ra.w, rb.x + rb.w), y0 = Math.max(ra.y, rb.y), y1 = Math.min(ra.y + ra.h, rb.y + rb.h), pas = Math.max(.25, Math.sqrt(Math.max(0, x1 - x0) * Math.max(0, y1 - y0)) / 200);   // un quart de case, plus large sur un très grand polygone
+  let n = 0; for (let x = x0 + pas / 2; x < x1; x += pas) for (let y = y0 + pas / 2; y < y1; y += pas) if (dansAnneau(a, x, y) && dansAnneau(b, x, y)) n++;
+  return n * pas * pas;
+}
+// La surface qu'une pièce partage avec une autre (ou avec un rectangle {x, y, w, h}).
+function aireInter(p, q) {
+  const A = anneauxDe(p), B = (q.rects || q.poly) ? anneauxDe(q) : [anneauRect(q)];
+  let s = 0; A.forEach(a => B.forEach(b => { s += aireInterAnneaux(a, b); })); return s;
+}
+// Les arêtes d'une pièce : {x1, y1, x2, y2}, dans le sens de chaque anneau (l'intérieur est à droite de la flèche, à l'écran).
+function aretesDe(p) {
+  const out = [];
+  anneauxDe(p).forEach(a => a.forEach((u, i) => { const v = a[(i + 1) % a.length]; out.push({x1: u[0], y1: u[1], x2: v[0], y2: v[1]}); }));
+  return out;
+}
+// Les murs que deux pièces ont en commun, quand l'une au moins est un polygone : les parties de leurs arêtes qui coïncident, en sens opposés.
+// Un mur droit se rend comme avant ({o: 'h' | 'v', c, a, b}), un mur oblique par ses deux bouts ({o: 'd', x1, y1, x2, y2, a: 0, b: longueur}).
+function segmentsCommunsGeneral(p, q) {
+  const segs = [], E1 = aretesDe(p), E2 = aretesDe(q);
+  E1.forEach(e => E2.forEach(f => {
+    const dx = e.x2 - e.x1, dy = e.y2 - e.y1, L = Math.hypot(dx, dy), fx = f.x2 - f.x1, fy = f.y2 - f.y1, M = Math.hypot(fx, fy); if (L < EPS || M < EPS) return;
+    const ux = dx / L, uy = dy / L;
+    if (ux * fx + uy * fy > -1e-6 * M) return;   // seulement des sens opposés : deux pièces voisines se tournent le dos
+    const d1 = (f.x1 - e.x1) * uy - (f.y1 - e.y1) * ux, d2 = (f.x2 - e.x1) * uy - (f.y2 - e.y1) * ux;
+    if (Math.abs(d1) > 1e-6 || Math.abs(d2) > 1e-6) return;   // pas sur la même droite
+    const t1 = (f.x1 - e.x1) * ux + (f.y1 - e.y1) * uy, t2 = (f.x2 - e.x1) * ux + (f.y2 - e.y1) * uy, a = Math.max(0, Math.min(t1, t2)), b = Math.min(L, Math.max(t1, t2));
+    if (b - a <= EPS) return;
+    const xa = e.x1 + ux * a, ya = e.y1 + uy * a, xb = e.x1 + ux * b, yb = e.y1 + uy * b;
+    if (Math.abs(dy) < 1e-9) segs.push({o: 'h', c: e.y1, a: Math.min(xa, xb), b: Math.max(xa, xb)});
+    else if (Math.abs(dx) < 1e-9) segs.push({o: 'v', c: e.x1, a: Math.min(ya, yb), b: Math.max(ya, yb)});
+    else segs.push({o: 'd', x1: xa, y1: ya, x2: xb, y2: yb, a: 0, b: b - a});
+  }));
+  return segs;
+}
+// Les murs droits d'une pièce, comme ceux des rectangles : {o: 'h' | 'v', a, b, c, int, piece}. « int » : de quel côté est l'intérieur (+1 : vers les x ou y croissants).
+function mursDroitsDe(p) {
+  const out = [];
+  aretesDe(p).forEach(e => {
+    const dx = e.x2 - e.x1, dy = e.y2 - e.y1;
+    if (Math.abs(dy) < 1e-9 && Math.abs(dx) > EPS) out.push({o: 'h', a: Math.min(e.x1, e.x2), b: Math.max(e.x1, e.x2), c: e.y1, int: dx > 0 ? 1 : -1, piece: p.id});
+    else if (Math.abs(dx) < 1e-9 && Math.abs(dy) > EPS) out.push({o: 'v', a: Math.min(e.y1, e.y2), b: Math.max(e.y1, e.y2), c: e.x1, int: dy > 0 ? -1 : 1, piece: p.id});
+  });
+  return out;
+}
+// Y a-t-il, dans la bande d'une ouverture, un bout de cette pièce plus loin vers le dehors ? À quelle distance ? (pièce polygonale : on lance trois rayons)
+function distanceVers(q, e, int, portee) {
+  const demi = (e.long || 1) / 2, h = e.o === 'h', sens = -int;   // vers le dehors : le sens contraire de l'intérieur
+  let best = null;
+  [-.8, 0, .8].forEach(f => {
+    const bx = h ? e.x + f * demi : e.x, by = h ? e.y : e.y + f * demi;
+    // la plus petite distance t ≥ 0 où le rayon entre dans la pièce
+    const ts = [];
+    aretesDe(q).forEach(a => {
+      const rx = h ? 0 : sens, ry = h ? sens : 0, sx = a.x2 - a.x1, sy = a.y2 - a.y1, den = rx * sy - ry * sx; if (Math.abs(den) < 1e-12) return;
+      const t = ((a.x1 - bx) * sy - (a.y1 - by) * sx) / den, u = ((a.x1 - bx) * ry - (a.y1 - by) * rx) / den;
+      if (t >= -EPS && u >= -1e-9 && u <= 1 + 1e-9) ts.push(t);
+    });
+    ts.sort((s, t) => s - t);
+    for (const t of ts) { if (dansStrict(q, bx + (h ? 0 : sens) * (t + .02), by + (h ? sens : 0) * (t + .02))) { if (t <= portee + EPS && (best === null || t < best)) best = Math.max(0, t); break; } }
+  });
+  return best;
+}
+// Le point de la pièce (hors de ses enclaves) le plus proche de (x, y) : lui-même s'il est libre, sinon le plus proche des bords de la pièce et des enclaves.
+function projeterPolygone(a, obstacles, x, y) {
+  const libre = (px, py) => (dansAnneau(a, px, py) || surBord(a, px, py, 1e-7)) && !obstacles.some(o => px > o.x + EPS && px < o.x + o.w - EPS && py > o.y + EPS && py < o.y + o.h - EPS);
+  if (libre(x, y)) return {x, y};
+  let best = null; const essai = (px, py) => { if (!libre(px, py)) return; const d = Math.hypot(px - x, py - y); if (!best || d < best.d) best = {x: px, y: py, d}; };
+  const sur = (u, v) => { const dx = v[0] - u[0], dy = v[1] - u[1], l2 = dx * dx + dy * dy; let t = l2 ? ((x - u[0]) * dx + (y - u[1]) * dy) / l2 : 0; t = Math.max(0, Math.min(1, t)); return [u[0] + t * dx, u[1] + t * dy]; };
+  for (let i = 0; i < a.length; i++) {
+    const u = a[i], v = a[(i + 1) % a.length], c = sur(u, v);
+    // un peu vers l'intérieur : sur le bord, un point est « dedans » à un souffle près
+    const dx = v[0] - u[0], dy = v[1] - u[1], l = Math.hypot(dx, dy) || 1, nx = -dy / l, ny = dx / l;
+    essai(c[0] + nx * 1e-4, c[1] + ny * 1e-4); essai(c[0], c[1]);
+  }
+  obstacles.forEach(o => [[o.x - .02, y], [o.x + o.w + .02, y], [x, o.y - .02], [x, o.y + o.h + .02]].forEach(([px, py]) => essai(px, py)));
+  return best ? {x: best.x, y: best.y} : {x, y};
+}
+const projeterDansPiece = (p, x, y) => aPoly(p) ? projeterPolygone(p.poly, obstaclesDe(p), x, y) : projeterPoint(p.rects, obstaclesDe(p), x, y);
+// Le point où écrire le nom d'une pièce polygonale : le plus loin des bords (par essais, tous les quarts de case), et la demi-largeur libre autour de lui.
+function centreVisuel(p) {
+  const a = p.poly, b = rectEnglobant(a); let best = null;
+  const dist = (x, y) => { let d = Infinity; for (let i = 0; i < a.length; i++) { const u = a[i], v = a[(i + 1) % a.length]; d = Math.min(d, distSegment(x, y, u[0], u[1], v[0], v[1])); } return d; };
+  const pas = Math.max(.25, Math.max(b.w, b.h) / 100);   // un quart de case, plus large sur un très grand polygone
+  for (let x = b.x + pas / 2; x < b.x + b.w; x += pas) for (let y = b.y + pas / 2; y < b.y + b.h; y += pas) {
+    if (!dansAnneau(a, x, y)) continue;
+    const d = dist(x, y) - .0005 * Math.hypot(x - (b.x + b.w / 2), y - (b.y + b.h / 2));
+    if (!best || d > best.d) best = {x, y, d};
+  }
+  return best ? {x: best.x, y: best.y, d: Math.max(.1, best.d)} : {x: b.x + b.w / 2, y: b.y + b.h / 2, d: Math.min(b.w, b.h) / 2};
+}
+// Deux arêtes se touchent-elles (même en un seul point, même bout à bout) ?
+function segmentsSeTouchent(a, b, c, d) {
+  const orient = (p, q, r) => { const v = (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]); return Math.abs(v) < 1e-9 ? 0 : v > 0 ? 1 : -1; };
+  const sur = (p, q, r) => Math.min(p[0], q[0]) - 1e-9 <= r[0] && r[0] <= Math.max(p[0], q[0]) + 1e-9 && Math.min(p[1], q[1]) - 1e-9 <= r[1] && r[1] <= Math.max(p[1], q[1]) + 1e-9;
+  const o1 = orient(a, b, c), o2 = orient(a, b, d), o3 = orient(c, d, a), o4 = orient(c, d, b);
+  if (o1 !== o2 && o3 !== o4) return true;
+  return (o1 === 0 && sur(a, b, c)) || (o2 === 0 && sur(a, b, d)) || (o3 === 0 && sur(c, d, a)) || (o4 === 0 && sur(c, d, b));
+}
+// Un polygone valide : au moins trois sommets distincts, une surface, aucune arête qui en recoupe une autre, aucun demi-tour sur place.
+function anneauSimple(a) {
+  const n = a.length; if (n < 3) return false;
+  for (let i = 0; i < n; i++) {
+    const u = a[i], v = a[(i + 1) % n], w = a[(i + 2) % n];
+    if (Math.hypot(u[0] - v[0], u[1] - v[1]) < 1e-6) return false;
+    const c = (v[0] - u[0]) * (w[1] - v[1]) - (v[1] - u[1]) * (w[0] - v[0]), d = (v[0] - u[0]) * (w[0] - v[0]) + (v[1] - u[1]) * (w[1] - v[1]);
+    if (Math.abs(c) < 1e-9 && d < 0) return false;   // une arête qui repart en arrière
+  }
+  for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+    if (j === i + 1 || (i === 0 && j === n - 1)) continue;
+    if (segmentsSeTouchent(a[i], a[(i + 1) % n], a[j], a[(j + 1) % n])) return false;
+  }
+  return aireAnneau(a) > .05;
+}
+// Un polygone lu dans un fichier ou construit à la main : des nombres, sans doublons de suite, orienté ; sinon rien.
+function nettoyerAnneau(poly) {
+  if (!Array.isArray(poly)) return null;
+  let a = poly.filter(s => Array.isArray(s) && s.length >= 2 && Number.isFinite(+s[0]) && Number.isFinite(+s[1])).map(s => [Math.round(+s[0] * 1000) / 1000, Math.round(+s[1] * 1000) / 1000]);
+  a = a.filter((s, i) => { const t = a[(i + a.length - 1) % a.length]; return a.length < 2 || s[0] !== t[0] || s[1] !== t[1]; });
+  if (a.length < 3 || !anneauSimple(a)) return null;
+  return orienter(a);
+}
+// Une forme nommée, dans le rectangle r : rend les sommets.
+const FORMES = [['rectangle', 'Rectangle'], ['trapeze', 'Trapèze'], ['triangle', 'Triangle']];
+function sommetsDeForme(forme, r) {
+  if (forme === 'trapeze') {
+    if (r.w < 2) return null;   // trop étroite pour une face du haut plus courte
+    const d = Math.max(.5, Math.min(Math.round(r.w / 4), (r.w - 1) / 2));
+    return [[r.x + d, r.y], [r.x + r.w - d, r.y], [r.x + r.w, r.y + r.h], [r.x, r.y + r.h]];
+  }
+  if (forme === 'triangle') return [[Math.round(r.x + r.w / 2), r.y], [r.x + r.w, r.y + r.h], [r.x, r.y + r.h]];
+  return null;
+}
+// Un polygone touche-t-il un rectangle (x0, y0, x1, y1) ? (cadre tracé à la souris)
+function anneauToucheRect(a, x0, y0, x1, y1) {
+  const b = rectEnglobant(a); if (b.x >= x1 || b.x + b.w <= x0 || b.y >= y1 || b.y + b.h <= y0) return false;
+  if (a.some(([x, y]) => x > x0 && x < x1 && y > y0 && y < y1)) return true;
+  if ([[x0, y0], [x1, y0], [x1, y1], [x0, y1]].some(([x, y]) => dansAnneau(a, x, y))) return true;
+  const c = [[x0, y0], [x1, y0], [x1, y1], [x0, y1]];
+  for (let i = 0; i < a.length; i++) for (let j = 0; j < 4; j++) if (segmentsSeTouchent(a[i], a[(i + 1) % a.length], c[j], c[(j + 1) % 4])) return true;
+  return false;
+}
+// Une pièce est-elle entièrement dans une autre (sommets et milieux d'arêtes, à un millième près) ?
+function pieceDansPiece(p, q) {
+  return anneauxDe(p).every(a => a.every((u, i) => { const v = a[(i + 1) % a.length]; return dansPiece(q, u[0], u[1], .001) && dansPiece(q, (u[0] + v[0]) / 2, (u[1] + v[1]) / 2, .001); }));
+}
+// Le nom d'une pièce polygonale qui en contient d'autres : à l'endroit où il tient en taille normale hors des enclaves et des meubles, au plus près du point le plus dégagé.
+function pointLibrePoly(p, obstacles, meubles, long) {
+  const b = p.rects[0], cible = Math.max(4, (long || 8) * .62) / 2, hv = 1, c0 = centreVisuel(p);
+  const touche = (x, y, w2, o) => x - w2 < o.x + o.w && x + w2 > o.x && y - hv < o.y + o.h && y + hv > o.y;
+  const tient = (x, y, w2) => [[x - w2, y - hv], [x + w2, y - hv], [x - w2, y + hv], [x + w2, y + hv], [x, y]].every(([px, py]) => dansPiece(p, px, py, 1e-9));
+  let best = null; const pas = Math.max(.5, Math.max(b.w, b.h) / 60);
+  for (let passe = 0; passe < 2 && !best; passe++) for (let x = b.x; x <= b.x + b.w; x += pas) for (let y = b.y; y <= b.y + b.h; y += pas) {
+    if (!tient(x, y, cible) || obstacles.some(o => touche(x, y, cible, o)) || (passe === 0 && (meubles || []).some(m => touche(x, y, cible, m)))) continue;
+    const c = Math.hypot(x - c0.x, y - c0.y); if (!best || c < best.c) best = {x, y, d: cible, c};
+  }
+  return best || {x: c0.x, y: c0.y, d: c0.d};
+}
+
+/* ── L'édition d'une pièce de forme libre (passe 236) ──
+   « Forme » (dans « Plus » de la carte) : rectangle, trapèze, triangle, ou forme libre. Une pièce polygonale se montre avec ses sommets (ronds pleins : on les tire,
+   ils se calent sur la grille) et, au milieu de chaque côté, un petit rond creux : le toucher ajoute un sommet, qu'on tire aussitôt. Un sommet choisi se retire (Suppr,
+   double-clic, ou « Retirer ce sommet »). Un geste qui ferait se croiser la forme est refusé : le sommet reste où il était. */
+function poignesSommets(p, k) {
+  const a = p.poly; let s = '';
+  a.forEach((u, i) => {
+    const v = a[(i + 1) % a.length];
+    if (Math.hypot(v[0] - u[0], v[1] - u[1]) * k >= 24) s += '<circle class="poly-milieu" data-milieu="' + i + '" cx="' + (u[0] + v[0]) / 2 + '" cy="' + (u[1] + v[1]) / 2 + '" r="' + 4.5 / k + '" stroke-width="' + 1.5 / k + '"><title>Ajouter un sommet</title></circle>';
+  });
+  a.forEach((u, i) => { s += '<circle class="poly-sommet' + (selection && selection.sommet === i ? ' actif' : '') + '" data-sommet="' + i + '" cx="' + u[0] + '" cy="' + u[1] + '" r="' + 6.5 / k + '" stroke-width="' + 1.5 / k + '"/>'; });
+  return s;
+}
+// Change la forme de la pièce choisie. Les formes nommées se tirent de son rectangle (celui qui l'entoure, si elle a déjà une forme libre).
+function formerPiece(forme) {
+  const p = selection && selection.piece && pieceParId(selection.piece); if (!p) return;
+  if (!aPoly(p) && p.rects.length > 1) { toast('Une pièce en plusieurs morceaux garde ses angles droits : retirez ses morceaux pour changer sa forme.'); rendrePlanEdition(); return; }
+  const b = p.rects[0]; let refus = '';
+  modifierPlan(() => {
+    if (forme === 'rectangle') { delete p.poly; p.rects = [{x: b.x, y: b.y, w: b.w, h: b.h}]; return; }
+    if (forme === 'libre' && aPoly(p)) return;
+    const pts = forme === 'libre' ? anneauRect(b) : sommetsDeForme(forme, b);
+    if (!pts) { refus = 'Cette pièce est trop étroite pour cette forme.'; return; }
+    p.poly = orienter(pts); recaler(p);
+  });
+  if (refus) toast(refus);
+  if (selection) delete selection.sommet;
+  rendrePlanEdition();
+}
+function retirerSommet() {
+  const p = selection && selection.piece && pieceParId(selection.piece); if (!p || !aPoly(p) || selection.sommet === undefined) return;
+  if (p.poly.length <= 3) { toast('Une forme garde au moins trois sommets.'); return; }
+  const cand = p.poly.filter((u, i) => i !== selection.sommet);
+  if (!anneauSimple(cand)) { toast('Sans ce sommet, la forme se croiserait : déplacez d\'abord un autre sommet.'); return; }
+  modifierPlan(() => { p.poly = orienter(cand); recaler(p); }); delete selection.sommet; rendrePlanEdition();
+}
+// Le mur droit où poser une porte ou une fenêtre de cette longueur : de préférence horizontal, le plus bas, le plus long.
+function murPrincipal(p, long) {
+  const l = mursDroitsDe(p).filter(m => m.b - m.a >= long - 1e-9);
+  l.sort((a, b) => (a.o === b.o ? 0 : a.o === 'h' ? -1 : 1) || (a.o === 'h' ? b.c - a.c : 0) || (b.b - b.a) - (a.b - a.a));
+  return l[0] || null;
+}
+// Le bloc « Forme » de la carte d'une pièce.
+function blocForme(p) {
+  const multi = !aPoly(p) && p.rects.length > 1, val = aPoly(p) ? 'libre' : 'rectangle';
+  const sel = selectHtml('pp-forme', val, FORMES.concat([['libre', 'Forme libre']]), 'formerPiece(this.value)');
+  return '<label class="champ"><span>Forme</span>' + (multi ? sel.replace('<select ', '<select disabled ') : sel) + '</label>' +
+    (aPoly(p) ? '<p class="discret">Tirez les ronds pleins (les sommets) ; touchez un rond creux, au milieu d\'un côté, pour ajouter un sommet.</p>' : multi ? '<p class="discret">Une pièce en plusieurs morceaux garde ses angles droits.</p>' : '');
+}
+
 /* ── Les pièces ── */
 function ajouterPiece() {
   const ce = centreVue(), w = 6, h = 4, n = niveauActif();
@@ -1220,6 +1509,7 @@ function ajouterPiece() {
 }
 function ajouterMorceau() {
   const p = selection && pieceParId(selection.piece); if (!p) return;
+  if (aPoly(p)) { toast('Une pièce de forme libre n\'a pas de morceaux : choisissez « Rectangle » dans « Forme » pour en ajouter.'); return; }
   const r = p.rects[selection.morceau];
   modifierPlan(() => p.rects.push({x: r.x + r.w, y: r.y, w: 3, h: Math.max(2, Math.round(r.h / 2))}));
   selection.morceau = p.rects.length - 1; rendrePlanEdition();
@@ -1231,7 +1521,7 @@ function retirerMorceau() {
 function dupliquerPiece() {
   const p = selection && pieceParId(selection.piece); if (!p) return;
   const id = nouvelId('p');
-  modifierPlan(() => pieces().push(Object.assign({id, nom: p.nom + ' (copie)', type: p.type, niveau: niveauDe(p), rects: p.rects.map(r => ({x: r.x + 2, y: r.y + 2, w: r.w, h: r.h}))}, pieceParent(p) ? {dans: p.dans} : {})));
+  modifierPlan(() => pieces().push(Object.assign({id, nom: p.nom + ' (copie)', type: p.type, niveau: niveauDe(p), rects: p.rects.map(r => ({x: r.x + 2, y: r.y + 2, w: r.w, h: r.h}))}, aPoly(p) ? {poly: p.poly.map(t => [t[0] + 2, t[1] + 2])} : {}, pieceParent(p) ? {dans: p.dans} : {})));
   if (fiches()[p.id]) { const c = clone(fiches()[p.id]); delete c.note; fiches()[id] = c; persister(); }
   selection = {piece: id, morceau: 0}; rendrePlanEdition();
 }
@@ -1268,7 +1558,7 @@ function toutesEnclavesDe(p) {
   while (pile.length) { const x = pile.pop(); enclavesDe(x).forEach(c => { if (!vus.has(c.id)) { vus.add(c.id); out.push(c); pile.push(c); } }); }
   return out;
 }
-const aireDe = p => p.rects.reduce((a, r) => a + r.w * r.h, 0);
+const aireDe = p => aPoly(p) ? aireAnneau(p.poly) : p.rects.reduce((a, r) => a + r.w * r.h, 0);
 // La plus petite pièce qui contient entièrement celle-ci, s'il y en a une (pour proposer de l'enclaver).
 function contenantPossible(p) {
   if (p.dans) return null;
@@ -1276,7 +1566,7 @@ function contenantPossible(p) {
   const dedans = (r, s) => r.x >= s.x - .001 && r.y >= s.y - .001 && r.x + r.w <= s.x + s.w + .001 && r.y + r.h <= s.y + s.h + .001;
   let best = null;
   piecesNiveau(niveauDe(p)).forEach(q => {
-    if (q.id === p.id || interdits.has(q.id) || q.dans === p.id || !p.rects.every(r => q.rects.some(s => dedans(r, s)))) return;
+    if (q.id === p.id || interdits.has(q.id) || q.dans === p.id || !((aPoly(p) || aPoly(q)) ? pieceDansPiece(p, q) : p.rects.every(r => q.rects.some(s => dedans(r, s))))) return;
     const a = aireDe(q); if (a > ap && (!best || a < best.a)) best = {q, a};
   });
   return best && best.q;
@@ -1299,6 +1589,7 @@ function blocEnclave(p) {
 // meubles), au plus près du centre ; faute de place, là où il en a le plus, et il rétrécit. « long » : le nombre de lettres du nom ; rend le point et la
 // demi-largeur libre autour de lui (« d »).
 function pointLibre(p, obstacles, meubles, long) {
+  if (aPoly(p)) return pointLibrePoly(p, obstacles, meubles, long);
   const g = p.rects.reduce((a, r) => r.w * r.h > a.w * a.h ? r : a, p.rects[0]), cx = g.x + g.w / 2, cy = g.y + g.h / 2, cible = Math.max(4, (long || 8) * .62) / 2, hv = 1;
   const touche = (x, y, w2, o) => x - w2 < o.x + o.w && x + w2 > o.x && y - hv < o.y + o.h && y + hv > o.y;
   const normal = evite => {
@@ -1414,10 +1705,11 @@ const arrondi = (v, pas) => Math.round(v / pas) * pas;
 // Les murs du niveau affiché : les quatre bords de chaque morceau ; « int » dit de quel côté est l'intérieur (+1 : vers les x ou y croissants).
 function murs() {
   const l = [];
-  piecesNiveau(niveauActif()).forEach(p => p.rects.forEach(r => {
+  piecesNiveau(niveauActif()).forEach(p => (aPoly(p) ? [] : p.rects).forEach(r => {
     l.push({o: 'h', a: r.x, b: r.x + r.w, c: r.y, int: 1, piece: p.id}, {o: 'h', a: r.x, b: r.x + r.w, c: r.y + r.h, int: -1, piece: p.id},
       {o: 'v', a: r.y, b: r.y + r.h, c: r.x, int: 1, piece: p.id}, {o: 'v', a: r.y, b: r.y + r.h, c: r.x + r.w, int: -1, piece: p.id});
   }));
+  piecesNiveau(niveauActif()).filter(aPoly).forEach(p => mursDroitsDe(p).forEach(m => l.push(m)));   // les murs droits des pièces polygonales
   return l;
 }
 // Accroche une ouverture au mur le plus proche du point (x, y), en restant entière sur ce mur.
@@ -1437,25 +1729,31 @@ function centreElement(e) { return estRect(e) ? {x: e.x + e.w / 2, y: e.y + e.h 
 // Les éléments posés dans une pièce — sans ceux de ses enclaves, qui suivent leur enclave.
 function elementsDeLaPiece(p) {
   const n = niveauDe(p), enfants = toutesEnclavesDe(p);
-  const dans = (q, c) => q.rects.some(r => c.x >= r.x - .01 && c.x <= r.x + r.w + .01 && c.y >= r.y - .01 && c.y <= r.y + r.h + .01);
+  const dans = (q, c) => dansPiece(q, c.x, c.y, .01);
   return elements().filter(e => { if (e.cat === 'escalier' || niveauDe(e) !== n) return false; const c = centreElement(e); return dans(p, c) && !enfants.some(q => dans(q, c)); });
 }
 // Déplacer une pièce emporte ses éléments et ses enclaves (avec leurs propres éléments) : enfants0 = [{id, rects0, elems0}].
-function deplacerPiece(p, rects0, elems0, dx, dy, enfants0) {
+function deplacerPiece(p, rects0, elems0, dx, dy, enfants0, poly0) {
   p.rects = rects0.map(r => ({x: r.x + dx, y: r.y + dy, w: r.w, h: r.h}));
+  if (poly0) p.poly = poly0.map(t => [t[0] + dx, t[1] + dy]);
   elems0.forEach(e0 => { const e = elemParId(e0.id); if (e) { e.x = e0.x + dx; e.y = e0.y + dy; } });
-  (enfants0 || []).forEach(c0 => { const c = pieceParId(c0.id); if (c) deplacerPiece(c, c0.rects0, c0.elems0, dx, dy); });
+  (enfants0 || []).forEach(c0 => { const c = pieceParId(c0.id); if (c) deplacerPiece(c, c0.rects0, c0.elems0, dx, dy, undefined, c0.poly0); });
 }
-function enfantsAvant(p) { return toutesEnclavesDe(p).map(c => ({id: c.id, rects0: clone(c.rects), elems0: clone(elementsDeLaPiece(c))})); }
+function enfantsAvant(p) { return toutesEnclavesDe(p).map(c => ({id: c.id, rects0: clone(c.rects), poly0: aPoly(c) ? clone(c.poly) : undefined, elems0: clone(elementsDeLaPiece(c))})); }
 function ajouterMural(cat) {
   const p = selection && selection.piece && pieceParId(selection.piece);
   if (!p) { toast('Touchez d\'abord la pièce où poser la ' + NOM_MURALE[cat] + '.'); return; }
   if (selectionMultiple()) { toast('Choisissez une seule pièce pour y poser la ' + NOM_MURALE[cat] + '.'); return; }
   const r = p.rects[selection.morceau || 0], el = {id: nouvelId('e'), cat, niveau: niveauDe(p), long: LONG_MURALE[cat], retourne: false};
   // Sur le mur du bas du morceau, au milieu ; une deuxième se décale pour ne pas recouvrir la première
-  let x = r.x + r.w / 2;
-  while (elements().some(e => murale(e) && Math.abs(e.x - x) < .1 && Math.abs(e.y - (r.y + r.h)) < .1)) x += 1.5;
-  modifierPlan(() => { accrocher(el, x, r.y + r.h); elements().push(el); });
+  let x = r.x + r.w / 2, y = r.y + r.h, sens = 'h';
+  if (aPoly(p)) {   // une pièce de forme libre : sur son plus bas mur horizontal assez long (sinon sur un mur vertical)
+    const m = murPrincipal(p, el.long);
+    if (!m) { toast('Cette pièce n\'a pas de mur droit assez long pour y poser une ' + NOM_MURALE[cat] + ' : allongez un côté, ou changez sa forme.'); return; }
+    sens = m.o; x = m.o === 'h' ? (m.a + m.b) / 2 : m.c; y = m.o === 'h' ? m.c : (m.a + m.b) / 2;
+  }
+  while (elements().some(e => murale(e) && Math.abs(e.x - x) < .1 && Math.abs(e.y - y) < .1)) { if (sens === 'h') x += 1.5; else y += 1.5; }
+  modifierPlan(() => { accrocher(el, x, y); elements().push(el); });
   selection = {elem: el.id}; rendrePlanEdition();
 }
 function ajouterMeuble(type) {
@@ -1463,7 +1761,7 @@ function ajouterMeuble(type) {
   const m = MEUBLES.find(x => x[0] === type) || MEUBLES[MEUBLES.length - 1];
   const p = !selectionMultiple() && selection && selection.piece && pieceParId(selection.piece), c = cadreEdition();
   const r = p ? p.rects[selection.morceau || 0] : null;
-  const ce = centreVue(), cx = r ? r.x + r.w / 2 : ce.x, cy = r ? r.y + r.h / 2 : ce.y;
+  const ce = centreVue(), cv = p && aPoly(p) ? centreVisuel(p) : null, cx = cv ? cv.x : r ? r.x + r.w / 2 : ce.x, cy = cv ? cv.y : r ? r.y + r.h / 2 : ce.y;
   const el = {id: nouvelId('e'), cat: 'meuble', type: m[0], niveau: p ? niveauDe(p) : niveauActif(), x: arrondi(cx - m[2] / 2, .5), y: arrondi(cy - m[3] / 2, .5), w: m[2], h: m[3]};
   modifierPlan(() => elements().push(el));
   selection = {elem: el.id}; rendrePlanEdition();
@@ -1479,7 +1777,7 @@ function ajouterEscalier(type) {
   const cur = niveauActif(), i = rangNiveau(cur), autre = ns[i + 1] ? ns[i + 1].id : ns[i - 1].id;
   const p = !selectionMultiple() && selection && selection.piece && pieceParId(selection.piece), c = cadreEdition();
   const r = p ? p.rects[selection.morceau || 0] : null, w = type === 'ascenseur' ? 1.5 : 2, h = type === 'ascenseur' ? 1.5 : 3;
-  const ce = centreVue(), cx = r ? r.x + r.w / 2 : ce.x, cy = r ? r.y + r.h / 2 : ce.y;
+  const ce = centreVue(), cv = p && aPoly(p) ? centreVisuel(p) : null, cx = cv ? cv.x : r ? r.x + r.w / 2 : ce.x, cy = cv ? cv.y : r ? r.y + r.h / 2 : ce.y;
   const lies = rangNiveau(cur) < rangNiveau(autre) ? [cur, autre] : [autre, cur];
   const el = {id: nouvelId('e'), cat: 'escalier', type, niveau: lies[0], niveaux: lies, x: arrondi(cx - w / 2, .5), y: arrondi(cy - h / 2, .5), w, h};
   modifierPlan(() => elements().push(el));
@@ -1512,7 +1810,7 @@ function pivoterPiece() {
   const b = boite(groupe), arr = rotDe(groupe[0]) < 2 ? Math.floor : Math.ceil, cx = arr(b.x + b.w / 2), cy = arr(b.y + b.h / 2), els = new Set();   // le pivot : une case entière, voir la note plus haut
   groupe.forEach(q => elementsDeLaPiece(q).forEach(e => els.add(e)));
   modifierPlan(() => {
-    groupe.forEach(q => { q.rects = q.rects.map(r => ({x: cx + cy - r.y - r.h, y: cy - cx + r.x, w: r.h, h: r.w})); q.rot = (rotDe(q) + 1) & 3; if (!q.rot) delete q.rot; });
+    groupe.forEach(q => { q.rects = q.rects.map(r => ({x: cx + cy - r.y - r.h, y: cy - cx + r.x, w: r.h, h: r.w})); if (aPoly(q)) { q.poly = q.poly.map(t => [cx + cy - t[1], cy - cx + t[0]]); recaler(q); } q.rot = (rotDe(q) + 1) & 3; if (!q.rot) delete q.rot; });
     els.forEach(e => {
       if (estRect(e)) { const x = n6(cx + cy - e.y - e.h), y = n6(cy - cx + e.x), w = e.h; e.x = x; e.y = y; e.h = e.w; e.w = w; }
       else { const x = n6(cx + cy - e.y), y = n6(cy - cx + e.x); e.x = x; e.y = y; if (e.o === 'h') { e.o = 'v'; e.cote = -(e.cote || 1); } else { e.o = 'h'; e.cote = e.cote || 1; } }   // le mur tourne, le sens du battant avec lui
@@ -1544,7 +1842,7 @@ function focaliserSiVisible(el, tout) {
 }
 function supprimerSelection() {
   if (!selection) return;
-  if (selection.legende) supprimerLegende(); else if (selection.elem) supprimerElement(); else supprimerPiece();
+  if (selection.sommet !== undefined) retirerSommet(); else if (selection.legende) supprimerLegende(); else if (selection.elem) supprimerElement(); else supprimerPiece();
 }
 
 /* ══ Plusieurs pièces à la fois (passe 234, Arthur et Émilie) ══
@@ -1590,14 +1888,14 @@ function racinesDe(ps) {
   const ids = new Set(ps.map(p => p.id));
   return ps.filter(p => { let q = pieceParent(p), n = 0; while (q && n++ < 20) { if (ids.has(q.id)) return false; q = pieceParent(q); } return true; });
 }
-function membresDeplacement() { return racinesDe(piecesEnSelection()).map(p => ({id: p.id, rects0: clone(p.rects), elems0: clone(elementsDeLaPiece(p)), enfants0: enfantsAvant(p)})); }
-function deplacerGroupe(membres, dx, dy) { membres.forEach(m => { const p = pieceParId(m.id); if (p) deplacerPiece(p, m.rects0, m.elems0, dx, dy, m.enfants0); }); }
+function membresDeplacement() { return racinesDe(piecesEnSelection()).map(p => ({id: p.id, rects0: clone(p.rects), poly0: aPoly(p) ? clone(p.poly) : undefined, elems0: clone(elementsDeLaPiece(p)), enfants0: enfantsAvant(p)})); }
+function deplacerGroupe(membres, dx, dy) { membres.forEach(m => { const p = pieceParId(m.id); if (p) deplacerPiece(p, m.rects0, m.elems0, dx, dy, m.enfants0, m.poly0); }); }
 // Le rectangle qui entoure ce qui est choisi (pour la flèche ronde et pour poser la carte).
 const boiteChoisies = () => boite(piecesEnSelection());
 // Ctrl+glisser sur le fond : les pièces du niveau que le cadre touche (une pièce en L est touchée par n'importe lequel de ses morceaux).
 function piecesDansCadre(c) {
   const x0 = Math.min(c.x0, c.x1), x1 = Math.max(c.x0, c.x1), y0 = Math.min(c.y0, c.y1), y1 = Math.max(c.y0, c.y1);
-  return piecesNiveau(niveauActif()).filter(p => p.rects.some(r => r.x < x1 && r.x + r.w > x0 && r.y < y1 && r.y + r.h > y0)).map(p => p.id);
+  return piecesNiveau(niveauActif()).filter(p => aPoly(p) ? anneauToucheRect(p.poly, x0, y0, x1, y1) : p.rects.some(r => r.x < x1 && r.x + r.w > x0 && r.y < y1 && r.y + r.h > y0)).map(p => p.id);
 }
 
 /* ══ Le plan, un espace de travail (passe 233, Arthur et Émilie) ══
@@ -1800,9 +2098,11 @@ function dessinPlan(ps, o) {
     const fond = o.couleurs ? ' style="fill:' + o.couleurs[p.id] + '"' : '';
     const g = grand(p), enf = enclavesDe(p);
     let cx = g.x + g.w / 2, cy = g.y + g.h / 2, taille = Math.max(.42, Math.min(1, g.w / Math.max(4, (p.nom || '').length * .62)));
+    if (aPoly(p)) { const cv = centreVisuel(p); cx = cv.x; cy = cv.y; taille = Math.max(.42, Math.min(1, 2 * cv.d / Math.max(4, (p.nom || '').length * .62))); }   // une pièce polygonale : le nom au point le plus dégagé
     if (enf.length) { const pl = pointLibre(p, enf.flatMap(c => c.rects), elementsDeLaPiece(p).filter(estRect), (p.nom || '').length); cx = pl.x; cy = pl.y; taille = Math.max(.42, Math.min(taille, pl.d * 2 / Math.max(4, (p.nom || '').length * .62))); }   // le nom d'une grande pièce se pose là où il y a de la place
-    const traits = p.rects.map(r => '<rect class="piece-trait" x="' + r.x + '" y="' + r.y + '" width="' + r.w + '" height="' + r.h + '" stroke-width="' + (ep * 2) + '"' + (ext ? ' stroke-dasharray="' + (ep * 3) + ' ' + (ep * 2.2) + '"' : '') + '/>').join('');
-    const fonds = p.rects.map((r, i) => '<rect class="piece-fond" data-piece="' + p.id + '" data-morceau="' + i + '" x="' + r.x + '" y="' + r.y + '" width="' + r.w + '" height="' + r.h + '"' + fond + '/>').join('');
+    const pts = a => a.map(t => t[0] + ',' + t[1]).join(' ');
+    const traits = aPoly(p) ? '<polygon class="piece-trait" points="' + pts(p.poly) + '" stroke-width="' + (ep * 2) + '" stroke-linejoin="round"' + (ext ? ' stroke-dasharray="' + (ep * 3) + ' ' + (ep * 2.2) + '"' : '') + '/>' : p.rects.map(r => '<rect class="piece-trait" x="' + r.x + '" y="' + r.y + '" width="' + r.w + '" height="' + r.h + '" stroke-width="' + (ep * 2) + '"' + (ext ? ' stroke-dasharray="' + (ep * 3) + ' ' + (ep * 2.2) + '"' : '') + '/>').join('');
+    const fonds = aPoly(p) ? '<polygon class="piece-fond" data-piece="' + p.id + '" data-morceau="0" points="' + pts(p.poly) + '"' + fond + '/>' : p.rects.map((r, i) => '<rect class="piece-fond" data-piece="' + p.id + '" data-morceau="' + i + '" x="' + r.x + '" y="' + r.y + '" width="' + r.w + '" height="' + r.h + '"' + fond + '/>').join('');
     // La route : une ligne médiane en tirets ; le parking : des places tracées.
     let marques = '';
     if ((p.type === 'route' || p.type === 'parking') && !o.couleurs) {
@@ -1829,13 +2129,13 @@ function dessinPlan(ps, o) {
 function niveauFantome(n) { const ns = niveaux(), i = rangNiveau(n); return ns[i - 1] || ns[i + 1] || null; }
 function dessinFantome(n, k) {
   const f = niveauFantome(n); if (!f) return '';
-  return '<g class="fantome">' + piecesNiveau(f.id).map(p => p.rects.map(r => '<rect x="' + r.x + '" y="' + r.y + '" width="' + r.w + '" height="' + r.h + '" stroke-width="' + 1.6 / k + '"/>').join('')).join('') + '</g>';
+  return '<g class="fantome">' + piecesNiveau(f.id).map(p => aPoly(p) ? '<polygon points="' + p.poly.map(t => t[0] + ',' + t[1]).join(' ') + '" stroke-width="' + 1.6 / k + '"/>' : p.rects.map(r => '<rect x="' + r.x + '" y="' + r.y + '" width="' + r.w + '" height="' + r.h + '" stroke-width="' + 1.6 / k + '"/>').join('')).join('') + '</g>';
 }
 // Ce que la BASE lit, posé sur le plan : les murs communs, les passages, les vues par les fenêtres.
 function dessinLecture(L, n, k) {
   const ep = 1 / k; let s = '<g class="lecture-calque">';
   L.adj.filter(a => a.niveau === n).forEach(a => a.segs.forEach(sg => {
-    s += sg.o === 'v' ? '<line class="lect-mur" x1="' + sg.c + '" y1="' + sg.a + '" x2="' + sg.c + '" y2="' + sg.b + '" stroke-width="' + ep * 5 + '"/>'
+    s += sg.o === 'd' ? '<line class="lect-mur" x1="' + sg.x1 + '" y1="' + sg.y1 + '" x2="' + sg.x2 + '" y2="' + sg.y2 + '" stroke-width="' + ep * 5 + '"/>' : sg.o === 'v' ? '<line class="lect-mur" x1="' + sg.c + '" y1="' + sg.a + '" x2="' + sg.c + '" y2="' + sg.b + '" stroke-width="' + ep * 5 + '"/>'
       : '<line class="lect-mur" x1="' + sg.a + '" y1="' + sg.c + '" x2="' + sg.b + '" y2="' + sg.c + '" stroke-width="' + ep * 5 + '"/>';
   }));
   L.passages.filter(p => p.niveau === n).forEach(p => { s += '<circle class="lect-passage" cx="' + p.e.x + '" cy="' + p.e.y + '" r="' + ep * 4.5 + '"/>'; });
@@ -1866,6 +2166,9 @@ function rendrePlanEdition() {
     const g = boiteChoisies();
     h += '<rect class="groupe-actif" x="' + (g.x - .15) + '" y="' + (g.y - .15) + '" width="' + (g.w + .3) + '" height="' + (g.h + .3) + '" stroke-width="' + (1.5 / k) + '"/>';
     if (!geste) h += boutonRotation(g, k);
+  } else if (p && aPoly(p)) {
+    h += poignesSommets(p, k);
+    if (!geste) h += boutonRotation(boite([p]), k);
   } else if (p) {
     const m = p.rects[selection.morceau];
     if (p.rects.length > 1) h += '<rect class="morceau-actif" x="' + m.x + '" y="' + m.y + '" width="' + m.w + '" height="' + m.h + '" stroke-width="' + (1.5 / k) + '"/>';
@@ -1942,8 +2245,9 @@ function remplirPanneau() {
     '<div class="boutons"><button type="button" class="bt petit" onclick="pivoterPiece()" title="Un quart de tour (touche R), avec ce que la pièce contient : meubles, portes, fenêtres, enclaves">↻ Tourner</button>' +
     '<button type="button" class="bt petit" onclick="dupliquerPiece()">⧉ Dupliquer</button>' +
     '<button type="button" class="bt petit danger" onclick="supprimerPiece()">Supprimer</button>' + fini + '</div>' +
-    '<details class="repli" id="pp-plus"' + (plus ? ' open' : '') + '><summary>Plus : un morceau, l\'enclave, la fiche</summary>' + blocEnclave(p) +
-    '<div class="boutons"><button type="button" class="bt petit" onclick="ajouterMorceau()" title="Pour une pièce en L ou en T : un rectangle collé à celui-ci">＋ Un morceau à cette pièce</button>' +
+    '<details class="repli" id="pp-plus"' + (plus ? ' open' : '') + '><summary>Plus : la forme, un morceau, l\'enclave, la fiche</summary>' + blocForme(p) + blocEnclave(p) +
+    '<div class="boutons">' + (aPoly(p) ? '' : '<button type="button" class="bt petit" onclick="ajouterMorceau()" title="Pour une pièce en L ou en T : un rectangle collé à celui-ci">＋ Un morceau à cette pièce</button>') +
+    (aPoly(p) && selection.sommet !== undefined ? '<button type="button" class="bt petit danger" onclick="retirerSommet()">Retirer ce sommet</button>' : '') +
     (p.rects.length > 1 ? '<button type="button" class="bt petit" onclick="retirerMorceau()">Retirer ce morceau</button>' : '') +
     (ficheOuverte(p) ? '<button type="button" class="bt petit" onclick="ouvrirFiche()">📋 Fiche de la pièce</button>' + chipFiche(completudeFiche(p)) : '') + '</div></details>';
   if (actif && /^pp-/.test(actif)) { const n = $(actif); if (n) n.focus({preventScroll: true}); }
@@ -1966,10 +2270,16 @@ function brancherEditeur() {
     if (ev.button > 0) return;
     lacherChamp();   // un champ resté actif garderait Suppr, et ramènerait la page vers lui à chaque dessin
     const pt = pointDuMonde(ev), cible = ev.target, at = n => cible.getAttribute && cible.getAttribute(n);
-    const poignee = at('data-poignee'), idE = at('data-elem'), idP = at('data-piece'), idLeg = at('data-legende');
+    const poignee = at('data-poignee'), idE = at('data-elem'), idP = at('data-piece'), idLeg = at('data-legende'), idS = at('data-sommet'), idM = at('data-milieu');
     if (at('data-rotation')) { geste = null; tournerSelection(); ev.preventDefault(); return; }   // la flèche ronde : un quart de tour
     svg.setPointerCapture(ev.pointerId);
-    if (poignee && selection && selection.elem) {
+    if ((idS || idM) && selection && selection.piece && aPoly(pieceParId(selection.piece))) {
+      const p = pieceParId(selection.piece), avant = etatPlan(); let i = +idS;
+      if (idM) { const m = +idM, u = p.poly[m], v = p.poly[(m + 1) % p.poly.length]; p.poly.splice(m + 1, 0, [(u[0] + v[0]) / 2, (u[1] + v[1]) / 2]); recaler(p); i = m + 1; }   // un rond creux : un sommet de plus, qu'on tire aussitôt
+      selection.sommet = i;
+      geste = {type: 'sommet', idx: i, depart: pt, poly0: clone(p.poly), avant};
+      rendrePlanEdition();
+    } else if (poignee && selection && selection.elem) {
       const e = elemParId(selection.elem);
       geste = {type: 'taille-meuble', dir: poignee, depart: pt, r0: {x: e.x, y: e.y, w: e.w, h: e.h}, avant: etatPlan()};
     } else if (poignee && selection && selection.piece) {
@@ -1993,7 +2303,7 @@ function brancherEditeur() {
       if (selectionMultiple()) geste = {type: 'groupe', depart: pt, membres: membresDeplacement(), avant: etatPlan(), bouge: false, reduire};
       else {
         const p = pieceParId(idP);
-        geste = {type: 'deplacer', depart: pt, rects0: clone(p.rects), elems0: clone(elementsDeLaPiece(p)), enfants0: enfantsAvant(p), avant: etatPlan(), bouge: false};
+        geste = {type: 'deplacer', depart: pt, rects0: clone(p.rects), poly0: aPoly(p) ? clone(p.poly) : undefined, elems0: clone(elementsDeLaPiece(p)), enfants0: enfantsAvant(p), avant: etatPlan(), bouge: false};
         if (ev.pointerType === 'touch' || ev.pointerType === 'pen') geste.long = setTimeout(() => { if (geste && !geste.bouge) { geste = null; nommerSelection(); } }, 600);   // appui long au doigt ; à la souris, c'est le double-clic
       }
       rendrePlanEdition();
@@ -2012,7 +2322,10 @@ function brancherEditeur() {
     const dx = pt.x - geste.depart.x, dy = pt.y - geste.depart.y;
     if (geste.type === 'deplacer') {
       if (Math.abs(dx) + Math.abs(dy) > .3) geste.bouge = true;
-      deplacerPiece(pieceParId(selection.piece), geste.rects0, geste.elems0, Math.round(dx), Math.round(dy), geste.enfants0);
+      deplacerPiece(pieceParId(selection.piece), geste.rects0, geste.elems0, Math.round(dx), Math.round(dy), geste.enfants0, geste.poly0);
+    } else if (geste.type === 'sommet') {
+      const p = pieceParId(selection.piece), u = geste.poly0[geste.idx], cand = geste.poly0.map((t, i) => i === geste.idx ? [arrondi(u[0] + dx, 1), arrondi(u[1] + dy, 1)] : t.slice());
+      if (p && aPoly(p) && anneauSimple(cand) && aireSignee(cand) > 0) { p.poly = cand; recaler(p); }   // un geste qui ferait se croiser la forme est refusé : le sommet reste où il était
     } else if (geste.type === 'groupe') {
       if (Math.abs(dx) + Math.abs(dy) > .3) geste.bouge = true;
       deplacerGroupe(geste.membres, Math.round(dx), Math.round(dy));
@@ -2050,7 +2363,8 @@ function brancherEditeur() {
   };
   svg.addEventListener('pointerup', fin); svg.addEventListener('pointercancel', fin);
   svg.addEventListener('dblclick', ev => {
-    const t = ev.target; if (!t || !t.getAttribute) return;
+    const t = document.elementFromPoint(ev.clientX, ev.clientY) || ev.target; if (!t || !t.getAttribute) return;   // l'élément sous le doigt : le plan est redessiné entre les deux clics
+    if (t.getAttribute('data-sommet') && selection && selection.sommet !== undefined) { retirerSommet(); return; }   // un double-clic sur un sommet le retire
     if (t.getAttribute('data-legende')) { const i = $('pl-texte'); if (i) { i.focus(); i.select(); } } else if (t.getAttribute('data-piece')) nommerSelection();
   });
   svg.addEventListener('wheel', ev => { ev.preventDefault(); const pt = pointDuMonde(ev); zoomer(ev.deltaY < 0 ? 1.12 : 1 / 1.12, pt.px, pt.py); }, {passive: false});
@@ -2100,9 +2414,10 @@ function recouvrement(r, s) {
   const w = Math.min(r.x + r.w, s.x + s.w) - Math.max(r.x, s.x), h = Math.min(r.y + r.h, s.y + s.h) - Math.max(r.y, s.y);
   return w > EPS && h > EPS ? w * h : 0;
 }
-function aireRecouvrement(p, q) { let a = 0; p.rects.forEach(r => q.rects.forEach(s => { a += recouvrement(r, s); })); return a; }
+function aireRecouvrement(p, q) { if (aPoly(p) || aPoly(q)) return aireInter(p, q); let a = 0; p.rects.forEach(r => q.rects.forEach(s => { a += recouvrement(r, s); })); return a; }
 // Les murs que deux pièces ont en commun : les segments de bord qui coïncident.
 function segmentsCommuns(p, q) {
+  if (aPoly(p) || aPoly(q)) return segmentsCommunsGeneral(p, q);
   const segs = [];
   p.rects.forEach(r => q.rects.forEach(s => {
     [[r.x + r.w, s.x], [r.x, s.x + s.w]].forEach(([xr, xs]) => {
@@ -2117,18 +2432,23 @@ function segmentsCommuns(p, q) {
 // Les pièces dont un bord porte l'ouverture e (porte, fenêtre, baie) ; « ints » dit de quel côté de ce bord est l'intérieur (+1 : vers les x ou y croissants).
 function bordsDe(e, l) {
   const out = {};
-  l.forEach(p => p.rects.forEach(r => {
+  l.forEach(p => (aPoly(p) ? [] : p.rects).forEach(r => {
     let c = null;
     if (e.o === 'h') { if (e.x >= r.x - EPS && e.x <= r.x + r.w + EPS) { if (Math.abs(e.y - r.y) < EPS) c = 1; else if (Math.abs(e.y - (r.y + r.h)) < EPS) c = -1; } }
     else if (e.y >= r.y - EPS && e.y <= r.y + r.h + EPS) { if (Math.abs(e.x - r.x) < EPS) c = 1; else if (Math.abs(e.x - (r.x + r.w)) < EPS) c = -1; }
     if (c !== null) (out[p.id] = out[p.id] || {p, ints: []}).ints.push(c);
+  }));
+  l.filter(aPoly).forEach(p => mursDroitsDe(p).forEach(m => {   // une pièce polygonale : ses murs droits
+    if (m.o !== e.o) return;
+    const sur = m.o === 'h' ? Math.abs(e.y - m.c) < EPS && e.x >= m.a - EPS && e.x <= m.b + EPS : Math.abs(e.x - m.c) < EPS && e.y >= m.a - EPS && e.y <= m.b + EPS;
+    if (sur) (out[p.id] = out[p.id] || {p, ints: []}).ints.push(m.int);
   }));
   return Object.values(out);
 }
 // Qu'y a-t-il en face de l'ouverture e, du côté du dehors (int : côté de l'intérieur) ? La pièce la plus proche, dans la bande de l'ouverture.
 function sonder(e, int, pieces, portee, exclure) {
   const demi = (e.long || 1) / 2; let best = null;
-  pieces.forEach(q => { if (exclure && q.id === exclure) return; q.rects.forEach(r => {
+  pieces.forEach(q => { if (exclure && q.id === exclure) return; if (aPoly(q)) { const t = distanceVers(q, e, int, portee); if (t !== null && (best === null || t < best.d)) best = {q, d: t}; return; } q.rects.forEach(r => {
     let d;
     if (e.o === 'h') { if (Math.min(e.x + demi, r.x + r.w) - Math.max(e.x - demi, r.x) <= EPS) return; d = int === 1 ? e.y - (r.y + r.h) : r.y - e.y; }
     else { if (Math.min(e.y + demi, r.y + r.h) - Math.max(e.y - demi, r.y) <= EPS) return; d = int === 1 ? e.x - (r.x + r.w) : r.x - e.x; }
@@ -2176,8 +2496,9 @@ function lectureDuPlan(b1) {
   L.parent = parentDe; L.enfants = enfantsDe;
   // 1. Les faits de chaque pièce
   ps.forEach(p => {
-    const cl = classe(p.type), aire = p.rects.reduce((a, r) => a + r.w * r.h, 0), larg = Math.min(...p.rects.map(r => Math.min(r.w, r.h)));
-    const lon = p.rects.reduce((a, r) => a + Math.max(r.w, r.h), 0) - (p.rects.length - 1) * larg;
+    const cl = classe(p.type), poly = aPoly(p), bb = p.rects[0], aire = poly ? aireAnneau(p.poly) : p.rects.reduce((a, r) => a + r.w * r.h, 0), lon0 = poly ? Math.max(bb.w, bb.h) : 0;
+    const larg = poly ? aire / Math.max(lon0, EPS) : Math.min(...p.rects.map(r => Math.min(r.w, r.h)));   // une pièce polygonale : sa largeur moyenne
+    const lon = poly ? lon0 : p.rects.reduce((a, r) => a + Math.max(r.w, r.h), 0) - (p.rects.length - 1) * larg;
     L.pieces[p.id] = {id: p.id, nom: p.nom, type: p.type, cl, obj: p, niveau: nv(p), ext: !!cl.ext, aire, aireM2: ech ? aire * ech * ech : null, aireBrute: aire, dans: parentDe[p.id] || null, enclaves: enfantsDe[p.id].slice(), largeur: larg, longueur: lon,
       morceaux: p.rects.length, voisines: [], passages: [], sorties: [], portesDehors: 0, vues: [], fenetres: 0, baies: 0, vitragesInt: 0, escaliers: 0,
       dehors: {route: false, parking: false}, superposees: [], portesVitrees: [], taille: ''};
@@ -2200,11 +2521,11 @@ function lectureDuPlan(b1) {
   });
   const adjDe = (x, y) => L.adj.find(a => (a.a === x && a.b === y) || (a.a === y && a.b === x));
   // Une enclave touche la pièce qui la contient par ses propres murs : ceux dont l'autre côté est dans la grande pièce (ni dehors, ni dans une autre enclave).
-  const contient = (q, x, y) => q.rects.some(r => x > r.x + EPS && x < r.x + r.w - EPS && y > r.y + EPS && y < r.y + r.h - EPS);
+  const contient = (q, x, y) => dansStrict(q, x, y);
   const dehorsDe = (e, int) => e.o === 'h' ? {x: e.x, y: e.y - int * .25} : {x: e.x - int * .25, y: e.y};   // un point juste de l'autre côté du mur
   ps.filter(c => parentDe[c.id]).forEach(c => {
     const q = objDe[parentDe[c.id]], freres = enfantsDe[q.id].filter(id => id !== c.id).map(id => objDe[id]), segs = [];
-    c.rects.forEach(r => [['h', r.y, r.x, r.x + r.w, -1], ['h', r.y + r.h, r.x, r.x + r.w, 1], ['v', r.x, r.y, r.y + r.h, -1], ['v', r.x + r.w, r.y, r.y + r.h, 1]].forEach(([o, cc, a, b, sens]) => {
+    (aPoly(c) ? [mursDroitsDe(c).map(m => [m.o, m.c, m.a, m.b, -m.int])] : c.rects.map(r => [['h', r.y, r.x, r.x + r.w, -1], ['h', r.y + r.h, r.x, r.x + r.w, 1], ['v', r.x, r.y, r.y + r.h, -1], ['v', r.x + r.w, r.y, r.y + r.h, 1]])).forEach(tuples => tuples.forEach(([o, cc, a, b, sens]) => {
       let debut = null;   // par demi-cases : le morceau de mur dont l'autre côté est dans la grande pièce
       for (let t = a; t < b - EPS; t += .5) {
         const m = (t + Math.min(b, t + .5)) / 2, px = o === 'h' ? m : cc + sens * .25, py = o === 'h' ? cc + sens * .25 : m;
@@ -2275,7 +2596,7 @@ function lectureDuPlan(b1) {
   // 4. Les escaliers et ascenseurs : de quelle pièce à quelle pièce
   els.filter(e => e.cat === 'escalier').forEach(e => {
     const [na, nb2] = e.niveaux || [];
-    const au = n => { let best = null, ba = 0; (parNiv[n] || []).forEach(p => p.rects.forEach(r => { const a = recouvrement(r, e); if (a > ba) { ba = a; best = p; } })); return best; };
+    const au = n => { let best = null, ba = 0; (parNiv[n] || []).forEach(p => (aPoly(p) ? [aireInter(p, e)] : p.rects.map(r => recouvrement(r, e))).forEach(a => { if (a > ba) { ba = a; best = p; } })); return best; };
     const pa = au(na), pb = au(nb2);
     L.escaliers.push({e, de: pa ? pa.id : null, vers: pb ? pb.id : null, niveaux: [na, nb2]});
     if (pa && pb && pa.id !== pb.id) { lierVoisins(pa.id, pb.id); L.pieces[pa.id].escaliers++; L.pieces[pb.id].escaliers++; }
@@ -2977,11 +3298,11 @@ function projeterPoint(rects, obstacles, x, y) {
 }
 const obstaclesDe = p => enclavesDe(p).flatMap(c => c.rects);
 function posDepuisPoint(p, pt) {
-  const a = projeterPoint(p.rects, obstaclesDe(p), pt.x, pt.y), b = boite([p]);
+  const a = projeterDansPiece(p, pt.x, pt.y), b = boite([p]);
   const uv = tourner01(Math.min(1, Math.max(0, (a.x - b.x) / Math.max(b.w, EPS))), Math.min(1, Math.max(0, (a.y - b.y) / Math.max(b.h, EPS))), 4 - rotDe(p));   // retour au repère d'origine de la pièce (passe 232)
   return {u: r3(uv[0]), v: r3(uv[1])};
 }
-function pointDepuisPos(p, pos) { const b = boite([p]), uv = tourner01(pos.u, pos.v, rotDe(p)); return projeterPoint(p.rects, obstaclesDe(p), b.x + uv[0] * b.w, b.y + uv[1] * b.h); }
+function pointDepuisPos(p, pos) { const b = boite([p]), uv = tourner01(pos.u, pos.v, rotDe(p)); return projeterDansPiece(p, b.x + uv[0] * b.w, b.y + uv[1] * b.h); }
 const posValide = pos => !!pos && typeof pos === 'object' && Number.isFinite(pos.u) && Number.isFinite(pos.v) && pos.u >= 0 && pos.u <= 1 && pos.v >= 0 && pos.v <= 1;
 // Dans quelles pièces la croix est-elle conseillée d'emblée ? Les très grandes : un dehors de 40 cases ou plus, un couloir de 12 cases ou plus, une pièce qui
 // en contient d'autres, une pièce « très grande » parmi celles du lieu (au moins deux fois la médiane), ou 80 cases et plus. Ailleurs, on peut la poser quand même.
@@ -3382,6 +3703,15 @@ const sigmaPiece = p => Math.min(3, Math.max(1, .09 * Math.sqrt(aireDe(p))));
 // Les cases de la grille dont le centre est dans la pièce, hors de ses enclaves.
 function casesDePiece(p, obstacles, pas) {
   const out = [], vus = new Set();
+  if (aPoly(p)) {   // une pièce polygonale : les cases de son rectangle englobant dont le centre est dedans
+    const r = p.rects[0];
+    for (let i = Math.floor(r.x / pas); i < Math.ceil((r.x + r.w) / pas); i++) for (let j = Math.floor(r.y / pas); j < Math.ceil((r.y + r.h) / pas); j++) {
+      const cx = (i + .5) * pas, cy = (j + .5) * pas;
+      if (!dansAnneau(p.poly, cx, cy) || obstacles.some(o => cx > o.x && cx < o.x + o.w && cy > o.y && cy < o.y + o.h)) continue;
+      out.push({i, j, cx, cy});
+    }
+    return out;
+  }
   p.rects.forEach(r => {
     for (let i = Math.round(r.x / pas); i < Math.round((r.x + r.w) / pas); i++) for (let j = Math.round(r.y / pas); j < Math.round((r.y + r.h) / pas); j++) {
       const cle = i + ',' + j; if (vus.has(cle)) continue;
@@ -3758,10 +4088,11 @@ function effacer() {
    augmente VERSION_SIMULATION : un lieu simulé gardé dans le navigateur (le bac à sable de l'administrateur, ou « Voir un exemple ») le dit dans la barre du
    haut et propose de se remettre à jour — sans quoi il garde, des jours après, les données d'avant les nouveautés. Une spécification de croix peut avoir un
    troisième élément : la part des épisodes qui posent leur croix (0,85 par défaut) ; le premier épisode de chaque pièce a toujours la sienne. « rot » :
-   [[numéro de la pièce, quarts de tour déjà faits]], pour que les simulations passent aussi par les pièces tournées. */
-const VERSION_SIMULATION = 2;
+   [[numéro de la pièce, quarts de tour déjà faits]], pour que les simulations passent aussi par les pièces tournées. « formes » (passe 236) :
+   [[numéro de la pièce, [[x, y], …]]], une pièce dessinée en polygone (ses sommets, dans le plan tel qu'on le voit). */
+const VERSION_SIMULATION = 3;
 const LIEUX_SIMULES = [
-  {nom: 'Bâtiment provisoire', desc: 'Un IME déménagé dans des bureaux, dessiné sans échelle : un hall unique où tout le monde arrive, un long couloir aveugle, des salles sans fenêtre, une cour non clôturée contre la route, et le parking devant la porte. Ses fiches de pièces sont remplies en mode rapide. Son réfectoire, très grand, contient trois petites pièces : un office, un local chariots et un coin calme. Les sanitaires, un ancien bureau, ont gardé leur porte vitrée. Presque toutes ses pièces ont leurs croix (au moins une par pièce qui a des épisodes), et la salle bleue est dessinée tournée d\'un quart de tour : de quoi voir ce que la carte thermique sait faire.', graine: 7,
+  {nom: 'Bâtiment provisoire', desc: 'Un IME déménagé dans des bureaux, dessiné sans échelle : un hall unique où tout le monde arrive, un long couloir aveugle, des salles sans fenêtre, une cour non clôturée contre la route, et le parking devant la porte. Ses fiches de pièces sont remplies en mode rapide. Son réfectoire, très grand, contient trois petites pièces : un office, un local chariots et un coin calme. Les sanitaires, un ancien bureau, ont gardé leur porte vitrée. Presque toutes ses pièces ont leurs croix (au moins une par pièce qui a des épisodes) ; la salle bleue est dessinée tournée d\'un quart de tour et le parking est un trapèze : de quoi voir ce que la carte thermique sait faire.', graine: 7,
     legendes: [['Entrée principale', -4.2, 2.2, 'm', 'e'], ['Vers le centre-ville', -10.5, -4.6, 'm', 'n']],
     pronostics: [['AES / AMP', [0, 2, 4]], ['Éducateur·rice spécialisé·e', [0, 4, 9]], ['Moniteur·rice-éducateur·rice', [0, 8]]],
     dates: ['2026-09-07', '2026-09-25'], moments: null,
@@ -3792,8 +4123,9 @@ const LIEUX_SIMULES = [
       [2, [[.43, .1, .7, 3], [.5, .55, 1.6, 3]], .7], [3, [[.4, .1, .6, 3], [.5, .6, 1.2, 2]], .7], [5, [[.93, .25, .5, 3], [.5, .6, 1, 2]], .7], [6, [[.1, .6, .5, 4], [.85, .4, .5, 1]], .7], [7, [[.5, .33, 2, 2]], .7],
       [10, [[.5, .12, .4, 4], [.5, .7, .6, 1]], .7], [11, [[.5, .12, .4, 3], [.3, .75, .6, 2]], .7], [12, [[.12, .5, .4, 3], [.6, .12, .5, 2]], .7]],
     rot: [[2, 1]],
+    formes: [[8, [[-9, 2], [0, 0], [0, 8], [-9, 8]]]],   // le parking : un trapèze rectangle, son haut en pente
     commentaires: ['Arrivée de tous les jeunes en même temps, le hall résonne.', 'S\'est bouché les oreilles puis est sorti en courant.', 'Bruit des chaises au réfectoire.', 'Descendu du taxi, a couru vers la route.']},
-  {nom: 'Foyer d\'hébergement', desc: 'Une unité de vie sur deux niveaux : salon avec baie vitrée sur le jardin, salle à manger et chambres au rez-de-chaussée ; à l\'étage, des chambres au-dessus de la salle à manger, qui voient le parking, et une salle de mise au calme. Un escalier et un ascenseur relient les deux. Deux fiches détaillées, les autres rapides. Un abri de jardin s\'ouvre sur le jardin (une pièce enclavée dans une pièce de dehors). La salle d\'eau de l\'étage a une porte vitrée. Presque toutes les pièces ont leurs croix, et la chambre 1 est dessinée tournée.', graine: 19,
+  {nom: 'Foyer d\'hébergement', desc: 'Une unité de vie sur deux niveaux : salon avec baie vitrée sur le jardin, salle à manger et chambres au rez-de-chaussée ; à l\'étage, des chambres au-dessus de la salle à manger, qui voient le parking, et une salle de mise au calme. Un escalier et un ascenseur relient les deux. Deux fiches détaillées, les autres rapides. Un abri de jardin s\'ouvre sur le jardin (une pièce enclavée dans une pièce de dehors). La salle d\'eau de l\'étage a une porte vitrée. Presque toutes les pièces ont leurs croix, la chambre 1 est dessinée tournée et le jardin a un pan coupé.', graine: 19,
     legendes: [['Entrée principale', 11.5, -1.8, 'm', 's'], ['Vers le centre-ville', -1, -10.5, 'm', 'o']],
     pronostics: [['Éducateur·rice spécialisé·e', [2, 4]], ['AES / AMP', [2, 8]], ['Infirmier·e', [4, 5]]],
     dates: ['2026-09-14', '2026-10-02'],
@@ -3840,8 +4172,9 @@ const LIEUX_SIMULES = [
       [13, [[.5, .88, .6, 3], [.5, .1, .7, 3], [.25, .45, .6, 1]], .7], [14, [[.5, .88, .6, 3], [.5, .1, .7, 3], [.25, .45, .6, 1]], .7], [15, [[.5, .9, .5, 3], [.5, .12, .5, 1]], .7],
       [16, [[.5, .88, .5, 3], [.1, .5, .6, 1], [.5, .4, 1, 2]], .7], [17, [[.12, .5, .8, 2], [.9, .5, .8, 2], [.74, .5, .6, 3]], .7], [18, [[.5, .15, .4, 3], [.2, .7, .4, 1]], .7]],
     rot: [[5, 3]],
+    formes: [[0, [[-7, 3], [-4, 0], [0, 0], [0, 13], [-7, 13]]]],   // le jardin : un pan coupé en haut à gauche
     commentaires: ['Attente du repas, bruit de la vaisselle.', 'A frappé la porte de la chambre voisine au moment du coucher.', 'Salle de bain occupée, a dû attendre dans le couloir.', 'Voiture sur le parking : s\'est collé à la fenêtre, puis n\'a plus voulu se coucher.']},
-  {nom: 'Externat, groupe des grands', desc: 'Un IME en journée, plan à l\'échelle (1 case = 0,8 m) : classe, atelier, cantine, une salle multisensorielle trop petite, une salle de repli à porte à hublot, une cour avec un petit préau ; le parking des taxis à côté. Ses fiches disent la salle multisensorielle, la cantine, la salle de repli. Un coin de retrait est cloisonné dans la classe, contre l\'atelier ; la porte des sanitaires est vitrée ; la salle multisensorielle, toujours accompagnée, ne reçoit aucun épisode. Presque toutes les pièces ont leurs croix, et la salle de classe est dessinée tournée.', graine: 31,
+  {nom: 'Externat, groupe des grands', desc: 'Un IME en journée, plan à l\'échelle (1 case = 0,8 m) : classe, atelier, cantine, une salle multisensorielle trop petite, une salle de repli à porte à hublot, une cour avec un petit préau ; le parking des taxis à côté. Ses fiches disent la salle multisensorielle, la cantine, la salle de repli. Un coin de retrait est cloisonné dans la classe, contre l\'atelier ; la porte des sanitaires est vitrée ; la salle multisensorielle, toujours accompagnée, ne reçoit aucun épisode. Presque toutes les pièces ont leurs croix, la salle de classe est dessinée tournée et le préau est un trapèze.', graine: 31,
     legendes: [['Entrée des taxis', 23.4, 6.3, 'm', 'o'], ['Vers le centre-ville', 28.5, -3.4, 'm', 'n']],
     pronostics: [['Éducateur·rice spécialisé·e', [4, 7, 2]], ['AES / AMP', [4, 7]], ['Moniteur·rice-éducateur·rice', [7, 11]]],
     dates: ['2026-09-21', '2026-10-09'], echelle: .8,
@@ -3876,6 +4209,7 @@ const LIEUX_SIMULES = [
       [0, [[.5, .9, .7, 3], [.5, .12, 1.2, 2], [.22, .42, 1, 2]], .7], [1, [[.5, .9, .7, 2], [.47, .2, 1.6, 3]], .7], [5, [[.5, .1, .5, 4], [.5, .7, .6, 1]], .7], [6, [[.5, .1, .6, 3], [.6, .6, .8, 1]], .7],
       [8, [[.5, .5, 1, 3], [.85, .2, .7, 2]], .7], [10, [[.5, .4, 2.5, 2]], .7], [11, [[.88, .25, .5, 3], [.3, .7, .7, 2]], .7], [12, [[.12, .35, .4, 4], [.7, .7, .5, 2]], .7]],
     rot: [[0, 2]],
+    formes: [[8, [[-4, 14], [0, 14], [0, 19], [-3, 19]]]],   // le préau : un trapèze, son mur du fond en biais
     commentaires: ['Sonnerie de la récréation, tout le monde sort en même temps.', 'Cantine très bruyante, a renversé son plateau.', 'S\'est réfugié sous le préau.', 'Attente du taxi sur le parking, a voulu partir vers la route.', 'Est allé de lui-même à la salle de repli.']}
 ];
 // Un endroit dans une grande pièce, tiré autour d'un des « foyers » [u, v, dispersion en cases, poids], puis ramené dans la pièce, hors de ses enclaves.
@@ -3883,7 +4217,8 @@ function positionSimulee(p, foyers, pieces, alea) {
   const total = foyers.reduce((a, f) => a + f[3], 0); let r = alea() * total, f = foyers[0];
   for (const x of foyers) { r -= x[3]; if (r < 0) { f = x; break; } }
   const g = () => Math.sqrt(-2 * Math.log(1 - alea())) * Math.cos(2 * Math.PI * alea()), b = boite([p]);
-  const a = projeterPoint(p.rects, pieces.filter(q => q.dans === p.id).flatMap(q => q.rects), b.x + f[0] * b.w + f[2] * g(), b.y + f[1] * b.h + f[2] * g());
+  const obs = pieces.filter(q => q.dans === p.id).flatMap(q => q.rects), px = b.x + f[0] * b.w + f[2] * g(), py = b.y + f[1] * b.h + f[2] * g();
+  const a = aPoly(p) ? projeterPolygone(p.poly, obs, px, py) : projeterPoint(p.rects, obs, px, py);
   const uv = tourner01(Math.min(1, Math.max(0, (a.x - b.x) / b.w)), Math.min(1, Math.max(0, (a.y - b.y) / b.h)), 4 - rotDe(p));   // les foyers sont écrits dans le plan tel qu'on le voit ; la croix est rangée dans le repère d'origine de la pièce
   return {u: r3(uv[0]), v: r3(uv[1])};
 }
@@ -3905,6 +4240,7 @@ function construireLieu(i) {
   d.b1.plan.niveaux = ns;
   d.b1.plan.pieces = L.pieces.map(([nom, type, rects, k]) => ({id: nouvelId('p'), nom, type, niveau: niv(k), rects: rects.map(([x, y, w, h]) => ({x, y, w, h}))}));
   (L.rot || []).forEach(([k, n]) => { if (n & 3) d.b1.plan.pieces[k].rot = n & 3; });   // des pièces dessinées tournées (passe 232)
+  (L.formes || []).forEach(([k, pts]) => { const p = d.b1.plan.pieces[k]; p.poly = nettoyerAnneau(pts); recaler(p); });   // des pièces de forme libre (passe 236)
   d.sim = {i: LIEUX_SIMULES[i] ? i : 0, v: VERSION_SIMULATION};   // quelle simulation, de quelle version (passe 235)
   L.pieces.forEach((t, k) => { if (t[4] !== undefined) d.b1.plan.pieces[k].dans = d.b1.plan.pieces[t[4]].id; });   // une enclave : le numéro de la pièce qui la contient
   d.b1.typesCD = L.types.map(nom => ({id: nouvelId('t'), nom}));
@@ -4046,6 +4382,12 @@ document.addEventListener('click', ev => {
 
 /* ══ Les notes de version ══ */
 const NOTES_BASE = [
+  {version: 'BASE v2026.10.13-10', titre: 'Des pièces de toute forme : trapèze, triangle, forme libre', corps: '<p><b>Une pièce n\'est plus forcément faite de rectangles</b> (Arthur et Émilie) : un trapèze, un triangle, un pan coupé, une forme libre.</p><ul>' +
+    '<li><b>Changer la forme</b>. Dans la carte d\'une pièce, « Plus » puis « Forme » : rectangle, trapèze, triangle, ou forme libre (un rectangle à quatre sommets à tirer). Une pièce en plusieurs morceaux (en L, en T) garde ses angles droits.</li>' +
+    '<li><b>Tirer, ajouter, retirer des sommets</b>. Une pièce de forme libre montre ses sommets (ronds pleins : on les tire, ils se calent sur la grille) et, au milieu de chaque côté, un petit rond creux : le toucher ajoute un sommet, qu\'on tire aussitôt. Un sommet choisi se retire par Suppr, par un double-clic ou par « Retirer ce sommet » ; une forme garde trois sommets au moins. Un geste qui ferait se croiser la forme est refusé : le sommet reste où il était.</li>' +
+    '<li><b>Tout le reste suit</b>. On déplace, tourne, duplique, enclave et supprime une pièce de forme libre comme une autre (quatre quarts de tour ramènent exactement sa forme) ; la flèche ronde, le choix de plusieurs pièces et le cadre tracé avec Ctrl la prennent en compte. Les portes, les fenêtres et les meubles se posent sur ses murs droits (horizontaux ou verticaux) et dedans ; pas encore sur un mur en biais.</li>' +
+    '<li><b>Ce que la BASE lit</b>. La surface est celle de la forme, pas celle de son rectangle englobant ; les murs communs sont retrouvés, droits comme en biais (le mur en biais entre deux salles se trace dans « Lecture ») ; ce qu\'on voit par une fenêtre, la pièce où tombe un escalier, les enclaves, les croix et la carte thermique suivent la forme (une croix posée dans un coin vide est ramenée dans la pièce). Le fichier garde les sommets et le rectangle englobant : une version d\'avant la lit comme un rectangle.</li>' +
+    '<li>Les trois lieux simulés ont leur pièce de forme libre : le parking du bâtiment provisoire (un trapèze), le jardin du foyer (un pan coupé), le préau de l\'externat (un trapèze). Un lieu simulé d\'avant propose de se remettre à jour.</li></ul>'},
   {version: 'BASE v2026.10.13-9', titre: 'Les lieux simulés : des croix partout, et ils se remettent à jour', corps: '<p><b>La carte thermique a de quoi montrer ce qu\'elle sait faire</b> (Arthur et Émilie) : les trois lieux simulés n\'avaient des croix que dans leurs grandes pièces.</p><ul>' +
     '<li><b>Des croix dans presque toutes les pièces</b>. Chaque pièce qui a des épisodes a au moins une croix (la première est toujours posée), et la plupart des épisodes ont la leur — près de la porte, de la fenêtre, du lit ou de l\'établi, selon la pièce. La chaleur se lit donc dans les petites pièces aussi, pas seulement dans les grandes (bâtiment provisoire : 38 épisodes sur 40 ont leur croix, foyer : 36 sur 44, externat : 35 sur 42 ; avant, 26, 11 et 21).</li>' +
     '<li><b>Une pièce dessinée tournée dans chaque lieu</b> (la salle bleue, la chambre 1, la salle de classe) : leurs croix passent par la rotation des pièces.</li>' +
@@ -5008,6 +5350,139 @@ function verifierBASE() {
         ok('« Remettre à jour » demande confirmation (refuser ne change rien) ; accepter refait le lieu simulé avec ses croix et son numéro de version, et le garde', refuse && D.sim && D.sim.v === VERSION_SIMULATION && D.sim.i === 2 && D.b2.episodes.length === LIEUX_SIMULES[2].n && persistes === 1 && !simPerimee());
       } finally {
         window.confirm = vraiConfirm18; toast = vraiToast18; persister = vraiPersister18; aller = aller18; D = sauveD18; mode = mode18; vueCourante = vue18;
+      }
+    }
+    // 19. Des pièces de toute forme : polygones, trapèze, triangle, forme libre (passe 236)
+    {
+      const vp = $('vue-preambule'), avait = vp.classList.contains('show'), vue19 = Object.assign({}, vueEdition), vraiToast19 = toast, temp = [], messages = [];
+      try {
+        vp.classList.add('show'); toast = m => { messages.push(m); };
+        const proche = (a, b, t) => Math.abs(a - b) < (t || 1e-6), rectP = (id, x, y, w, h, extra) => Object.assign({id, nom: id, type: 'sejour', niveau: 'n0', rects: [{x, y, w, h}]}, extra || {});
+        const polyP = (id, pts, extra) => Object.assign({id, nom: id, type: 'sejour', niveau: 'n0', rects: [rectEnglobant(pts)], poly: pts}, extra || {});
+        const nouveau = (ps, els) => { D = dossierVide(); D.b1.plan = {niveaux: [{id: 'n0', nom: 'Rez-de-chaussée'}], pieces: ps, elements: els || [], legendes: []}; mode = 'socle'; historique = []; refaites = []; selection = null; niveauCourant = 'n0'; return D; };
+        const T = [[2, 0], [6, 0], [8, 6], [0, 6]], pT = polyP('T', T);
+        // 1. La géométrie de base
+        const carre = [[0, 0], [4, 0], [4, 3], [0, 3]], inverse = carre.slice().reverse(), Lx = [[0, 0], [6, 0], [6, 2], [2, 2], [2, 6], [0, 6]];
+        ok('Surface d\'un polygone (formule des lacets) : 12 pour un rectangle 4 × 3, 36 pour le trapèze (haut 4, bas 8, hauteur 6) ; le sens des sommets se lit au signe et se corrige (« orienter ») ; le rectangle englobant',
+          proche(aireAnneau(carre), 12) && aireSignee(carre) > 0 && aireSignee(inverse) < 0 && aireSignee(orienter(inverse)) > 0 && proche(aireAnneau(T), 36) && proche(aireAnneau(Lx), 20) && JSON.stringify(rectEnglobant(T)) === JSON.stringify({x: 0, y: 0, w: 8, h: 6}) && proche(aireDe(pT), 36) && proche(aireDe(rectP('R', 0, 0, 4, 3)), 12));
+        ok('Un point dans le polygone, sur son bord, ou dehors ; « strictement dedans » exclut le bord ; une pièce de rectangles se comporte comme avant (à .01 près)',
+          dansAnneau(T, 4, 3) && !dansAnneau(T, .2, .2) && !dansPiece(pT, .2, .2, 0) && dansPiece(pT, 1, 3, .01) && !dansStrict(pT, 1, 3) && dansStrict(pT, 1.2, 3) && dansPiece(rectP('R', 0, 0, 4, 3), 4.005, 3, .01) && !dansPiece(rectP('R', 0, 0, 4, 3), 4.05, 3, .01) && dansStrict(rectP('R', 0, 0, 4, 3), 2, 2) && !dansStrict(rectP('R', 0, 0, 4, 3), 4, 2));
+        ok('Convexe ou non ; surface commune de deux formes : exacte quand l\'une est convexe (trapèze ∩ moitié basse = 21, ∩ moitié haute = 15), L ∩ carré = 7, comptée par quarts de case pour deux formes creuses (L ∩ L = 20)',
+          convexe(T) && convexe(carre) && !convexe(Lx) && proche(aireInterAnneaux(T, anneauRect({x: 0, y: 3, w: 8, h: 3})), 21, 1e-6) && proche(aireInterAnneaux(T, anneauRect({x: 0, y: 0, w: 8, h: 3})), 15, 1e-6) && proche(aireInterAnneaux(Lx, anneauRect({x: 1, y: 1, w: 4, h: 4})), 7, 1e-6) && proche(aireInterAnneaux(Lx, Lx), 20, .01) &&
+          proche(aireInter(pT, {x: 0, y: 3, w: 8, h: 3}), 21) && proche(aireInter(rectP('R', 0, 0, 4, 3), rectP('S', 2, 1, 4, 3)), 4));
+        ok('Un polygone valide a trois sommets distincts, une surface, aucune arête qui en recoupe une autre, aucun demi-tour ; « nettoyer » remet d\'équerre ce qui vient d\'un fichier (sens, doublons, nombres) et refuse le reste',
+          anneauSimple(T) && anneauSimple(carre) && !anneauSimple([[0, 0], [4, 4], [4, 0], [0, 4]]) && !anneauSimple([[0, 0], [4, 0], [2, 0], [2, 3]]) && !anneauSimple([[0, 0], [1, 0], [2, 0]]) && !anneauSimple([[0, 0], [0, 0], [4, 0], [4, 3]]) && !anneauSimple([[0, 0], [1, 1]]) &&
+          proche(aireSignee(nettoyerAnneau([[0, 6], [8, 6], [6, 0], [2, 0]])), 36) && nettoyerAnneau([[0, 0], [0, 0], [4, 0], [4, 3], [0, 3]]).length === 4 && nettoyerAnneau([[0, 0], [4, 4], [4, 0], [0, 4]]) === null &&
+          nettoyerAnneau([[0, 0], ['x', 1], [4, 0], [4, 3]]).length === 3 && nettoyerAnneau('pas un polygone') === null && nettoyerAnneau([[0, 0], [1, 1]]) === null);
+        ok('Les formes nommées se tirent d\'un rectangle : trapèze (face du haut plus courte, d\'un quart de chaque côté), triangle ; trop étroit pour un trapèze en dessous de deux cases ; recaler remet le rectangle englobant',
+          JSON.stringify(sommetsDeForme('trapeze', {x: 0, y: 0, w: 8, h: 6})) === JSON.stringify(T) && JSON.stringify(sommetsDeForme('trapeze', {x: 0, y: 0, w: 2, h: 4})) === JSON.stringify([[.5, 0], [1.5, 0], [2, 4], [0, 4]]) && sommetsDeForme('trapeze', {x: 0, y: 0, w: 1, h: 4}) === null && JSON.stringify(sommetsDeForme('triangle', {x: 0, y: 0, w: 8, h: 6})) === JSON.stringify([[4, 0], [8, 6], [0, 6]]) && sommetsDeForme('rectangle', {x: 0, y: 0, w: 4, h: 4}) === null &&
+          (() => { const q = polyP('Q', T); q.poly = [[1, 1], [3, 1], [3, 5]]; recaler(q); return JSON.stringify(q.rects) === JSON.stringify([{x: 1, y: 1, w: 2, h: 4}]); })());
+        // 2. Les murs communs, les portes et les fenêtres, ce qu'on voit
+        const pA = polyP('A', [[0, 0], [4, 0], [6, 6], [0, 6]]), pB = polyP('B', [[4, 0], [10, 0], [10, 6], [6, 6]]), rC = rectP('C', -4, 0, 4, 6), rD = rectP('D', 0, 6, 10, 3), rE = rectP('E', 12, 0, 4, 6);
+        const sAB = segmentsCommuns(pA, pB), sAC = segmentsCommuns(pA, rC), sAD = segmentsCommuns(pA, rD), sBD = segmentsCommuns(pB, rD), sCD = segmentsCommuns(rC, rD), sAE = segmentsCommuns(pA, rE);
+        ok('Les murs communs de deux pièces dont l\'une est polygonale : un mur oblique se rend par ses deux bouts (A et B : de (4 ; 0) à (6 ; 6)), un mur droit comme avant (A et C : x = 0, de 0 à 6 ; A et D : y = 6, de 0 à 6 ; B et D : de 6 à 10) ; des pièces qui ne se touchent pas n\'ont rien en commun',
+          sAB.length === 1 && sAB[0].o === 'd' && proche(sAB[0].x1, 4) && proche(sAB[0].y1, 0) && proche(sAB[0].x2, 6) && proche(sAB[0].y2, 6) && proche(sAB[0].b - sAB[0].a, Math.hypot(2, 6)) && sAC.length === 1 && sAC[0].o === 'v' && proche(sAC[0].c, 0) && proche(sAC[0].a, 0) && proche(sAC[0].b, 6) &&
+          sAD.length === 1 && sAD[0].o === 'h' && proche(sAD[0].c, 6) && proche(sAD[0].a, 0) && proche(sAD[0].b, 6) && sBD.length === 1 && proche(sBD[0].a, 6) && proche(sBD[0].b, 10) && sCD.length === 0 && sAE.length === 0, JSON.stringify([sAB, sAC, sAD, sBD]));
+        const els2 = [{id: 'dAC', cat: 'porte', niveau: 'n0', long: 1, retourne: false, x: 0, y: 3, o: 'v', cote: 1}, {id: 'dAD', cat: 'porte', niveau: 'n0', long: 1, retourne: false, x: 3, y: 6, o: 'h', cote: -1},
+          {id: 'fA', cat: 'fenetre', niveau: 'n0', long: 1.5, retourne: false, x: 2, y: 0, o: 'h', cote: 1}, {id: 'fB', cat: 'fenetre', niveau: 'n0', long: 1.5, retourne: false, x: 10, y: 3, o: 'v', cote: -1}, {id: 'fE', cat: 'fenetre', niveau: 'n0', long: 1.5, retourne: false, x: 12, y: 3, o: 'v', cote: 1}];
+        nouveau([pA, pB, rC, rD, rE], els2); const L2 = lectureDuPlan(D.b1), vuDe = (de, id) => L2.vues.find(v => v.de === de && v.e.id === id);
+        ok('Le plan lu avec des pièces polygonales : leurs voisinages (A–B, A–C, A–D, B–D), la longueur du mur oblique, leurs surfaces exactes (30 chacune), deux portes qui font passer de A à C et de A à D',
+          L2.adj.length === 4 && ['A-B', 'A-C', 'A-D', 'B-D'].every(c => L2.adj.some(a => (a.a + '-' + a.b === c || a.b + '-' + a.a === c))) && proche(L2.adj.find(a => (a.a === 'A' && a.b === 'B') || (a.a === 'B' && a.b === 'A')).longueur, Math.hypot(2, 6)) && proche(L2.pieces.A.aire, 30) && proche(L2.pieces.B.aire, 30) &&
+          L2.passages.length === 2 && L2.passages.some(z => [z.a, z.b].sort().join() === 'A,C') && L2.passages.some(z => [z.a, z.b].sort().join() === 'A,D') && L2.flottants.length === 0, L2.passages.map(z => z.a + '-' + z.b).join());
+        ok('Une fenêtre sur le mur droit d\'une pièce polygonale donne sur le dehors (en haut de A) ou sur la pièce d\'en face (B voit E à deux cases) ; une fenêtre d\'une pièce voisine voit la pièce polygonale (E regarde B à deux cases)',
+          !!vuDe('A', 'fA') && vuDe('A', 'fA').vers === null && vuDe('A', 'fA').dir.dy === -1 && !!vuDe('B', 'fB') && vuDe('B', 'fB').vers === 'E' && proche(vuDe('B', 'fB').d, 2, .05) && vuDe('B', 'fB').dir.dx === 1 && !!vuDe('E', 'fE') && vuDe('E', 'fE').vers === 'B' && proche(vuDe('E', 'fE').d, 2, .05), JSON.stringify(L2.vues.map(v => [v.de, v.vers, v.d])));
+        // 3. Une enclave dans une pièce polygonale ; un escalier posé dessus
+        const rEnc = rectP('Enc', 1, 2, 2, 2);
+        nouveau([pA, rEnc], []); selection = {piece: 'Enc', morceau: 0}; const ctn = contenantPossible(pieceParId('Enc')); enclaverPiece('A'); const L3 = lectureDuPlan(D.b1);
+        ok('Une petite pièce entièrement dans un trapèze est reconnue (« L\'enclaver ») ; la grande pièce ne compte plus la place de son enclave (30 − 4 = 26) ; un trapèze qui dépasse de sa grande pièce n\'est pas dedans',
+          ctn && ctn.id === 'A' && L3.pieces.A.enclaves.join() === 'Enc' && proche(L3.pieces.A.aire, 26) && proche(L3.pieces.A.aireBrute, 30) && !pieceDansPiece(pA, rectP('G', 0, 0, 5, 7)) && pieceDansPiece(rEnc, pA) && pieceDansPiece(pA, rectP('G', 0, 0, 7, 7)));
+        nouveau([pA, rectP('N', 0, 6, 6, 3), rectP('M', 9, 9, 3, 3)], [{id: 'es', cat: 'escalier', type: 'escalier', niveau: 'n0', niveaux: ['n0', 'n0'], x: 1, y: 4, w: 2, h: 2}]); const L4 = lectureDuPlan(D.b1);
+        ok('Un escalier posé dans un trapèze relie bien ce trapèze (la pièce où il tombe, choisie par la plus grande surface commune)', L4.escaliers.length === 1 && L4.escaliers[0].de === 'A');
+        // 4. Les croix et la chaleur dans une pièce polygonale
+        nouveau([polyP('T', T)], []); const T1 = pieceParId('T');
+        const pos0 = posDepuisPoint(T1, {x: 4, y: 3}), retour = pointDepuisPos(T1, pos0), dehors = pointDepuisPos(T1, {u: .02, v: .02}), pres = posDepuisPoint(T1, {x: 0.2, y: 0.2});
+        const pr = projeterDansPiece(T1, 0.2, 0.2), ok1 = dansPiece(T1, pr.x, pr.y, 1e-6) && Math.hypot(pr.x - .2, pr.y - .2) < 2;
+        ok('Une croix dans un trapèze : posée dehors (dans l\'angle vide en haut à gauche), elle est ramenée dans la pièce ; (u, v) se lit dans le rectangle englobant et revient au même point ; une croix déjà dans la pièce ne bouge pas',
+          pos0.u === .5 && pos0.v === .5 && proche(retour.x, 4) && proche(retour.y, 3) && dansPiece(T1, dehors.x, dehors.y, 1e-6) && ok1 && posValide(pres), JSON.stringify([pos0, retour, dehors, pr]));
+        const cases = casesDePiece(T1, [], .25), surfaceCases = cases.length * .25 * .25;
+        D.b1.moments = [{id: 'm1', nom: 'M', debut: '08:00', fin: '12:00'}]; D.b1.typesCD = [{id: 't1', nom: 'T'}];
+        D.b2.episodes = [{id: 'e1', piece: 'T', date: '2026-10-05', heure: '10:00', moment: 'm1', types: ['t1'], autre: '', nbPros: 1, commentaire: '', pos: {u: .5, v: .8}}, {id: 'e2', piece: 'T', date: '2026-10-06', heure: '10:00', moment: 'm1', types: ['t1'], autre: '', nbPros: 1, commentaire: ''}];
+        const ch = champThermique(D.b2.episodes), cs = ch.niveaux.n0, masse = cs.reduce((a, c) => a + c.d * ch.pas * ch.pas, 0), chaud = cs.reduce((a, c) => c.d > a.d ? c : a), a1 = pointDepuisPos(T1, {u: .5, v: .8});
+        ok('La chaleur d\'un trapèze : ses cases couvrent sa surface (36 à une case et demie près, aucune hors de la pièce), la masse des deux épisodes est conservée (2), et la case la plus chaude est contre la croix',
+          Math.abs(surfaceCases - 36) < 1.5 && cases.every(c => dansPiece(T1, c.cx, c.cy, 1e-6)) && proche(masse, 2, 1e-6) && Math.hypot((chaud.i + .5) * ch.pas - a1.x, (chaud.j + .5) * ch.pas - a1.y) < 1.5, [surfaceCases, masse, chaud.d].join(' | '));
+        // 5. Déplacer, tourner, dupliquer, annuler
+        nouveau([polyP('T', T), rectP('R', 10, 0, 4, 4)], [{id: 'm1', cat: 'meuble', type: 'table', niveau: 'n0', x: 3, y: 4, w: 2, h: 1}]); const avant19 = etatPlan();
+        selection = {piece: 'T', morceau: 0, plus: ['R']}; const mem = membresDeplacement(); deplacerGroupe(mem, 3, -2);
+        const T5 = pieceParId('T');
+        ok('Déplacer des pièces dont une polygonale : ses sommets, son rectangle englobant et son mobilier vont du même pas ; revenir au départ remet tout exactement',
+          JSON.stringify(T5.poly) === JSON.stringify([[5, -2], [9, -2], [11, 4], [3, 4]]) && JSON.stringify(T5.rects) === JSON.stringify([{x: 3, y: -2, w: 8, h: 6}]) && proche(elemParId('m1').x, 6) && proche(elemParId('m1').y, 2) && (deplacerGroupe(mem, 0, 0), etatPlan() === avant19));
+        selection = {piece: 'T', morceau: 0}; pivoterPiece(); const T6 = pieceParId('T');
+        ok('Tourner une pièce polygonale d\'un quart de tour : ses sommets tournent (autour d\'un point entier), son rectangle englobant se recale, elle retient son quart de tour',
+          JSON.stringify(rectEnglobant(T6.poly)) === JSON.stringify(T6.rects[0]) && T6.rot === 1 && proche(aireAnneau(T6.poly), 36) && aireSignee(T6.poly) > 0 && JSON.stringify(T6.poly) === JSON.stringify([[7, 1], [7, 5], [1, 7], [1, -1]]));
+        nouveau([polyP('T', T), rectP('R', 10, 0, 4, 4)], []); const dep5 = etatPlan(); selection = {piece: 'T', morceau: 0};
+        const cycleOk = [[[2, 0], [6, 0], [8, 6], [0, 6]], [[0, 0], [5, 0], [5, 3], [0, 6]], [[1, 1], [7, 2], [4, 8]], [[0, 0], [6, 0], [6, 2], [2, 2], [2, 6], [0, 6]], [[0, 0], [3.5, 0], [5, 4], [0, 4]]].every(pts => { nouveau([polyP('Q', pts)], []); const d = etatPlan(); selection = {piece: 'Q', morceau: 0}; for (let i = 0; i < 4; i++) pivoterPiece(); return etatPlan() === d; });
+        ok('Quatre quarts de tour ramènent exactement toute forme (trapèze, quadrilatère, triangle, L, sommet à mi-case)', cycleOk);
+        nouveau([polyP('T', T)], []); selection = {piece: 'T', morceau: 0}; dupliquerPiece(); const copie = pieces().find(q => /copie/.test(q.nom)), orig = pieceParId('T');
+        copie.poly[0][0] = 99;
+        ok('Dupliquer une pièce polygonale : la copie est décalée de deux cases (sommets et rectangle englobant) et ne partage rien avec l\'originale ; « Annuler » la fait disparaître',
+          !!copie && JSON.stringify(orig.poly) === JSON.stringify(T) && copie.poly.length === 4 && (copie.poly[0][0] = 4, JSON.stringify(copie.poly) === JSON.stringify([[4, 2], [8, 2], [10, 8], [2, 8]])) && JSON.stringify(copie.rects) === JSON.stringify([{x: 2, y: 2, w: 8, h: 6}]) && (annuler(), pieces().length === 1 && etatPlan().indexOf('copie') < 0));
+        // 6. Un dossier lu : les polygones remis d'équerre ou écartés
+        const brut = {b1: {plan: {niveaux: [{id: 'n0', nom: 'RdC'}], pieces: [
+          Object.assign(rectP('ok', 0, 0, 8, 6), {poly: [[0, 6], [8, 6], [6, 0], [2, 0]], rects: [{x: 99, y: 99, w: 1, h: 1}]}), Object.assign(rectP('croise', 20, 0, 4, 4), {poly: [[0, 0], [4, 4], [4, 0], [0, 4]]}),
+          Object.assign(rectP('deux', 30, 0, 4, 4), {poly: [[0, 0], [1, 1]]}), Object.assign(rectP('texte', 40, 0, 4, 4), {poly: 'x'}), Object.assign(rectP('nan', 50, 0, 4, 4), {poly: [[0, 0], [NaN, 1], [4, 0]]}), rectP('rect', 60, 0, 4, 4)], elements: []}}};
+        normaliserPlan(brut); const pp = Object.fromEntries(brut.b1.plan.pieces.map(q => [q.id, q]));
+        ok('Un dossier abîmé ou d\'avant les formes libres : un polygone bien formé est remis dans le bon sens et son rectangle englobant refait (même si le fichier en donnait un autre) ; un polygone qui se croise, trop court, illisible ou avec un nombre faux est écarté et la pièce garde ses rectangles',
+          proche(aireSignee(pp.ok.poly), 36) && JSON.stringify(pp.ok.rects) === JSON.stringify([{x: 0, y: 0, w: 8, h: 6}]) && pp.croise.poly === undefined && pp.croise.rects.length === 1 && pp.deux.poly === undefined && pp.texte.poly === undefined && pp.nan.poly === undefined && pp.rect.poly === undefined && Object.keys(pp).every(k => pp[k].rects && pp[k].rects.length === 1));
+        // 7. Le dessin
+        nouveau([polyP('T', T), rectP('R', 10, 0, 4, 4)], []); const dess = dessinPlan(piecesNiveau('n0'), {k: 26, edition: true, niveau: 'n0', types: true});
+        const nomT = /<text class="piece-nom" x="([-\d.]+)" y="([-\d.]+)"[^>]*>T</.exec(dess);
+        ok('Le dessin d\'une pièce polygonale : un polygone (trait puis fond, avec de quoi la saisir) ; une pièce rectangulaire garde ses rectangles ; le nom est écrit dans la pièce, au point le plus dégagé ; le niveau d\'à côté en filigrane la montre aussi',
+          /<polygon class="piece-trait" points="2,0 6,0 8,6 0,6"/.test(dess) && /<polygon class="piece-fond" data-piece="T" data-morceau="0" points="2,0 6,0 8,6 0,6"/.test(dess) && /<rect class="piece-fond" data-piece="R"/.test(dess) && !/<rect class="piece-fond" data-piece="T"/.test(dess) && !!nomT && dansAnneau(T, +nomT[1], +nomT[2]) &&
+          (() => { D.b1.plan.niveaux.push({id: 'n1', nom: 'Étage'}); const f = dessinFantome('n1', 26); return /<polygon points="2,0 6,0 8,6 0,6"/.test(f); })());
+        const triangle = polyP('Tri', [[0, 0], [8, 6], [0, 6]]); nouveau([triangle], []); const dTri = dessinPlan(piecesNiveau('n0'), {k: 26, edition: true, niveau: 'n0', types: true}), nomTri = /<text class="piece-nom" x="([-\d.]+)" y="([-\d.]+)"/.exec(dTri);
+        ok('Le nom d\'un triangle rectangle est écrit à l\'intérieur, loin de la diagonale', !!nomTri && dansStrict(triangle, +nomTri[1], +nomTri[2]) && distSegment(+nomTri[1], +nomTri[2], 0, 0, 8, 6) > 1);
+        // 8. L'édition : « Forme », sommets, murs droits, meubles
+        nouveau([rectP('S', 0, 0, 8, 6), rectP('Etroite', 20, 0, 1, 6), Object.assign(rectP('L', 30, 0, 4, 4), {rects: [{x: 30, y: 0, w: 4, h: 4}, {x: 34, y: 0, w: 3, h: 2}]})], []); selection = {piece: 'S', morceau: 0};
+        formerPiece('trapeze'); const apresTrapeze = JSON.stringify(pieceParId('S').poly) === JSON.stringify(T) && JSON.stringify(pieceParId('S').rects) === JSON.stringify([{x: 0, y: 0, w: 8, h: 6}]);
+        formerPiece('triangle'); const apresTriangle = JSON.stringify(pieceParId('S').poly) === JSON.stringify([[4, 0], [8, 6], [0, 6]]);
+        formerPiece('rectangle'); const apresRect = pieceParId('S').poly === undefined && JSON.stringify(pieceParId('S').rects) === JSON.stringify([{x: 0, y: 0, w: 8, h: 6}]);
+        formerPiece('libre'); const apresLibre = JSON.stringify(pieceParId('S').poly) === JSON.stringify([[0, 0], [8, 0], [8, 6], [0, 6]]);
+        messages.length = 0; selection = {piece: 'Etroite', morceau: 0}; formerPiece('trapeze'); const trop = pieceParId('Etroite').poly === undefined && messages.length === 1 && /trop étroite/.test(messages[0]);
+        messages.length = 0; selection = {piece: 'L', morceau: 0}; formerPiece('triangle'); const enL = pieceParId('L').poly === undefined && messages.length === 1 && /plusieurs morceaux/.test(messages[0]);
+        ok('« Forme » : trapèze, triangle, retour au rectangle, forme libre (un rectangle à quatre sommets à tirer) ; une pièce trop étroite ou en plusieurs morceaux refuse en le disant, sans rien changer',
+          apresTrapeze && apresTriangle && apresRect && apresLibre && trop && enL, [apresTrapeze, apresTriangle, apresRect, apresLibre, trop, enL].join());
+        nouveau([polyP('T', T)], []); selection = {piece: 'T', morceau: 0}; messages.length = 0;
+        selection.sommet = 3; retirerSommet(); const quatreVersTrois = pieceParId('T').poly.length === 3 && selection.sommet === undefined && historique.length === 1;
+        selection.sommet = 0; retirerSommet(); const refusTrois = pieceParId('T').poly.length === 3 && messages.some(m => /au moins trois sommets/.test(m));
+        nouveau([polyP('Q', [[0, 0], [10, 0], [10, 10], [2, 2], [0, 10]])], []); selection = {piece: 'Q', morceau: 0, sommet: 1}; messages.length = 0; retirerSommet();
+        const croiserait = pieceParId('Q').poly.length === 5 && messages.some(m => /se croiserait/.test(m)) && historique.length === 0;
+        selection = {piece: 'Q', morceau: 0, sommet: 3}; supprimerSelection(); const apresSuppr = pieceParId('Q') && pieceParId('Q').poly.length === 4 && selection.sommet === undefined && pieces().length === 1;
+        selection = {piece: 'Q', morceau: 0}; supprimerSelection(); const piecePart = pieces().length === 0;
+        ok('Retirer un sommet : le sommet choisi part (un trapèze devient un triangle, en un seul pas d\'historique) ; une forme garde trois sommets au moins ; un retrait qui ferait se croiser la forme est refusé ; Suppr retire d\'abord le sommet choisi, et la pièce quand aucun sommet n\'est choisi',
+          quatreVersTrois && refusTrois && croiserait && apresSuppr && piecePart, [quatreVersTrois, refusTrois, croiserait, apresSuppr, piecePart].join());
+        nouveau([polyP('T', T)], []); const poignesT = poignesSommets(pieceParId('T'), 26);
+        ok('Les poignées d\'une pièce polygonale : un rond plein par sommet, un rond creux au milieu de chaque côté assez long (pas sur un côté trop court pour deux ronds)',
+          (poignesT.match(/data-sommet="\d"/g) || []).length === 4 && (poignesT.match(/data-milieu="\d"/g) || []).length === 4 && (poignesSommets(polyP('P', [[0, 0], [.6, 0], [.6, 6], [0, 6]]), 26).match(/data-milieu/g) || []).length === 2);
+        nouveau([polyP('T', T), polyP('Diamant', [[4, 0], [8, 4], [4, 8], [0, 4]]), rectP('R', 20, 0, 6, 4)], []);
+        const mp = murPrincipal(pieceParId('T'), 1), mpDiamant = murPrincipal(pieceParId('Diamant'), 1), mpLong = murPrincipal(pieceParId('T'), 9);
+        ok('Le mur droit où poser une porte : le plus bas des murs horizontaux d\'une pièce polygonale (celui du bas du trapèze) ; un losange n\'en a aucun ; rien si la porte est plus longue que le mur',
+          mp && mp.o === 'h' && mp.c === 6 && mp.a === 0 && mp.b === 8 && mpDiamant === null && mpLong === null);
+        selection = {piece: 'T', morceau: 0}; ajouterMural('porte'); const porteT = elements()[0];
+        selection = {piece: 'Diamant', morceau: 0}; messages.length = 0; const avantDiamant = elements().length; ajouterMural('fenetre');
+        selection = {piece: 'T', morceau: 0}; ajouterMeuble('table'); const tableT = elements().find(e => e.cat === 'meuble');
+        ok('Une porte se pose au milieu du mur du bas d\'un trapèze, sur le mur (la pièce la voit) ; sur un losange, qui n\'a pas de mur droit, on le dit et rien n\'est posé ; un meuble se pose au point le plus dégagé de la pièce',
+          porteT && porteT.o === 'h' && proche(porteT.x, 4) && proche(porteT.y, 6) && bordsDe(porteT, [pieceParId('T')]).length === 1 && elements().filter(e => e.cat === 'fenetre').length === 0 && elements().length === avantDiamant + (tableT ? 1 : 0) && messages.length === 1 && /mur droit/.test(messages[0]) && !!tableT && dansPiece(pieceParId('T'), tableT.x + tableT.w / 2, tableT.y + tableT.h / 2, 1e-6), JSON.stringify([porteT, messages]));
+        // 9. Le cadre tracé à la souris
+        nouveau([polyP('T', T), rectP('R', 12, 0, 4, 4)], []);
+        ok('Un cadre tracé avec Ctrl prend une pièce polygonale seulement s\'il touche la pièce elle-même, pas le coin vide de son rectangle englobant',
+          piecesDansCadre({x0: -1, y0: -1, x1: 1, y1: 1}).join() === '' && piecesDansCadre({x0: 3, y0: 2, x1: 4, y1: 3}).join() === 'T' && piecesDansCadre({x0: -1, y0: 5, x1: .5, y1: 7}).join() === 'T' && piecesDansCadre({x0: 0, y0: 0, x1: 20, y1: 8}).join() === 'T,R' && piecesDansCadre({x0: 9, y0: 0, x1: 11, y1: 2}).join() === '');
+        // 10. Les lieux simulés : une pièce de forme libre chacun
+        const sims = [0, 1, 2].map(i => construireLieu(i)), formesSim = sims.map(d => d.b1.plan.pieces.filter(aPoly).map(p => p.nom + ':' + p.poly.length).join()), adjSim = (d, x, y) => { const l = lectureDuPlan(d.b1), px = d.b1.plan.pieces.find(p => p.nom === x), py = d.b1.plan.pieces.find(p => p.nom === y), e = l.adj.find(z => (z.a === px.id && z.b === py.id) || (z.a === py.id && z.b === px.id)); return e ? Math.round(e.longueur * 10) / 10 : 0; };
+        const valides = sims.every(d => { D = d; const l = lectureDuPlan(d.b1), ps = d.b1.plan.pieces.filter(aPoly); return d.sim.v === 3 && VERSION_SIMULATION === 3 && l.flottants.length === 0 && ps.every(p => anneauSimple(p.poly) && aireAnneau(p.poly) < p.rects[0].w * p.rects[0].h && d.b2.episodes.some(e => e.piece === p.id && e.pos) && d.b2.episodes.filter(e => e.piece === p.id && e.pos).every(e => { const a = pointDepuisPos(p, e.pos); return dansPiece(p, a.x, a.y, 1e-6); })); });
+        ok('Chaque lieu simulé a une pièce de forme libre (le parking en trapèze, le jardin à pan coupé, le préau en trapèze), valide, plus petite que son rectangle englobant, avec des épisodes dont les croix sont dedans ; aucune porte ni fenêtre ne flotte ; les voisinages d\'avant tiennent (parking–hall 6, jardin–salon 6, préau–cour 5) ; version 3',
+          formesSim.join(' | ') === 'Parking:4 | Jardin:5 | Préau:4' && valides && adjSim(sims[0], 'Parking', 'Hall d\'accueil') === 6 && adjSim(sims[1], 'Jardin', 'Salon') === 6 && adjSim(sims[2], 'Préau', 'Cour') === 5, formesSim.join(' | '));
+      } finally {
+        toast = vraiToast19; Object.assign(vueEdition, vue19); geste = null; selection = null; temp.forEach(x => x.remove()); vp.classList.toggle('show', avait); historique = []; refaites = [];
       }
     }
   } catch (e) { ok('Les vérifications ont planté', false, e.message); }
