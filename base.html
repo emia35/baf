@@ -688,7 +688,7 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
         </div>
       </div>
       <p class="plan-aide" id="lecture-legende" hidden><b>Lecture</b> — traits verts épais : murs communs ; points verts : passages (portes) ; tirets bleus : ce qu'on voit par une fenêtre (en rouge vers une route ou un parking).</p>
-      <p class="plan-aide">Glisser une pièce pour la déplacer, ses poignées pour l'agrandir ; glisser le fond pour se déplacer ; molette ou ＋ / － pour zoomer. Double-clic (ou appui long au doigt) sur une pièce pour la nommer. La flèche ronde au-dessus de ce qui est choisi (ou la touche R) le tourne d'un quart de tour, avec ce que la pièce contient ; Suppr le supprime, Échap le lâche. Ctrl+clic (ou Maj+clic, ou le bouton « Plusieurs ») choisit plusieurs pièces — Ctrl+A les prend toutes, un cadre tracé avec Ctrl en prend plusieurs d'un coup — et on les glisse ensemble. Une pièce peut prendre une autre forme (« Plus », puis « Forme » : trapèze, triangle, forme libre) : on tire ses sommets (ronds pleins), un petit rond creux au milieu d'un côté en ajoute un. Les outils flottent sur le plan (▴ les replie) ; ce qui est choisi a sa petite carte à côté de lui. « ＋ Légende » pose un texte libre (« Entrée principale », « Vers le centre-ville ») qui se glisse où l'on veut. Les portes, fenêtres et baies se posent sur un mur de la pièce choisie, les meubles et les escaliers dedans ; les zones de dehors (cour, route, parking) se choisissent dans « Type de zone ».</p>
+      <p class="plan-aide">Glisser une pièce pour la déplacer, ses poignées pour l'agrandir ; glisser le fond pour se déplacer ; molette ou ＋ / － pour zoomer. Double-clic (ou appui long au doigt) sur une pièce pour la nommer. La flèche ronde au-dessus de ce qui est choisi (ou la touche R) le tourne d'un quart de tour, avec ce que la pièce contient ; Suppr le supprime, Échap le lâche. Ctrl+clic (ou Maj+clic, ou le bouton « Plusieurs ») choisit plusieurs pièces — Ctrl+A les prend toutes, un cadre tracé avec Ctrl en prend plusieurs d'un coup — et on les glisse ensemble. Une pièce peut prendre une autre forme (« Plus », puis « Forme » : trapèze, triangle, forme libre) : on tire ses sommets (ronds pleins), un petit rond creux au milieu d'un côté en ajoute un, un double-clic sur un sommet le retire. Les outils flottent sur le plan (▴ les replie) ; ce qui est choisi a sa petite carte à côté de lui. « ＋ Légende » pose un texte libre (« Entrée principale », « Vers le centre-ville ») qui se glisse où l'on veut. Les portes, fenêtres et baies se posent sur un mur de la pièce choisie, les meubles et les escaliers dedans ; les zones de dehors (cour, route, parking) se choisissent dans « Type de zone ».</p>
       <div id="plan-panneau-place"><div class="plan-panneau" id="plan-panneau"></div></div>
       <details class="repli" style="margin-top:12px"><summary>Échelle du plan (facultative)</summary>
         <p class="discret" id="echelle-texte"></p>
@@ -899,7 +899,7 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
    chose lue de la BAF, en lecture : le choix clair / sombre, pour s'ouvrir dans le même thème.
    ══════════════════════════════════════════════════════════════════════════════════════════════ */
 
-const VERSION_BASE = 'BASE v2026.10.13-10';
+const VERSION_BASE = 'BASE v2026.10.13-11';
 const CLE_SOCLE = 'base-dossier-v1', CLE_DECL = 'base-declarant-v1', CLE_MODE = 'base-mode', CLE_THEME = 'base-theme';
 const TYPES_ZONE = [['activite', "Salle d'activité"], ['sejour', 'Séjour, salon'], ['repas', 'Repas'], ['accueil', 'Accueil'], ['circulation', 'Circulation'],
   ['chambre', 'Chambre'], ['repos', 'Salle de repos'], ['calme', 'Salle de mise au calme'], ['snoezelen', 'Salle multisensorielle'], ['soins', 'Soins, infirmerie'],
@@ -1494,7 +1494,7 @@ function blocForme(p) {
   const multi = !aPoly(p) && p.rects.length > 1, val = aPoly(p) ? 'libre' : 'rectangle';
   const sel = selectHtml('pp-forme', val, FORMES.concat([['libre', 'Forme libre']]), 'formerPiece(this.value)');
   return '<label class="champ"><span>Forme</span>' + (multi ? sel.replace('<select ', '<select disabled ') : sel) + '</label>' +
-    (aPoly(p) ? '<p class="discret">Tirez les ronds pleins (les sommets) ; touchez un rond creux, au milieu d\'un côté, pour ajouter un sommet.</p>' : multi ? '<p class="discret">Une pièce en plusieurs morceaux garde ses angles droits.</p>' : '');
+    (aPoly(p) ? '<p class="discret">Tirez les ronds pleins (les sommets) ; touchez un rond creux, au milieu d\'un côté, pour ajouter un sommet ; un double-clic sur un sommet le retire.</p>' : multi ? '<p class="discret">Une pièce en plusieurs morceaux garde ses angles droits.</p>' : '');
 }
 
 /* ── Les pièces ── */
@@ -2263,6 +2263,7 @@ function rendreNiveaux() {
 
 // Les gestes : un seul pointeur suit son geste (déplacer une pièce ou un élément, agrandir, se déplacer dans la vue).
 let geste = null;
+let dernierAppui = {cle: '', t: 0, x: 0, y: 0};   // le dernier appui sur une pièce, un sommet ou une légende : pour reconnaître un double appui
 function pointDuMonde(ev) { const r = $('plan-edition').getBoundingClientRect(); return {x: vueEdition.x + (ev.clientX - r.left) / vueEdition.k, y: vueEdition.y + (ev.clientY - r.top) / vueEdition.k, px: ev.clientX - r.left, py: ev.clientY - r.top}; }
 function brancherEditeur() {
   const svg = $('plan-edition');
@@ -2272,7 +2273,17 @@ function brancherEditeur() {
     const pt = pointDuMonde(ev), cible = ev.target, at = n => cible.getAttribute && cible.getAttribute(n);
     const poignee = at('data-poignee'), idE = at('data-elem'), idP = at('data-piece'), idLeg = at('data-legende'), idS = at('data-sommet'), idM = at('data-milieu');
     if (at('data-rotation')) { geste = null; tournerSelection(); ev.preventDefault(); return; }   // la flèche ronde : un quart de tour
-    svg.setPointerCapture(ev.pointerId);
+    // Un double appui (à la souris comme au doigt) : sur un sommet, il le retire ; sur une pièce, il met son nom à écrire ; sur une légende, son texte. On ne compte pas sur
+    // l'événement « dblclick » : il n'arrive pas quand le geste est capturé par le plan.
+    const cleAppui = idS ? 'S' + idS : idM ? '' : idP ? 'P' + idP : idLeg ? 'L' + idLeg : '', maintenant = Date.now();
+    const double = !!cleAppui && dernierAppui.cle === cleAppui && maintenant - dernierAppui.t < 400 && Math.hypot(ev.clientX - dernierAppui.x, ev.clientY - dernierAppui.y) < 9;
+    dernierAppui = {cle: cleAppui, t: double ? 0 : maintenant, x: ev.clientX, y: ev.clientY};
+    if (double) {
+      if (idS && selection && selection.piece && selection.sommet === +idS) { geste = null; retirerSommet(); ev.preventDefault(); return; }
+      if (idLeg) { selection = {legende: idLeg}; geste = null; rendrePlanEdition(); const i = $('pl-texte'); if (i) { i.focus({preventScroll: true}); i.select(); } ev.preventDefault(); return; }
+      if (idP && !idS && !idM && !selectionMultiple()) { selection = {piece: idP, morceau: +at('data-morceau') || 0}; geste = null; nommerSelection(); ev.preventDefault(); return; }
+    }
+    try { svg.setPointerCapture(ev.pointerId); } catch (e) { /* un pointeur qui n'existe plus : on continue sans capture */ }
     if ((idS || idM) && selection && selection.piece && aPoly(pieceParId(selection.piece))) {
       const p = pieceParId(selection.piece), avant = etatPlan(); let i = +idS;
       if (idM) { const m = +idM, u = p.poly[m], v = p.poly[(m + 1) % p.poly.length]; p.poly.splice(m + 1, 0, [(u[0] + v[0]) / 2, (u[1] + v[1]) / 2]); recaler(p); i = m + 1; }   // un rond creux : un sommet de plus, qu'on tire aussitôt
@@ -2385,7 +2396,7 @@ function brancherEditeur() {
   document.addEventListener('keyup', ev => { if (touchesDeChoix(ev)) { touchesChoix = ev.ctrlKey || ev.shiftKey || ev.metaKey; majSourdine(); } });
   window.addEventListener('blur', () => { touchesChoix = false; majSourdine(); });
 }
-function nommerSelection() { rendrePlanEdition(); const n = $('pp-nom'); if (n) { n.focus(); n.select(); n.scrollIntoView({block: 'nearest'}); } }
+function nommerSelection() { rendrePlanEdition(); const n = $('pp-nom'); if (n) { n.focus({preventScroll: true}); n.select(); const r = n.getBoundingClientRect(); if (r.top < 0 || r.bottom > (window.innerHeight || 0)) n.scrollIntoView({block: 'nearest'}); } }   // la page ne défile que si le champ n'est pas à l'écran
 
 /* ══ Comprendre le plan (passe 225, Arthur et Émilie) ══
    La BASE lit le plan comme une géométrie et un graphe, sans rien supposer : tout vient de ce qui est dessiné.
@@ -4382,6 +4393,9 @@ document.addEventListener('click', ev => {
 
 /* ══ Les notes de version ══ */
 const NOTES_BASE = [
+  {version: 'BASE v2026.10.13-11', titre: 'Le double-clic marche', corps: '<p><b>Un double-clic (ou un double appui au doigt) fait ce que l\'aide dit</b> (Arthur et Émilie) : sur une pièce, il met son nom à écrire ; sur une légende, son texte ; sur un sommet d\'une pièce de forme libre, il le retire.</p><ul>' +
+    '<li>Avant, le double-clic ne faisait rien à la souris : le navigateur ne signale pas « double-clic » quand le plan a capturé le geste (seul l\'appui long, au doigt, nommait la pièce). Il est maintenant reconnu directement : deux appuis au même endroit, à moins de 0,4 seconde. Sur plusieurs pièces choisies, un double-clic sur l\'une d\'elles la garde seule et met son nom à écrire.</li>' +
+    '<li>La page ne défile vers le champ du nom que s\'il n\'est pas à l\'écran.</li></ul>'},
   {version: 'BASE v2026.10.13-10', titre: 'Des pièces de toute forme : trapèze, triangle, forme libre', corps: '<p><b>Une pièce n\'est plus forcément faite de rectangles</b> (Arthur et Émilie) : un trapèze, un triangle, un pan coupé, une forme libre.</p><ul>' +
     '<li><b>Changer la forme</b>. Dans la carte d\'une pièce, « Plus » puis « Forme » : rectangle, trapèze, triangle, ou forme libre (un rectangle à quatre sommets à tirer). Une pièce en plusieurs morceaux (en L, en T) garde ses angles droits.</li>' +
     '<li><b>Tirer, ajouter, retirer des sommets</b>. Une pièce de forme libre montre ses sommets (ronds pleins : on les tire, ils se calent sur la grille) et, au milieu de chaque côté, un petit rond creux : le toucher ajoute un sommet, qu\'on tire aussitôt. Un sommet choisi se retire par Suppr, par un double-clic ou par « Retirer ce sommet » ; une forme garde trois sommets au moins. Un geste qui ferait se croiser la forme est refusé : le sommet reste où il était.</li>' +
@@ -5483,6 +5497,41 @@ function verifierBASE() {
           formesSim.join(' | ') === 'Parking:4 | Jardin:5 | Préau:4' && valides && adjSim(sims[0], 'Parking', 'Hall d\'accueil') === 6 && adjSim(sims[1], 'Jardin', 'Salon') === 6 && adjSim(sims[2], 'Préau', 'Cour') === 5, formesSim.join(' | '));
       } finally {
         toast = vraiToast19; Object.assign(vueEdition, vue19); geste = null; selection = null; temp.forEach(x => x.remove()); vp.classList.toggle('show', avait); historique = []; refaites = [];
+      }
+    }
+    // 20. Le double appui : retirer un sommet, nommer une pièce, écrire une légende (passe 237)
+    {
+      const vp = $('vue-preambule'), avait = vp.classList.contains('show'), vue20 = Object.assign({}, vueEdition), vraiToast20 = toast;
+      try {
+        vp.classList.add('show'); toast = () => {};
+        const rectP = (id, x, y, w, h) => ({id, nom: id, type: 'sejour', niveau: 'n0', rects: [{x, y, w, h}]});
+        const nouveau = (ps, legs) => { D = dossierVide(); D.b1.plan = {niveaux: [{id: 'n0', nom: 'Rez-de-chaussée'}], pieces: ps, elements: [], legendes: legs || []}; mode = 'socle'; historique = []; refaites = []; selection = null; niveauCourant = 'n0'; dernierAppui = {cle: '', t: 0, x: 0, y: 0}; return D; };
+        const svg = $('plan-edition'), centre = el => { const r = el.getBoundingClientRect(); return {x: r.left + r.width / 2, y: r.top + r.height / 2}; };
+        const appui = el => { const c = centre(el); el.dispatchEvent(new PointerEvent('pointerdown', {bubbles: true, cancelable: true, pointerId: 41, pointerType: 'mouse', button: 0, buttons: 1, clientX: c.x, clientY: c.y})); svg.dispatchEvent(new PointerEvent('pointerup', {bubbles: true, cancelable: true, pointerId: 41, pointerType: 'mouse', button: 0, clientX: c.x, clientY: c.y})); };
+        const double = sel => { appui(document.querySelector(sel)); appui(document.querySelector(sel)); };
+        const lacher = () => { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); };
+        // 1. Un double appui sur un sommet le retire (l'événement « dblclick » n'arrive pas quand le geste est capturé par le plan)
+        nouveau([{id: 'T', nom: 'T', type: 'sejour', niveau: 'n0', rects: [{x: 0, y: 0, w: 8, h: 6}], poly: [[2, 0], [6, 0], [8, 6], [0, 6]]}]); Object.assign(vueEdition, {x: -3, y: -3, k: 30}); selection = {piece: 'T', morceau: 0}; rendrePlanEdition();
+        appui(document.querySelector('[data-sommet="2"]')); const choisi = selection.sommet === 2 && pieceParId('T').poly.length === 4;
+        appui(document.querySelector('[data-sommet="2"]')); const retire = pieceParId('T').poly.length === 3 && selection.sommet === undefined && historique.length === 1;
+        // Deux appuis sur deux sommets différents ne font pas un double appui ; un appui lent non plus
+        nouveau([{id: 'T', nom: 'T', type: 'sejour', niveau: 'n0', rects: [{x: 0, y: 0, w: 8, h: 6}], poly: [[2, 0], [6, 0], [8, 6], [0, 6]]}]); selection = {piece: 'T', morceau: 0}; rendrePlanEdition();
+        appui(document.querySelector('[data-sommet="1"]')); appui(document.querySelector('[data-sommet="2"]')); const deuxSommets = pieceParId('T').poly.length === 4;
+        nouveau([{id: 'T', nom: 'T', type: 'sejour', niveau: 'n0', rects: [{x: 0, y: 0, w: 8, h: 6}], poly: [[2, 0], [6, 0], [8, 6], [0, 6]]}]); selection = {piece: 'T', morceau: 0}; rendrePlanEdition();
+        appui(document.querySelector('[data-sommet="2"]')); dernierAppui.t = Date.now() - 1000; appui(document.querySelector('[data-sommet="2"]')); const lent = pieceParId('T').poly.length === 4;
+        ok('Un double appui sur un sommet le retire (le premier appui le choisit, le second le retire, en un pas d\'historique) ; deux appuis sur deux sommets, ou deux appuis trop espacés (plus de 400 ms), n\'en font pas un', choisi && retire && deuxSommets && lent, [choisi, retire, deuxSommets, lent].join());
+        // 2. Un double appui sur une pièce met son nom à écrire (dans la carte, sans faire défiler la page) ; sur une légende, son texte
+        nouveau([rectP('A', 0, 0, 8, 6), rectP('B', 10, 0, 8, 6)], [{id: 'l1', niveau: 'n0', x: 5, y: 9, texte: 'Entrée', taille: 'm', fleche: ''}]); Object.assign(vueEdition, {x: -3, y: -3, k: 30}); rendrePlanEdition(); lacher();
+        $('plan-edition-cadre').scrollIntoView({block: 'start'}); window.scrollBy(0, -112); const sy = window.scrollY; double('.piece-fond[data-piece="A"]'); const nomPret = document.activeElement && document.activeElement.id === 'pp-nom' && selection.piece === 'A' && !selectionMultiple();
+        const texteChoisi = document.activeElement.selectionStart === 0 && document.activeElement.selectionEnd === 1; lacher();
+        double('.leg-zone[data-legende="l1"]'); const legendePrete = document.activeElement && document.activeElement.id === 'pl-texte' && selection.legende === 'l1'; lacher();
+        ok('Un double appui sur une pièce met son nom à écrire dans sa carte (tout le nom est choisi, la page ne bouge pas) ; sur une légende, son texte', nomPret && texteChoisi && legendePrete && window.scrollY === sy);
+        // 3. Pas de double appui sur deux pièces différentes, ni sur plusieurs pièces choisies
+        lacher(); selection = null; rendrePlanEdition(); dernierAppui = {cle: '', t: 0, x: 0, y: 0}; appui(document.querySelector('.piece-fond[data-piece="A"]')); appui(document.querySelector('.piece-fond[data-piece="B"]')); const deuxPieces = !(document.activeElement && document.activeElement.id === 'pp-nom') && selection.piece === 'B'; lacher();
+        selection = {piece: 'A', morceau: 0, plus: ['B']}; rendrePlanEdition(); dernierAppui = {cle: '', t: 0, x: 0, y: 0}; double('.piece-fond[data-piece="A"]'); const multiple = document.activeElement && document.activeElement.id === 'pp-nom' && selection.piece === 'A' && !selectionMultiple(); lacher();
+        ok('Deux appuis sur deux pièces différentes ne renomment rien ; sur plusieurs pièces choisies, un double appui sur l\'une d\'elles la garde seule (comme un simple clic) et met son nom à écrire', deuxPieces && multiple);
+      } finally {
+        toast = vraiToast20; Object.assign(vueEdition, vue20); geste = null; selection = null; window.scrollTo(0, 0); vp.classList.toggle('show', avait); historique = []; refaites = []; dernierAppui = {cle: '', t: 0, x: 0, y: 0};
       }
     }
   } catch (e) { ok('Les vérifications ont planté', false, e.message); }
