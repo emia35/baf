@@ -376,6 +376,9 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--slate);}
 .piece-type{font-family:var(--police-interface);fill:var(--ink-soft);text-anchor:middle;dominant-baseline:middle;pointer-events:none;}
 .poignee{fill:var(--sheet);stroke:var(--slate);}
 .morceau-actif{fill:none;stroke:var(--slate);stroke-dasharray:.3 .2;pointer-events:none;}
+.groupe-actif{fill:none;stroke:var(--slate);stroke-dasharray:.3 .2;pointer-events:none;}
+.cadre-choix{fill:var(--slate-pale);fill-opacity:.4;stroke:var(--slate);stroke-dasharray:.25 .2;pointer-events:none;}
+.plan-panneau.carte-plan.en-sourdine{opacity:.14;pointer-events:none;}
 .rotation circle{fill:var(--slate);stroke:var(--sheet);stroke-width:2;cursor:pointer;}
 .rotation:hover circle{fill:var(--slate-deep);}
 .rotation text{fill:var(--sheet);font:700 17px/1 var(--police-interface);text-anchor:middle;dominant-baseline:central;pointer-events:none;}
@@ -670,6 +673,7 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
         <div class="plan-vue-outils no-print" id="plan-vue-outils">
           <button type="button" class="bt petit" id="btn-lecture" aria-pressed="false" onclick="basculerCalqueLecture()" title="Voir sur le plan ce que la BASE lit : murs communs, passages, vues">👁 Lecture</button>
           <select class="bt petit" style="width:auto;min-height:28px;padding:0 8px" aria-label="Télécharger le plan vierge" title="Le plan seul, sans épisode : à imprimer, à annoter, à glisser dans un document" onchange="exporterPlanVierge(this.value); this.value=''"><option value="">⬇ Plan vierge…</option><option value="png">Image PNG</option><option value="svg">Image SVG</option></select>
+          <button type="button" class="bt petit" id="btn-plusieurs" aria-pressed="false" onclick="basculerPlusieurs()" title="Pour choisir plusieurs pièces sans le clavier : touchez-les l'une après l'autre, puis glissez l'une d'elles pour les déplacer ensemble (au clavier : Ctrl+clic, ou Ctrl+A pour toutes)">☑ Plusieurs</button>
           <span class="discret plan-filigrane" id="niveaux-fantome"></span>
         </div>
         <svg id="plan-edition" xmlns="http://www.w3.org/2000/svg"></svg>
@@ -681,7 +685,7 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
         </div>
       </div>
       <p class="plan-aide" id="lecture-legende" hidden><b>Lecture</b> — traits verts épais : murs communs ; points verts : passages (portes) ; tirets bleus : ce qu'on voit par une fenêtre (en rouge vers une route ou un parking).</p>
-      <p class="plan-aide">Glisser une pièce pour la déplacer, ses poignées pour l'agrandir ; glisser le fond pour se déplacer ; molette ou ＋ / － pour zoomer. Double-clic (ou appui long au doigt) sur une pièce pour la nommer. La flèche ronde au-dessus de ce qui est choisi (ou la touche R) le tourne d'un quart de tour, avec ce que la pièce contient ; Suppr le supprime, Échap le lâche. Les outils flottent sur le plan (▴ les replie) ; ce qui est choisi a sa petite carte à côté de lui. « ＋ Légende » pose un texte libre (« Entrée principale », « Vers le centre-ville ») qui se glisse où l'on veut. Les portes, fenêtres et baies se posent sur un mur de la pièce choisie, les meubles et les escaliers dedans ; les zones de dehors (cour, route, parking) se choisissent dans « Type de zone ».</p>
+      <p class="plan-aide">Glisser une pièce pour la déplacer, ses poignées pour l'agrandir ; glisser le fond pour se déplacer ; molette ou ＋ / － pour zoomer. Double-clic (ou appui long au doigt) sur une pièce pour la nommer. La flèche ronde au-dessus de ce qui est choisi (ou la touche R) le tourne d'un quart de tour, avec ce que la pièce contient ; Suppr le supprime, Échap le lâche. Ctrl+clic (ou Maj+clic, ou le bouton « Plusieurs ») choisit plusieurs pièces — Ctrl+A les prend toutes, un cadre tracé avec Ctrl en prend plusieurs d'un coup — et on les glisse ensemble. Les outils flottent sur le plan (▴ les replie) ; ce qui est choisi a sa petite carte à côté de lui. « ＋ Légende » pose un texte libre (« Entrée principale », « Vers le centre-ville ») qui se glisse où l'on veut. Les portes, fenêtres et baies se posent sur un mur de la pièce choisie, les meubles et les escaliers dedans ; les zones de dehors (cour, route, parking) se choisissent dans « Type de zone ».</p>
       <div id="plan-panneau-place"><div class="plan-panneau" id="plan-panneau"></div></div>
       <details class="repli" style="margin-top:12px"><summary>Échelle du plan (facultative)</summary>
         <p class="discret" id="echelle-texte"></p>
@@ -892,7 +896,7 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
    chose lue de la BAF, en lecture : le choix clair / sombre, pour s'ouvrir dans le même thème.
    ══════════════════════════════════════════════════════════════════════════════════════════════ */
 
-const VERSION_BASE = 'BASE v2026.10.13-7';
+const VERSION_BASE = 'BASE v2026.10.13-8';
 const CLE_SOCLE = 'base-dossier-v1', CLE_DECL = 'base-declarant-v1', CLE_MODE = 'base-mode', CLE_THEME = 'base-theme';
 const TYPES_ZONE = [['activite', "Salle d'activité"], ['sejour', 'Séjour, salon'], ['repas', 'Repas'], ['accueil', 'Accueil'], ['circulation', 'Circulation'],
   ['chambre', 'Chambre'], ['repos', 'Salle de repos'], ['calme', 'Salle de mise au calme'], ['snoezelen', 'Salle multisensorielle'], ['soins', 'Soins, infirmerie'],
@@ -1177,7 +1181,9 @@ function verifierSelection() {
   if (!selection) return;
   if (selection.legende) { if (!legendeParId(selection.legende)) selection = null; return; }
   if (selection.elem) { if (!elemParId(selection.elem)) selection = null; return; }
-  const p = pieceParId(selection.piece); if (!p) selection = null; else selection.morceau = Math.min(selection.morceau, p.rects.length - 1);
+  const p = pieceParId(selection.piece); if (!p) { selection = null; return; }
+  selection.morceau = Math.min(selection.morceau, p.rects.length - 1);
+  if (selection.plus) { const n = niveauDe(p); selection.plus = selection.plus.filter(id => { const q = pieceParId(id); return q && id !== selection.piece && niveauDe(q) === n; }); if (!selection.plus.length) delete selection.plus; }
 }
 function modifierPlan(fn) { const avant = etatPlan(); fn(); if (etatPlan() !== avant) { memoriser(avant); persister(); } rendrePlanEdition(); }
 
@@ -1231,13 +1237,20 @@ function dupliquerPiece() {
 }
 function episodesDansPiece(id) { return (D.b2.episodes || []).filter(e => e.piece === id).length; }
 function supprimerPiece() {
-  const p = selection && pieceParId(selection.piece); if (!p) return;
-  const n = mode === 'socle' ? episodesDansPiece(p.id) : 0;
-  if (n) { alert('« ' + p.nom + ' » a déjà ' + nb(n, 'épisode') + ' : on ne la supprime pas, pour ne rien perdre. Renommez-la, ou déplacez-la.'); return; }
-  const siens = new Set(elementsDeLaPiece(p).map(e => e.id));
-  const orphelines = enclavesDe(p).length;
-  modifierPlan(() => { pieces().forEach(x => { if (x.dans === p.id) delete x.dans; }); D.b1.plan.pieces = pieces().filter(x => x.id !== p.id); D.b1.plan.elements = elements().filter(e => !siens.has(e.id)); }); selection = null; rendrePlanEdition();
-  if (orphelines) toast('« ' + p.nom + ' » est supprimée ; ' + (orphelines > 1 ? 'ses ' + orphelines + ' enclaves restent, comme pièces à part entière.' : 'son enclave reste, comme pièce à part entière.'));
+  const ps = piecesEnSelection(); if (!ps.length) return;
+  const avec = mode === 'socle' ? ps.filter(p => episodesDansPiece(p.id)) : [];
+  if (avec.length) {
+    const p = avec[0];
+    alert('« ' + p.nom + ' » a déjà ' + nb(episodesDansPiece(p.id), 'épisode') + ' : on ne la supprime pas, pour ne rien perdre. Renommez-la, ou déplacez-la.' + (ps.length > 1 ? '\n\nPour supprimer les autres, retirez-la d\'abord de ce qui est choisi (Ctrl+clic).' : ''));
+    return;
+  }
+  const ids = new Set(ps.map(p => p.id)), siens = new Set();
+  ps.forEach(p => elementsDeLaPiece(p).forEach(e => siens.add(e.id)));
+  const orphelines = new Set(); ps.forEach(p => enclavesDe(p).forEach(c => { if (!ids.has(c.id)) orphelines.add(c.id); }));
+  modifierPlan(() => { pieces().forEach(x => { if (ids.has(x.dans)) delete x.dans; }); D.b1.plan.pieces = pieces().filter(x => !ids.has(x.id)); D.b1.plan.elements = elements().filter(e => !siens.has(e.id)); }); selection = null; rendrePlanEdition();
+  const o = orphelines.size;
+  if (o) toast(ps.length > 1 ? nb(ps.length, 'pièce') + ' supprimées ; ' + (o > 1 ? nb(o, 'enclave') + ' restent, comme pièces à part entière.' : 'une enclave reste, comme pièce à part entière.')
+    : '« ' + ps[0].nom + ' » est supprimée ; ' + (o > 1 ? 'ses ' + o + ' enclaves restent, comme pièces à part entière.' : 'son enclave reste, comme pièce à part entière.'));
 }
 function renommerPiece(v) { const p = selection && pieceParId(selection.piece); if (!p) return; modifierPlan(() => { p.nom = v; }); }
 function typerPiece(v) { const p = selection && pieceParId(selection.piece); if (!p) return; modifierPlan(() => { p.type = v; }); }
@@ -1437,6 +1450,7 @@ function enfantsAvant(p) { return toutesEnclavesDe(p).map(c => ({id: c.id, rects
 function ajouterMural(cat) {
   const p = selection && selection.piece && pieceParId(selection.piece);
   if (!p) { toast('Touchez d\'abord la pièce où poser la ' + NOM_MURALE[cat] + '.'); return; }
+  if (selectionMultiple()) { toast('Choisissez une seule pièce pour y poser la ' + NOM_MURALE[cat] + '.'); return; }
   const r = p.rects[selection.morceau || 0], el = {id: nouvelId('e'), cat, niveau: niveauDe(p), long: LONG_MURALE[cat], retourne: false};
   // Sur le mur du bas du morceau, au milieu ; une deuxième se décale pour ne pas recouvrir la première
   let x = r.x + r.w / 2;
@@ -1447,7 +1461,7 @@ function ajouterMural(cat) {
 function ajouterMeuble(type) {
   if (!type) return;
   const m = MEUBLES.find(x => x[0] === type) || MEUBLES[MEUBLES.length - 1];
-  const p = selection && selection.piece && pieceParId(selection.piece), c = cadreEdition();
+  const p = !selectionMultiple() && selection && selection.piece && pieceParId(selection.piece), c = cadreEdition();
   const r = p ? p.rects[selection.morceau || 0] : null;
   const ce = centreVue(), cx = r ? r.x + r.w / 2 : ce.x, cy = r ? r.y + r.h / 2 : ce.y;
   const el = {id: nouvelId('e'), cat: 'meuble', type: m[0], niveau: p ? niveauDe(p) : niveauActif(), x: arrondi(cx - m[2] / 2, .5), y: arrondi(cy - m[3] / 2, .5), w: m[2], h: m[3]};
@@ -1463,7 +1477,7 @@ function ajouterEscalier(type) {
   const ns = niveaux();
   if (ns.length < 2) { toast('Un escalier relie deux niveaux : ajoutez d\'abord un étage ou un sous-sol (« ＋ Niveau… »).'); return; }
   const cur = niveauActif(), i = rangNiveau(cur), autre = ns[i + 1] ? ns[i + 1].id : ns[i - 1].id;
-  const p = selection && selection.piece && pieceParId(selection.piece), c = cadreEdition();
+  const p = !selectionMultiple() && selection && selection.piece && pieceParId(selection.piece), c = cadreEdition();
   const r = p ? p.rects[selection.morceau || 0] : null, w = type === 'ascenseur' ? 1.5 : 2, h = type === 'ascenseur' ? 1.5 : 3;
   const ce = centreVue(), cx = r ? r.x + r.w / 2 : ce.x, cy = r ? r.y + r.h / 2 : ce.y;
   const lies = rangNiveau(cur) < rangNiveau(autre) ? [cur, autre] : [autre, cur];
@@ -1488,10 +1502,14 @@ function tournerMeuble() { modifierElement(e => { const cx = e.x + e.w / 2, cy =
 const tourner01 = (u, v, r) => { r = ((r % 4) + 4) % 4; return r === 1 ? [1 - v, u] : r === 2 ? [1 - u, 1 - v] : r === 3 ? [v, 1 - u] : [u, v]; };
 const rotDe = p => ((p && p.rot) | 0) & 3;
 const n6 = v => Math.round(v * 1e6) / 1e6;
-// Tourne d'un quart de tour la pièce choisie, avec ses enclaves et tout ce qui est posé dedans, autour du centre de l'ensemble.
+// Tourne d'un quart de tour la pièce choisie (ou toutes celles qui sont choisies), avec leurs enclaves et tout ce qui est posé dedans, autour du centre de l'ensemble.
+// Le pivot est une case entière (les pièces restent sur la grille). Arrondir le centre toujours dans le même sens ferait « marcher » une pièce de largeur + hauteur
+// impaire à chaque tour complet : on prend la case d'en dessous pour les deux premiers quarts de tour, celle d'au-dessus pour les deux suivants (trouvé par
+// essais : ces quatre pivots-là se compensent pour toute pièce, de toute taille, où qu'elle soit) ; « rot » dit où l'on en est du tour complet.
 function pivoterPiece() {
-  const p = selection && selection.piece && pieceParId(selection.piece); if (!p) return;
-  const groupe = [p].concat(toutesEnclavesDe(p)), b = boite(groupe), cx = Math.round(b.x + b.w / 2), cy = Math.round(b.y + b.h / 2), els = new Set();
+  const ps = piecesEnSelection(); if (!ps.length) return;
+  const vus = new Set(), groupe = []; ps.forEach(p => [p].concat(toutesEnclavesDe(p)).forEach(q => { if (!vus.has(q.id)) { vus.add(q.id); groupe.push(q); } }));
+  const b = boite(groupe), arr = rotDe(groupe[0]) < 2 ? Math.floor : Math.ceil, cx = arr(b.x + b.w / 2), cy = arr(b.y + b.h / 2), els = new Set();   // le pivot : une case entière, voir la note plus haut
   groupe.forEach(q => elementsDeLaPiece(q).forEach(e => els.add(e)));
   modifierPlan(() => {
     groupe.forEach(q => { q.rects = q.rects.map(r => ({x: cx + cy - r.y - r.h, y: cy - cx + r.x, w: r.h, h: r.w})); q.rot = (rotDe(q) + 1) & 3; if (!q.rot) delete q.rot; });
@@ -1529,6 +1547,59 @@ function supprimerSelection() {
   if (selection.legende) supprimerLegende(); else if (selection.elem) supprimerElement(); else supprimerPiece();
 }
 
+/* ══ Plusieurs pièces à la fois (passe 234, Arthur et Émilie) ══
+   Ctrl+clic (ou Maj+clic, ou le bouton « Plusieurs » au doigt) ajoute une pièce à ce qui est choisi, ou l'en retire ; Ctrl+glisser sur le fond trace un cadre
+   qui prend les pièces qu'il touche ; Ctrl+A les prend toutes. Glisser l'une d'elles les déplace ensemble (avec leurs meubles, leurs portes, leurs enclaves) ;
+   la flèche ronde, R, Suppr et Échap valent pour l'ensemble. selection = {piece: la dernière touchée, morceau, plus: [les autres]} ; sans « plus », c'est une
+   seule pièce, comme avant. */
+let modePlusieurs = false;   // le bouton « Plusieurs » : toucher une pièce l'ajoute ou la retire, sans clavier
+function piecesEnSelection() {
+  if (!selection || !selection.piece) return [];
+  const vus = new Set(), out = [];
+  [selection.piece].concat(selection.plus || []).forEach(id => { const p = pieceParId(id); if (p && !vus.has(id)) { vus.add(id); out.push(p); } });
+  return out;
+}
+const selectionMultiple = () => piecesEnSelection().length > 1;
+// Choisit ces pièces (la dernière touchée en premier) ; aucune : rien n'est choisi.
+function choisirPieces(ids, morceau) {
+  const l = ids.filter((id, i) => ids.indexOf(id) === i && pieceParId(id));
+  if (!l.length) { selection = null; return; }
+  selection = {piece: l[0], morceau: l.length === 1 ? (morceau || 0) : 0};
+  if (l.length > 1) selection.plus = l.slice(1);
+}
+// Ctrl+clic : la pièce entre dans ce qui est choisi, ou en sort. Rend vrai si elle y est maintenant.
+function basculerChoix(id, morceau) {
+  const ids = piecesEnSelection().map(p => p.id), i = ids.indexOf(id);
+  if (i >= 0) { ids.splice(i, 1); choisirPieces(ids); return false; }
+  choisirPieces([id].concat(ids), morceau); return true;
+}
+function toutChoisir() { choisirPieces(piecesNiveau(niveauActif()).map(p => p.id)); rendrePlanEdition(); }
+function basculerPlusieurs() {
+  modePlusieurs = !modePlusieurs; majBoutonPlusieurs();
+  if (modePlusieurs) toast('Touchez les pièces l\'une après l\'autre pour les choisir ; glissez l\'une d\'elles pour les déplacer ensemble.');
+}
+function majBoutonPlusieurs() {
+  const b = $('btn-plusieurs'); if (b) { const n = piecesEnSelection().length; b.setAttribute('aria-pressed', String(modePlusieurs)); b.classList.toggle('plein', modePlusieurs); b.textContent = '☑ Plusieurs' + (modePlusieurs && n ? ' · ' + n : ''); }
+  majSourdine();
+}
+// Pendant qu'on maintient Ctrl ou Maj, ou en mode « Plusieurs », la carte s'efface (elle laisse passer les clics) : on peut toucher les pièces qu'elle recouvrait.
+let touchesChoix = false;
+function majSourdine() { const el = $('plan-panneau'); if (el) el.classList.toggle('en-sourdine', touchesChoix || modePlusieurs); }
+// Les pièces qui se déplacent d'elles-mêmes : celles qu'aucune autre pièce choisie ne contient (une enclave suit déjà sa pièce).
+function racinesDe(ps) {
+  const ids = new Set(ps.map(p => p.id));
+  return ps.filter(p => { let q = pieceParent(p), n = 0; while (q && n++ < 20) { if (ids.has(q.id)) return false; q = pieceParent(q); } return true; });
+}
+function membresDeplacement() { return racinesDe(piecesEnSelection()).map(p => ({id: p.id, rects0: clone(p.rects), elems0: clone(elementsDeLaPiece(p)), enfants0: enfantsAvant(p)})); }
+function deplacerGroupe(membres, dx, dy) { membres.forEach(m => { const p = pieceParId(m.id); if (p) deplacerPiece(p, m.rects0, m.elems0, dx, dy, m.enfants0); }); }
+// Le rectangle qui entoure ce qui est choisi (pour la flèche ronde et pour poser la carte).
+const boiteChoisies = () => boite(piecesEnSelection());
+// Ctrl+glisser sur le fond : les pièces du niveau que le cadre touche (une pièce en L est touchée par n'importe lequel de ses morceaux).
+function piecesDansCadre(c) {
+  const x0 = Math.min(c.x0, c.x1), x1 = Math.max(c.x0, c.x1), y0 = Math.min(c.y0, c.y1), y1 = Math.max(c.y0, c.y1);
+  return piecesNiveau(niveauActif()).filter(p => p.rects.some(r => r.x < x1 && r.x + r.w > x0 && r.y < y1 && r.y + r.h > y0)).map(p => p.id);
+}
+
 /* ══ Le plan, un espace de travail (passe 233, Arthur et Émilie) ══
    Tout se fait sur le plan, sans aller chercher des options plus haut ni plus bas :
    · la barre d'outils flotte sur le plan (▴ la replie ; repliée d'office sur un petit écran, sauf choix contraire gardé) ;
@@ -1558,15 +1629,17 @@ function hautBarre() { const b = $('plan-barre'); return b && b.offsetHeight ? b
 // Le centre de la partie du plan qu'on voit (sous la barre d'outils), en unités du plan : là où se posent une pièce, une légende, un meuble.
 function centreVue() { const c = cadreEdition(), k = vueEdition.k; return {x: vueEdition.x + c.w / k / 2, y: vueEdition.y + (hautBarre() + c.h) / k / 2}; }
 // Où poser la carte. obj : ce qui est choisi, carte : sa taille, cadre : {w, h}, haut : le bas de la barre d'outils (tout en pixels du cadre).
-function placerCarte(obj, carte, cadre, haut) {
+function placerCarte(obj, carte, cadre, haut, autres) {
   const m = 8, droite = cadre.w - m - 44;   // 44 : la colonne des boutons de zoom
   const cx = obj.x + obj.w / 2, x = Math.max(m, Math.min(droite - carte.w, cx - carte.w / 2)), cy = obj.y + obj.h / 2;
   const yc = Math.max(haut + 4, Math.min(cadre.h - m - carte.h, cy - carte.h / 2));
   const libre = r => r.x >= m - .5 && r.y >= haut + 3.5 && r.x + r.w <= droite + .5 && r.y + r.h <= cadre.h - m + .5;
+  const inter = (a, b) => Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x)) * Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y));
+  const couvre = r => (autres || []).reduce((t, o) => t + inter(r, o), 0);   // la surface des autres pièces que la carte cacherait
   const essais = [['dessous', {x, y: obj.y + obj.h + 12, w: carte.w, h: carte.h}], ['dessus', {x, y: obj.y - 46 - carte.h, w: carte.w, h: carte.h}],
     ['droite', {x: obj.x + obj.w + 12, y: yc, w: carte.w, h: carte.h}], ['gauche', {x: obj.x - 12 - carte.w, y: yc, w: carte.w, h: carte.h}]];   // 46 : la place de la flèche ronde
-  const ok = essais.find(e => libre(e[1]));
-  if (ok) return {x: ok[1].x, y: ok[1].y, cote: ok[0]};
+  const bons = essais.map((e, i) => ({e, i, c: couvre(e[1])})).filter(t => libre(t.e[1])).sort((a, b) => a.c - b.c || a.i - b.i);
+  if (bons.length) return {x: bons[0].e[1].x, y: bons[0].e[1].y, cote: bons[0].e[0]};
   return {x, y: Math.max(haut + 4, cadre.h - m - carte.h), cote: 'bas'};
 }
 // Le rectangle de ce qui est choisi, en unités du plan.
@@ -1578,13 +1651,13 @@ function boiteSelection() {
     if (estRect(e)) return {x: e.x, y: e.y, w: e.w, h: e.h};
     return e.o === 'h' ? {x: e.x - e.long / 2, y: e.y - .35, w: e.long, h: .7} : {x: e.x - .35, y: e.y - e.long / 2, w: .7, h: e.long};
   }
-  const p = selection.piece && pieceParId(selection.piece); return p ? boite([p]) : null;
+  const ps = piecesEnSelection(); return ps.length ? boite(ps) : null;
 }
 // La carte est sur le plan quand quelque chose est choisi, sous le plan sinon.
 function poserPanneau(sur) {
   const el = $('plan-panneau'), cadre = $('plan-edition-cadre'), place = $('plan-panneau-place'); if (!el || !cadre || !place) return;
   if (sur && el.parentNode !== cadre) cadre.appendChild(el); else if (!sur && el.parentNode !== place) place.appendChild(el);
-  el.classList.toggle('carte-plan', !!sur); el.classList.toggle('no-print', !!sur);
+  el.classList.toggle('carte-plan', !!sur); el.classList.toggle('no-print', !!sur); if (!sur) el.classList.remove('en-sourdine');
   if (!sur) { el.hidden = false; el.style.cssText = ''; delete el.dataset.cote; }
 }
 function placerPanneau() {
@@ -1592,13 +1665,15 @@ function placerPanneau() {
   const b = boiteSelection(); if (!b) { el.hidden = true; return; }
   const k = vueEdition.k, c = cadreEdition();
   el.hidden = false; el.style.visibility = 'hidden'; el.style.left = '0px'; el.style.top = '0px';
-  const pos = placerCarte({x: (b.x - vueEdition.x) * k, y: (b.y - vueEdition.y) * k, w: b.w * k, h: b.h * k}, {w: el.offsetWidth, h: el.offsetHeight}, c, hautBarre());
+  const choisies = new Set(piecesEnSelection().map(p => p.id)), enPx = r => ({x: (r.x - vueEdition.x) * k, y: (r.y - vueEdition.y) * k, w: r.w * k, h: r.h * k});
+  const autres = piecesNiveau(niveauActif()).filter(p => !choisies.has(p.id)).flatMap(p => p.rects.map(enPx));
+  const pos = placerCarte(enPx(b), {w: el.offsetWidth, h: el.offsetHeight}, c, hautBarre(), autres);
   el.style.left = Math.round(pos.x) + 'px'; el.style.top = Math.round(pos.y) + 'px'; el.style.visibility = ''; el.dataset.cote = pos.cote;
 }
 function rendrePanneauPiece() {
   const el = $('plan-panneau'); if (!el) return;
   const choisi = !!(selection && ((selection.legende && legendeParId(selection.legende)) || (selection.elem && elemParId(selection.elem)) || (selection.piece && pieceParId(selection.piece))));
-  poserPanneau(choisi);
+  poserPanneau(choisi); if (choisi) majSourdine();
   if (choisi && geste) { el.hidden = true; return; }   // la carte se range pendant un geste, et revient à la fin
   remplirPanneau();
   if (choisi) placerPanneau();
@@ -1721,7 +1796,7 @@ function dessinPlan(ps, o) {
   const grand = p => p.rects.reduce((a, r) => r.w * r.h > a.w * a.h ? r : a, p.rects[0]);
   const corps = ps.slice().sort((a, b) => profondeurPiece(a) - profondeurPiece(b)).map(p => {   // les enclaves par-dessus la pièce qui les contient
     const ext = estExterieur(p.type);
-    const cl = 'piece zone-' + esc(p.type) + (ext ? ' exterieur' : '') + (o.selection === p.id ? ' selection' : '') + (o.choisie === p.id ? ' choisie' : '');
+    const cl = 'piece zone-' + esc(p.type) + (ext ? ' exterieur' : '') + (o.selection === p.id || (Array.isArray(o.selection) && o.selection.indexOf(p.id) >= 0) ? ' selection' : '') + (o.choisie === p.id ? ' choisie' : '');
     const fond = o.couleurs ? ' style="fill:' + o.couleurs[p.id] + '"' : '';
     const g = grand(p), enf = enclavesDe(p);
     let cx = g.x + g.w / 2, cy = g.y + g.h / 2, taille = Math.max(.42, Math.min(1, g.w / Math.max(4, (p.nom || '').length * .62)));
@@ -1774,26 +1849,31 @@ function dessinLecture(L, n, k) {
 
 function rendrePlanEdition() {
   const svg = $('plan-edition'); if (!svg || !$('vue-preambule').classList.contains('show')) return;
-  appliquerBarre();
+  appliquerBarre(); majBoutonPlusieurs();
   const n = niveauActif(), c = cadreEdition(), v = vueEdition, k = v.k, vw = c.w / k, vh = c.h / k;
   svg.setAttribute('viewBox', v.x + ' ' + v.y + ' ' + vw + ' ' + vh);
   const pas = 1, r = Math.max(.04, 1.2 / k);
   let h = '<defs><pattern id="grille" width="' + pas + '" height="' + pas + '" patternUnits="userSpaceOnUse"><circle cx="0" cy="0" r="' + r + '" fill="var(--line)"/></pattern></defs>' +
     '<rect class="plan-fond" x="' + v.x + '" y="' + v.y + '" width="' + vw + '" height="' + vh + '" fill="url(#grille)"/>';
-  h += dessinPlan(piecesNiveau(n), {k, selection: selection && (selection.piece || selection.elem || selection.legende), types: true, edition: true, niveau: n});
+  h += dessinPlan(piecesNiveau(n), {k, selection: selectionMultiple() ? piecesEnSelection().map(q => q.id) : selection && (selection.piece || selection.elem || selection.legende), types: true, edition: true, niveau: n});
   h += dessinFantome(n, k);   // par-dessus, comme un calque : les pièces du niveau d'à côté ont un fond opaque, il serait caché dessous
   if (lectureVisible && pieces().length) h += dessinLecture(lectureDuPlan(D.b1), n, k);
   const p = selection && selection.piece && pieceParId(selection.piece);
   const e = selection && selection.elem && elemParId(selection.elem);
   const poignees = m => { const t = 11 / k; let s = ''; [['nw', 0, 0], ['n', .5, 0], ['ne', 1, 0], ['e', 1, .5], ['se', 1, 1], ['s', .5, 1], ['sw', 0, 1], ['w', 0, .5]].forEach(([d, fx, fy]) => {
     s += '<rect class="poignee" data-poignee="' + d + '" x="' + (m.x + m.w * fx - t / 2) + '" y="' + (m.y + m.h * fy - t / 2) + '" width="' + t + '" height="' + t + '" rx="' + (2 / k) + '" stroke-width="' + (1.5 / k) + '" style="cursor:' + d + '-resize"/>'; }); return s; };
-  if (p) {
+  if (p && selectionMultiple()) {
+    const g = boiteChoisies();
+    h += '<rect class="groupe-actif" x="' + (g.x - .15) + '" y="' + (g.y - .15) + '" width="' + (g.w + .3) + '" height="' + (g.h + .3) + '" stroke-width="' + (1.5 / k) + '"/>';
+    if (!geste) h += boutonRotation(g, k);
+  } else if (p) {
     const m = p.rects[selection.morceau];
     if (p.rects.length > 1) h += '<rect class="morceau-actif" x="' + m.x + '" y="' + m.y + '" width="' + m.w + '" height="' + m.h + '" stroke-width="' + (1.5 / k) + '"/>';
     h += poignees(m);
     if (!geste) h += boutonRotation(boite([p]), k);
   }
   if (e && estRect(e)) { h += poignees(e); if (!geste) h += boutonRotation(e, k); }
+  if (geste && geste.type === 'cadre' && geste.cadre) { const c = geste.cadre; h += '<rect class="cadre-choix" x="' + Math.min(c.x0, c.x1) + '" y="' + Math.min(c.y0, c.y1) + '" width="' + Math.abs(c.x1 - c.x0) + '" height="' + Math.abs(c.y1 - c.y0) + '" stroke-width="' + (1.5 / k) + '"/>'; }
   svg.innerHTML = h;
   majVidePlan(n);
   rendrePanneauPiece();
@@ -1849,6 +1929,13 @@ function remplirPanneau() {
     if (actif === 'pn-nom') { const n = $(actif); if (n) n.focus({preventScroll: true}); }
     return;
   }
+  if (selectionMultiple()) {
+    const ps = piecesEnSelection(), noms = ps.slice(0, 6).map(q => esc(q.nom)).join(', ') + (ps.length > 6 ? '…' : '');
+    el.innerHTML = '<p class="discret"><b>' + nb(ps.length, 'pièce') + ' choisies</b> : ' + noms + '.<br>Glissez l\'une d\'elles pour les déplacer ensemble ; Ctrl+clic en ajoute ou en retire.</p>' +
+      '<div class="boutons"><button type="button" class="bt petit" onclick="pivoterPiece()" title="Un quart de tour (touche R), autour du centre de l\'ensemble">↻ Tourner l\'ensemble</button>' +
+      '<button type="button" class="bt petit danger" onclick="supprimerPiece()">Supprimer les ' + ps.length + '</button>' + fini + '</div>';
+    return;
+  }
   const plus = !!($('pp-plus') && $('pp-plus').open);
   el.innerHTML = '<div class="grille2"><label class="champ"><span>Nom de la pièce</span><input type="text" id="pp-nom" value="' + esc(p.nom) + '" onchange="renommerPiece(this.value)" onkeydown="champFini(event, this)"></label>' +
     '<label class="champ"><span>Type de zone</span><select id="pp-type" onchange="typerPiece(this.value)">' + optionsTypesZone(p.type) + '</select></label></div>' +
@@ -1898,11 +1985,20 @@ function brancherEditeur() {
       geste = {type: 'element', depart: pt, x0: e.x, y0: e.y, avant: etatPlan()};
       rendrePlanEdition();
     } else if (idP) {
-      selection = {piece: idP, morceau: +at('data-morceau') || 0};
-      const p = pieceParId(idP);
-      geste = {type: 'deplacer', depart: pt, rects0: clone(p.rects), elems0: clone(elementsDeLaPiece(p)), enfants0: enfantsAvant(p), avant: etatPlan(), bouge: false};
-      if (ev.pointerType === 'touch' || ev.pointerType === 'pen') geste.long = setTimeout(() => { if (geste && !geste.bouge) { geste = null; nommerSelection(); } }, 600);   // appui long au doigt ; à la souris, c'est le double-clic
+      const ajout = ev.ctrlKey || ev.metaKey || ev.shiftKey || modePlusieurs, morceau = +at('data-morceau') || 0;
+      let reduire = null;
+      if (ajout) { if (!basculerChoix(idP, morceau)) { geste = null; rendrePlanEdition(); ev.preventDefault(); return; } }   // retirée de ce qui est choisi : pas de geste
+      else if (selectionMultiple() && piecesEnSelection().some(q => q.id === idP)) reduire = {id: idP, morceau};   // un simple clic sur l'une d'elles, sans glisser, ne garde qu'elle
+      else selection = {piece: idP, morceau};
+      if (selectionMultiple()) geste = {type: 'groupe', depart: pt, membres: membresDeplacement(), avant: etatPlan(), bouge: false, reduire};
+      else {
+        const p = pieceParId(idP);
+        geste = {type: 'deplacer', depart: pt, rects0: clone(p.rects), elems0: clone(elementsDeLaPiece(p)), enfants0: enfantsAvant(p), avant: etatPlan(), bouge: false};
+        if (ev.pointerType === 'touch' || ev.pointerType === 'pen') geste.long = setTimeout(() => { if (geste && !geste.bouge) { geste = null; nommerSelection(); } }, 600);   // appui long au doigt ; à la souris, c'est le double-clic
+      }
       rendrePlanEdition();
+    } else if (ev.ctrlKey || ev.metaKey || ev.shiftKey) {
+      geste = {type: 'cadre', depart: pt, cadre: null, base: piecesEnSelection().map(q => q.id)};   // Ctrl+glisser sur le fond : un cadre qui prend les pièces qu'il touche
     } else {
       if (selection) { selection = null; rendrePlanEdition(); }
       geste = {type: 'vue', depart: pt, x0: vueEdition.x, y0: vueEdition.y};
@@ -1917,6 +2013,11 @@ function brancherEditeur() {
     if (geste.type === 'deplacer') {
       if (Math.abs(dx) + Math.abs(dy) > .3) geste.bouge = true;
       deplacerPiece(pieceParId(selection.piece), geste.rects0, geste.elems0, Math.round(dx), Math.round(dy), geste.enfants0);
+    } else if (geste.type === 'groupe') {
+      if (Math.abs(dx) + Math.abs(dy) > .3) geste.bouge = true;
+      deplacerGroupe(geste.membres, Math.round(dx), Math.round(dy));
+    } else if (geste.type === 'cadre') {
+      geste.cadre = {x0: geste.depart.x, y0: geste.depart.y, x1: pt.x, y1: pt.y};
     } else if (geste.type === 'legende') {
       const lg = legendeParId(selection.legende); if (lg) { lg.x = arrondi(geste.x0 + dx, .5); lg.y = arrondi(geste.y0 + dy, .5); }
     } else if (geste.type === 'element') {
@@ -1938,6 +2039,12 @@ function brancherEditeur() {
   const fin = () => {
     if (!geste) return;
     clearTimeout(geste.long);
+    if (geste.type === 'cadre') {
+      const c = geste.cadre;
+      if (c && Math.abs(c.x1 - c.x0) + Math.abs(c.y1 - c.y0) > .3) choisirPieces(piecesDansCadre(c).filter(id => geste.base.indexOf(id) < 0).concat(geste.base));
+      geste = null; rendrePlanEdition(); return;
+    }
+    if (geste.type === 'groupe' && !geste.bouge && geste.reduire) choisirPieces([geste.reduire.id], geste.reduire.morceau);
     if (geste.avant && etatPlan() !== geste.avant) { memoriser(geste.avant); persister(); }
     geste = null; rendrePlanEdition();
   };
@@ -1952,12 +2059,17 @@ function brancherEditeur() {
     const liste = (document.activeElement || {}).tagName === 'SELECT', cmd = ev.ctrlKey || ev.metaKey, touche = String(ev.key || '').toLowerCase();
     if (cmd && touche === 'z') { ev.preventDefault(); if (ev.shiftKey) refaire(); else annuler(); }
     else if (cmd && touche === 'y') { ev.preventDefault(); refaire(); }
+    else if (cmd && touche === 'a') { ev.preventDefault(); toutChoisir(); }
     else if (!selection || cmd || ev.altKey) return;
     else if (ev.key === 'Delete' || ev.key === 'Backspace') { ev.preventDefault(); supprimerSelection(); }
     else if (ev.key === 'Escape') { selection = null; rendrePlanEdition(); }
     else if (touche === 'r' && !liste) { ev.preventDefault(); tournerSelection(); }   // R dans un menu déroulant choisirait « R… » : on la laisse au menu
   });
   window.addEventListener('resize', () => { rendrePlanEdition(); });
+  const touchesDeChoix = ev => ev.key === 'Control' || ev.key === 'Shift' || ev.key === 'Meta';
+  document.addEventListener('keydown', ev => { if (touchesDeChoix(ev) && !touchesChoix && !saisieEnCours(document.activeElement)) { touchesChoix = true; majSourdine(); } });
+  document.addEventListener('keyup', ev => { if (touchesDeChoix(ev)) { touchesChoix = ev.ctrlKey || ev.shiftKey || ev.metaKey; majSourdine(); } });
+  window.addEventListener('blur', () => { touchesChoix = false; majSourdine(); });
 }
 function nommerSelection() { rendrePlanEdition(); const n = $('pp-nom'); if (n) { n.focus(); n.select(); n.scrollIntoView({block: 'nearest'}); } }
 
@@ -3895,6 +4007,11 @@ document.addEventListener('click', ev => {
 
 /* ══ Les notes de version ══ */
 const NOTES_BASE = [
+  {version: 'BASE v2026.10.13-8', titre: 'Plusieurs pièces à la fois : choisir avec Ctrl, déplacer, tourner, supprimer ensemble', corps: '<p><b>Plusieurs pièces d\'un coup</b> (Arthur et Émilie) : on déplace une aile entière sans reprendre les pièces une à une.</p><ul>' +
+    '<li><b>Choisir</b>. Ctrl+clic (ou Maj+clic) ajoute une pièce à ce qui est choisi, ou l\'en retire ; Ctrl+glisser sur le fond trace un cadre qui prend les pièces qu\'il touche ; Ctrl+A prend toutes les pièces du niveau affiché. Au doigt, ou sans clavier : le bouton « ☑ Plusieurs » (en bas à gauche du plan), puis on touche les pièces l\'une après l\'autre. Les pièces choisies sont surlignées, entourées d\'un contour en pointillés, avec une seule flèche ronde.</li>' +
+    '<li><b>Déplacer ensemble</b>. Glisser l\'une d\'elles les déplace toutes du même pas, avec leurs meubles, leurs portes et leurs enclaves ; « Annuler » les ramène d\'un seul geste. Un simple clic sur l\'une d\'elles, sans glisser, ne garde qu\'elle.</li>' +
+    '<li><b>Tourner, supprimer l\'ensemble</b>. La flèche ronde, la touche R ou « Tourner l\'ensemble » font tourner le tout autour de son centre ; Suppr ou « Supprimer les N » les supprime (si l\'une a déjà un épisode, rien n\'est supprimé et on dit laquelle) ; Échap lâche tout. Une porte se pose sur une seule pièce : on en choisit une.</li>' +
+    '<li><b>Détails</b>. Quatre quarts de tour ramènent maintenant exactement la pièce, quelle que soit sa taille : le pivot est une case entière, choisie pour que les tours se compensent (avant, une pièce de largeur plus hauteur impaire « marchait » d\'une case ou deux). La carte de ce qui est choisi s\'efface pendant qu\'on maintient Ctrl ou Maj, ou en mode « Plusieurs », pour ne pas cacher les pièces à toucher ; elle se pose là où elle en cache le moins.</li></ul>'},
   {version: 'BASE v2026.10.13-7', titre: 'Le plan, un espace de travail : des outils qui flottent sur le plan', corps: '<p><b>Rester sur le plan pour faire son plan</b> (Arthur et Émilie) : plus besoin d\'aller chercher des options plus haut ou plus bas.</p><ul>' +
     '<li><b>La barre d\'outils flotte sur le plan</b>. « ＋ Pièce », « ＋ Porte », « ＋ Fenêtre », les menus (niveau, baie ou escalier, meuble), « ＋ Légende », annuler et rétablir sont dans le cadre du plan, et « Voir tout le plan » cadre le plan sous elle. Le bouton ▴ la replie en un bouton « 🛠 Outils » ; elle se replie d\'office sur un petit écran, et le choix est gardé sur l\'appareil. La lecture, le plan vierge et le niveau en filigrane sont en bas à gauche du plan, les zooms en bas à droite. Le cadre est plus haut, pour travailler sans défiler.</li>' +
     '<li><b>Ce qui est choisi a sa petite carte à côté de lui</b>. Pour une pièce : le nom, le type, « Tourner », « Dupliquer », « Supprimer » ; « Plus » garde le morceau en plus, l\'enclave et la fiche. La carte se pose au-dessous de la pièce, sinon au-dessus (en laissant la place de la flèche ronde), sinon à côté, sans jamais la recouvrir ; elle se range pendant qu\'on déplace ou qu\'on agrandit, et suit quand on zoome. Même chose pour une porte, une fenêtre, une baie, un meuble, un escalier, une légende. Dans un nom, Entrée valide et lâche le champ (Suppr et R retrouvent alors le plan), Échap rend l\'ancien nom.</li>' +
@@ -4720,6 +4837,92 @@ function verifierBASE() {
         cadreEdition = vraiCadre; toast = vraiToast16; Object.assign(vueEdition, vue16); geste = null; selection = null; barreRepliee = barre16;
         try { if (cleBarre === null) localStorage.removeItem('base-barre'); else localStorage.setItem('base-barre', cleBarre); } catch (e) { /* rien */ }
         vp.classList.toggle('show', avait); historique = []; refaites = [];
+      }
+    }
+    // 17. Plusieurs pièces à la fois (passe 234)
+    {
+      const vp = $('vue-preambule'), avait = vp.classList.contains('show'), vue17 = Object.assign({}, vueEdition), vraiToast17 = toast, vraiAlert17 = window.alert, modeAvant = modePlusieurs, temp = [], messages = [], alertes = [];
+      try {
+        vp.classList.add('show'); toast = m => { messages.push(m); }; window.alert = t => { alertes.push(String(t)); }; modePlusieurs = false; touchesChoix = false;
+        const pie = (id, x, y, w, h, extra) => Object.assign({id, nom: id, type: 'sejour', niveau: 'n0', rects: [{x, y, w, h}]}, extra || {});
+        const nouveau = (ps, els) => { D = dossierVide(); D.b1.plan = {niveaux: [{id: 'n0', nom: 'Rez-de-chaussée'}, {id: 'n1', nom: 'Étage'}], pieces: ps, elements: els || [], legendes: []}; mode = 'socle'; historique = []; refaites = []; selection = null; niveauCourant = 'n0'; return D; };
+        const proche = (a, b) => Math.abs(a - b) < 1e-6, ids = () => piecesEnSelection().map(p => p.id).join(), rect = el => el.getBoundingClientRect();
+        const touche = (key, opts) => { const ev = new KeyboardEvent('keydown', Object.assign({key, bubbles: true, cancelable: true}, opts || {})); document.dispatchEvent(ev); return ev.defaultPrevented; };
+        const plan4 = () => nouveau([pie('A', 0, 0, 6, 4), pie('B', 8, 0, 6, 4), pie('C', 0, 6, 6, 4), pie('D', 8, 6, 6, 4)], []);
+        // 1. Choisir, ajouter, retirer
+        plan4(); const r1 = basculerChoix('A', 0), s1 = ids(), simple1 = !selectionMultiple() && !selection.plus;
+        const r2 = basculerChoix('B', 0), s2 = ids(), multi2 = selectionMultiple();
+        const r3 = basculerChoix('C', 0), s3 = ids(), r4 = basculerChoix('B', 0), s4 = ids();
+        const r5 = basculerChoix('C', 0), s5 = ids(), simple5 = !selectionMultiple() && !selection.plus && selection.piece === 'A';
+        const r6 = basculerChoix('A', 0), vide6 = selection === null && !ids();
+        ok('Ctrl+clic ajoute une pièce à ce qui est choisi (la dernière touchée en premier) ou l\'en retire ; il ne reste qu\'une pièce : c\'est un choix simple ; plus rien : rien n\'est choisi',
+          r1 === true && s1 === 'A' && simple1 && r2 === true && s2 === 'B,A' && multi2 && r3 === true && s3 === 'C,B,A' && r4 === false && s4 === 'C,A' && r5 === false && s5 === 'A' && simple5 && r6 === false && vide6, [s1, s2, s3, s4, s5].join(' | '));
+        choisirPieces(['A', 'A', 'zz', 'B']); const dedup = ids(); choisirPieces(['zz']); const inconnue = selection === null; choisirPieces([]); const aucune = selection === null;
+        selection = {piece: 'A', morceau: 0, plus: ['B', 'zz', 'A', 'E']}; pieces().push(pie('E', 20, 0, 2, 2, {niveau: 'n1'})); verifierSelection(); const nettoyee = ids();
+        selection = {piece: 'zz', morceau: 0, plus: ['B']}; verifierSelection(); const sansPrimaire = selection === null;
+        ok('Ce qui est choisi reste cohérent : doublons, pièces inconnues ou d\'un autre niveau écartés ; si la pièce principale disparaît (« Annuler »), plus rien n\'est choisi', dedup === 'A,B' && inconnue && aucune && nettoyee === 'A,B' && sansPrimaire, [dedup, nettoyee].join(' | '));
+        // 2. Qui se déplace : une enclave suit sa pièce, même si elle est choisie aussi
+        const E17 = () => nouveau([pie('A', 0, 0, 6, 4), pie('B', 8, 0, 6, 4), pie('E', 10, 1, 2, 2, {dans: 'B'}), pie('C', 0, 6, 6, 4)],
+          [{id: 't1', cat: 'meuble', type: 'table', niveau: 'n0', x: 2, y: 1.5, w: 2, h: 1}, {id: 'c1', cat: 'meuble', type: 'chaise', niveau: 'n0', x: 10.5, y: 1.5, w: .7, h: .7}, {id: 'd1', cat: 'porte', niveau: 'n0', long: 1, retourne: false, x: 11, y: 4, o: 'h', cote: -1}, {id: 'k1', cat: 'meuble', type: 'table', niveau: 'n0', x: 2, y: 7.5, w: 2, h: 1}]);
+        E17(); const rA = racinesDe([pieceParId('B'), pieceParId('E')]).map(p => p.id).join(), rB = racinesDe([pieceParId('A'), pieceParId('E')]).map(p => p.id).join(), rC = racinesDe([pieceParId('E'), pieceParId('B')]).map(p => p.id).join();
+        ok('Parmi les pièces choisies, seules se déplacent d\'elles-mêmes celles qu\'aucune autre ne contient (une enclave suit déjà sa pièce) ; l\'ordre n\'y change rien', rA === 'B' && rB === 'A,E' && rC === 'B', [rA, rB, rC].join(' | '));
+        E17(); selection = {piece: 'A', morceau: 0, plus: ['B', 'E']}; const avant17 = etatPlan(), membres = membresDeplacement();
+        deplacerGroupe(membres, 3, -1);
+        const R = id => pieceParId(id).rects[0], X = id => elemParId(id);
+        ok('Déplacer l\'ensemble : chaque pièce choisie va du même pas, avec ses meubles et ses portes ; une enclave choisie en même temps que sa pièce ne bouge qu\'une fois ; les autres pièces et leurs meubles ne bougent pas',
+          membres.length === 2 && proche(R('A').x, 3) && proche(R('A').y, -1) && proche(R('B').x, 11) && proche(R('B').y, -1) && proche(R('E').x, 13) && proche(R('E').y, 0) && proche(X('t1').x, 5) && proche(X('t1').y, .5) && proche(X('c1').x, 13.5) && proche(X('c1').y, .5) && proche(X('d1').x, 14) && proche(X('d1').y, 3) &&
+          proche(R('C').x, 0) && proche(R('C').y, 6) && proche(X('k1').x, 2) && proche(X('k1').y, 7.5), JSON.stringify([R('A'), R('B'), R('E'), X('t1')]));
+        deplacerGroupe(membres, 0, 0); const retourDep = etatPlan() === avant17; deplacerGroupe(membres, -2, 4); deplacerGroupe(membres, 1, 1);
+        ok('Le déplacement se calcule toujours depuis le départ : revenir au point de départ remet tout exactement en place, sans dérive', retourDep && proche(R('A').x, 1) && proche(R('A').y, 1) && proche(R('E').x, 11) && proche(X('d1').x, 12));
+        // 3. Tourner l'ensemble : quatre quarts de tour ramènent exactement le plan, même quand le centre tombe entre deux cases
+        E17(); selection = {piece: 'A', morceau: 0, plus: ['B', 'E']}; const dep3 = etatPlan(); pivoterPiece();
+        const rots = ['A', 'B', 'E', 'C'].map(id => pieceParId(id).rot);
+        const apres1 = etatPlan(); pivoterPiece(); pivoterPiece(); pivoterPiece();
+        ok('Tourner l\'ensemble : toutes les pièces choisies (et l\'enclave) tournent d\'un quart de tour autour du centre de l\'ensemble, la pièce non choisie ne bouge pas ; quatre quarts de tour ramènent exactement le plan',
+          rots.join() === '1,1,1,' && apres1 !== dep3 && etatPlan() === dep3 && etatPlan().indexOf('"rot"') < 0, rots.join());
+        const dims = [[5, 3], [6, 3], [7, 4], [1, 2], [9, 1], [3, 3], [2, 2], [4, 5], [8, 7]], pos = [[0, 0], [-3, 2], [5, -4], [1, 1]];
+        const cyclesOk = dims.every(([w, h]) => pos.every(([x, y]) => { nouveau([pie('S', x, y, w, h), pie('U', x + w + 2, y + 1, 3, 2)], [{id: 'm1', cat: 'meuble', type: 'table', niveau: 'n0', x: x + .5, y: y + .5, w: .5, h: .5}]); const d = etatPlan(); selection = {piece: 'S', morceau: 0}; for (let i = 0; i < 4; i++) pivoterPiece(); const seule = etatPlan() === d; selection = {piece: 'S', morceau: 0, plus: ['U']}; for (let i = 0; i < 4; i++) pivoterPiece(); return seule && etatPlan() === d; }));
+        ok('Quatre quarts de tour ramènent exactement la pièce (et un ensemble de deux), quelles que soient sa taille (largeur + hauteur paire ou impaire) et sa place : le pivot est une case entière choisie pour que les quatre tours se compensent', cyclesOk);
+        // 4. Supprimer l'ensemble
+        E17(); D.b2.episodes = [{id: 'e1', piece: 'A', date: '2026-10-05', heure: '10:00', moment: 'm1', types: [], autre: '', nbPros: 1, commentaire: ''}]; selection = {piece: 'B', morceau: 0, plus: ['A']}; const dep4 = etatPlan(); alertes.length = 0; supprimerPiece();
+        ok('Supprimer l\'ensemble quand l\'une des pièces a déjà un épisode : rien n\'est supprimé, on dit laquelle et comment faire pour les autres', pieces().length === 4 && etatPlan() === dep4 && alertes.length === 1 && /« A » a déjà 1 épisode/.test(alertes[0]) && /Ctrl\+clic/.test(alertes[0]) && !!selection, alertes[0]);
+        D.b2.episodes = []; messages.length = 0; selection = {piece: 'B', morceau: 0, plus: ['A']}; supprimerPiece();
+        ok('Supprimer l\'ensemble (sans épisode) : les pièces et leurs meubles partent, l\'enclave non choisie reste comme pièce à part entière (on le dit), les autres pièces et leurs meubles restent ; « Annuler » rend tout d\'un seul pas',
+          pieces().map(p => p.id).join() === 'E,C' && !pieceParId('E').dans && elements().map(e => e.id).join() === 'c1,k1' && selection === null && messages.length === 1 && /2 pièces supprimées/.test(messages[0]) && /une enclave reste/.test(messages[0]) && historique.length === 1 && (annuler(), etatPlan() === dep4) && historique.length === 0, messages[0]);
+        // 5. Un cadre tracé avec Ctrl, Ctrl+A
+        nouveau([pie('A', 0, 0, 6, 4), pie('B', 8, 0, 6, 4), pie('C', 0, 6, 6, 4), pie('D', 8, 6, 6, 4), pie('L', 20, 0, 2, 2)], []); pieceParId('L').rects.push({x: 20, y: 2, w: 6, h: 2}); pieces().push(pie('Z', 30, 30, 2, 2, {niveau: 'n1'}));
+        const cadreAB = piecesDansCadre({x0: -1, y0: 1, x1: 15, y1: 3}).join(), cadreLeger = piecesDansCadre({x0: 5.9, y0: 3.9, x1: 8.1, y1: 6.1}).join(), cadreL = piecesDansCadre({x0: 24, y0: 2.5, x1: 25, y1: 3.5}).join(), cadreInverse = piecesDansCadre({x0: 7, y0: 7, x1: 1, y1: 5}).join(), cadreVide = piecesDansCadre({x0: 40, y0: 40, x1: 41, y1: 41}).join();
+        ok('Un cadre tracé avec Ctrl prend les pièces du niveau qu\'il touche (dans n\'importe quel sens de tracé, par n\'importe quel morceau d\'une pièce en L ; pas celles d\'un autre niveau), et seulement celles-là',
+          cadreAB === 'A,B' && cadreLeger === 'A,B,C,D' && cadreL === 'L' && cadreInverse === 'C' && cadreVide === '', [cadreAB, cadreLeger, cadreL, cadreInverse, cadreVide].join(' | '));
+        document.activeElement.blur(); selection = null; const pCtrlA = touche('a', {ctrlKey: true}), toutes = ids();
+        const champ = document.createElement('input'); champ.type = 'text'; document.body.appendChild(champ); temp.push(champ); champ.focus(); selection = {piece: 'A', morceau: 0}; const pCtrlAChamp = touche('a', {ctrlKey: true}), restee = ids(); champ.blur();
+        ok('Ctrl+A prend toutes les pièces du niveau affiché (pas celles d\'un autre niveau) ; dans un champ de texte, il garde son sens habituel (tout sélectionner dans le champ)', pCtrlA && toutes === 'A,B,C,D,L' && !pCtrlAChamp && restee === 'A', toutes);
+        // 6. Le dessin et la carte de l'ensemble
+        plan4(); Object.assign(vueEdition, {x: -3, y: -8, k: 24}); selection = {piece: 'A', morceau: 0, plus: ['B', 'C']}; rendrePlanEdition();
+        const svg = $('plan-edition'), cadre = $('plan-edition-cadre'), carte = $('plan-panneau'), cr = rect(cadre), pr = rect(carte);
+        const noms = carte.textContent.replace(/\s+/g, ' ');
+        ok('Plusieurs pièces choisies : toutes sont surlignées, un contour entoure l\'ensemble avec une seule flèche ronde, plus de poignées ; la carte, dans le cadre, dit combien et lesquelles, et propose « Tourner l\'ensemble » et « Supprimer les 3 »',
+          svg.querySelectorAll('.piece.selection').length === 3 && svg.querySelectorAll('.groupe-actif').length === 1 && svg.querySelectorAll('circle[data-rotation]').length === 1 && svg.querySelectorAll('.poignee').length === 0 && cadre.contains(carte) && carte.classList.contains('carte-plan') && pr.left >= cr.left - 1 && pr.right <= cr.right + 1 && pr.top >= cr.top - 1 && pr.bottom <= cr.bottom + 1 &&
+          /3 pièces choisies : A, B, C/.test(noms) && !!carte.querySelector('button[onclick="pivoterPiece()"]') && /Supprimer les 3/.test(carte.textContent) && !carte.querySelector('#pp-nom'), noms.slice(0, 120));
+        const g = boiteChoisies(), dessinTrois = dessinPlan(piecesNiveau('n0'), {k: 26, selection: ['A', 'B'], edition: true, niveau: 'n0'});
+        ok('Le dessin du plan prend une liste de pièces choisies ; le rectangle de l\'ensemble entoure les trois pièces', (dessinTrois.match(/class="piece zone-sejour selection"/g) || []).length === 2 && proche(g.x, 0) && proche(g.y, 0) && proche(g.w, 14) && proche(g.h, 10));
+        // 7. La carte s'efface (et laisse passer les clics) pendant qu'on maintient Ctrl, ou en mode « Plusieurs »
+        document.activeElement.blur(); const avantCtrl = carte.classList.contains('en-sourdine');
+        document.dispatchEvent(new KeyboardEvent('keydown', {key: 'Control', ctrlKey: true, bubbles: true})); const pendantCtrl = carte.classList.contains('en-sourdine'), clicsPassent = getComputedStyle(carte).pointerEvents === 'none';
+        document.dispatchEvent(new KeyboardEvent('keyup', {key: 'Control', ctrlKey: false, bubbles: true})); const apresCtrl = carte.classList.contains('en-sourdine');
+        basculerPlusieurs(); const enMode = carte.classList.contains('en-sourdine'), etiquette = $('btn-plusieurs').textContent, appuye = $('btn-plusieurs').getAttribute('aria-pressed'); basculerPlusieurs(); const finMode = carte.classList.contains('en-sourdine');
+        const champ2 = document.createElement('input'); champ2.type = 'text'; document.body.appendChild(champ2); temp.push(champ2); champ2.focus(); document.dispatchEvent(new KeyboardEvent('keydown', {key: 'Shift', shiftKey: true, bubbles: true})); const pendantSaisie = carte.classList.contains('en-sourdine'); document.dispatchEvent(new KeyboardEvent('keyup', {key: 'Shift', bubbles: true})); champ2.blur();
+        ok('La carte s\'efface (et laisse passer les clics) pendant qu\'on maintient Ctrl ou Maj, ou en mode « Plusieurs » (dont le bouton donne le nombre de pièces choisies), pour toucher les pièces qu\'elle recouvrait ; elle revient après ; la majuscule d\'un nom tapé ne l\'efface pas',
+          !avantCtrl && pendantCtrl && clicsPassent && !apresCtrl && enMode && /Plusieurs · 3/.test(etiquette) && appuye === 'true' && !finMode && !pendantSaisie, [avantCtrl, pendantCtrl, clicsPassent, apresCtrl, enMode, etiquette, appuye, finMode, pendantSaisie].join(' | '));
+        // 8. Une porte se pose sur une seule pièce
+        selection = {piece: 'A', morceau: 0, plus: ['B']}; messages.length = 0; const avant8 = elements().length; ajouterMural('porte');
+        ok('Avec plusieurs pièces choisies, « ＋ Porte » demande d\'en choisir une seule (rien n\'est posé)', elements().length === avant8 && messages.length === 1 && /une seule pièce/.test(messages[0]));
+        // 9. La carte se pose là où elle cache le moins de pièces
+        const sansAutres = placerCarte({x: 300, y: 150, w: 120, h: 80}, {w: 370, h: 160}, {w: 900, h: 600}, 90), avecAutres = placerCarte({x: 300, y: 150, w: 120, h: 80}, {w: 370, h: 160}, {w: 900, h: 600}, 90, [{x: 150, y: 235, w: 700, h: 200}]);
+        const aVide = placerCarte({x: 300, y: 150, w: 120, h: 80}, {w: 370, h: 160}, {w: 900, h: 600}, 90, [{x: 0, y: 0, w: 900, h: 600}]);
+        ok('La carte choisit, parmi les places où elle tient, celle qui cache le moins de surface des autres pièces (à égalité : au-dessous, au-dessus, à droite, à gauche) ; si rien ne tient, contre le bas', sansAutres.cote === 'dessous' && avecAutres.cote !== 'dessous' && aVide.cote === 'dessous', [sansAutres.cote, avecAutres.cote, aVide.cote].join(' | '));
+      } finally {
+        toast = vraiToast17; window.alert = vraiAlert17; Object.assign(vueEdition, vue17); geste = null; selection = null; modePlusieurs = modeAvant; touchesChoix = false; temp.forEach(x => x.remove()); vp.classList.toggle('show', avait); historique = []; refaites = []; majBoutonPlusieurs();
       }
     }
   } catch (e) { ok('Les vérifications ont planté', false, e.message); }
