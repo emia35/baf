@@ -1098,7 +1098,8 @@ section.view.show{display:block;animation:fadein .25s ease;}
 .lettre-echo{color:var(--sauge-deep);}
 .outil-echo{font-weight:700;}
 .outil-echo.outil-1{color:var(--vol-comportement-texte, #46685A);}
-.outil-echo.outil-2{color:var(--rose-deep);}
+.outil-echo.outil-base{color:var(--vol-contexte-texte);}
+.outil-echo.outil-icaf{color:var(--rose-deep);}
 .signatures{text-align:right;margin-top:10px;font-size:13px;line-height:1.55;color:var(--ink);font-weight:400;}
 .signatures i{color:var(--ink-soft);}
 .signature-nom{font-weight:700;}
@@ -1221,8 +1222,8 @@ body.tool-idc .intro-card .ethique{background:var(--rose-pale);border-left-color
 #view-accueil .mod-row .mod-btn.m2{color:#fff;}
 #view-accueil .mod-row .mod-btn.m2 .num,
 #view-accueil .mod-row .mod-btn.m2 .temps{color:#fff;opacity:.85;}
-#view-accueil .mod-row .mod-btn.m2:nth-child(2){background:var(--rose);}
-/* L'outil 3, la BASE : le bleu du contexte (le lieu, c'est l'environnement). */
+#view-accueil .mod-row .mod-btn.mod-icaf{background:var(--rose);}
+/* L'outil 2, la BASE : le bleu du contexte (le lieu, c'est l'environnement). */
 /* C'est un lien, pas un bouton : il reprend la taille et l'interligne des deux autres (sans quoi il héritait de ceux de la page). */
 #view-accueil .mod-row .mod-btn.mod-base{background:var(--vol-contexte);text-decoration:none;font-size:13.3333px;line-height:normal;}
 
@@ -4286,7 +4287,7 @@ html[data-theme="sombre"] .analyse-tete .rail-etape.tel-vue{color:#141A22;}
     </div>
 
     <div class="intro-card accueil-texte">
-      <p>Au cœur de nos communautés de soin, certains comportements peuvent nous troubler, voire mettre à mal le quotidien. Ces « comportements-défis » sont une tentative, pour la personne accompagnée, de répondre à un besoin, de façon plus ou moins adaptée. L'analyse fonctionnelle vise à décrypter la fonction d'un comportement qui n'est, de fait, pas là pour rien. C'est un travail d'élaboration clinique qui doit se faire <i>à plusieurs</i> et qui peut se soutenir d'outils. C'est pour cela que nous avons créé la <b class="sigle-baf">B<span class="lettre-echo">A</span><span class="lettre-echo">F</span></b>, pour vous aider à structurer la démarche d'analyse fonctionnelle avant (c'est l'<b class="outil-echo outil-1">outil 1</b>) et après (c'est l'<b class="outil-echo outil-2">outil 2</b>). Mais ce qui se passe entre les deux, c'est à vous de jouer.</p>
+      <p>Au cœur de nos communautés de soin, certains comportements peuvent nous troubler, voire mettre à mal le quotidien. Ces « comportements-défis » sont une tentative, pour la personne accompagnée, de répondre à un besoin, de façon plus ou moins adaptée. L'analyse fonctionnelle vise à décrypter la fonction d'un comportement qui n'est, de fait, pas là pour rien. C'est un travail d'élaboration clinique qui doit se faire <i>à plusieurs</i> et qui peut se soutenir d'outils. C'est pour cela que nous avons créé la <b class="sigle-baf">B<span class="lettre-echo">A</span><span class="lettre-echo">F</span></b>, pour vous aider à structurer votre démarche d'analyse fonctionnelle au niveau individuel (c'est l'<b class="outil-echo outil-1">outil 1</b>), au niveau écologique (c'est l'<b class="outil-echo outil-base">outil 2</b>) et à évaluer sa qualité (c'est l'<b class="outil-echo outil-icaf">outil 3</b>). La BAF ne pensera pas à votre place, donc à vous de jouer&nbsp;!</p>
       <div class="signatures">
         <div><b class="signature-nom">Émilie Musard</b> — <i>Éducatrice spécialisée</i></div>
         <div><b class="signature-nom">Arthur Guillieux</b> — <i>Psychologue clinicien</i></div>
@@ -4300,18 +4301,18 @@ html[data-theme="sombre"] .analyse-tete .rail-etape.tel-vue{color:#141A22;}
           <span class="titre">Recueil des données</span>
           <span class="desc">Recueillir, organiser et interpréter les épisodes observés.</span>
         </button>
-        <button class="mod-btn m2" onclick="route('idc-accueil')">
-          <span class="num">Outil 2 — ICAF</span>
-          <span class="titre">Indice de confiance</span>
-          <span class="desc">Évaluer la qualité du processus d'analyse fonctionnelle produit.</span>
-        </button>
-        <!-- Outil 3, la BASE (12/10/2026) : une expérimentation d'Arthur, dans son propre fichier. Passe 239 : on y va sans l'avertissement « quitter la page »
+        <!-- Outil 2, la BASE (12/10/2026 ; outil 2 depuis le 16/10, passe 240), dans son propre fichier. Passe 239 : on y va sans l'avertissement « quitter la page »
              (le dossier est enregistré dans le navigateur juste avant ; s'il ne peut pas l'être, l'avertissement reste). -->
         <a class="mod-btn m2 mod-base" href="base.html" onclick="versLaBase(event)">
-          <span class="num">Outil 3 — BASE</span>
+          <span class="num">Outil 2 — BASE</span>
           <span class="titre">Analyse spatio-environnementale</span>
           <span class="desc">Cartographie des points sensibles dans un lieu donné, à un moment donné.</span>
         </a>
+        <button class="mod-btn m2 mod-icaf" onclick="route('idc-accueil')">
+          <span class="num">Outil 3 — ICAF</span>
+          <span class="titre">Indice de confiance</span>
+          <span class="desc">Évaluer la qualité du processus d'analyse fonctionnelle produit.</span>
+        </button>
       </div>
     </div>
 
@@ -4322,7 +4323,6 @@ html[data-theme="sombre"] .analyse-tete .rail-etape.tel-vue{color:#141A22;}
 
   <section id="view-reperes" class="view">
     <div class="mod-header">
-      <div class="crumb"><button onclick="route('accueil')">← Accueil</button></div>
       <span class="temps-tag tag-m1">Repères</span>
       <h2>Comprendre l'analyse fonctionnelle</h2>
       <div class="sub">Ce qu'il faut avoir en tête avant de se lancer, le vocabulaire qu'on emploie, et ce sur quoi la BAF s'appuie. À lire une fois, à revenir consulter au besoin.</div>
@@ -13607,7 +13607,7 @@ const _CONTROLES = [
       .getElementsByTagName('parsererror').length;
     const texte = corps.replace(/<[^>]+>/g, '').replace(/&apos;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&');
     return _bancEgal('XML bien formé, analyse écrite, ICAF facultatif, plus de « quatre étapes »', 'true,true,true,true',
-      [bienForme, texte.includes("écrivent l'analyse fonctionnelle"), texte.includes('outil 2, facultatif'), !texte.includes("c'est quatre étapes")].join(','));
+      [bienForme, texte.includes("écrivent l'analyse fonctionnelle"), texte.includes('outil 3, facultatif'), !texte.includes("c'est quatre étapes")].join(','));
   }},
 
   {nom:'Fichiers déclarants : un socle provisoire les réunit sans rien perdre', test: () => {
@@ -16485,6 +16485,22 @@ const _CONTROLES = [
       try { if (avantPref === null) localStorage.removeItem('baf-m1-sommaire'); else localStorage.setItem('baf-m1-sommaire', avantPref); } catch (e) { /* rien */ }
       if (vue) route(vue.replace(/^view-/, ''));
     }
+  }},
+
+  {nom:'L\'accueil (passe 240) : le texte d\'Arthur, les trois outils dans l\'ordre (RDAF, BASE, ICAF) et à leur couleur ; Repères sans bouton « Accueil »', test: () => {
+    const vue = (document.querySelector('section.view.show') || {}).id;
+    try {
+      route('accueil');
+      const btns = [...document.querySelectorAll('#view-accueil .mod-row .mod-btn')], nums = btns.map(b => b.querySelector('.num').textContent).join(' | ');
+      const fonds = btns.map(b => getComputedStyle(b).backgroundColor), distincts = new Set(fonds).size === 3;
+      const texte = document.querySelector('#view-accueil .accueil-texte p').textContent;
+      const echo = [...document.querySelectorAll('#view-accueil .outil-echo')].map(b => b.textContent + ':' + getComputedStyle(b).color);
+      const couleursEcho = new Set(echo.map(x => x.split(':')[1])).size === 3;
+      const reperes = document.querySelectorAll('#view-reperes .crumb').length;
+      return _bancEgal('numéros | fonds distincts | texte | échos colorés | Repères sans « Accueil »',
+        'Outil 1 — RDAF | Outil 2 — BASE | Outil 3 — ICAF | true | true | true | 0',
+        [nums, distincts, texte.includes('au niveau individuel (c\'est l\'outil 1), au niveau écologique (c\'est l\'outil 2) et à évaluer sa qualité (c\'est l\'outil 3)') && /donc à vous de jouer\s!$/.test(texte.trim()), couleursEcho, reperes].join(' | '));
+    } finally { if (vue) route(vue.replace(/^view-/, '')); }
   }},
 
   {nom:'Accueils (passe 198) : les outils en couleur, les titres centrés, le parcours en quatre blocs colorés, le détail au survol', test: () => {
@@ -21107,10 +21123,11 @@ function corpsModeEmploiGeneral() {
     docxTitre(1, "Notice d'utilisation") +
     '@@SOMMAIRE@@' +
 
-    docxIntertitre("La BAF, c'est deux outils", DOCX_C.papierFonce, bleu, niv(1, "La BAF, c'est deux outils", true)) +
+    docxIntertitre("La BAF, c'est trois outils", DOCX_C.papierFonce, bleu, niv(1, "La BAF, c'est trois outils", true)) +
     puce('Le RDAF, Recueil de Données pour une Analyse Fonctionnelle (outil 1), ', 'recueille et prépare les données : un Préambule, puis Recueillir, Analyser (le déclaratif brut, Découper, Catégoriser, Interpréter) et une Synthèse.') +
-    puce("L'ICAF, Indice de Confiance pour une Analyse Fonctionnelle (outil 2, facultatif), ", "évalue la qualité d'une analyse fonctionnelle une fois terminée. C'est un travail long, à réserver aux équipes qui peuvent y consacrer du temps.") +
-    encadre([{t: "Ce qui se passe entre les deux, l'analyse fonctionnelle elle-même, c'est le travail du binôme et de l'équipe.", gras: true}], DOCX_C.papierFonce, bleu) +
+    puce("La BASE, Boussole d'Analyse Spatio-Environnementale (outil 2), ", "regarde le lieu : le plan dessiné, les épisodes posés pièce par pièce, une carte thermique. Elle a sa propre page, et ses propres fichiers.") +
+    puce("L'ICAF, Indice de Confiance pour une Analyse Fonctionnelle (outil 3, facultatif), ", "évalue la qualité d'une analyse fonctionnelle une fois terminée. C'est un travail long, à réserver aux équipes qui peuvent y consacrer du temps.") +
+    encadre([{t: "L'analyse fonctionnelle elle-même, c'est le travail du binôme et de l'équipe : la BAF ne pensera pas à votre place.", gras: true}], DOCX_C.papierFonce, bleu) +
     docxP('', {apres: 40}) +
 
     docxIntertitre("La BAF, c'est trois rôles", DOCX_C.papierFonce, bleu, niv(1, "La BAF, c'est trois rôles", true)) +
@@ -21141,7 +21158,7 @@ function corpsModeEmploiGeneral() {
     puce('Recueillir ', 'des données qualitatives sur les comportements-défis ciblés, dans tous les lieux de vie de la personne. (avec le RDAF)') +
     puce('Analyser ', 'ces données — les ranger, les catégoriser, les interpréter —, en binôme. (avec le RDAF)') +
     puce('Formuler les hypothèses fonctionnelles, ', "avec le regard clinique du binôme et de l'équipe. (sans la BAF)") +
-    docxP([{t: 'Facultatif : ', gras: true, italique: true}, {t: "évaluer ensuite la qualité de l'analyse avec l'ICAF (outil 2)."}], {retrait: 240, apres: 80, align: 'both'}) +
+    docxP([{t: 'Facultatif : ', gras: true, italique: true}, {t: "évaluer ensuite la qualité de l'analyse avec l'ICAF (outil 3)."}], {retrait: 240, apres: 80, align: 'both'}) +
 
     /* ── 1 ── */
     partie('1.', 'Recueillir', "Une analyse fonctionnelle vaut ce que vaut son matériel déclaratif. Il le faut de qualité, et venu des différents lieux de vie de la personne.") +
@@ -22274,7 +22291,7 @@ window.addEventListener('beforeunload', (e) => {
   if (versBase) return;   // on part vers la BASE, le dossier vient d'être enregistré dans ce navigateur : il sera là au retour
   try { if (socleNonSauvegarde()) { e.preventDefault(); e.returnValue = ''; } } catch (x) { /* au démarrage, avant que tout soit prêt */ }
 });
-/* Le bouton « Outil 3 — BASE » de l'accueil (passe 239) : la BASE est une autre page du même site ; le dossier en cours reste dans le
+/* Le bouton « Outil 2 — BASE » de l'accueil (passe 239) : la BASE est une autre page du même site ; le dossier en cours reste dans le
    navigateur. On l'y enregistre juste avant de partir ; si l'enregistrement réussit, pas d'avertissement « quitter la page » (rien ne se
    perd). S'il échoue (navigateur plein, mode « voir en tant que », mode administrateur ouvert ailleurs), l'avertissement reste. Un clic
    avec Ctrl ou la molette ouvre un autre onglet : la page reste, l'avertissement aussi. */
@@ -24242,6 +24259,15 @@ function svgActiviteCode() {
 
 const NOTES_VERSION = [
 
+  {
+    date: '2026-10-16',
+    version: 'v2026.10.16-3',
+    titre: "Un nouveau texte d'accueil ; la BASE devient l'outil 2, l'ICAF l'outil 3",
+    corps: `
+<p><b>L'accueil dit ce que fait chaque outil</b> (Arthur et Émilie). Le texte d'accueil est réécrit : la BAF aide à structurer la démarche d'analyse fonctionnelle au niveau individuel (outil 1, le RDAF), au niveau écologique (outil 2, la BASE) et à évaluer sa qualité (outil 3, l'ICAF) ; elle ne pensera pas à votre place. Les trois outils s'affichent dans cet ordre, chacun à sa couleur, et la numérotation suit partout : la FAQ et le lexique de Repères, le mode d'emploi en Word, et la BASE elle-même.</p>
+<p>La page Repères n'a plus de bouton « ← Accueil » : la boussole du bandeau y ramène, comme partout.</p>
+`
+  },
   {
     date: '2026-10-16',
     version: 'v2026.10.16-2',
@@ -26396,10 +26422,10 @@ const REPERES = [
     titre: "Questions sur l'outil",
     questions: [
       {groupe: "Pour se lancer", q: "Est-ce que la BAF pense à ma place ?",
-       r: `<p>Non. Elle ne pose aucun diagnostic et ne formule aucune hypothèse. Elle vous aide à structurer la démarche <b>avant</b> l'analyse — le recueil et l'analyse des données (outil 1) — et, si vous le souhaitez, à en évaluer la qualité <b>après</b> (outil 2, facultatif).</p>
-           <p>Ce qui se passe entre les deux — formuler des hypothèses, décider quoi proposer — reste votre travail. Tout ce que l'outil fait apparaître, catégories, régularités, pourcentages, est un matériau de discussion, jamais une conclusion.</p>`},
+       r: `<p>Non. Elle ne pose aucun diagnostic et ne formule aucune hypothèse. Elle vous aide à structurer votre démarche au niveau individuel — le recueil et l'analyse des données (outil 1) —, au niveau écologique — le lieu où se produisent les comportements-défis (outil 2) — et, si vous le souhaitez, à en évaluer la qualité <b>après</b> (outil 3, facultatif).</p>
+           <p>L'analyse fonctionnelle elle-même — formuler des hypothèses, décider quoi proposer — reste votre travail. Tout ce que l'outil fait apparaître, catégories, régularités, pourcentages, est un matériau de discussion, jamais une conclusion.</p>`},
       {q: "Qui fait quoi dans la BAF ?",
-       r: `<p>La BAF réunit deux outils : le <b>RDAF</b> (outil 1), qui recueille et prépare les données — un Préambule, Recueillir, Analyser, une Synthèse —, et l'<b>ICAF</b> (outil 2, facultatif), qui évalue la qualité d'une analyse fonctionnelle terminée.</p>
+       r: `<p>La BAF réunit trois outils : le <b>RDAF</b> (outil 1), qui recueille et prépare les données — un Préambule, Recueillir, Analyser, une Synthèse —, la <b>BASE</b> (outil 2), qui cartographie les comportements-défis dans un lieu, pièce par pièce, et l'<b>ICAF</b> (outil 3, facultatif), qui évalue la qualité d'une analyse fonctionnelle terminée.</p>
            <p><b>Le déclarant</b> remplit le recueil : il décrit ce qu'il observe là où il accompagne la personne. <b>L'analyste</b> analyse les données (il les range, les catégorise, les interprète), puis fait l'analyse fonctionnelle — dans la démarche proposée, c'est le binôme formé par le référent et le clinicien. <b>Le cotateur</b>, si l'équipe choisit d'évaluer son analyse, remplit l'ICAF.</p>`},
       {q: "Comment commencer une analyse fonctionnelle avec la BAF ?",
        r: `<p>Dans cet ordre :</p>
@@ -26514,11 +26540,11 @@ const LEXIQUE_BAF = {
   "pattern": "Une séquence qui semble se répéter, composée à partir des catégories créées dans Catégoriser. Ce n'est pas une certitude : c'est une hypothèse de lecture, à discuter.",
   "gradation": "La façon dont la tension monte chez la personne : un signe discret d'abord, puis ça s'intensifie. Repérer la gradation permet d'intervenir avant le pic.",
   "indice de confiance": "Dans la synthèse, un indicateur de la robustesse du recueil — volume, pluralité des regards, durée, complétude de la séquence (antécédent, comportement-défi, conséquence — lue sur le rangement de l'analyste quand l'épisode est rangé), niveau de détail (un formulaire détaillé pèse plus qu'un résumé rapide ou qu'un récit libre rangé), part d'observation directe. À ne pas confondre avec l'ICAF, qui évalue l'analyse fonctionnelle entière.",
-  "BAF": "Boussole pour une Analyse Fonctionnelle. L'enveloppe : elle réunit le RDAF (outil 1) et l'ICAF (outil 2).",
+  "BAF": "Boussole pour une Analyse Fonctionnelle. L'enveloppe : elle réunit le RDAF (outil 1), la BASE (outil 2) et l'ICAF (outil 3).",
   "RDAF": "L'outil 1, le recueil de données. Il se déroule en quatre modules — Préambule, Recueillir, Analyser (déclaratif brut, Découper, Catégoriser, Interpréter) et Synthèse. Il prépare l'analyse fonctionnelle, il ne la produit pas.",
   "analyser": "Le troisième module du RDAF, celui du travail de l'analyste. Il se fait un épisode à la fois, sur quatre panneaux qui glissent comme un carrousel : Déclaratif brut, Découper, Catégoriser, Interpréter. On y voit toujours l'étape d'avant pour faire la suivante.",
   "phase": "Dans la séquence d'un épisode, une suite antécédent → CD → intervention. Un épisode a une ou plusieurs phases : un CD qui en suit un autre, après une intervention, ouvre la phase suivante.",
-  "ICAF": "L'outil 2, l'indice de confiance. Il évalue la qualité méthodologique d'une analyse fonctionnelle terminée — pas la personne, pas les déclarants.",
+  "ICAF": "L'outil 3, l'indice de confiance. Il évalue la qualité méthodologique d'une analyse fonctionnelle terminée — pas la personne, pas les déclarants.",
   "préambule": "Ce que l'équipe sait déjà de la personne avant toute observation : lieux de vie, journée type, piste somatique, vase de tension connu. C'est le point de départ commun à tous les déclarants.",
   "analyste": "Celui ou celle qui analyse les données (les range, les catégorise, les interprète), puis fait l'analyse fonctionnelle. Dans la démarche proposée, c'est le binôme formé par le référent et le clinicien.",
   "référent": "Le professionnel qui porte la démarche : il la prépare, lance le recueil, reçoit les fichiers déclarants et fait l'analyse avec le clinicien qui la supervise.",

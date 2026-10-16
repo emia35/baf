@@ -12,7 +12,7 @@
   document.documentElement.setAttribute('data-theme', s ? 'sombre' : 'clair'); })();
 </script>
 <style>
-/* ═══ La BASE, outil 3 de la BAF. La charte ci-dessous (polices, variables, mode sombre) est recopiée telle quelle
+/* ═══ La BASE, outil 2 de la BAF. La charte ci-dessous (polices, variables, mode sombre) est recopiée telle quelle
    de la BAF (index.html), sans lien avec elle : la BASE vit en vase clos le temps de l'essayer. ═══ */
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,500&display=swap');
 :root{
@@ -216,7 +216,7 @@ button{cursor:pointer;}
 a{color:var(--slate);}
 p{margin:0 0 10px;}
 
-/* ── L'outil 3 : le bleu du contexte (le lieu, c'est l'environnement) ── */
+/* ── L'outil 2 : le bleu du contexte (le lieu, c'est l'environnement) ── */
 body.tool-base{
   --hdr-bg: var(--vol-contexte);
   --hdr-text: var(--slate);
@@ -630,7 +630,7 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
 <path d="M24 10 L24 38" stroke="var(--hdr-text)" stroke-width=".8" opacity=".4"/>
 <circle cx="24" cy="24" r="2.6" fill="var(--hdr-bg)" stroke="var(--hdr-text)" stroke-width="1"/>
 </svg>
-      <div class="kicker">EMIA35 · BAF · Outil 3</div>
+      <div class="kicker">EMIA35 · BAF · Outil 2</div>
       <h1>Boussole d'Analyse <i>Spatio-Environnementale</i></h1>
       <p class="lecture">La BASE regarde un <b>lieu</b> — un service, un bâtiment, un groupe — et non une personne. Elle répond à une question : <b>où et quand, dans ce lieu, les comportements-défis se concentrent-ils ?</b> Elle dessine le plan — et le lit : voisinages, passages, vues, points de vigilance —, recueille des épisodes courts, et montre une carte. Ce n'est pas une analyse fonctionnelle : elle ne dit rien de la fonction d'un comportement pour un jeune, et ne juge ni le lieu ni les professionnels.</p>
     </div>
@@ -874,7 +874,7 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
 
 <footer class="bas no-print">
   <div class="pied-inner">
-    <div class="gauche">BASE, outil 3 de la BAF — créé par Émilie Musard, éducatrice spécialisée, et Arthur Guillieux, psychologue clinicien — EMIA35</div>
+    <div class="gauche">BASE, outil 2 de la BAF — créé par Émilie Musard, éducatrice spécialisée, et Arthur Guillieux, psychologue clinicien — EMIA35</div>
     <div><a class="lien-pied" id="pied-version" href="index.html#notes-de-version" title="Les notes de version de la BASE sont dans celles de la BAF"></a> · <button type="button" class="lien-pied" id="theme-bouton" onclick="basculerTheme()">☾ Mode sombre</button></div>
   </div>
 </footer>
@@ -882,14 +882,14 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
 <script>
 'use strict';
 /* ══════════════════════════════════════════════════════════════════════════════════════════════
-   LA BASE — Boussole d'Analyse Spatio-Environnementale, outil 3 de la BAF (Arthur et Émilie, 12/10/2026).
+   LA BASE — Boussole d'Analyse Spatio-Environnementale, outil 2 de la BAF (Arthur et Émilie, 12/10/2026).
    Un VASE CLOS, le temps de l'essayer : elle ne lit ni n'écrit rien du RDAF ni de l'ICAF. Ses données
    dans le navigateur portent le préfixe « base- » ; ses fichiers ont leurs propres types (« base-dossier »,
    « base-declarant ») : le RDAF les refuse tels quels, et la BASE refuse les fichiers de la BAF. Seule
    chose lue de la BAF, en lecture : le choix clair / sombre, pour s'ouvrir dans le même thème.
    ══════════════════════════════════════════════════════════════════════════════════════════════ */
 
-const VERSION_BASE = 'BASE v2026.10.16-2';
+const VERSION_BASE = 'BASE v2026.10.16-3';
 const CLE_SOCLE = 'base-dossier-v1', CLE_DECL = 'base-declarant-v1', CLE_MODE = 'base-mode', CLE_THEME = 'base-theme';
 const TYPES_ZONE = [['activite', "Salle d'activité"], ['sejour', 'Séjour, salon'], ['repas', 'Repas'], ['accueil', 'Accueil'], ['circulation', 'Circulation'],
   ['chambre', 'Chambre'], ['repos', 'Salle de repos'], ['calme', 'Salle de mise au calme'], ['snoezelen', 'Salle multisensorielle'], ['soins', 'Soins, infirmerie'],
@@ -4016,7 +4016,7 @@ function svgExport() {
   const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + (H + haut + bas) + '" viewBox="0 0 ' + W + ' ' + (H + haut + bas) + '">' + style + deg +
     '<rect width="100%" height="100%" fill="#F5F0E8"/>' +
     '<text x="16" y="28" font-size="18" font-weight="700" fill="#2C2416">' + esc(titre) + '</text>' +
-    '<text x="16" y="50" font-size="12.5" fill="#6B6152">' + esc(nb(eps.length, 'épisode') + (fil ? ' · ' + fil : '') + ' · BASE, outil 3 de la BAF (EMIA35)') + '</text>' +
+    '<text x="16" y="50" font-size="12.5" fill="#6B6152">' + esc(nb(eps.length, 'épisode') + (fil ? ' · ' + fil : '') + ' · BASE, outil 2 de la BAF (EMIA35)') + '</text>' +
     plans + legende +
     '<text x="16" y="' + (bs + 52) + '" font-size="11.5" fill="#6B6152">' + esc(note[0]) + '</text>' +
     '<text x="16" y="' + (bs + 68) + '" font-size="11.5" fill="#6B6152">' + esc(note[1]) + '</text></svg>';
@@ -4062,7 +4062,7 @@ function svgPlanVierge() {
     esc(virgule(Math.round(5 * ech * 10) / 10) + ' m (une case : ' + virgule(ech) + ' m)') + '</text>' : '';
   const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + (H + haut + bas) + '" viewBox="0 0 ' + W + ' ' + (H + haut + bas) + '">' + styleExport() + '<rect width="100%" height="100%" fill="#FFFDF8"/>' +
     '<text x="16" y="28" font-size="18" font-weight="700" fill="#2C2416">' + esc((D.b1.lieu || 'Le lieu') + ' — plan vierge') + '</text>' +
-    '<text x="16" y="50" font-size="12.5" fill="#6B6152">' + esc(nb(pieces().length, 'pièce') + (multi ? ' sur ' + niv.length + ' niveaux' : '') + ' · BASE, outil 3 de la BAF (EMIA35)') + '</text>' +
+    '<text x="16" y="50" font-size="12.5" fill="#6B6152">' + esc(nb(pieces().length, 'pièce') + (multi ? ' sur ' + niv.length + ' niveaux' : '') + ' · BASE, outil 2 de la BAF (EMIA35)') + '</text>' +
     corps + barre + '<text x="16" y="' + (bs + (ech ? 56 : 30)) + '" font-size="11.5" fill="#6B6152">Le plan seul, sans épisode : à imprimer, à annoter à la main, ou à glisser dans un document.</text></svg>';
   return {svg, W, H: H + haut + bas};
 }
