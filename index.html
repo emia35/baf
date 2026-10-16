@@ -4305,8 +4305,9 @@ html[data-theme="sombre"] .analyse-tete .rail-etape.tel-vue{color:#141A22;}
           <span class="titre">Indice de confiance</span>
           <span class="desc">Évaluer la qualité du processus d'analyse fonctionnelle produit.</span>
         </button>
-        <!-- Outil 3, la BASE (12/10/2026) : une expérimentation d'Arthur, dans son propre fichier, sans lien avec le reste de la BAF. -->
-        <a class="mod-btn m2 mod-base" href="base.html">
+        <!-- Outil 3, la BASE (12/10/2026) : une expérimentation d'Arthur, dans son propre fichier. Passe 239 : on y va sans l'avertissement « quitter la page »
+             (le dossier est enregistré dans le navigateur juste avant ; s'il ne peut pas l'être, l'avertissement reste). -->
+        <a class="mod-btn m2 mod-base" href="base.html" onclick="versLaBase(event)">
           <span class="num">Outil 3 — BASE</span>
           <span class="titre">Analyse spatio-environnementale</span>
           <span class="desc">Cartographie des points sensibles dans un lieu donné, à un moment donné.</span>
@@ -22270,8 +22271,21 @@ function etatSauvegardeSocle() {
 }
 // Fermer ou recharger la page avec du travail non exporté : le navigateur demande confirmation.
 window.addEventListener('beforeunload', (e) => {
+  if (versBase) return;   // on part vers la BASE, le dossier vient d'être enregistré dans ce navigateur : il sera là au retour
   try { if (socleNonSauvegarde()) { e.preventDefault(); e.returnValue = ''; } } catch (x) { /* au démarrage, avant que tout soit prêt */ }
 });
+/* Le bouton « Outil 3 — BASE » de l'accueil (passe 239) : la BASE est une autre page du même site ; le dossier en cours reste dans le
+   navigateur. On l'y enregistre juste avant de partir ; si l'enregistrement réussit, pas d'avertissement « quitter la page » (rien ne se
+   perd). S'il échoue (navigateur plein, mode « voir en tant que », mode administrateur ouvert ailleurs), l'avertissement reste. Un clic
+   avec Ctrl ou la molette ouvre un autre onglet : la page reste, l'avertissement aussi. */
+let versBase = false;
+function versLaBase(ev) {
+  if (ev && (ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.button === 1)) return;
+  let ok = false;
+  try { ok = DEPOT.ecrire(state); } catch (x) { ok = false; }
+  if (!ok) return;
+  versBase = true; setTimeout(() => { versBase = false; }, 3000);   // si la navigation n'a pas lieu, la protection revient
+}
 
 /* Ce qui compte pour savoir s'il reste du travail non sauvegardé : ce que le
    déclarant a écrit, pas le moment où il a ouvert une page. */
@@ -24228,6 +24242,14 @@ function svgActiviteCode() {
 
 const NOTES_VERSION = [
 
+  {
+    date: '2026-10-16',
+    version: 'v2026.10.16-2',
+    titre: "La BASE s'ouvre sans avertissement, sa boussole ramène à la BAF",
+    corps: `
+<p><b>Passer de la BAF à la BASE, et revenir</b> (Arthur et Émilie). Le bouton « Outil 3 — BASE » de l'accueil n'affiche plus l'avertissement « vous allez quitter la page » : le dossier en cours est enregistré dans le navigateur juste avant, et il est là au retour (si le navigateur ne peut pas l'enregistrer, l'avertissement reste, pour ne rien perdre). Dans la BASE, le bouton « ← La BAF » disparaît : la boussole du bandeau ramène à l'accueil de la BAF, comme elle ramène à l'accueil dans la BAF ; trois clics rapides ouvrent toujours le mode administrateur.</p>
+`
+  },
   {
     date: '2026-10-16',
     version: 'v2026.10.16-1',
