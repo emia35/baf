@@ -1094,7 +1094,7 @@ section.view.show{display:block;animation:fadein .25s ease;}
    sur le fond de la carte, tombent sous 3 pour 1 de contraste et ne se lisent
    plus comme du texte. */
 .intro-card.accueil-texte p{font-size:15.5px;line-height:1.65;margin:0 0 10px;text-align:justify;text-justify:inter-word;}
-.sigle-baf{font-weight:700;letter-spacing:.02em;}
+.sigle-baf{font-weight:700;letter-spacing:.02em;color:var(--ink);}   /* le B en noir (l'encre), le A et le F à la couleur de l'outil (passe 241) */
 .lettre-echo{color:var(--sauge-deep);}
 .outil-echo{font-weight:700;}
 .outil-echo.outil-1{color:var(--vol-comportement-texte, #46685A);}
@@ -4287,7 +4287,7 @@ html[data-theme="sombre"] .analyse-tete .rail-etape.tel-vue{color:#141A22;}
     </div>
 
     <div class="intro-card accueil-texte">
-      <p>Au cœur de nos communautés de soin, certains comportements peuvent nous troubler, voire mettre à mal le quotidien. Ces « comportements-défis » sont une tentative, pour la personne accompagnée, de répondre à un besoin, de façon plus ou moins adaptée. L'analyse fonctionnelle vise à décrypter la fonction d'un comportement qui n'est, de fait, pas là pour rien. C'est un travail d'élaboration clinique qui doit se faire <i>à plusieurs</i> et qui peut se soutenir d'outils. C'est pour cela que nous avons créé la <b class="sigle-baf">B<span class="lettre-echo">A</span><span class="lettre-echo">F</span></b>, pour vous aider à structurer votre démarche d'analyse fonctionnelle au niveau individuel (c'est l'<b class="outil-echo outil-1">outil 1</b>), au niveau écologique (c'est l'<b class="outil-echo outil-base">outil 2</b>) et à évaluer sa qualité (c'est l'<b class="outil-echo outil-icaf">outil 3</b>). La BAF ne pensera pas à votre place, donc à vous de jouer&nbsp;!</p>
+      <p>Au cœur de nos communautés de soin, certains comportements peuvent nous troubler, voire mettre à mal le quotidien. Ces « comportements-défis » sont une tentative, pour la personne accompagnée, de répondre à un besoin, de façon plus ou moins adaptée. L'analyse fonctionnelle vise à décrypter la fonction d'un comportement qui n'est, de fait, pas là pour rien. C'est un travail d'élaboration clinique qui doit se faire <i>à plusieurs</i> et qui peut se soutenir d'outils. C'est pour cela que nous avons créé la <b class="sigle-baf">B<span class="lettre-echo">A</span><span class="lettre-echo">F</span></b>, pour vous aider à structurer votre démarche d'analyse fonctionnelle au niveau individuel (c'est l'<b class="outil-echo outil-1">outil 1</b>), au niveau écologique (c'est l'<b class="outil-echo outil-base">outil 2</b>) et à évaluer sa qualité (c'est l'<b class="outil-echo outil-icaf">outil 3</b>). La <b class="sigle-baf">B<span class="lettre-echo">A</span><span class="lettre-echo">F</span></b> ne pensera pas à votre place, donc à vous de jouer&nbsp;!</p>
       <div class="signatures">
         <div><b class="signature-nom">Émilie Musard</b> — <i>Éducatrice spécialisée</i></div>
         <div><b class="signature-nom">Arthur Guillieux</b> — <i>Psychologue clinicien</i></div>
@@ -16499,7 +16499,7 @@ const _CONTROLES = [
       const reperes = document.querySelectorAll('#view-reperes .crumb').length;
       return _bancEgal('numéros | fonds distincts | texte | échos colorés | Repères sans « Accueil »',
         'Outil 1 — RDAF | Outil 2 — BASE | Outil 3 — ICAF | true | true | true | 0',
-        [nums, distincts, texte.includes('au niveau individuel (c\'est l\'outil 1), au niveau écologique (c\'est l\'outil 2) et à évaluer sa qualité (c\'est l\'outil 3)') && /donc à vous de jouer\s!$/.test(texte.trim()), couleursEcho, reperes].join(' | '));
+        [nums, distincts, document.querySelectorAll('#view-accueil .accueil-texte .sigle-baf').length === 2 && [...document.querySelectorAll('#view-accueil .accueil-texte .sigle-baf')].every(b => getComputedStyle(b).color !== getComputedStyle(b.querySelector('.lettre-echo')).color && getComputedStyle(b).color === getComputedStyle(document.documentElement).getPropertyValue('--ink').trim().replace(/^#(..)(..)(..)$/, (m, r, g, b2) => 'rgb(' + [r, g, b2].map(h => parseInt(h, 16)).join(', ') + ')')) && texte.includes('au niveau individuel (c\'est l\'outil 1), au niveau écologique (c\'est l\'outil 2) et à évaluer sa qualité (c\'est l\'outil 3)') && /donc à vous de jouer\s!$/.test(texte.trim()), couleursEcho, reperes].join(' | '));
     } finally { if (vue) route(vue.replace(/^view-/, '')); }
   }},
 
@@ -24259,6 +24259,14 @@ function svgActiviteCode() {
 
 const NOTES_VERSION = [
 
+  {
+    date: '2026-10-16',
+    version: 'v2026.10.16-4',
+    titre: "Le sigle BAF à ses couleurs dans le texte d'accueil",
+    corps: `
+<p><b>Dans le texte d'accueil, BAF s'écrit comme dans l'en-tête</b> (Arthur et Émilie) : le B en noir, le A et le F en vert, les deux fois qu'il apparaît (la seconde, « La BAF ne pensera pas à votre place », était restée en texte simple, et le B de la première prenait le gris du paragraphe).</p>
+`
+  },
   {
     date: '2026-10-16',
     version: 'v2026.10.16-3',
