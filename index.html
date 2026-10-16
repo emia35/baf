@@ -1125,6 +1125,21 @@ body.tool-baf #view-baf-accueil .hero h1 i{color:var(--sauge-deep);}
 #view-baf-accueil .intro-card p.avant-commencer{font-size:14.5px;line-height:1.6;margin:0;}
 /* L'accueil de l'outil 2 reprend l'en-tête de l'outil 1, dans les couleurs de l'outil 2 (Arthur, 15/09/2026). */
 #view-idc-accueil .hero{padding:22px 0 16px;}
+/* L'outil 3, ses deux indices (passe 242) : la page de choix et celle de l'ICASE ont l'en-tête de l'accueil de l'ICAF, dans le rosé de l'outil. */
+:is(#view-indices,#view-icase) .hero{padding:22px 0 16px;}
+:is(#view-indices,#view-icase) .hero svg.bigrose{width:50px;height:50px;margin-bottom:6px;color:var(--prune);}
+:is(#view-indices,#view-icase) .hero svg.bigrose path[fill="var(--sauge)"]{fill:var(--rose);}
+:is(#view-indices,#view-icase) .hero .kicker{font-size:11px;margin-bottom:6px;color:var(--slate);}
+:is(#view-indices,#view-icase) .hero h1{font-size:28px;margin-bottom:0;}
+:is(#view-indices,#view-icase) .hero h1 i,:is(#view-indices,#view-icase) .hero .lettre-echo{color:var(--rose-deep);}
+:is(#view-indices,#view-icase) .intro-card{padding:20px 28px;margin-bottom:30px;}
+#view-indices .entrees{margin-top:0;}
+#view-indices .entree-card{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;}
+#view-indices .entree-card .entree-cta{margin-top:auto;padding-top:5px;}
+#view-indices .entree-card p{margin-bottom:16px;}
+.badge-construction{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--prune-deep);background:var(--rose-pale);border-radius:999px;padding:4px 12px;margin-bottom:12px;}
+.lien-retour-indices{background:none;border:0;padding:0;font:inherit;font-style:normal;font-weight:600;color:var(--prune);text-decoration:underline;cursor:pointer;}
+@media(max-width:680px){:is(#view-indices,#view-icase) .hero h1{font-size:23px;} :is(#view-indices,#view-icase) .intro-card{padding:18px 18px;}}
 #view-idc-accueil .hero svg.bigrose{width:50px;height:50px;margin-bottom:6px;}
 #view-idc-accueil .hero .kicker{font-size:11px;margin-bottom:6px;}
 #view-idc-accueil .hero h1{font-size:28px;margin-bottom:0;}
@@ -4308,10 +4323,10 @@ html[data-theme="sombre"] .analyse-tete .rail-etape.tel-vue{color:#141A22;}
           <span class="titre">Analyse spatio-environnementale</span>
           <span class="desc">Cartographie des points sensibles dans un lieu donné, à un moment donné.</span>
         </a>
-        <button class="mod-btn m2 mod-icaf" onclick="route('idc-accueil')">
-          <span class="num">Outil 3 — ICAF</span>
+        <button class="mod-btn m2 mod-icaf" onclick="route('indices')">
+          <span class="num">Outil 3 — ICAF · ICASE</span>
           <span class="titre">Indice de confiance</span>
-          <span class="desc">Évaluer la qualité du processus d'analyse fonctionnelle produit.</span>
+          <span class="desc">Évaluer la qualité d'une analyse : fonctionnelle individuelle (ICAF) ou spatio-environnementale (ICASE).</span>
         </button>
       </div>
     </div>
@@ -4528,6 +4543,64 @@ html[data-theme="sombre"] .analyse-tete .rail-etape.tel-vue{color:#141A22;}
   </section>
 
 
+
+  <!-- L'outil 3 a deux indices de confiance (passe 242) : on choisit d'abord lequel. -->
+  <section id="view-indices" class="view">
+    <div class="wrap">
+      <div class="hero">
+        <svg class="bigrose" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="1">
+<circle cx="100" cy="100" r="96"/>
+<path d="M100 22 L118 100 L100 178 L82 100 Z" fill="var(--sauge)" stroke="none"/>
+<path d="M100 22 L100 178" stroke="currentColor" stroke-width="1" opacity=".4"/>
+<circle cx="100" cy="100" r="6" fill="var(--paper)" stroke="currentColor" stroke-width="2"/>
+</svg>
+        <div class="kicker">EMIA35 · B<span class="lettre-echo">A</span><span class="lettre-echo">F</span> · Outil 3</div>
+        <h1>Indice de <i>confiance</i></h1>
+      </div>
+
+      <div class="intro-card">
+        <p>Un indice de confiance évalue <b>la qualité d'un processus d'analyse</b> — ce qui a été recueilli, comment c'est organisé, ce qui en est déduit, ce qui est proposé —, jamais la personne qui l'a mené ni la personne accompagnée. La BAF en propose deux, un par niveau d'analyse. Ils suivent la même logique (le recueil, l'organisation des données, les régularités, les hypothèses, les préconisations, le document), mais ne posent pas les mêmes questions : leurs scores ne se comparent pas.</p>
+      </div>
+
+      <div class="entrees">
+        <button class="entree-card primary" onclick="route('idc-accueil')">
+          <div class="entree-icon">🧭</div>
+          <h3>ICAF — une analyse fonctionnelle individuelle</h3>
+          <p>L'Indice de Confiance pour une Analyse Fonctionnelle évalue le bilan d'analyse fonctionnelle d'une personne, mené avec le recueil des données (outil 1, le RDAF) ou par un autre moyen.</p>
+          <div class="entree-cta">Ouvrir l'ICAF →</div>
+        </button>
+        <button class="entree-card secondary" onclick="route('icase')">
+          <div class="entree-icon">🗺️</div>
+          <h3>ICASE — une analyse spatio-environnementale</h3>
+          <p>L'Indice de Confiance pour une Analyse Spatio-Environnementale évaluera l'analyse d'un lieu, menée avec la BASE (outil 2) : le plan, les épisodes posés pièce par pièce, ce que l'équipe en a tiré.</p>
+          <div class="entree-cta">En construction →</div>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section id="view-icase" class="view">
+    <div class="wrap">
+      <div class="hero">
+        <svg class="bigrose" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="1">
+<circle cx="100" cy="100" r="96"/>
+<path d="M100 22 L118 100 L100 178 L82 100 Z" fill="var(--sauge)" stroke="none"/>
+<path d="M100 22 L100 178" stroke="currentColor" stroke-width="1" opacity=".4"/>
+<circle cx="100" cy="100" r="6" fill="var(--paper)" stroke="currentColor" stroke-width="2"/>
+</svg>
+        <div class="kicker">EMIA35 · B<span class="lettre-echo">A</span><span class="lettre-echo">F</span> · Outil 3</div>
+        <h1>Indice de Confiance pour une <i>Analyse Spatio-Environnementale</i></h1>
+      </div>
+
+      <div class="intro-card">
+        <div class="badge-construction">En construction</div>
+        <p><b>L'ICASE se prépare.</b> Il évaluera la qualité d'une analyse écologique, celle d'un lieu, menée avec la BASE (outil 2) : comme l'ICAF pour une personne, il regardera le processus, pas les gens.</p>
+        <p style="margin-top:12px;">Il suivra les six mêmes étapes que l'ICAF, mais avec ses propres questions : un recueil qui couvre les rôles, les moments et les journées calmes, sur un plan fidèle ; des données organisées ; des régularités repérées (pièces, moments, endroits précis, écarts avec les pronostics) ; des hypothèses sur l'environnement, qui distinguent ce qui arrive ensemble de ce qui en est la cause ; des aménagements proposés et suivis ; un document cohérent.</p>
+        <p style="margin-top:12px;">Arthur et Émilie en écrivent la grille. Elle sera d'abord proposée à l'essai.</p>
+      </div>
+      <p class="entrees-note"><button type="button" class="lien-retour-indices" onclick="route('indices')">← Revenir aux indices de confiance</button></p>
+    </div>
+  </section>
 
   <section id="view-idc-accueil" class="view">
     <div class="wrap">
@@ -7257,7 +7330,7 @@ function route(name, fromHistory){
   const entreeParticiper = name === 'declarant' && !modeDeclarantActif();
   const isBaf = ['baf-accueil','m1','m2','m2-form','analyser','comparer','synthese','declarant','reserve'].includes(name) && !entreeParticiper;
   const isIdc = ['idc-accueil','idc-main'].includes(name);
-  const isGlobal = ['accueil','reperes','ressources','apropos','notes','parcours','charte','banc'].includes(name);
+  const isGlobal = ['accueil','reperes','ressources','apropos','notes','parcours','charte','banc','indices','icase'].includes(name);
   const bafNavGroup = document.getElementById('baf-nav-group');
   const idcNavGroup = document.getElementById('idc-nav-group');
   const globalNavGroup = document.getElementById('global-nav-group');
@@ -7370,7 +7443,7 @@ function majBarreDossierInterne(outil, surAccueilOutil) {
   const label = document.getElementById('subbar-retour-label');
   const zone = document.getElementById('subbar-dossier');
   if (label) label.textContent = subbarSurAccueilOutil
-    ? 'Accueil général'
+    ? (outil === 'idc' ? 'Indices de confiance' : 'Accueil général')
     : (outil === 'idc' ? 'Accueil indice de confiance' : 'Accueil recueil des données');
   if (!zone) return;
 
@@ -7419,7 +7492,7 @@ function majBarreDossierInterne(outil, surAccueilOutil) {
 }
 
 function retourAccueilOutil() {
-  if (subbarSurAccueilOutil) { route('accueil'); return; }
+  if (subbarSurAccueilOutil) { route(outilCourant === 'idc' ? 'indices' : 'accueil'); return; }   // de l'accueil de l'ICAF : vers le choix des indices (passe 242)
   route(outilCourant === 'idc' ? 'idc-accueil' : 'baf-accueil');
 }
 function exporterDossierCourant() {
@@ -7854,6 +7927,8 @@ const ADRESSES_VUES = {
   'comparer':     'comparer-les-codages',
   'm4':           'interpreter',
   'synthese':     'synthese',
+  'indices':      'indices-de-confiance',
+  'icase':        'icase',
   'idc-accueil':  'indice-de-confiance',
   'idc-main':     'cotation',
 };
@@ -16498,8 +16573,27 @@ const _CONTROLES = [
       const couleursEcho = new Set(echo.map(x => x.split(':')[1])).size === 3;
       const reperes = document.querySelectorAll('#view-reperes .crumb').length;
       return _bancEgal('numéros | fonds distincts | texte | échos colorés | Repères sans « Accueil »',
-        'Outil 1 — RDAF | Outil 2 — BASE | Outil 3 — ICAF | true | true | true | 0',
+        'Outil 1 — RDAF | Outil 2 — BASE | Outil 3 — ICAF · ICASE | true | true | true | 0',
         [nums, distincts, document.querySelectorAll('#view-accueil .accueil-texte .sigle-baf').length === 2 && [...document.querySelectorAll('#view-accueil .accueil-texte .sigle-baf')].every(b => getComputedStyle(b).color !== getComputedStyle(b.querySelector('.lettre-echo')).color && getComputedStyle(b).color === getComputedStyle(document.documentElement).getPropertyValue('--ink').trim().replace(/^#(..)(..)(..)$/, (m, r, g, b2) => 'rgb(' + [r, g, b2].map(h => parseInt(h, 16)).join(', ') + ')')) && texte.includes('au niveau individuel (c\'est l\'outil 1), au niveau écologique (c\'est l\'outil 2) et à évaluer sa qualité (c\'est l\'outil 3)') && /donc à vous de jouer\s!$/.test(texte.trim()), couleursEcho, reperes].join(' | '));
+    } finally { if (vue) route(vue.replace(/^view-/, '')); }
+  }},
+
+  {nom:'L\'outil 3 (passe 242) : l\'encadré rose mène au choix des deux indices ; l\'ICAF s\'ouvre comme avant et sa flèche ramène au choix ; l\'ICASE est en construction', test: () => {
+    const vue = (document.querySelector('section.view.show') || {}).id;
+    try {
+      route('accueil');
+      const rose = document.querySelector('#view-accueil .mod-btn.mod-icaf'); rose.click();
+      const surChoix = document.getElementById('view-indices').classList.contains('show') && location.hash === '#indices-de-confiance';
+      const cartes = [...document.querySelectorAll('#view-indices .entree-card')].map(c => c.querySelector('h3').textContent.split(' — ')[0]).join(',');
+      document.querySelectorAll('#view-indices .entree-card')[1].click();
+      const icase = document.getElementById('view-icase').classList.contains('show') && /En construction/i.test(document.querySelector('#view-icase .badge-construction').textContent);
+      document.querySelector('#view-icase .lien-retour-indices').click(); const retourChoix = document.getElementById('view-indices').classList.contains('show');
+      document.querySelectorAll('#view-indices .entree-card')[0].click();
+      const icaf = document.getElementById('view-idc-accueil').classList.contains('show') && document.getElementById('subbar-retour-label').textContent === 'Indices de confiance';
+      retourAccueilOutil(); const flecheChoix = document.getElementById('view-indices').classList.contains('show');
+      return _bancEgal('choix | cartes | ICASE en construction | retour | ICAF | flèche vers le choix | texte de l\'encadré',
+        'true | ICAF,ICASE | true | true | true | true | true',
+        [surChoix, cartes, icase, retourChoix, icaf, flecheChoix, /ICAF · ICASE/.test(rose.textContent)].join(' | '));
     } finally { if (vue) route(vue.replace(/^view-/, '')); }
   }},
 
@@ -21960,6 +22054,16 @@ const VUES_RESERVEES = {
     quoi: "La vue d'ensemble : les chiffres, les graphiques, les régularités repérées sur l'ensemble des épisodes déclarés.",
     qui: "Elle se construit à partir de l'ensemble des observations reçues. L'EMIA vous en restituera ce qui vous concerne."
   },
+  indices: {
+    titre: "Les indices de confiance",
+    quoi: "Deux grilles qui évaluent la qualité méthodologique d'une analyse — fonctionnelle (ICAF) ou spatio-environnementale (ICASE) : pas la personne, pas vous, le travail produit.",
+    qui: "C'est un outil interne à l'équipe."
+  },
+  icase: {
+    titre: "L'indice de confiance spatio-environnemental",
+    quoi: "Une grille qui évaluera la qualité de l'analyse d'un lieu — pas la personne, pas vous : le travail produit.",
+    qui: "C'est un outil interne à l'équipe."
+  },
   'idc-accueil': {
     titre: "L'indice de confiance",
     quoi: "Une grille qui évalue la qualité méthodologique de l'analyse fonctionnelle elle-même — pas la personne, pas vous : le travail produit.",
@@ -24261,6 +24365,14 @@ const NOTES_VERSION = [
 
   {
     date: '2026-10-16',
+    version: 'v2026.10.16-5',
+    titre: "L'indice de confiance a deux entrées : l'ICAF et l'ICASE",
+    corps: `
+<p><b>L'outil 3, « Indice de confiance », s'ouvre sur un choix</b> (Arthur et Émilie). L'encadré rose de l'accueil mène à une page qui distingue les deux indices : l'<b>ICAF</b>, pour une analyse fonctionnelle individuelle (avec le RDAF ou par un autre moyen), qui s'ouvre comme avant ; et l'<b>ICASE</b>, Indice de Confiance pour une Analyse Spatio-Environnementale, pour l'analyse d'un lieu menée avec la BASE, <b>en construction</b> : sa page dit ce qu'il évaluera. Les deux suivent la même logique (le recueil, l'organisation, les régularités, les hypothèses, les préconisations, le document) avec des questions différentes ; leurs scores ne se comparent pas. Depuis l'accueil de l'ICAF, la flèche « Indices de confiance » ramène à ce choix. La FAQ et le lexique de Repères suivent.</p>
+`
+  },
+  {
+    date: '2026-10-16',
     version: 'v2026.10.16-4',
     titre: "Le sigle BAF à ses couleurs dans le texte d'accueil",
     corps: `
@@ -26433,7 +26545,7 @@ const REPERES = [
        r: `<p>Non. Elle ne pose aucun diagnostic et ne formule aucune hypothèse. Elle vous aide à structurer votre démarche au niveau individuel — le recueil et l'analyse des données (outil 1) —, au niveau écologique — le lieu où se produisent les comportements-défis (outil 2) — et, si vous le souhaitez, à en évaluer la qualité <b>après</b> (outil 3, facultatif).</p>
            <p>L'analyse fonctionnelle elle-même — formuler des hypothèses, décider quoi proposer — reste votre travail. Tout ce que l'outil fait apparaître, catégories, régularités, pourcentages, est un matériau de discussion, jamais une conclusion.</p>`},
       {q: "Qui fait quoi dans la BAF ?",
-       r: `<p>La BAF réunit trois outils : le <b>RDAF</b> (outil 1), qui recueille et prépare les données — un Préambule, Recueillir, Analyser, une Synthèse —, la <b>BASE</b> (outil 2), qui cartographie les comportements-défis dans un lieu, pièce par pièce, et l'<b>ICAF</b> (outil 3, facultatif), qui évalue la qualité d'une analyse fonctionnelle terminée.</p>
+       r: `<p>La BAF réunit trois outils : le <b>RDAF</b> (outil 1), qui recueille et prépare les données — un Préambule, Recueillir, Analyser, une Synthèse —, la <b>BASE</b> (outil 2), qui cartographie les comportements-défis dans un lieu, pièce par pièce, et l'<b>indice de confiance</b> (outil 3, facultatif), qui évalue la qualité d'une analyse terminée : l'<b>ICAF</b> pour une analyse fonctionnelle individuelle, l'<b>ICASE</b> (en construction) pour une analyse spatio-environnementale.</p>
            <p><b>Le déclarant</b> remplit le recueil : il décrit ce qu'il observe là où il accompagne la personne. <b>L'analyste</b> analyse les données (il les range, les catégorise, les interprète), puis fait l'analyse fonctionnelle — dans la démarche proposée, c'est le binôme formé par le référent et le clinicien. <b>Le cotateur</b>, si l'équipe choisit d'évaluer son analyse, remplit l'ICAF.</p>`},
       {q: "Comment commencer une analyse fonctionnelle avec la BAF ?",
        r: `<p>Dans cet ordre :</p>
@@ -26552,7 +26664,8 @@ const LEXIQUE_BAF = {
   "RDAF": "L'outil 1, le recueil de données. Il se déroule en quatre modules — Préambule, Recueillir, Analyser (déclaratif brut, Découper, Catégoriser, Interpréter) et Synthèse. Il prépare l'analyse fonctionnelle, il ne la produit pas.",
   "analyser": "Le troisième module du RDAF, celui du travail de l'analyste. Il se fait un épisode à la fois, sur quatre panneaux qui glissent comme un carrousel : Déclaratif brut, Découper, Catégoriser, Interpréter. On y voit toujours l'étape d'avant pour faire la suivante.",
   "phase": "Dans la séquence d'un épisode, une suite antécédent → CD → intervention. Un épisode a une ou plusieurs phases : un CD qui en suit un autre, après une intervention, ouvre la phase suivante.",
-  "ICAF": "L'outil 3, l'indice de confiance. Il évalue la qualité méthodologique d'une analyse fonctionnelle terminée — pas la personne, pas les déclarants.",
+  "ICASE": "Indice de Confiance pour une Analyse Spatio-Environnementale : le second indice de l'outil 3 (en construction). Il évaluera la qualité de l'analyse d'un lieu, menée avec la BASE.",
+  "ICAF": "Le premier indice de l'outil 3, l'indice de confiance. Il évalue la qualité méthodologique d'une analyse fonctionnelle terminée — pas la personne, pas les déclarants.",
   "préambule": "Ce que l'équipe sait déjà de la personne avant toute observation : lieux de vie, journée type, piste somatique, vase de tension connu. C'est le point de départ commun à tous les déclarants.",
   "analyste": "Celui ou celle qui analyse les données (les range, les catégorise, les interprète), puis fait l'analyse fonctionnelle. Dans la démarche proposée, c'est le binôme formé par le référent et le clinicien.",
   "référent": "Le professionnel qui porte la démarche : il la prépare, lance le recueil, reçoit les fichiers déclarants et fait l'analyse avec le clinicien qui la supervise.",
@@ -26586,7 +26699,7 @@ const LEXIQUE_CLASSE = {
   "épisode": "outil", "volet": "outil", "intervention": "outil", "CD à la suite": "outil", "découpage": "outil", "séquence": "outil",
   "crise": "outil", "pattern": "outil", "gradation": "outil", "indice de confiance": "outil",
   "déclarant": "outil", "source": "outil", "espace": "outil",
-  "BAF": "outil", "RDAF": "outil", "ICAF": "outil", "préambule": "outil",
+  "BAF": "outil", "RDAF": "outil", "ICAF": "outil", "ICASE": "outil", "préambule": "outil",
   "analyste": "outil", "référent": "outil", "cotateur": "outil",
   "fichier socle": "outil", "fichier déclarant": "outil", "période observée": "outil",
   "vase de tension": "outil", "double codage": "outil", "typologie commune": "outil", "codage vierge": "outil", "analyser": "outil", "phase": "outil",
