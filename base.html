@@ -510,6 +510,12 @@ table.croise td.n{white-space:normal;}
 .puces{display:flex;flex-wrap:wrap;gap:6px;}
 .puce{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:var(--surface);border:1.5px solid var(--line);font-size:12.5px;color:var(--ink);}
 .puce.on{background:var(--sauge-pale);border-color:var(--sauge-deep);}
+/* La journée type (passe 243) : une puce par pièce et par moment ; « certains jours » en pointillés. */
+.puce.parfois{background:var(--sauge-pale);border-color:var(--sauge-deep);border-style:dashed;}
+.journee-moment{padding:9px 0;border-top:1px solid var(--line);}
+.journee-moment:first-child{border-top:0;}
+.journee-pieces{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+.journee-pieces .puce{cursor:pointer;font:inherit;font-size:12.5px;}
 
 /* ── Recueillir ── */
 .episode{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;padding:12px 0;border-top:1px solid var(--line-feuille);}
@@ -718,6 +724,11 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
       <button type="button" class="bt petit" onclick="ajouterMoment()">＋ Un moment</button>
     </div>
     <div class="feuille">
+      <div class="surtitre">La journée type <span class="discret">· facultatif</span></div>
+      <p class="lecture">Où se tient le groupe, moment par moment ? Touchez une pièce une fois : il y est ; deux fois : certains jours seulement. La synthèse pourra alors rapporter les épisodes au temps passé dans chaque pièce : une salle où l'on vit cinq heures par jour en recueille forcément plus qu'un hall qu'on traverse.</p>
+      <details class="repli" id="journee-repli" ontoggle="if (this.open) rendreJournee()"><summary id="journee-resume">Où est le groupe, moment par moment ?</summary><div id="journee"></div></details>
+    </div>
+    <div class="feuille">
       <div class="surtitre">Les comportements-défis suivis</div>
       <p class="lecture">Une liste libre, construite avec l'équipe. Décrivez un <b>geste observable</b>, pas une étiquette : « crie », « jette des objets », « sort de la salle en courant », plutôt qu'« agressivité ».</p>
       <div class="liste-edit" id="liste-types"></div>
@@ -889,7 +900,7 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
    chose lue de la BAF, en lecture : le choix clair / sombre, pour s'ouvrir dans le même thème.
    ══════════════════════════════════════════════════════════════════════════════════════════════ */
 
-const VERSION_BASE = 'BASE v2026.10.16-3';
+const VERSION_BASE = 'BASE v2026.10.16-6';
 const CLE_SOCLE = 'base-dossier-v1', CLE_DECL = 'base-declarant-v1', CLE_MODE = 'base-mode', CLE_THEME = 'base-theme';
 const TYPES_ZONE = [['activite', "Salle d'activité"], ['sejour', 'Séjour, salon'], ['repas', 'Repas'], ['accueil', 'Accueil'], ['circulation', 'Circulation'],
   ['chambre', 'Chambre'], ['repos', 'Salle de repos'], ['calme', 'Salle de mise au calme'], ['snoezelen', 'Salle multisensorielle'], ['soins', 'Soins, infirmerie'],
@@ -936,7 +947,7 @@ function dossierVide() {
   return {
     idDossier: nouvelId('lieu'), cree: new Date().toISOString(), modifie: '',
     b1: {lieu: '', dates: {debut: '', fin: ''}, echelle: null, fiches: {}, plan: {niveaux: [{id: 'n0', nom: 'Rez-de-chaussée'}], pieces: [], elements: []},
-      moments: MOMENTS_DEFAUT.map(m => ({id: nouvelId('m'), nom: m[0], debut: m[1], fin: m[2]})), typesCD: []},
+      moments: MOMENTS_DEFAUT.map(m => ({id: nouvelId('m'), nom: m[0], debut: m[1], fin: m[2]})), typesCD: [], journee: {}},
     b2: {episodes: [], calmes: []},
     contributions: {}, pronostics: {}, exporte: ''
   };
@@ -987,6 +998,15 @@ function normaliserPlan(d) {
   if (!d.b1.fiches || typeof d.b1.fiches !== 'object' || Array.isArray(d.b1.fiches)) d.b1.fiches = {};
   const pids = new Set((pl.pieces || []).map(p => p.id));
   Object.keys(d.b1.fiches).forEach(id => { if (!pids.has(id) || !d.b1.fiches[id] || typeof d.b1.fiches[id] !== 'object') delete d.b1.fiches[id]; });
+  // La journée type (passe 243) : pour chaque moment, les pièces où se tient le groupe (1) ou certains jours seulement (0,5) ; un moment ou une pièce disparus sont écartés.
+  if (!d.b1.journee || typeof d.b1.journee !== 'object' || Array.isArray(d.b1.journee)) d.b1.journee = {};
+  const mids = new Set((d.b1.moments || []).map(m => m.id));
+  Object.keys(d.b1.journee).forEach(mid => {
+    const l = d.b1.journee[mid];
+    if (!mids.has(mid) || !l || typeof l !== 'object' || Array.isArray(l)) { delete d.b1.journee[mid]; return; }
+    Object.keys(l).forEach(pid => { if (!pids.has(pid) || (l[pid] !== 1 && l[pid] !== .5)) delete l[pid]; });
+    if (!Object.keys(l).length) delete d.b1.journee[mid];
+  });
   if (d.idContribution === undefined && (!d.pronostics || typeof d.pronostics !== 'object' || Array.isArray(d.pronostics))) d.pronostics = {};   // les pronostics du référent (passe 231)
   return d;
 }
@@ -3261,8 +3281,8 @@ function majLieu() { D.b1.lieu = $('b1-lieu').value; D.b1.dates.debut = $('b1-de
 function rendreListes() {
   $('liste-moments').innerHTML = D.b1.moments.map((m, i) => '<div class="ligne">' +
     '<input type="text" value="' + esc(m.nom) + '" aria-label="Nom du moment" onchange="D.b1.moments[' + i + '].nom=this.value;persister()">' +
-    '<input type="time" value="' + esc(m.debut) + '" aria-label="Début" onchange="D.b1.moments[' + i + '].debut=this.value;persister()">' +
-    '<input type="time" value="' + esc(m.fin) + '" aria-label="Fin" onchange="D.b1.moments[' + i + '].fin=this.value;persister()">' +
+    '<input type="time" value="' + esc(m.debut) + '" aria-label="Début" onchange="D.b1.moments[' + i + '].debut=this.value;persister();rendreJournee()">' +
+    '<input type="time" value="' + esc(m.fin) + '" aria-label="Fin" onchange="D.b1.moments[' + i + '].fin=this.value;persister();rendreJournee()">' +
     '<button type="button" class="x" title="Retirer ce moment" onclick="retirerMoment(' + i + ')">✕</button></div>').join('') ||
     '<div class="vide">Aucun moment pour l\'instant.</div>';
   $('liste-types').innerHTML = D.b1.typesCD.map((t, i) => '<div class="ligne simple">' +
@@ -3270,7 +3290,58 @@ function rendreListes() {
     '<button type="button" class="x" title="Retirer" onclick="retirerType(' + i + ')">✕</button></div>').join('') ||
     '<div class="vide">Aucun comportement pour l\'instant : ajoutez ceux que l\'équipe veut suivre.</div>';
   const pris = new Set(D.b1.typesCD.map(t => t.nom.toLowerCase()));
+  rendreJournee();
   $('suggestions-cd').innerHTML = SUGGESTIONS_CD.map(s => '<button type="button" class="puce' + (pris.has(s.toLowerCase()) ? ' on' : '') + '" onclick="ajouterType(\'' + esc(s).replace(/'/g, '&#39;') + '\')">' + (pris.has(s.toLowerCase()) ? '✓ ' : '＋ ') + esc(s) + '</button>').join('');
+}
+/* ══ La journée type (passe 243, Arthur et Émilie) ══
+   Le référent coche une fois, pour chaque moment de la journée, les pièces où se tient le groupe (1), ou certains jours seulement (0,5). La BASE en
+   tire des heures de présence par jour pour chaque pièce, puis, sur la période, un nombre d'épisodes pour 10 h de présence : une salle où l'on vit cinq
+   heures par jour recueille mécaniquement plus d'épisodes qu'un hall qu'on traverse (le taux de base). Le groupe partagé entre deux pièces : on coche
+   les deux, chacune compte le temps entier (c'est le temps où la pièce est occupée). Sous SEUIL_PRESENCE heures de présence en tout, pas de taux : une
+   poignée de minutes ferait exploser le chiffre. C'est facultatif : sans journée type, rien ne change. D.b1.journee = {idMoment: {idPièce: 1 | 0.5}}. */
+const SEUIL_PRESENCE = 5;
+function minutesDe(t) { const m = /^(\d{1,2}):(\d{2})$/.exec(t || ''); return m ? +m[1] * 60 + +m[2] : null; }
+function dureeMoment(m) { const a = minutesDe(m && m.debut), b = minutesDe(m && m.fin); return a === null || b === null || b <= a ? 0 : b - a; }
+const dureeTexte = min => { min = Math.round(min); const h = Math.floor(min / 60), m = min % 60; return h ? h + ' h' + (m ? ' ' + String(m).padStart(2, '0') : '') : m + ' min'; };
+function journee() { if (!D.b1.journee || typeof D.b1.journee !== 'object' || Array.isArray(D.b1.journee)) D.b1.journee = {}; return D.b1.journee; }
+function journeeRemplie() { return Object.values(journee()).some(l => l && Object.keys(l).length); }
+function presenceDe(mid, pid) { const l = journee()[mid]; return l && l[pid] ? l[pid] : 0; }
+function basculerPresence(mid, pid) {
+  const j = journee(), l = j[mid] = j[mid] || {}, v = l[pid] || 0, suite = v === 0 ? 1 : v === 1 ? .5 : 0;
+  if (suite) l[pid] = suite; else delete l[pid];
+  if (!Object.keys(l).length) delete j[mid];
+  persister(); rendreJournee();
+}
+// Les heures de présence du groupe dans chaque pièce, pour une journée type (ou pour un seul moment).
+function heuresParJour(seulMoment) {
+  const h = {};
+  D.b1.moments.forEach(m => { if (seulMoment && m.id !== seulMoment) return; const d = dureeMoment(m) / 60; Object.entries(journee()[m.id] || {}).forEach(([pid, v]) => { if (pieceParId(pid)) h[pid] = (h[pid] || 0) + d * v; }); });
+  return h;
+}
+// Les jours observés : ceux où quelque chose a été déclaré, un épisode ou « rien à signaler ».
+function joursObserves(eps, calmes) { return new Set(eps.map(e => e.date).concat((calmes || []).map(c => c.date)).filter(Boolean)).size; }
+function calmesFiltres(f) { return D.b2.calmes.filter(x => (!f.debut || x.date >= f.debut) && (!f.fin || x.date <= f.fin)); }
+// Le taux de chaque pièce : épisodes pour 10 h de présence du groupe sur la période (pas de taux sous SEUIL_PRESENCE heures).
+function tauxParPiece(eps, calmes, seulMoment) {
+  const h = heuresParJour(seulMoment), J = joursObserves(eps, calmes), comptes = comptesParPiece(eps), taux = {}, presence = {};
+  pieces().forEach(p => { const tot = (h[p.id] || 0) * J; presence[p.id] = tot; if (tot >= SEUIL_PRESENCE) taux[p.id] = Math.round((comptes[p.id] || 0) / tot * 100) / 10; });
+  return {taux, presence, heures: h, jours: J, comptes, max: Math.max(0, ...Object.values(taux))};
+}
+// Les épisodes déclarés à un moment où, d'après la journée type, le groupe n'est pas dans cette pièce (seulement pour les moments remplis).
+function horsJournee(eps) { const j = journee(); return eps.filter(e => pieceParId(e.piece) && j[e.moment] && Object.keys(j[e.moment]).length && !presenceDe(e.moment, e.piece)); }
+function rendreJournee() {
+  const el = $('journee'), res = $('journee-resume'); if (!el || !D) return;
+  const ps = pieces().slice().sort((a, b) => rangNiveau(niveauDe(a)) - rangNiveau(niveauDe(b)) || (estExterieur(a.type) - estExterieur(b.type)) || a.nom.localeCompare(b.nom, 'fr'));
+  const remplis = D.b1.moments.filter(m => Object.keys(journee()[m.id] || {}).length).length;
+  if (res) res.textContent = 'Où est le groupe, moment par moment ?' + (remplis ? ' · ' + remplis + ' moment' + (remplis > 1 ? 's' : '') + ' sur ' + D.b1.moments.length : '');
+  if (!ps.length || !D.b1.moments.length) { el.innerHTML = '<div class="vide">Dessinez d\'abord le plan, et gardez au moins un moment de la journée.</div>'; return; }
+  const multi = niveaux().length > 1, h = heuresParJour();
+  el.innerHTML = D.b1.moments.map(m => { const d = dureeMoment(m);
+    return '<div class="journee-moment"><div><b>' + esc(m.nom || 'Moment sans nom') + '</b> <span class="discret">' + (d ? esc(m.debut) + '–' + esc(m.fin) + ' · ' + dureeTexte(d) : 'horaires à compléter, plus haut') + '</span></div><div class="journee-pieces">' +
+      ps.map(p => { const v = presenceDe(m.id, p.id);
+        return '<button type="button" class="puce' + (v === 1 ? ' on' : v ? ' parfois' : '') + '" aria-pressed="' + (v ? 'true' : 'false') + '" title="' + (v === 1 ? 'Le groupe est là' : v ? 'Certains jours seulement' : 'Le groupe n\'est pas là') + '" onclick="basculerPresence(\'' + esc(m.id) + '\', \'' + esc(p.id) + '\')">' +
+          (v === 1 ? '✓ ' : v ? '½ ' : '') + esc(p.nom) + (multi ? ' <span class="discret">· ' + esc(nomNiveau(niveauDe(p))) + '</span>' : '') + '</button>'; }).join('') + '</div></div>'; }).join('') +
+    (Object.keys(h).length ? '<p class="discret" style="margin-top:10px"><b>Temps de présence par jour</b> : ' + ps.filter(p => h[p.id]).sort((a, b) => h[b.id] - h[a.id]).map(p => esc(p.nom) + ' ' + dureeTexte(h[p.id] * 60)).join(' · ') + '.</p>' : '');
 }
 function ajouterMoment() { D.b1.moments.push({id: nouvelId('m'), nom: '', debut: '', fin: ''}); persister(); rendreListes(); const l = $('liste-moments').querySelectorAll('input[type=text]'); if (l.length) l[l.length - 1].focus(); }
 function utilise(champ, id) { return (D.b2.episodes || []).filter(e => champ === 'moment' ? e.moment === id : (e.types || []).indexOf(id) >= 0).length; }
@@ -3657,6 +3728,11 @@ function questionsEquipe(eps) {
   const L = lectureDuPlan(D.b1);
   cr.attendus.slice(0, 2).forEach(p => q.push('Dans ' + nm(p.id) + ', ' + nb(p.eps, 'épisode') + ', et le plan y lit : ' + p.titres.slice(0, 3).map(t => t.charAt(0).toLowerCase() + t.slice(1)).join(' ; ') + '. Que se passe-t-il là juste avant que ça monte ? Qu\'y essayer cette semaine, sans rien acheter ?'));
   cr.surprises.slice(0, 2).forEach(p => q.push('Dans ' + nm(p.id) + ', ' + nb(p.eps, 'épisode') + ' et rien que le plan ou les fiches expliquent. Qu\'est-ce que le plan ne montre pas ici : qui est là, à quelle heure, ce qu\'on y attend, ce qu\'on y entend de la pièce d\'à côté ? Et si l\'on y passait dix minutes, à hauteur de la personne ?'));
+  if (journeeRemplie()) {   // la journée type (passe 243) : la pièce la plus chargée n'est pas forcément celle où il y a le plus d'épisodes
+    const fm = filtres(), t = tauxParPiece(eps, calmesFiltres(fm), fm.moment), avecN = pieces().filter(p => t.comptes[p.id]).sort((a, b) => t.comptes[b.id] - t.comptes[a.id]);
+    const avecT = Object.keys(t.taux).filter(id => t.comptes[id]).sort((a, b) => t.taux[b] - t.taux[a]);
+    if (avecN.length && avecT.length && avecN[0].id !== avecT[0]) q.push(nm(avecN[0].id) + ' a le plus d\'épisodes (' + t.comptes[avecN[0].id] + ')' + (t.heures[avecN[0].id] ? ', mais le groupe y passe ' + dureeTexte(t.heures[avecN[0].id] * 60) + ' par jour' : '') + '. Rapporté au temps de présence, c\'est ' + nm(avecT[0]) + ' qui est le plus chargé (' + virguleSynthese(t.taux[avecT[0]].toFixed(1)) + ' pour 10 h). Que se passe-t-il là, dans ce temps plus court ?');
+  }
   cr.calmes.slice(0, 1).forEach(p => q.push(nm(p.id) + ' : le plan y lit des points de vigilance, et aucun épisode n\'y est déclaré. Qu\'est-ce qui protège cette pièce (un adulte présent, un temps court, un choix possible) ? Qu\'en retenir pour les autres ? Ou n\'y déclare-t-on simplement pas ?'));
   concentrations(eps).slice(0, 2).forEach(c => { const p = pieceParId(c.id); q.push('Dans ' + nm(c.id) + ', les épisodes se rassemblent ' + decrireEndroit(p, c.x, c.y, L) + '. Qu\'y a-t-il à cet endroit (une file, un bruit, un passage, un regard) ? Et à l\'autre bout de la pièce, qu\'est-ce qui est différent ?'); });
   const pr = comparaisonPronostics(eps);
@@ -3664,6 +3740,8 @@ function questionsEquipe(eps) {
     pr.surprises.slice(0, 1).forEach(id => q.push('Personne n\'avait cité ' + nm(id) + ', et il y a ' + nb(pr.comptes[id], 'épisode') + '. Qu\'est-ce qui nous échappait : qui y est, quand, ce qu\'on y fait ?'));
     pr.calmes.slice(0, 1).forEach(id => q.push(nm(id) + ' était cité par ' + nb(pr.citees.find(c => c.id === id).citations, 'professionnel') + ', et il y a peu d\'épisodes. Qu\'est-ce qui nous faisait penser le contraire, et que peut-on en apprendre ?'));
   }
+  const hj = horsJournee(eps);
+  if (hj.length >= 2) q.push(nb(hj.length, 'épisode') + ' ont été déclarés dans une pièce où, d\'après la journée type, le groupe n\'est pas à ce moment-là. Qui y était, et pourquoi ? Ou la journée type est-elle à revoir ?');
   const cx = bilanContexte(eps);
   if (cx.remplis >= 5 && cx.lignes.length) q.push('Ce qui est le plus souvent remarqué autour des épisodes : ' + cx.lignes.slice(0, 2).map(l => '« ' + l.lib.charAt(0).toLowerCase() + l.lib.slice(1).replace(/ \(.*$/, '') + ' » (' + Math.round(l.n / cx.remplis * 100) + ' %)').join(', ') + '. Et dans les moments calmes, au même endroit : est-ce aussi présent ?');
   q.push('Si l\'on ne devait essayer qu\'un seul changement d\'environnement cette semaine, dans quelle pièce, et lequel ? Comment verra-t-on, dans trois semaines, si quelque chose a bougé ?');
@@ -3678,7 +3756,7 @@ function htmlQuestions(eps) {
 }
 function texteQuestions(eps) {
   const f = filtres(), fil = [f.moment && nomMoment(f.moment), f.type && (f.type === '_autre' ? 'Autre' : nomType(f.type)), (f.debut || f.fin) && ((f.debut ? 'du ' + dateFr(f.debut) : '') + (f.fin ? ' au ' + dateFr(f.fin) : ''))].filter(Boolean).join(' · ');
-  return 'Questions pour l\'équipe — ' + (D.b1.lieu || 'le lieu') + ' (' + nb(eps.length, 'épisode') + (fil ? ' · ' + fil : '') + ')\n\n' + questionsEquipe(eps).map((t, i) => (i + 1) + '. ' + t).join('\n\n') + '\n\nDes questions, pas des conclusions : la carte compte, elle n\'explique pas. BASE, outil 3 de la BAF (EMIA35).';
+  return 'Questions pour l\'équipe — ' + (D.b1.lieu || 'le lieu') + ' (' + nb(eps.length, 'épisode') + (fil ? ' · ' + fil : '') + ')\n\n' + questionsEquipe(eps).map((t, i) => (i + 1) + '. ' + t).join('\n\n') + '\n\nDes questions, pas des conclusions : la carte compte, elle n\'explique pas. BASE, outil 2 de la BAF (EMIA35).';
 }
 function copierSecours(texte, fait) {
   const t = document.createElement('textarea'); t.value = texte; t.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(t); t.select();
@@ -3745,8 +3823,13 @@ const FICHE_SIGNES = ['○', '◐', '●'];
 function couleurFiche(niveau, sombre) { return niveau <= 0 ? (sombre ? ZERO_SOMBRE : ZERO_CLAIR) : niveau === 1 ? (sombre ? '#4A5D7A' : '#B4C1D7') : (sombre ? '#6E88B3' : '#6F87AE'); }
 const virguleSynthese = x => String(x).replace('.', ',');
 // Ce que chaque pièce vaut pour le calque choisi : la valeur (qui donne la couleur), ce qu'on écrit dedans, et sous le nom le nombre d'épisodes.
-function valeursCalque(cq, eps) {
+function valeursCalque(cq, eps, o) {
   const comptes = comptesParPiece(eps);
+  if (cq === 'episodes' && o && o.taux) {   // par heure de présence (passe 243) : la couleur est le taux ; écrit dedans le taux (ou « — »), dessous l'effectif et le temps de présence par jour
+    const t = tauxParPiece(eps, o.calmes || [], o.moment), et = {}, sous = {};
+    pieces().forEach(p => { et[p.id] = t.taux[p.id] !== undefined ? virguleSynthese(t.taux[p.id].toFixed(1)) : '—'; sous[p.id] = nb(comptes[p.id] || 0, 'épisode') + (t.heures[p.id] ? ' · ' + dureeTexte(t.heures[p.id] * 60) + '/j' : ''); });
+    return {valeurs: t.taux, etiquettes: et, sous, max: t.max, taux: t};
+  }
   if (cq === 'episodes') return {valeurs: comptes, etiquettes: null, sous: null, max: Math.max(0, ...Object.values(comptes))};
   const L = lectureDuPlan(D.b1), v = {}, et = {}, sous = {};
   pieces().forEach(p => {
@@ -3765,7 +3848,7 @@ function valeursCalque(cq, eps) {
    tous les niveaux. À nombre égal d'épisodes, une petite pièce paraît donc plus chaude qu'une grande : le nombre écrit dans chaque pièce dit combien
    il y en a. La grille est alignée sur l'origine du plan (0,25 case pour un petit lieu, 0,5 puis 1 pour un grand). Rien n'est mémorisé : c'est un calcul. */
 const GAMMA_CHALEUR = .75, NIVEAUX_CHALEUR = 32;
-let modeCarte = 'piece', montrerCroix = false;   // « piece » | « chaleur » ; les croix des épisodes par-dessus
+let modeCarte = 'piece', montrerCroix = false;   // « piece » | « taux » (par heure de présence, passe 243) | « chaleur » ; les croix des épisodes par-dessus
 function pasThermique() { const A = pieces().reduce((a, p) => a + aireDe(p), 0); return A <= 800 ? .25 : A <= 3000 ? .5 : 1; }
 const sigmaPiece = p => Math.min(3, Math.max(1, .09 * Math.sqrt(aireDe(p))));
 // Les cases de la grille dont le centre est dans la pièce, hors de ses enclaves.
@@ -3841,14 +3924,15 @@ function svgCroixCarte(eps, niveau) {
   eps.forEach(e => { const p = pieceParId(e.piece); if (!p || niveauDe(p) !== niveau || !posValide(e.pos)) return; const a = pointDepuisPos(p, e.pos); s += '<circle class="croix-point" cx="' + a.x + '" cy="' + a.y + '" r=".17"/>'; });
   return s + '</g>';
 }
-function choisirModeCarte(m) { modeCarte = m === 'chaleur' ? 'chaleur' : 'piece'; majSynthese(); }
+function choisirModeCarte(m) { modeCarte = m === 'chaleur' ? 'chaleur' : m === 'taux' && journeeRemplie() ? 'taux' : 'piece'; majSynthese(); }
 function basculerCroixCarte(b) { montrerCroix = !!b; majSynthese(); }
 // Sous les calques : « Par pièce » ou « Carte thermique » (pour le calque des épisodes), et les croix.
 function rendreModeCarte() {
   const el = $('mode-carte'); if (!el) return;
   if (calque !== 'episodes') { el.innerHTML = ''; return; }
-  const bouton = (m, nom) => '<button type="button" role="tab" class="' + (modeCarte === m ? 'on' : '') + '" aria-selected="' + (modeCarte === m) + '" onclick="choisirModeCarte(\'' + m + '\')">' + nom + '</button>';
-  el.innerHTML = '<div class="segment" role="tablist" aria-label="Façon de colorer la carte">' + bouton('piece', 'Par pièce') + bouton('chaleur', 'Carte thermique') + '</div>' +
+  const bouton = (m, nom, off) => '<button type="button" role="tab" class="' + (modeCarte === m ? 'on' : '') + '" aria-selected="' + (modeCarte === m) + '"' + (off ? ' disabled title="' + esc(off) + '"' : '') + ' onclick="choisirModeCarte(\'' + m + '\')">' + nom + '</button>';
+  el.innerHTML = '<div class="segment" role="tablist" aria-label="Façon de colorer la carte">' + bouton('piece', 'Par pièce') +
+    bouton('taux', 'Par heure de présence', journeeRemplie() ? '' : 'Remplissez d\'abord la journée type, dans le préambule : où se tient le groupe, moment par moment.') + bouton('chaleur', 'Carte thermique') + '</div>' +
     (modeCarte === 'chaleur' ? '<label class="case-croix"><input type="checkbox"' + (montrerCroix ? ' checked' : '') + ' onchange="basculerCroixCarte(this.checked)"> Montrer les croix</label>' : '');
 }
 function legendeChaleur(champ, sombre) {
@@ -3860,12 +3944,13 @@ function legendeChaleur(champ, sombre) {
 const NOTE_CHALEUR = 'La carte thermique étale chaque épisode autour de sa croix : elle montre des zones, pas des points exacts ; et, à nombre égal, une petite pièce paraît plus chaude qu\'une grande, puisque la couleur est un nombre d\'épisodes par case.';
 
 function svgCarte(eps, opts) {
-  const sombre = !opts.export && themeSombre(), cq = opts.calque || 'episodes', vc = valeursCalque(cq, eps), comptes = comptesParPiece(eps), max = vc.max;
+  const taux = (opts.calque || 'episodes') === 'episodes' && !opts.chaleur && !!opts.taux && journeeRemplie();
+  const sombre = !opts.export && themeSombre(), cq = opts.calque || 'episodes', vc = valeursCalque(cq, eps, taux ? {taux: true, calmes: opts.calmes, moment: opts.moment} : null), comptes = comptesParPiece(eps), max = vc.max;
   const chaleur = cq === 'episodes' && !!opts.chaleur, champ = chaleur ? champThermique(eps) : null;   // carte thermique : les pièces gardent leur ton neutre, la densité se pose par-dessus
   const couleurs = {}, encre = {};
   pieces().forEach(p => {
     const n = vc.valeurs[p.id];
-    couleurs[p.id] = chaleur ? (sombre ? ZERO_SOMBRE : ZERO_CLAIR) : cq === 'fiches' ? couleurFiche(n, sombre) : couleurCarte(n, max, sombre, ECHELLES[cq]);
+    couleurs[p.id] = chaleur ? (sombre ? ZERO_SOMBRE : ZERO_CLAIR) : taux ? (n > 0 ? couleurChaleur(Math.max(.1, n / max)) : (sombre ? ZERO_SOMBRE : ZERO_CLAIR)) : cq === 'fiches' ? couleurFiche(n, sombre) : couleurCarte(n, max, sombre, ECHELLES[cq]);
     encre[p.id] = chaleur ? (sombre ? '#F3EEE2' : '#2C2416') : n > 0 ? encreSur(couleurs[p.id]) : (sombre ? '#E9E4D8' : '#6B6152');
   });
   // Un plan par niveau, cadré sur ses propres pièces ; les couleurs, elles, se comparent d'un niveau à l'autre (même échelle de couleur).
@@ -3874,7 +3959,7 @@ function svgCarte(eps, opts) {
     const plan = dessinPlan(piecesNiveau(n.id), {k, couleurs, comptes: vc.valeurs, etiquettes: vc.etiquettes, sous: vc.sous, encre, filigrane: true, niveau: n.id,
       chaleur: champ ? svgChaleur(champ, n.id) : '', surcouche: champ && opts.croix ? svgCroixCarte(eps, n.id) : ''});
     return {id: n.id, nom: n.nom, vb: [b.x - m, b.y - m, b.w + 2 * m, b.h + 2 * m], corps: chaleur ? '<g class="chaleur">' + plan + '</g>' : plan}; });
-  return {comptes, valeurs: vc.valeurs, max, calque: cq, chaleur: champ, vb: niv.length ? niv[0].vb : [0, 0, 24, 16], niveaux: niv, corps: niv.map(n => n.corps).join('')};
+  return {comptes, valeurs: vc.valeurs, max, calque: cq, chaleur: champ, taux: taux ? vc.taux : null, vb: niv.length ? niv[0].vb : [0, 0, 24, 16], niveaux: niv, corps: niv.map(n => n.corps).join('')};
 }
 function rendreCalques() {
   const el = $('calques'); if (!el) return;
@@ -3882,8 +3967,12 @@ function rendreCalques() {
 }
 function choisirCalque(c) { calque = CALQUES.some(x => x[0] === c) ? c : 'episodes'; majSynthese(); }
 const NOM_CALQUE = {episodes: 'épisodes déclarés par pièce', vigilance: 'points de vigilance par pièce', appui: 'points d\'appui par pièce', fiches: 'fiches des pièces'};
-function legendeCalque(cq, max, sombre, champ) {
+function legendeCalque(cq, max, sombre, champ, taux) {
   if (cq === 'episodes' && champ) return legendeChaleur(champ, sombre);
+  if (cq === 'episodes' && taux) return '<span><i class="zero" style="background:' + (sombre ? ZERO_SOMBRE : ZERO_CLAIR) + '"></i> aucun épisode</span>' +
+    (max ? '<span>moins <i class="degrade" style="background:linear-gradient(90deg,' + ECHELLE.join(',') + ')"></i> ' + virguleSynthese(max.toFixed(1)) + ' épisodes pour 10 h de présence</span>' : '') +
+    '<span>Écrit dans chaque pièce : ses épisodes pour 10 h de présence du groupe (' + nb(taux.jours, 'jour observé', 'jours observés') + '). Dessous : l\'effectif, et le temps de présence par jour d\'après la journée type.</span>' +
+    '<span>« — » : moins de ' + SEUIL_PRESENCE + ' h de présence en tout, ou une pièce absente de la journée type : pas de taux.</span>';
   const case_ = fond => '<i class="zero" style="background:' + fond + '"></i> ', zero = sombre ? ZERO_SOMBRE : ZERO_CLAIR;
   const degrade = e => 'linear-gradient(90deg,' + e.join(',') + ')', dehors = pieces().some(p => estExterieur(p.type)) ? '<span>Contour en pointillés : dehors.</span>' : '';
   if (cq === 'episodes') return '<span>' + case_(zero) + 'aucun épisode</span>' + (max ? '<span>1 <i class="degrade" style="background:' + degrade(ECHELLE) + '"></i> ' + max + ' épisode' + (max > 1 ? 's' : '') + '</span>' : '') + '<span>Le nombre écrit dans chaque pièce est l\'effectif.</span>' + dehors;
@@ -3892,7 +3981,8 @@ function legendeCalque(cq, max, sombre, champ) {
   return '<span>' + case_(zero) + 'aucun ' + mot + '</span>' + (max ? '<span>1 <i class="degrade" style="background:' + degrade(ECHELLES[cq]) + '"></i> ' + max + ' ' + (max > 1 ? pluriel : mot) + '</span>' : '') +
     '<span>Le nombre écrit dans chaque pièce est le nombre de points différents (lus dans le plan ou déclarés dans la fiche). Sous le nom : le nombre d\'épisodes.</span>' + dehors;
 }
-function avertissementCalque(cq, chaleur) { return avertissementDeBase(cq) + (cq === 'episodes' && chaleur ? ' ' + NOTE_CHALEUR : ''); }
+const NOTE_TAUX = 'Cette carte rapporte les épisodes au temps que le groupe passe dans chaque pièce, d\'après la journée type : une estimation, pas une mesure. Elle corrige le taux de base, pas le reste : une pièce où personne ne remplit reste froide, et un point chaud peut tenir à une seule personne. Avec peu d\'heures de présence, un seul épisode suffit à tout changer. Les pistes se discutent en équipe.';
+function avertissementCalque(cq, chaleur, taux) { return cq === 'episodes' && taux ? NOTE_TAUX : avertissementDeBase(cq) + (cq === 'episodes' && chaleur ? ' ' + NOTE_CHALEUR : ''); }
 function avertissementDeBase(cq) {
   if (cq === 'episodes') return 'Cette carte montre où des épisodes ont été déclarés, pas pourquoi. Une pièce très fréquentée, ou occupée longtemps, recueille mécaniquement plus d\'épisodes : c\'est le taux de base, que la carte ne corrige pas. Une pièce froide peut aussi être une pièce où personne ne remplit, et un point chaud peut tenir à une seule personne. Les pistes se discutent en équipe.';
   return 'Cette carte ne montre pas des épisodes mais ce que le plan et les fiches disent de chaque pièce, d\'après le guide « Autisme & sensorialité » (CRA Alsace, 2017). Un point est une piste à discuter, pas un constat : un même stimulus n\'agit pas dans le même sens pour tous, et le nombre de points n\'est pas une mesure de gravité.' +
@@ -3950,17 +4040,18 @@ function majSynthese() {
   if (!$('vue-synthese').classList.contains('show')) return;
   const f = filtres(), eps = episodesFiltres(f), tous = D.b2.episodes;
   if (!pieces().length) { $('carte-cadre').innerHTML = '<div class="vide" style="margin:14px">Le plan est vide : dessinez le lieu dans le préambule.</div>'; $('legende').innerHTML = ''; $('chiffres').innerHTML = ''; $('repartitions').innerHTML = ''; $('calques').innerHTML = ''; $('croisements').innerHTML = ''; viderSupplements(); return; }
+  if (modeCarte === 'taux' && !journeeRemplie()) modeCarte = 'piece';
   rendreCalques(); rendreModeCarte();
-  const chaleur = calque === 'episodes' && modeCarte === 'chaleur', c = svgCarte(eps, {calque, chaleur, croix: montrerCroix}), sombre = themeSombre(), filtreActif = f.moment || f.type || f.debut || f.fin;
+  const calmes = calmesFiltres(f), taux = calque === 'episodes' && modeCarte === 'taux';
+  const chaleur = calque === 'episodes' && modeCarte === 'chaleur', c = svgCarte(eps, {calque, chaleur, taux, calmes, moment: f.moment, croix: montrerCroix}), sombre = themeSombre(), filtreActif = f.moment || f.type || f.debut || f.fin;
   $('carte-cadre').innerHTML = c.niveaux.map(n => '<div class="carte-niveau">' + (c.niveaux.length > 1 ? '<div class="carte-niveau-nom">' + esc(n.nom) + '</div>' : '') +
-    '<svg viewBox="' + n.vb.join(' ') + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Carte : ' + esc(chaleur ? 'carte thermique des épisodes' : NOM_CALQUE[calque]) + (c.niveaux.length > 1 ? ' — ' + esc(n.nom) : '') + '">' + n.corps + '</svg></div>').join('');
-  $('carte-titre').textContent = calque === 'episodes' ? (chaleur ? 'La carte thermique des épisodes' : 'La carte des épisodes') + (filtreActif ? ' — filtrée : ' + nb(eps.length, 'épisode') + ' sur ' + tous.length : ' — ' + nb(eps.length, 'épisode'))
+    '<svg viewBox="' + n.vb.join(' ') + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Carte : ' + esc(chaleur ? 'carte thermique des épisodes' : taux ? 'épisodes pour 10 h de présence, par pièce' : NOM_CALQUE[calque]) + (c.niveaux.length > 1 ? ' — ' + esc(n.nom) : '') + '">' + n.corps + '</svg></div>').join('');
+  $('carte-titre').textContent = calque === 'episodes' ? (chaleur ? 'La carte thermique des épisodes' : taux ? 'Les épisodes par heure de présence' : 'La carte des épisodes') + (filtreActif ? ' — filtrée : ' + nb(eps.length, 'épisode') + ' sur ' + tous.length : ' — ' + nb(eps.length, 'épisode'))
     : 'La carte du plan : ' + NOM_CALQUE[calque] + (filtreActif ? ' (épisodes filtrés)' : '');
-  $('legende').innerHTML = legendeCalque(calque, c.max, sombre, c.chaleur);
-  $('avertissement').textContent = avertissementCalque(calque, chaleur);
+  $('legende').innerHTML = legendeCalque(calque, c.max, sombre, c.chaleur, c.taux);
+  $('avertissement').textContent = avertissementCalque(calque, chaleur, !!c.taux);
   // Les chiffres clés
   const dates = eps.map(e => e.date).sort(), provs = new Set(eps.map(e => e.provenance || (e.source ? e.source : 'le référent')));
-  const calmes = D.b2.calmes.filter(x => (!f.debut || x.date >= f.debut) && (!f.fin || x.date <= f.fin));
   const jours = dates.length ? Math.round((new Date(dates[dates.length - 1]) - new Date(dates[0])) / 864e5) + 1 : 0;
   $('chiffres').innerHTML = [[eps.length, 'épisodes' + (filtreActif ? ' (filtrés)' : '')],
     [dates.length ? dateFr(dates[0]) + (dates.length > 1 ? ' → ' + dateFr(dates[dates.length - 1]) : '') : '—', dates.length ? 'période couverte · ' + nb(jours, 'jour') : 'période couverte'],
@@ -3978,7 +4069,13 @@ function majSynthese() {
   const dehors = eps.filter(e => { const p = pieceParId(e.piece); return p && estExterieur(p.type); }).length;
   const notePieces = [pieces().some(p => estExterieur(p.type)) ? 'Dehors (cour, jardin, route, parking, préau) : ' + nb(dehors, 'épisode') + (n ? ', ' + pct(dehors) : '') + '.' : '',
     horsPlan ? nb(horsPlan, 'épisode') + ' dans une pièce retirée du plan, compté' + (horsPlan > 1 ? 's' : '') + ' ici mais pas sur la carte.' : ''].filter(Boolean).join(' ');
-  $('repartitions').innerHTML = tableau('Par pièce', parPiece, notePieces) +
+  // Par pièce, avec la journée type (passe 243) : le temps de présence par jour et les épisodes pour 10 h de présence, à côté de l'effectif.
+  const tPres = journeeRemplie() ? tauxParPiece(eps, calmes, f.moment) : null;
+  const tableauPieces = !tPres ? tableau('Par pièce', parPiece, notePieces) : '<div class="feuille"><div class="surtitre">Par pièce</div><div class="defile"><table class="rep"><thead><tr><th></th><th class="n">Épisodes</th><th class="n">%</th><th class="n">Présence par jour</th><th class="n">Pour 10 h</th></tr></thead><tbody>' +
+    pieces().map(p => p).sort((a, b) => (c.comptes[b.id] || 0) - (c.comptes[a.id] || 0) || (tPres.heures[b.id] || 0) - (tPres.heures[a.id] || 0)).map(p => { const x = c.comptes[p.id] || 0;
+      return '<tr><td>' + esc(p.nom) + '<div class="barre-mini" style="width:' + (n ? Math.round(x / n * 100) : 0) + '%"></div></td><td class="n">' + x + '</td><td class="n">' + pct(x) + '</td><td class="n">' + (tPres.heures[p.id] ? dureeTexte(tPres.heures[p.id] * 60) : '—') + '</td><td class="n">' + (tPres.taux[p.id] !== undefined ? virguleSynthese(tPres.taux[p.id].toFixed(1)) : '—') + '</td></tr>'; }).join('') +
+    '</tbody></table></div><p class="discret" style="margin-top:8px">« Pour 10 h » : les épisodes pour 10 heures de présence du groupe dans la pièce, sur ' + nb(tPres.jours, 'jour observé', 'jours observés') + ' (d\'après la journée type ; « — » sous ' + SEUIL_PRESENCE + ' h de présence en tout). ' + notePieces + '</p></div>';
+  $('repartitions').innerHTML = tableauPieces +
     tableau('Par moment de la journée', parMoment) +
     tableau('Par comportement', parType, 'Un épisode peut porter plusieurs comportements : le total peut dépasser 100 %.');
   rendreCroisements(eps); rendrePronosticsSynthese(eps); rendreContexteSynthese(eps); rendreQuestionsSynthese(eps); rendrePorte();
@@ -3989,11 +4086,11 @@ function styleExport() {
 }
 // L'image de la carte : toujours claire (elle part dans un document), avec son titre, sa légende et l'avertissement. Celle du calque choisi.
 function svgExport() {
-  const f = filtres(), eps = episodesFiltres(f), c = svgCarte(eps, {export: true, calque, chaleur: calque === 'episodes' && modeCarte === 'chaleur', croix: montrerCroix}), k = 30, cq = c.calque;
+  const f = filtres(), eps = episodesFiltres(f), c = svgCarte(eps, {export: true, calque, chaleur: calque === 'episodes' && modeCarte === 'chaleur', taux: calque === 'episodes' && modeCarte === 'taux', calmes: calmesFiltres(f), moment: f.moment, croix: montrerCroix}), k = 30, cq = c.calque;
   const multi = c.niveaux.length > 1, ent = multi ? 26 : 0, ecart = 8, haut = 64, bas = 86;
   const tailles = c.niveaux.map(n => [Math.round(n.vb[2] * k), Math.round(n.vb[3] * k)]);
   const W = Math.max(720, ...tailles.map(t => t[0])), H = tailles.reduce((a, t) => a + t[1] + ent, 0) + (c.niveaux.length - 1) * ecart;
-  const titre = (D.b1.lieu || 'Le lieu') + ' — ' + (c.chaleur ? 'carte thermique des épisodes' : NOM_CALQUE[cq]);
+  const titre = (D.b1.lieu || 'Le lieu') + ' — ' + (c.chaleur ? 'carte thermique des épisodes' : c.taux ? 'épisodes pour 10 h de présence, par pièce' : NOM_CALQUE[cq]);
   const fil = [f.moment && nomMoment(f.moment), f.type && (f.type === '_autre' ? 'Autre' : nomType(f.type)), (f.debut || f.fin) && ((f.debut ? 'du ' + dateFr(f.debut) : '') + (f.fin ? ' au ' + dateFr(f.fin) : ''))].filter(Boolean).join(' · ');
   const echelle = ECHELLES[cq] || ECHELLE;
   let deg = '<defs><linearGradient id="lg">' + echelle.map((col, i) => '<stop offset="' + (i / (echelle.length - 1)) + '" stop-color="' + col + '"/>').join('') + '</linearGradient></defs>';
@@ -4008,10 +4105,12 @@ function svgExport() {
   const legende = cq === 'fiches'
     ? gris(16, 22, ZERO_CLAIR) + '<text x="44" y="' + (bs + 25) + '" font-size="12" fill="#6B6152">○ pas de fiche</text>' + gris(150, 22, couleurFiche(1, false)) + '<text x="178" y="' + (bs + 25) + '" font-size="12" fill="#6B6152">◐ rapide</text>' + gris(260, 22, couleurFiche(2, false)) + '<text x="288" y="' + (bs + 25) + '" font-size="12" fill="#6B6152">● détaillée</text>'
     : gris(16, 22, ZERO_CLAIR) + '<text x="44" y="' + (bs + 25) + '" font-size="12" fill="#6B6152">aucun ' + (cq === 'episodes' ? 'épisode' : mot) + '</text>' +
-      (c.max ? (c.chaleur ? '<text x="170" y="' + (bs + 25) + '" font-size="12" fill="#6B6152">moins</text><rect x="208" y="' + (bs + 14) + '" width="160" height="14" rx="3" fill="url(#lg)"/><text x="376" y="' + (bs + 25) + '" font-size="12" fill="#6B6152">plus d\'épisodes (par case)</text>'
+      (c.max ? (c.taux ? '<text x="170" y="' + (bs + 25) + '" font-size="12" fill="#6B6152">moins</text><rect x="208" y="' + (bs + 14) + '" width="160" height="14" rx="3" fill="url(#lg)"/><text x="376" y="' + (bs + 25) + '" font-size="12" fill="#6B6152">' + virguleSynthese(c.max.toFixed(1)) + ' épisodes pour 10 h de présence (« — » : pas de taux)</text>'
+      : c.chaleur ? '<text x="170" y="' + (bs + 25) + '" font-size="12" fill="#6B6152">moins</text><rect x="208" y="' + (bs + 14) + '" width="160" height="14" rx="3" fill="url(#lg)"/><text x="376" y="' + (bs + 25) + '" font-size="12" fill="#6B6152">plus d\'épisodes (par case)</text>'
       : '<text x="170" y="' + (bs + 25) + '" font-size="12" fill="#6B6152">1</text><rect x="182" y="' + (bs + 14) + '" width="160" height="14" rx="3" fill="url(#lg)"/><text x="350" y="' + (bs + 25) + '" font-size="12" fill="#6B6152">' + c.max + '</text>') : '');
   const note = cq === 'episodes'
-    ? ['La carte montre où des épisodes ont été déclarés, pas pourquoi. Une pièce occupée longtemps en recueille mécaniquement plus ;', (c.chaleur ? 'la couleur est une densité d\'épisodes : chaque épisode est étalé autour de sa croix (ou sur toute sa pièce) ; à nombre égal, une petite pièce paraît plus chaude.' : 'une pièce froide peut être une pièce où personne ne remplit. Les pistes se discutent en équipe.')]
+    ? (c.taux ? ['Les épisodes rapportés au temps de présence du groupe dans chaque pièce, d\'après la journée type (' + nb(c.taux.jours, 'jour observé', 'jours observés') + ') : une estimation, pas une mesure.', 'Sous le nom : l\'effectif et la présence par jour. « — » : moins de ' + SEUIL_PRESENCE + ' h de présence en tout. Les pistes se discutent en équipe.']
+    : ['La carte montre où des épisodes ont été déclarés, pas pourquoi. Une pièce occupée longtemps en recueille mécaniquement plus ;', (c.chaleur ? 'la couleur est une densité d\'épisodes : chaque épisode est étalé autour de sa croix (ou sur toute sa pièce) ; à nombre égal, une petite pièce paraît plus chaude.' : 'une pièce froide peut être une pièce où personne ne remplit. Les pistes se discutent en équipe.')])
     : ['Ce que le plan et les fiches disent de chaque pièce (guide « Autisme & sensorialité », CRA Alsace, 2017) : des pistes, pas des constats.', 'Le nombre de points n\'est pas une mesure de gravité. Sous le nom de chaque pièce : le nombre d\'épisodes déclarés.'];
   const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + (H + haut + bas) + '" viewBox="0 0 ' + W + ' ' + (H + haut + bas) + '">' + style + deg +
     '<rect width="100%" height="100%" fill="#F5F0E8"/>' +
@@ -4158,12 +4257,14 @@ function effacer() {
    [[numéro de la pièce, quarts de tour déjà faits]], pour que les simulations passent aussi par les pièces tournées. « formes » (passe 236) :
    [[numéro de la pièce, [[x, y], …]]], une pièce dessinée en polygone (ses sommets, dans le plan tel qu'on le voit). */
 // Passe 238 : une pièce à pan coupé dans chaque lieu, avec une fenêtre dans le mur en biais (fenêtre [x, y, 'd', largeur, niveau, type, [sens du mur]]).
-const VERSION_SIMULATION = 4;
+// Passe 243 : une journée type dans chaque lieu, « journee » : [[n° du moment, [pièces où est le groupe], [pièces certains jours]], …].
+const VERSION_SIMULATION = 5;
 const LIEUX_SIMULES = [
   {nom: 'Bâtiment provisoire', desc: 'Un IME déménagé dans des bureaux, dessiné sans échelle : un hall unique où tout le monde arrive, un long couloir aveugle, des salles sans fenêtre, une cour non clôturée contre la route, et le parking devant la porte. Ses fiches de pièces sont remplies en mode rapide. Son réfectoire, très grand, contient trois petites pièces : un office, un local chariots et un coin calme. Les sanitaires, un ancien bureau, ont gardé leur porte vitrée. Presque toutes ses pièces ont leurs croix (au moins une par pièce qui a des épisodes) ; la salle bleue est dessinée tournée d\'un quart de tour et le parking est un trapèze ; les sanitaires ont un pan coupé, avec une fenêtre dans le mur en biais : de quoi voir ce que la carte thermique sait faire.', graine: 7,
     legendes: [['Entrée principale', -4.2, 2.2, 'm', 'e'], ['Vers le centre-ville', -10.5, -4.6, 'm', 'n']],
     pronostics: [['AES / AMP', [0, 2, 4]], ['Éducateur·rice spécialisé·e', [0, 4, 9]], ['Moniteur·rice-éducateur·rice', [0, 8]]],
     dates: ['2026-09-07', '2026-09-25'], moments: null,
+    journee: [[0, [0, 8]], [1, [2, 3]], [2, [1, 6]], [3, [4], [12, 10, 11]], [4, [5], [9]], [5, [2, 3], [9]], [6, [0, 8]]],
     pieces: [['Hall d\'accueil', 'accueil', [[0, 0, 10, 6]]], ['Couloir', 'circulation', [[10, 2, 14, 2], [22, 4, 2, 8]]], ['Salle bleue', 'activite', [[10, 4, 7, 6]]],
       ['Salle verte', 'activite', [[17, 4, 5, 6]]], ['Réfectoire', 'repas', [[0, 6, 10, 8], [10, 10, 6, 4]]], ['Salle calme', 'calme', [[16, 10, 6, 4]]], ['Sanitaires', 'sanitaires', [[24, 0, 4, 5]]],
       ['Route', 'route', [[-12, -3, 3, 20]]], ['Parking', 'parking', [[-9, 0, 9, 8]]], ['Cour (sans clôture)', 'exterieur', [[-9, 8, 9, 5]]],
@@ -4197,6 +4298,7 @@ const LIEUX_SIMULES = [
     legendes: [['Entrée principale', 11.5, -1.8, 'm', 's'], ['Vers le centre-ville', -1, -10.5, 'm', 'o']],
     pronostics: [['Éducateur·rice spécialisé·e', [2, 4]], ['AES / AMP', [2, 8]], ['Infirmier·e', [4, 5]]],
     dates: ['2026-09-14', '2026-10-02'],
+    journee: [[0, [4, 5, 6, 7, 8, 13, 14, 15, 17]], [1, [2]], [2, [1], [0]], [3, [2]], [4, [1], [16]], [5, [1, 0]], [6, [2]], [7, [4, 5, 6, 7, 8, 13, 14, 15, 17]]],
     moments: [['Lever', '07:00', '08:00'], ['Petit-déjeuner', '08:00', '09:00'], ['Matinée', '09:00', '12:00'], ['Déjeuner', '12:00', '13:15'], ['Temps calme', '13:15', '14:30'],
       ['Après-midi', '14:30', '18:30'], ['Dîner', '18:30', '19:45'], ['Coucher', '19:45', '21:30']],
     niveaux: ['Rez-de-chaussée', 'Étage'],
@@ -4246,6 +4348,7 @@ const LIEUX_SIMULES = [
     legendes: [['Entrée des taxis', 23.4, 6.3, 'm', 'o'], ['Vers le centre-ville', 28.5, -3.4, 'm', 'n']],
     pronostics: [['Éducateur·rice spécialisé·e', [4, 7, 2]], ['AES / AMP', [4, 7]], ['Moniteur·rice-éducateur·rice', [7, 11]]],
     dates: ['2026-09-21', '2026-10-09'], echelle: .8,
+    journee: [[0, [9, 3]], [1, [0, 1]], [2, [7, 8]], [3, [0, 1], [2]], [4, [4]], [5, [7, 8]], [6, [0, 1], [2, 11]], [7, [3, 9]]],
     moments: [['Arrivée', '08:45', '09:15'], ['Matinée', '09:15', '10:30'], ['Récréation', '10:30', '10:50'], ['Fin de matinée', '10:50', '12:00'], ['Cantine', '12:00', '13:00'],
       ['Temps de cour', '13:00', '13:30'], ['Après-midi', '13:30', '15:45'], ['Départ', '15:45', '16:15']],
     pieces: [['Salle de classe', 'activite', [[0, 0, 8, 6]]], ['Atelier bois', 'activite', [[8, 0, 7, 6]]], ['Salle multisensorielle', 'snoezelen', [[15, 0, 5, 6]]], ['Couloir', 'circulation', [[0, 6, 20, 2]]],
@@ -4312,6 +4415,8 @@ function construireLieu(i) {
   d.sim = {i: LIEUX_SIMULES[i] ? i : 0, v: VERSION_SIMULATION};   // quelle simulation, de quelle version (passe 235)
   L.pieces.forEach((t, k) => { if (t[4] !== undefined) d.b1.plan.pieces[k].dans = d.b1.plan.pieces[t[4]].id; });   // une enclave : le numéro de la pièce qui la contient
   d.b1.typesCD = L.types.map(nom => ({id: nouvelId('t'), nom}));
+  d.b1.journee = {};
+  (L.journee || []).forEach(([mi, oui, parfois]) => { const m = d.b1.moments[mi]; if (!m) return; const l = {}; (oui || []).forEach(k => { l[d.b1.plan.pieces[k].id] = 1; }); (parfois || []).forEach(k => { l[d.b1.plan.pieces[k].id] = .5; }); if (Object.keys(l).length) d.b1.journee[m.id] = l; });   // la journée type (passe 243)
   d.b1.plan.elements = (L.portes || []).map(([x, y, o, long, cote, k, vitrage]) => Object.assign({id: nouvelId('e'), cat: 'porte', niveau: niv(k), x, y, o, long, cote, retourne: cote < 0}, vitrage ? {vitrage} : {}))
     .concat((L.fenetres || []).map(([x, y, o, long, k, cat, sens]) => Object.assign({id: nouvelId('e'), cat: cat || 'fenetre', niveau: niv(k), x, y, o, long, cote: 1, retourne: false},
       o === 'd' ? {dx: n6(sens[0] / Math.hypot(sens[0], sens[1])), dy: n6(sens[1] / Math.hypot(sens[0], sens[1]))} : {})))   // sur un mur en biais : le sens du mur, de gauche à droite (passe 238)
@@ -5464,9 +5569,9 @@ function verifierBASE() {
           piecesDansCadre({x0: -1, y0: -1, x1: 1, y1: 1}).join() === '' && piecesDansCadre({x0: 3, y0: 2, x1: 4, y1: 3}).join() === 'T' && piecesDansCadre({x0: -1, y0: 5, x1: .5, y1: 7}).join() === 'T' && piecesDansCadre({x0: 0, y0: 0, x1: 20, y1: 8}).join() === 'T,R' && piecesDansCadre({x0: 9, y0: 0, x1: 11, y1: 2}).join() === '');
         // 10. Les lieux simulés : une pièce de forme libre chacun
         const sims = [0, 1, 2].map(i => construireLieu(i)), formesSim = sims.map(d => d.b1.plan.pieces.filter(aPoly).map(p => p.nom + ':' + p.poly.length).join()), adjSim = (d, x, y) => { const l = lectureDuPlan(d.b1), px = d.b1.plan.pieces.find(p => p.nom === x), py = d.b1.plan.pieces.find(p => p.nom === y), e = l.adj.find(z => (z.a === px.id && z.b === py.id) || (z.a === py.id && z.b === px.id)); return e ? Math.round(e.longueur * 10) / 10 : 0; };
-        const valides = sims.every(d => { D = d; const l = lectureDuPlan(d.b1), ps = d.b1.plan.pieces.filter(aPoly); return d.sim.v === 4 && VERSION_SIMULATION === 4 && l.flottants.length === 0 && ps.some(p => d.b2.episodes.some(e => e.piece === p.id && e.pos)) && ps.every(p => anneauSimple(p.poly) && aireAnneau(p.poly) < p.rects[0].w * p.rects[0].h && d.b2.episodes.filter(e => e.piece === p.id && e.pos).every(e => { const a = pointDepuisPos(p, e.pos); return dansPiece(p, a.x, a.y, 1e-6); })); });
+        const valides = sims.every(d => { D = d; const l = lectureDuPlan(d.b1), ps = d.b1.plan.pieces.filter(aPoly); return d.sim.v === 5 && VERSION_SIMULATION === 5 && l.flottants.length === 0 && ps.some(p => d.b2.episodes.some(e => e.piece === p.id && e.pos)) && ps.every(p => anneauSimple(p.poly) && aireAnneau(p.poly) < p.rects[0].w * p.rects[0].h && d.b2.episodes.filter(e => e.piece === p.id && e.pos).every(e => { const a = pointDepuisPos(p, e.pos); return dansPiece(p, a.x, a.y, 1e-6); })); });
         const biaisSim = sims.map(d => { const l = lectureDuPlan(d.b1), e = d.b1.plan.elements.find(x => x.o === 'd'), b = e ? bordsDe(e, d.b1.plan.pieces.filter(p => p.niveau === e.niveau)) : []; return !!e && b.length === 1 && aPoly(b[0].p) && l.pieces[b[0].p.id].fenetres >= 1 && d.b1.plan.elements.filter(x => x.cat === 'meuble' && x.niveau === b[0].p.niveau && b[0].p.rects[0].x <= x.x && x.x < b[0].p.rects[0].x + b[0].p.rects[0].w && b[0].p.rects[0].y <= x.y && x.y < b[0].p.rects[0].y + b[0].p.rects[0].h).every(x => [[x.x, x.y], [x.x + x.w, x.y], [x.x + x.w, x.y + x.h], [x.x, x.y + x.h]].every(([px, py]) => dansPiece(b[0].p, px, py, 1e-6))); });
-        ok('Chaque lieu simulé a ses pièces de forme libre (le parking en trapèze et les sanitaires à pan coupé ; le jardin et la cuisine à pan coupé ; la salle de classe à pan coupé et le préau en trapèze), valides, plus petites que leur rectangle englobant, des épisodes dont les croix sont dedans ; une fenêtre dans un mur en biais, que la pièce voit (et ses meubles restent dedans) ; aucune porte ni fenêtre ne flotte ; les voisinages d\'avant tiennent (parking–hall 6, jardin–salon 6, préau–cour 5) ; version 4',
+        ok('Chaque lieu simulé a ses pièces de forme libre (le parking en trapèze et les sanitaires à pan coupé ; le jardin et la cuisine à pan coupé ; la salle de classe à pan coupé et le préau en trapèze), valides, plus petites que leur rectangle englobant, des épisodes dont les croix sont dedans ; une fenêtre dans un mur en biais, que la pièce voit (et ses meubles restent dedans) ; aucune porte ni fenêtre ne flotte ; les voisinages d\'avant tiennent (parking–hall 6, jardin–salon 6, préau–cour 5) ; version 5',
           formesSim.join(' | ') === 'Sanitaires:5,Parking:4 | Jardin:5,Cuisine:5 | Salle de classe:5,Préau:4' && valides && biaisSim.every(Boolean) && adjSim(sims[0], 'Parking', 'Hall d\'accueil') === 6 && adjSim(sims[1], 'Jardin', 'Salon') === 6 && adjSim(sims[2], 'Préau', 'Cour') === 5, formesSim.join(' | ') + ' / ' + biaisSim.join());
       } finally {
         toast = vraiToast19; Object.assign(vueEdition, vue19); geste = null; selection = null; temp.forEach(x => x.remove()); vp.classList.toggle('show', avait); historique = []; refaites = [];
@@ -5585,8 +5690,61 @@ function verifierBASE() {
         toast = vraiToast21; Object.assign(vueEdition, vue21); geste = null; selection = null; vp.classList.toggle('show', avait); historique = []; refaites = [];
       }
     }
+    // 22. La journée type et les épisodes par heure de présence (passe 243)
+    {
+      const sauveMode22 = modeCarte, sauveCq22 = calque;
+      try {
+        const rect22 = (id, x) => ({id, nom: id, type: 'sejour', niveau: 'n0', rects: [{x, y: 0, w: 4, h: 4}]});
+        const ep22 = (piece, moment, date) => ({id: nouvelId('ep'), date, heure: '09:00', moment, piece, types: [], autre: '', nbPros: 1, commentaire: '', provenance: 'test'});
+        const base22 = () => { D = dossierVide(); mode = 'socle'; D.b1.plan.pieces = [rect22('A', 0), rect22('B', 4), rect22('C', 8)];
+          D.b1.moments = [{id: 'm1', nom: 'Arrivée', debut: '08:00', fin: '09:00'}, {id: 'm2', nom: 'Matinée', debut: '09:00', fin: '14:00'}, {id: 'm3', nom: 'Sans heure', debut: '', fin: ''}]; return D; };
+        ['f-moment', 'f-type', 'f-debut', 'f-fin'].forEach(id => { if ($(id)) $(id).value = ''; });
+        base22();
+        const vide = !journeeRemplie() && !Object.keys(tauxParPiece([], []).taux).length;
+        basculerPresence('m1', 'A'); const un = presenceDe('m1', 'A') === 1; basculerPresence('m1', 'A'); const demi = presenceDe('m1', 'A') === .5; basculerPresence('m1', 'A'); const zero = presenceDe('m1', 'A') === 0 && !D.b1.journee.m1;
+        ok('La journée type : un toucher met le groupe dans la pièce, un second « certains jours », un troisième l\'en retire ; un moment vidé disparaît', vide && un && demi && zero);
+        ok('La durée d\'un moment vient de ses horaires (1 h, 5 h) ; sans horaires, ou à l\'envers, elle vaut 0', dureeMoment(D.b1.moments[0]) === 60 && dureeMoment(D.b1.moments[1]) === 300 && dureeMoment(D.b1.moments[2]) === 0 && dureeMoment({debut: '10:00', fin: '09:00'}) === 0 && dureeTexte(90) === '1 h 30' && dureeTexte(45) === '45 min' && dureeTexte(300) === '5 h');
+        // A : l'arrivée (1 h) ; B : la matinée (5 h) ; C : la matinée certains jours (2 h 30), et un moment sans horaires
+        D.b1.journee = {m1: {A: 1}, m2: {B: 1, C: .5}, m3: {C: 1}};
+        D.b2.episodes = [ep22('A', 'm1', '2026-10-01'), ep22('A', 'm1', '2026-10-01'), ep22('A', 'm1', '2026-10-02'), ep22('B', 'm2', '2026-10-01'), ep22('B', 'm2', '2026-10-02'), ep22('B', 'm2', '2026-10-02'),
+          ep22('B', 'm2', '2026-10-01'), ep22('B', 'm2', '2026-10-02'), ep22('B', 'm2', '2026-10-01'), ep22('A', 'm2', '2026-10-02')];
+        D.b2.calmes = [{id: 'c1', date: '2026-10-03', provenance: 'test'}];
+        const h22 = heuresParJour(), t22 = tauxParPiece(D.b2.episodes, D.b2.calmes), m22 = tauxParPiece(D.b2.episodes.filter(e => e.moment === 'm2'), D.b2.calmes, 'm2');
+        ok('Les heures de présence par jour (A 1 h, B 5 h, C 2 h 30 « certains jours ») ; sur 3 jours observés (dont un « rien à signaler »), B a 4,0 épisodes pour 10 h, C 0, et A (3 h en tout) pas de taux',
+          h22.A === 1 && h22.B === 5 && h22.C === 2.5 && t22.jours === 3 && t22.taux.B === 4 && t22.taux.C === 0 && t22.taux.A === undefined && t22.max === 4, JSON.stringify([h22, t22.taux, t22.jours]));
+        ok('Rapporté à un seul moment (le filtre « Matinée ») : seules ses heures comptent', m22.heures.A === undefined && m22.heures.B === 5 && m22.taux.B === Math.round(6 / 15 * 100) / 10);
+        const hj22 = horsJournee(D.b2.episodes);
+        ok('Un épisode déclaré là où, d\'après la journée type, le groupe n\'est pas à ce moment-là est repéré', hj22.length === 1 && hj22[0].piece === 'A' && hj22[0].moment === 'm2');
+        const c22 = svgCarte(D.b2.episodes, {calque: 'episodes', taux: true, calmes: D.b2.calmes}), c22b = svgCarte(D.b2.episodes, {calque: 'episodes'});
+        ok('La carte par heure de présence : « 4,0 » dans B, « — » dans A, l\'effectif et la présence par jour sous le nom ; sans ce mode, la carte d\'avant',
+          !!c22.taux && /4,0/.test(c22.corps) && />—</.test(c22.corps) && /5 h\/j/.test(c22.corps) && !c22b.taux && !/5 h\/j/.test(c22b.corps));
+        calque = 'episodes'; rendreModeCarte(); const bt22 = () => document.querySelector('#mode-carte button[onclick*="taux"]'); const actif = !!bt22() && !bt22().disabled;
+        const sauveJ22 = D.b1.journee; D.b1.journee = {}; rendreModeCarte(); const inactif = bt22().disabled; modeCarte = 'piece'; choisirModeCarte('taux'); const refuse = modeCarte === 'piece';
+        D.b1.journee = sauveJ22; choisirModeCarte('taux'); const pris = modeCarte === 'taux';
+        ok('« Par heure de présence » ne se choisit que si la journée type est remplie ; sa légende et son avertissement sont les siens',
+          actif && inactif && refuse && pris && /pour 10 h de présence/.test(legendeCalque('episodes', 4, false, null, c22.taux)) && avertissementCalque('episodes', false, true) === NOTE_TAUX);
+        // Une pièce plus chargée au temps de présence que celle qui a le plus d'épisodes : C (5 en 7 h 30) devant B (6 en 15 h)
+        D.b2.episodes = D.b2.episodes.concat([1, 2, 3, 4, 5].map(k => ep22('C', 'm2', '2026-10-0' + (k % 3 + 1))));
+        const q22 = questionsEquipe(D.b2.episodes).join(' ');
+        ok('Les questions pour l\'équipe le disent quand la pièce la plus chargée au temps de présence n\'est pas celle qui a le plus d\'épisodes',
+          /« B » a le plus d'épisodes \(6\), mais le groupe y passe 5 h par jour/.test(q22) && /c'est « C » qui est le plus chargé \(6,7 pour 10 h\)/.test(q22), q22.slice(0, 500));
+        base22(); D.b1.journee = {m1: {A: 1}, m2: {B: 1, C: .5}, m3: {C: 1}}; rendreJournee();
+        ok('Le préambule : une puce par pièce et par moment (cochée, « certains jours » ou non), et le temps de présence par jour dessous',
+          document.querySelectorAll('#journee .puce').length === 9 && document.querySelectorAll('#journee .puce.on').length === 3 && document.querySelectorAll('#journee .puce.parfois').length === 1 && /Temps de présence par jour/.test($('journee').textContent) && /2 moments sur 3|3 moments sur 3/.test($('journee-resume').textContent));
+        const n22 = dossierVide(); n22.b1.plan.pieces = [rect22('A', 0)]; n22.b1.moments = [{id: 'm1', nom: 'x', debut: '08:00', fin: '09:00'}];
+        n22.b1.journee = {m1: {A: 1, Z: 1}, mX: {A: 1}}; normaliserPlan(n22); const n22b = dossierVide(); n22b.b1.journee = [1]; normaliserPlan(n22b);
+        const n22c = dossierVide(); n22c.b1.plan.pieces = [rect22('A', 0)]; n22c.b1.moments = [{id: 'm1', nom: 'x', debut: '08:00', fin: '09:00'}]; n22c.b1.journee = {m1: {A: 2}}; normaliserPlan(n22c);
+        ok('À l\'ouverture d\'un fichier : une pièce ou un moment disparus, une valeur inconnue sont écartés de la journée type',
+          JSON.stringify(n22.b1.journee) === '{"m1":{"A":1}}' && JSON.stringify(n22b.b1.journee) === '{}' && JSON.stringify(n22c.b1.journee) === '{}');
+        const sims22 = [0, 1, 2].map(i => construireLieu(i));
+        const okSims = sims22.every(d => { D = d; return d.sim.v === 5 && journeeRemplie() && Object.keys(tauxParPiece(d.b2.episodes, d.b2.calmes).taux).length >= 4; });
+        D = sims22[0]; const t0 = tauxParPiece(D.b2.episodes, D.b2.calmes), hall = D.b1.plan.pieces[0].id, bleue = D.b1.plan.pieces[2].id;
+        ok('Les trois lieux simulés ont leur journée type (version 5) ; au bâtiment provisoire, le hall (une heure par jour) est plus chargé au temps de présence que la salle bleue (près de cinq heures)',
+          okSims && t0.taux[hall] > t0.taux[bleue], JSON.stringify([t0.taux[hall], t0.taux[bleue], t0.heures[hall], t0.heures[bleue]]));
+      } finally { modeCarte = sauveMode22; calque = sauveCq22; }
+    }
   } catch (e) { ok('Les vérifications ont planté', false, e.message); }
-  finally { calque = sauveCalque; persister = vraiPersister; toast = vraiToast; window.confirm = vraiConfirm; modeFiche = sauveModeFiche; pieceFiche = null; niveauCourant = sauveNiveau; D = sauveD; mode = sauveMode; selection = null; historique = []; refaites = []; }
+  finally { calque = sauveCalque; persister = vraiPersister; toast = vraiToast; window.confirm = vraiConfirm; modeFiche = sauveModeFiche; pieceFiche = null; niveauCourant = sauveNiveau; D = sauveD; mode = sauveMode; selection = null; historique = []; refaites = []; try { rendreJournee(); } catch (e) { /* rien */ } }
   return r;
 }
 
