@@ -389,6 +389,9 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--slate);}
 /* ── Dehors, ouvertures, meubles (passe 224) — ajouts à la charte : le vert d'une cour, l'asphalte d'une route ── */
 :root{--ext-vert:#E3ECD6;--ext-trait:#6E8F6A;--asphalte:#D9D6CF;}
 @media screen{html[data-theme="sombre"]{--ext-vert:#25322A;--ext-trait:#8DB08A;--asphalte:#30343B;}}
+/* Passe 238 — ajouts à la charte : le verre d'une baie vitrée (un bleu d'eau), pour qu'elle ne se confonde plus avec une fenêtre dans un mur plein */
+:root{--vitre:#D3E8F6;--vitre-trait:#2F7FB5;}
+@media screen{html[data-theme="sombre"]{--vitre:#1F3A50;--vitre-trait:#7FC1EA;}}
 .zone-exterieur .piece-fond,.zone-preau .piece-fond{fill:var(--ext-vert);}
 .zone-route .piece-fond,.zone-parking .piece-fond{fill:var(--asphalte);}
 .exterieur .piece-trait{stroke:var(--ext-trait);}
@@ -414,7 +417,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--slate);}
 .escalier.selection .escalier-fond{fill:var(--slate-pale);stroke:var(--slate);}
 .escalier-trait{stroke:var(--ocre-deep);pointer-events:none;}
 .escalier-nom{font-family:var(--police-interface);font-weight:700;fill:var(--ocre-deep);text-anchor:middle;dominant-baseline:middle;pointer-events:none;paint-order:stroke;stroke:var(--ocre-pale);stroke-width:.14px;}
-.baie{stroke:var(--vol-contexte-deep);pointer-events:none;}
+.baie{stroke:var(--vitre-trait);pointer-events:none;}
+.baie-verre{fill:var(--vitre);stroke:none;pointer-events:none;}
 .porte.vitree{stroke:var(--vol-contexte-deep);}
 .hublot{fill:var(--sheet);stroke:var(--vol-contexte-deep);pointer-events:none;}
 .lect-mur{stroke:var(--sauge-deep);opacity:.7;stroke-linecap:round;pointer-events:none;}
@@ -662,8 +666,8 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
             <div class="plan-outils">
               <button type="button" class="bt plein petit" onclick="ajouterPiece()">＋ Pièce</button>
               <button type="button" class="bt petit" onclick="ajouterMural('porte')" title="Sur un mur de la pièce choisie ; elle glisse ensuite le long des murs">＋ Porte</button>
-              <button type="button" class="bt petit" onclick="ajouterMural('fenetre')" title="Sur un mur de la pièce choisie ; elle glisse ensuite le long des murs">＋ Fenêtre</button>
-              <select class="bt petit" style="width:auto;min-height:28px;padding:0 8px" aria-label="Ajouter une baie vitrée, un escalier ou un ascenseur" onchange="ajouterAutre(this.value); this.value=''"><option value="">＋ Baie, escalier…</option><option value="baie">Baie vitrée</option><option value="escalier">Escalier</option><option value="ascenseur">Ascenseur</option></select>
+              <button type="button" class="bt petit" onclick="ajouterMural('fenetre')" title="Une fenêtre dans un mur plein, sur un mur de la pièce choisie (même en biais) ; elle glisse ensuite le long des murs">＋ Fenêtre</button>
+              <select class="bt petit" style="width:auto;min-height:28px;padding:0 8px" aria-label="Ajouter une baie vitrée, un escalier ou un ascenseur" onchange="ajouterAutre(this.value); this.value=''"><option value="">＋ Baie, escalier…</option><option value="baie">Baie vitrée (du sol au plafond)</option><option value="escalier">Escalier</option><option value="ascenseur">Ascenseur</option></select>
               <select class="bt petit" style="width:auto;min-height:28px;padding:0 8px" aria-label="Ajouter un meuble" onchange="ajouterMeuble(this.value); this.value=''"><option value="">＋ Meuble…</option></select>
               <button type="button" class="bt petit" onclick="ajouterLegende()" title="Un texte libre sur le plan : Entrée principale, Vers le centre-ville… avec une flèche si l'on veut">＋ Légende</button>
               <span class="sep"></span>
@@ -688,7 +692,7 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
         </div>
       </div>
       <p class="plan-aide" id="lecture-legende" hidden><b>Lecture</b> — traits verts épais : murs communs ; points verts : passages (portes) ; tirets bleus : ce qu'on voit par une fenêtre (en rouge vers une route ou un parking).</p>
-      <p class="plan-aide">Glisser une pièce pour la déplacer, ses poignées pour l'agrandir ; glisser le fond pour se déplacer ; molette ou ＋ / － pour zoomer. Double-clic (ou appui long au doigt) sur une pièce pour la nommer. La flèche ronde au-dessus de ce qui est choisi (ou la touche R) le tourne d'un quart de tour, avec ce que la pièce contient ; Suppr le supprime, Échap le lâche. Ctrl+clic (ou Maj+clic, ou le bouton « Plusieurs ») choisit plusieurs pièces — Ctrl+A les prend toutes, un cadre tracé avec Ctrl en prend plusieurs d'un coup — et on les glisse ensemble. Une pièce peut prendre une autre forme (« Plus », puis « Forme » : trapèze, triangle, forme libre) : on tire ses sommets (ronds pleins), un petit rond creux au milieu d'un côté en ajoute un, un double-clic sur un sommet le retire. Les outils flottent sur le plan (▴ les replie) ; ce qui est choisi a sa petite carte à côté de lui. « ＋ Légende » pose un texte libre (« Entrée principale », « Vers le centre-ville ») qui se glisse où l'on veut. Les portes, fenêtres et baies se posent sur un mur de la pièce choisie, les meubles et les escaliers dedans ; les zones de dehors (cour, route, parking) se choisissent dans « Type de zone ».</p>
+      <p class="plan-aide">Glisser une pièce pour la déplacer, ses poignées pour l'agrandir ; glisser le fond pour se déplacer ; molette ou ＋ / － pour zoomer. Double-clic (ou appui long au doigt) sur une pièce pour la nommer. La flèche ronde au-dessus de ce qui est choisi (ou la touche R) le tourne d'un quart de tour, avec ce que la pièce contient ; Suppr le supprime, Échap le lâche. Ctrl+clic (ou Maj+clic, ou le bouton « Plusieurs ») choisit plusieurs pièces — Ctrl+A les prend toutes, un cadre tracé avec Ctrl en prend plusieurs d'un coup — et on les glisse ensemble. Une pièce peut prendre une autre forme (« Plus », puis « Forme » : trapèze, triangle, forme libre) : on tire ses sommets (ronds pleins), un petit rond creux au milieu d'un côté en ajoute un, un double-clic sur un sommet le retire. Les outils flottent sur le plan (▴ les replie) ; ce qui est choisi a sa petite carte à côté de lui. « ＋ Légende » pose un texte libre (« Entrée principale », « Vers le centre-ville ») qui se glisse où l'on veut. Les portes, les fenêtres (dans un mur plein) et les baies vitrées (du sol au plafond) se posent sur un mur de la pièce choisie, même en biais — « ↔ Tout le mur » fait d'une baie une façade vitrée —, les meubles et les escaliers dedans ; les zones de dehors (cour, route, parking) se choisissent dans « Type de zone ».</p>
       <div id="plan-panneau-place"><div class="plan-panneau" id="plan-panneau"></div></div>
       <details class="repli" style="margin-top:12px"><summary>Échelle du plan (facultative)</summary>
         <p class="discret" id="echelle-texte"></p>
@@ -791,16 +795,6 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
     </div>
   </section>
 
-  <!-- ═══ Notes de version ═══ -->
-  <section class="vue" id="vue-notes">
-    <div class="tete"><h2>Notes de version de la BASE</h2><div class="sous">Ce qui a changé dans la BASE, du plus récent au plus ancien. La BASE a ses propres notes : elle vit à part de la BAF, le temps de l'essayer.</div></div>
-    <div id="notes-contenu"></div>
-    <details class="repli no-print"><summary>Vérifier la BASE (contrôles automatiques)</summary>
-      <p class="discret">Des contrôles qui refont les calculs par un autre chemin et vérifient que rien ne se perd. Ils ne touchent pas à votre dossier.</p>
-      <button type="button" class="bt petit" onclick="afficherVerifications()">Lancer les vérifications</button>
-      <div id="verifs" style="margin-top:10px;"></div>
-    </details>
-  </section>
 </main>
 
 <!-- ═══ Fenêtres ═══ -->
@@ -885,7 +879,7 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
 <footer class="bas no-print">
   <div class="pied-inner">
     <div class="gauche">BASE, outil 3 de la BAF — créé par Émilie Musard, éducatrice spécialisée, et Arthur Guillieux, psychologue clinicien — EMIA35</div>
-    <div><button type="button" class="lien-pied" id="pied-version" onclick="aller('notes')"></button> · <button type="button" class="lien-pied" id="theme-bouton" onclick="basculerTheme()">☾ Mode sombre</button></div>
+    <div><a class="lien-pied" id="pied-version" href="index.html#notes-de-version" title="Les notes de version de la BASE sont dans celles de la BAF"></a> · <button type="button" class="lien-pied" id="theme-bouton" onclick="basculerTheme()">☾ Mode sombre</button></div>
   </div>
 </footer>
 
@@ -899,7 +893,7 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
    chose lue de la BAF, en lecture : le choix clair / sombre, pour s'ouvrir dans le même thème.
    ══════════════════════════════════════════════════════════════════════════════════════════════ */
 
-const VERSION_BASE = 'BASE v2026.10.13-11';
+const VERSION_BASE = 'BASE v2026.10.16-1';
 const CLE_SOCLE = 'base-dossier-v1', CLE_DECL = 'base-declarant-v1', CLE_MODE = 'base-mode', CLE_THEME = 'base-theme';
 const TYPES_ZONE = [['activite', "Salle d'activité"], ['sejour', 'Séjour, salon'], ['repas', 'Repas'], ['accueil', 'Accueil'], ['circulation', 'Circulation'],
   ['chambre', 'Chambre'], ['repos', 'Salle de repos'], ['calme', 'Salle de mise au calme'], ['snoezelen', 'Salle multisensorielle'], ['soins', 'Soins, infirmerie'],
@@ -978,6 +972,15 @@ function normaliserPlan(d) {
   pl.elements.forEach(e => {
     if (e.cat === 'escalier') { if (!Array.isArray(e.niveaux) || e.niveaux.length !== 2 || !e.niveaux.every(id => ids.has(id))) e.niveaux = [defaut, defaut]; if (!e.niveau || !ids.has(e.niveau)) e.niveau = e.niveaux[0]; }
     else if (!e.niveau || !ids.has(e.niveau)) e.niveau = defaut;
+  });
+  // Une ouverture sur un mur en biais (passe 238) garde le sens de son mur, remis à l'unité et de gauche à droite (son côté suit) ; un sens illisible ou un mur inconnu : à l'horizontale.
+  pl.elements.forEach(e => {
+    if (!murale(e)) return;
+    if (e.o === 'd') {
+      const L = Math.hypot(+e.dx, +e.dy);
+      if (!(L > 1e-9) || !Number.isFinite(L)) { e.o = 'h'; delete e.dx; delete e.dy; return; }
+      const sg = +e.dx > 0 || (+e.dx === 0 && +e.dy > 0) ? 1 : -1; e.dx = n6(sg * e.dx / L); e.dy = n6(sg * e.dy / L); if (sg < 0) e.cote = -(e.cote || 1);
+    } else { if (e.o !== 'v') e.o = 'h'; delete e.dx; delete e.dy; }
   });
   // Les légendes du plan (passe 229) : du texte posé sur un niveau, avec une taille et une flèche facultative.
   pl.legendes = (Array.isArray(pl.legendes) ? pl.legendes : []).filter(l => l && typeof l === 'object' && String(l.texte || '').trim() && Number.isFinite(+l.x) && Number.isFinite(+l.y))
@@ -1218,8 +1221,8 @@ function zoomer(f, cx, cy) {
    Une pièce est faite de rectangles (comme avant : p.rects, des angles droits, des morceaux collés) ou d'UN polygone (p.poly : [[x, y], …], trois sommets ou plus, dans
    le sens des aiguilles d'une montre à l'écran) : un trapèze, un triangle, un pan coupé, une forme libre. Un polygone garde aussi p.rects = [son rectangle englobant] :
    tout ce qui ne regarde que l'emprise (cadrage, cadre de sélection, collisions grossières) marche sans rien savoir des polygones ; ce qui dépend de la forme (dessin,
-   surface, murs communs, portes et fenêtres, croix, chaleur, enclaves) passe par les fonctions ci-dessous. Les portes et les fenêtres se posent sur les murs droits
-   (horizontaux ou verticaux). Rien de tout cela ne change une pièce faite de rectangles : elle suit exactement les chemins d'avant. */
+   surface, murs communs, portes et fenêtres, croix, chaleur, enclaves) passe par les fonctions ci-dessous. Les portes et les fenêtres se posent sur tous les murs,
+   droits ou en biais (passe 238 : une ouverture en biais a o = 'd' et le sens de son mur, dx et dy). Rien de tout cela ne change une pièce faite de rectangles : elle suit exactement les chemins d'avant. */
 const aPoly = p => !!p && Array.isArray(p.poly) && p.poly.length >= 3;
 const anneauRect = r => [[r.x, r.y], [r.x + r.w, r.y], [r.x + r.w, r.y + r.h], [r.x, r.y + r.h]];
 const anneauxDe = p => aPoly(p) ? [p.poly] : p.rects.map(anneauRect);
@@ -1333,21 +1336,40 @@ function mursDroitsDe(p) {
   });
   return out;
 }
+// Les murs en biais d'une pièce polygonale (passe 238) : {o: 'd', x1, y1, x2, y2 (de gauche à droite), ux, uy (le sens du mur, ux > 0), a: 0, b: longueur, int, piece}.
+// « int » : +1 si l'intérieur est du côté de la normale (−uy, ux), celle qui descend à l'écran — comme un mur horizontal, dont l'intérieur est en bas pour +1.
+function mursBiaisDe(p) {
+  const out = [];
+  aretesDe(p).forEach(e => {
+    const dx = e.x2 - e.x1, dy = e.y2 - e.y1, L = Math.hypot(dx, dy);
+    if (L <= EPS || Math.abs(dx) < 1e-9 || Math.abs(dy) < 1e-9) return;
+    const s = dx > 0 ? 1 : -1, x1 = s > 0 ? e.x1 : e.x2, y1 = s > 0 ? e.y1 : e.y2;
+    out.push({o: 'd', x1, y1, x2: x1 + s * dx, y2: y1 + s * dy, ux: s * dx / L, uy: s * dy / L, a: 0, b: L, int: s, piece: p.id});
+  });
+  return out;
+}
+// L'axe d'une ouverture : u le long de son mur, n la normale de son côté « + » (vers le bas pour un mur horizontal ou en biais, vers la droite pour un mur vertical).
+function axeOuv(e) {
+  if (e.o === 'd') { const L = Math.hypot(+e.dx || 0, +e.dy || 0); if (L > 1e-9) { const ux = e.dx / L, uy = e.dy / L; return {ux, uy, nx: -uy, ny: ux}; } }
+  return e.o === 'v' ? {ux: 0, uy: 1, nx: 1, ny: 0} : {ux: 1, uy: 0, nx: 0, ny: 1};
+}
+// Les deux bouts d'une ouverture, de part et d'autre de son centre (x, y).
+function boutsOuv(e) { const A = axeOuv(e), m = e.long / 2; return {x1: e.x - A.ux * m, y1: e.y - A.uy * m, x2: e.x + A.ux * m, y2: e.y + A.uy * m}; }
 // Y a-t-il, dans la bande d'une ouverture, un bout de cette pièce plus loin vers le dehors ? À quelle distance ? (pièce polygonale : on lance trois rayons)
 function distanceVers(q, e, int, portee) {
-  const demi = (e.long || 1) / 2, h = e.o === 'h', sens = -int;   // vers le dehors : le sens contraire de l'intérieur
+  const demi = (e.long || 1) / 2, A = axeOuv(e), sens = -int, rx = sens * A.nx, ry = sens * A.ny;   // vers le dehors : le sens contraire de l'intérieur (perpendiculaire au mur, même en biais)
   let best = null;
   [-.8, 0, .8].forEach(f => {
-    const bx = h ? e.x + f * demi : e.x, by = h ? e.y : e.y + f * demi;
+    const bx = e.x + f * demi * A.ux, by = e.y + f * demi * A.uy;
     // la plus petite distance t ≥ 0 où le rayon entre dans la pièce
     const ts = [];
     aretesDe(q).forEach(a => {
-      const rx = h ? 0 : sens, ry = h ? sens : 0, sx = a.x2 - a.x1, sy = a.y2 - a.y1, den = rx * sy - ry * sx; if (Math.abs(den) < 1e-12) return;
+      const sx = a.x2 - a.x1, sy = a.y2 - a.y1, den = rx * sy - ry * sx; if (Math.abs(den) < 1e-12) return;
       const t = ((a.x1 - bx) * sy - (a.y1 - by) * sx) / den, u = ((a.x1 - bx) * ry - (a.y1 - by) * rx) / den;
       if (t >= -EPS && u >= -1e-9 && u <= 1 + 1e-9) ts.push(t);
     });
     ts.sort((s, t) => s - t);
-    for (const t of ts) { if (dansStrict(q, bx + (h ? 0 : sens) * (t + .02), by + (h ? sens : 0) * (t + .02))) { if (t <= portee + EPS && (best === null || t < best)) best = Math.max(0, t); break; } }
+    for (const t of ts) { if (dansStrict(q, bx + rx * (t + .02), by + ry * (t + .02))) { if (t <= portee + EPS && (best === null || t < best)) best = Math.max(0, t); break; } }
   });
   return best;
 }
@@ -1710,20 +1732,46 @@ function murs() {
       {o: 'v', a: r.y, b: r.y + r.h, c: r.x, int: 1, piece: p.id}, {o: 'v', a: r.y, b: r.y + r.h, c: r.x + r.w, int: -1, piece: p.id});
   }));
   piecesNiveau(niveauActif()).filter(aPoly).forEach(p => mursDroitsDe(p).forEach(m => l.push(m)));   // les murs droits des pièces polygonales
+  piecesNiveau(niveauActif()).filter(aPoly).forEach(p => mursBiaisDe(p).forEach(m => l.push(m)));   // et leurs murs en biais (passe 238)
   return l;
 }
-// Accroche une ouverture au mur le plus proche du point (x, y), en restant entière sur ce mur.
+// Accroche une ouverture au mur le plus proche du point (x, y), en restant entière sur ce mur. Sur un mur en biais (passe 238), elle glisse par quarts de case
+// le long du mur et garde son sens (dx, dy, de gauche à droite).
 function accrocher(el, x, y) {
   let best = null, dmin = Infinity;
   murs().forEach(m => {
-    if (m.b - m.a < el.long) return;
-    const le = m.o === 'h' ? x : y, a = Math.max(m.a + el.long / 2, Math.min(m.b - el.long / 2, arrondi(le, .5)));
-    const px = m.o === 'h' ? a : m.c, py = m.o === 'h' ? m.c : a, d = Math.hypot(px - x, py - y);
+    if (m.b - m.a < el.long - 1e-9) return;
+    let px, py;
+    if (m.o === 'd') { const t = Math.max(el.long / 2, Math.min(m.b - el.long / 2, arrondi((x - m.x1) * m.ux + (y - m.y1) * m.uy, .25))); px = m.x1 + m.ux * t; py = m.y1 + m.uy * t; }
+    else { const le = m.o === 'h' ? x : y, a = Math.max(m.a + el.long / 2, Math.min(m.b - el.long / 2, arrondi(le, .5))); px = m.o === 'h' ? a : m.c; py = m.o === 'h' ? m.c : a; }
+    const d = Math.hypot(px - x, py - y);
     if (d < dmin - 1e-9) { dmin = d; best = {px, py, m}; }
   });
   if (!best) return false;
-  el.x = best.px; el.y = best.py; el.o = best.m.o; el.cote = best.m.int * (el.retourne ? -1 : 1);
+  const m = best.m;
+  el.x = m.o === 'd' ? n6(best.px) : best.px; el.y = m.o === 'd' ? n6(best.py) : best.py; el.o = m.o; el.cote = m.int * (el.retourne ? -1 : 1);
+  if (m.o === 'd') { el.dx = n6(m.ux); el.dy = n6(m.uy); } else { delete el.dx; delete el.dy; }
   return true;
+}
+// Le mur qui porte l'ouverture e (au niveau affiché) : le plus court de ceux qui la portent (la pièce, pas la terrasse qui longe toute la façade), ou null.
+function murDe(e) {
+  const l = murs().filter(m => {
+    if (m.o !== e.o) return false;
+    if (m.o === 'd') { const A = axeOuv(e); return Math.abs(A.ux * m.uy - A.uy * m.ux) < 1e-4 && distSegment(e.x, e.y, m.x1, m.y1, m.x2, m.y2) < 1e-3; }
+    return m.o === 'h' ? Math.abs(e.y - m.c) < 1e-6 && e.x >= m.a - 1e-6 && e.x <= m.b + 1e-6 : Math.abs(e.x - m.c) < 1e-6 && e.y >= m.a - 1e-6 && e.y <= m.b + 1e-6;
+  });
+  l.sort((a, b) => (a.b - a.a) - (b.b - b.a));
+  return l[0] || null;
+}
+const MAX_LONG = {porte: 4, fenetre: 8, baie: 80};   // en cases ; une baie peut faire toute une façade
+// « Tout le mur » : la fenêtre ou la baie couvre le mur où elle est posée, d'un bout à l'autre (une façade vitrée).
+function couvrirMur() {
+  modifierElement(e => {
+    const m = murDe(e); if (!m) return;
+    e.long = n6(Math.min(MAX_LONG[e.cat] || 4, m.b - m.a));
+    if (m.o === 'd') { const t = (m.b - m.a) / 2; e.x = n6(m.x1 + m.ux * t); e.y = n6(m.y1 + m.uy * t); }
+    else if (m.o === 'h') e.x = (m.a + m.b) / 2; else e.y = (m.a + m.b) / 2;
+  });
 }
 function centreElement(e) { return estRect(e) ? {x: e.x + e.w / 2, y: e.y + e.h / 2} : {x: e.x, y: e.y}; }
 // Les éléments posés dans une pièce — sans ceux de ses enclaves, qui suivent leur enclave.
@@ -1746,13 +1794,14 @@ function ajouterMural(cat) {
   if (selectionMultiple()) { toast('Choisissez une seule pièce pour y poser la ' + NOM_MURALE[cat] + '.'); return; }
   const r = p.rects[selection.morceau || 0], el = {id: nouvelId('e'), cat, niveau: niveauDe(p), long: LONG_MURALE[cat], retourne: false};
   // Sur le mur du bas du morceau, au milieu ; une deuxième se décale pour ne pas recouvrir la première
-  let x = r.x + r.w / 2, y = r.y + r.h, sens = 'h';
-  if (aPoly(p)) {   // une pièce de forme libre : sur son plus bas mur horizontal assez long (sinon sur un mur vertical)
-    const m = murPrincipal(p, el.long);
-    if (!m) { toast('Cette pièce n\'a pas de mur droit assez long pour y poser une ' + NOM_MURALE[cat] + ' : allongez un côté, ou changez sa forme.'); return; }
-    sens = m.o; x = m.o === 'h' ? (m.a + m.b) / 2 : m.c; y = m.o === 'h' ? m.c : (m.a + m.b) / 2;
+  let x = r.x + r.w / 2, y = r.y + r.h, pas = [1.5, 0];
+  if (aPoly(p)) {   // une pièce de forme libre : sur son plus bas mur horizontal assez long (sinon un mur vertical, sinon son plus long mur en biais : passe 238)
+    const m = murPrincipal(p, el.long) || mursBiaisDe(p).filter(w => w.b >= el.long - 1e-9).sort((a, b) => b.b - a.b)[0];
+    if (!m) { toast('Cette pièce n\'a pas de mur assez long pour y poser une ' + NOM_MURALE[cat] + ' : allongez un côté.'); return; }
+    if (m.o === 'd') { x = (m.x1 + m.x2) / 2; y = (m.y1 + m.y2) / 2; pas = [1.5 * m.ux, 1.5 * m.uy]; }
+    else { x = m.o === 'h' ? (m.a + m.b) / 2 : m.c; y = m.o === 'h' ? m.c : (m.a + m.b) / 2; pas = m.o === 'h' ? [1.5, 0] : [0, 1.5]; }
   }
-  while (elements().some(e => murale(e) && Math.abs(e.x - x) < .1 && Math.abs(e.y - y) < .1)) { if (sens === 'h') x += 1.5; else y += 1.5; }
+  while (elements().some(e => murale(e) && Math.abs(e.x - x) < .1 && Math.abs(e.y - y) < .1)) { x += pas[0]; y += pas[1]; }
   modifierPlan(() => { accrocher(el, x, y); elements().push(el); });
   selection = {elem: el.id}; rendrePlanEdition();
 }
@@ -1813,7 +1862,7 @@ function pivoterPiece() {
     groupe.forEach(q => { q.rects = q.rects.map(r => ({x: cx + cy - r.y - r.h, y: cy - cx + r.x, w: r.h, h: r.w})); if (aPoly(q)) { q.poly = q.poly.map(t => [cx + cy - t[1], cy - cx + t[0]]); recaler(q); } q.rot = (rotDe(q) + 1) & 3; if (!q.rot) delete q.rot; });
     els.forEach(e => {
       if (estRect(e)) { const x = n6(cx + cy - e.y - e.h), y = n6(cy - cx + e.x), w = e.h; e.x = x; e.y = y; e.h = e.w; e.w = w; }
-      else { const x = n6(cx + cy - e.y), y = n6(cy - cx + e.x); e.x = x; e.y = y; if (e.o === 'h') { e.o = 'v'; e.cote = -(e.cote || 1); } else { e.o = 'h'; e.cote = e.cote || 1; } }   // le mur tourne, le sens du battant avec lui
+      else { const x = n6(cx + cy - e.y), y = n6(cy - cx + e.x); e.x = x; e.y = y; if (e.o === 'd') { const ux = -e.dy, uy = e.dx, sg = ux > 0 ? 1 : -1; e.dx = n6(sg * ux); e.dy = n6(sg * uy); e.cote = sg * (e.cote || 1); } else if (e.o === 'h') { e.o = 'v'; e.cote = -(e.cote || 1); } else { e.o = 'h'; e.cote = e.cote || 1; } }   // le mur tourne, le sens du battant avec lui (en biais : le sens du mur tourne d'un quart de tour, passe 238)
     });
   });
 }
@@ -1947,6 +1996,7 @@ function boiteSelection() {
   if (selection.elem) {
     const e = elemParId(selection.elem); if (!e) return null;
     if (estRect(e)) return {x: e.x, y: e.y, w: e.w, h: e.h};
+    if (e.o === 'd') { const b = boutsOuv(e); return {x: Math.min(b.x1, b.x2) - .35, y: Math.min(b.y1, b.y2) - .35, w: Math.abs(b.x2 - b.x1) + .7, h: Math.abs(b.y2 - b.y1) + .7}; }
     return e.o === 'h' ? {x: e.x - e.long / 2, y: e.y - .35, w: e.long, h: .7} : {x: e.x - .35, y: e.y - e.long / 2, w: .7, h: e.long};
   }
   const ps = piecesEnSelection(); return ps.length ? boite(ps) : null;
@@ -1991,13 +2041,13 @@ function majVidePlan(n) {
 function tailleElement(champ, delta) {
   modifierElement(e => {
     if (estRect(e)) e[champ] = Math.max(.5, Math.min(12, +(e[champ] + delta).toFixed(2)));
-    else { e.long = Math.max(.5, Math.min(4, +(e.long + delta).toFixed(2))); accrocher(e, e.x, e.y); }
+    else { const m = murDe(e); e.long = Math.max(.5, Math.min(MAX_LONG[e.cat] || 4, m ? n6(m.b - m.a) : Infinity, +(e.long + delta).toFixed(2))); accrocher(e, e.x, e.y); }
   });
 }
 function retournerPorte() { modifierElement(e => { e.retourne = !e.retourne; e.cote = -(e.cote || 1); }); }
 function typerMeuble(t) { modifierElement(e => { e.type = t; }); }
 function vitrerPorte(v) { modifierElement(e => { if (v) e.vitrage = v; else delete e.vitrage; }); }
-function typerOuverture(cat) { modifierElement(e => { if (e.cat === cat) return; e.cat = cat; e.long = Math.max(.5, Math.min(4, cat === 'baie' ? Math.max(e.long, 2.5) : Math.min(e.long, 1.5))); accrocher(e, e.x, e.y); }); }
+function typerOuverture(cat) { modifierElement(e => { if (e.cat === cat) return; e.cat = cat; e.long = Math.max(.5, Math.min(MAX_LONG[cat] || 4, cat === 'baie' ? Math.max(e.long, 2.5) : Math.min(e.long, 1.5))); accrocher(e, e.x, e.y); }); }
 function typerEscalier(t) { modifierElement(e => { e.type = t; }); }
 function relierEscalier(autre) {
   modifierElement(e => {
@@ -2056,31 +2106,32 @@ function dessinElements(o) {
   const k = o.k || 26, ep = (o.trait || 2.2) / k, els = o.niveau !== undefined ? elementsNiveau(o.niveau) : ((D && D.b1.plan.elements) || []);
   const rects = els.filter(estRect).map(e => e.cat === 'escalier' ? dessinEscalier(e, o, ep) : dessinMeuble(e, o, ep)).join('');
   const muraux = els.filter(murale).map(e => {
-    const L = e.long, h = e.o === 'h', x1 = h ? e.x - L / 2 : e.x, y1 = h ? e.y : e.y - L / 2, x2 = h ? e.x + L / 2 : e.x, y2 = h ? e.y : e.y + L / 2;
+    // Le long de son mur, horizontal, vertical ou en biais (passe 238) : A.u suit le mur, A.n le traverse.
+    const L = e.long, h = e.o === 'h', A = axeOuv(e), B = boutsOuv(e), x1 = B.x1, y1 = B.y1, x2 = B.x2, y2 = B.y2;
     const sel = o.selection === e.id, cote = e.cote || 1;
-    let g = '<line class="ouverture" x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke-width="' + ep * 2.8 + '"/>';
+    const ligne = (cls, d, sw) => '<line class="' + cls + '" x1="' + n6(x1 + A.nx * d) + '" y1="' + n6(y1 + A.ny * d) + '" x2="' + n6(x2 + A.nx * d) + '" y2="' + n6(y2 + A.ny * d) + '" stroke-width="' + sw + '"/>';
+    const travers = (cls, t, b, sw) => { const px = x1 + A.ux * t, py = y1 + A.uy * t; return '<line class="' + cls + '" x1="' + n6(px - A.nx * b) + '" y1="' + n6(py - A.ny * b) + '" x2="' + n6(px + A.nx * b) + '" y2="' + n6(py + A.ny * b) + '" stroke-width="' + sw + '"/>'; };   // un trait en travers du mur, à t du premier bout
+    const bande = (cls, b, extra) => '<polygon class="' + cls + '"' + (extra || '') + ' points="' + [[x1, y1, b], [x2, y2, b], [x2, y2, -b], [x1, y1, -b]].map(([x, y, t]) => n6(x + A.nx * t) + ',' + n6(y + A.ny * t)).join(' ') + '"/>';
+    let g = ligne('ouverture', 0, ep * 2.8);
     if (e.cat === 'porte') {
-      const fx = h ? x1 : x1 + cote * L, fy = h ? y1 + cote * L : y1;   // le battant, ouvert à angle droit depuis le gond
-      const sweep = h ? (cote > 0 ? 1 : 0) : (cote > 0 ? 0 : 1);
-      g += '<line class="porte' + (e.vitrage === 'vitree' ? ' vitree' : '') + '" x1="' + x1 + '" y1="' + y1 + '" x2="' + fx + '" y2="' + fy + '" stroke-width="' + ep * (e.vitrage === 'vitree' ? 1.3 : .9) + '"/>' +
-        '<path class="porte-arc" d="M' + x2 + ' ' + y2 + ' A' + L + ' ' + L + ' 0 0 ' + sweep + ' ' + fx + ' ' + fy + '" stroke-width="' + ep * .5 + '"/>';
-      if (e.vitrage === 'hublot') g += '<circle class="hublot" cx="' + (x1 + fx) / 2 + '" cy="' + (y1 + fy) / 2 + '" r="' + Math.min(.2, L * .2) + '" stroke-width="' + ep * .6 + '"/>';
+      const fx = n6(x1 + cote * L * A.nx), fy = n6(y1 + cote * L * A.ny), sweep = cote * (A.ux * A.ny - A.uy * A.nx) > 0 ? 1 : 0;   // le battant, ouvert à angle droit depuis le gond
+      g += '<line class="porte' + (e.vitrage === 'vitree' ? ' vitree' : '') + '" x1="' + n6(x1) + '" y1="' + n6(y1) + '" x2="' + fx + '" y2="' + fy + '" stroke-width="' + ep * (e.vitrage === 'vitree' ? 1.3 : .9) + '"/>' +
+        '<path class="porte-arc" d="M' + n6(x2) + ' ' + n6(y2) + ' A' + L + ' ' + L + ' 0 0 ' + sweep + ' ' + fx + ' ' + fy + '" stroke-width="' + ep * .5 + '"/>';
+      if (e.vitrage === 'hublot') g += '<circle class="hublot" cx="' + n6((x1 + fx) / 2) + '" cy="' + n6((y1 + fy) / 2) + '" r="' + Math.min(.2, L * .2) + '" stroke-width="' + ep * .6 + '"/>';
     } else if (e.cat === 'baie') {
-      const d = ep * 1.25, dx = h ? 0 : d, dy = h ? d : 0, b = .22, bx = h ? 0 : b, by = h ? b : 0;   // une baie : un vitrage plus épais, ses montants aux deux bouts
-      g += '<line class="baie" x1="' + (x1 - dx) + '" y1="' + (y1 - dy) + '" x2="' + (x2 - dx) + '" y2="' + (y2 - dy) + '" stroke-width="' + ep * .75 + '"/>' +
-        '<line class="baie" x1="' + (x1 + dx) + '" y1="' + (y1 + dy) + '" x2="' + (x2 + dx) + '" y2="' + (y2 + dy) + '" stroke-width="' + ep * .75 + '"/>' +
-        '<line class="baie" x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke-width="' + ep * .5 + '"/>' +
-        '<line class="baie" x1="' + (x1 - bx) + '" y1="' + (y1 - by) + '" x2="' + (x1 + bx) + '" y2="' + (y1 + by) + '" stroke-width="' + ep * 1.1 + '"/>' +
-        '<line class="baie" x1="' + (x2 - bx) + '" y1="' + (y2 - by) + '" x2="' + (x2 + bx) + '" y2="' + (y2 + by) + '" stroke-width="' + ep * 1.1 + '"/>';
+      // Une baie vitrée, du sol au plafond : une bande de verre bleutée entre deux traits, un montant à peu près tous les mètres et aux deux bouts —
+      // rien à voir avec la fenêtre, qui reste trois traits fins dans un mur plein (passe 238).
+      const d = ep * 1.25, ech = D && D.b1 && D.b1.echelle > 0 ? D.b1.echelle : 0, n = Math.max(1, Math.round(L / (ech ? 1 / ech : 2)));
+      g += bande('baie-verre', d) + ligne('baie', -d, ep * .75) + ligne('baie', d, ep * .75);
+      for (let i = 0; i <= n; i++) g += travers('baie', L * i / n, i === 0 || i === n ? .22 : d, ep * (i === 0 || i === n ? 1.1 : .6));
     } else {
-      const d = ep * .9, dx = h ? 0 : d, dy = h ? d : 0;
-      g += '<line class="ouv-fenetre" x1="' + (x1 - dx) + '" y1="' + (y1 - dy) + '" x2="' + (x2 - dx) + '" y2="' + (y2 - dy) + '" stroke-width="' + ep * .55 + '"/>' +
-        '<line class="ouv-fenetre" x1="' + (x1 + dx) + '" y1="' + (y1 + dy) + '" x2="' + (x2 + dx) + '" y2="' + (y2 + dy) + '" stroke-width="' + ep * .55 + '"/>' +
-        '<line class="ouv-fenetre" x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke-width="' + ep * .35 + '"/>';
+      const d = ep * .9;
+      g += ligne('ouv-fenetre', -d, ep * .55) + ligne('ouv-fenetre', d, ep * .55) + ligne('ouv-fenetre', 0, ep * .35);
     }
     if (o.edition) {
       const z = .7, zx = h ? x1 : e.x - z / 2, zy = h ? e.y - z / 2 : y1;
-      g += '<rect class="elem-zone' + (sel ? ' selection' : '') + '" data-elem="' + e.id + '" x="' + zx + '" y="' + zy + '" width="' + (h ? L : z) + '" height="' + (h ? z : L) + '" rx="' + (.12) + '" stroke-width="' + (1.5 / k) + '"/>';
+      if (e.o === 'd') g += bande('elem-zone' + (sel ? ' selection' : ''), z / 2, ' data-elem="' + e.id + '" stroke-width="' + (1.5 / k) + '"');
+      else g += '<rect class="elem-zone' + (sel ? ' selection' : '') + '" data-elem="' + e.id + '" x="' + zx + '" y="' + zy + '" width="' + (h ? L : z) + '" height="' + (h ? z : L) + '" rx="' + (.12) + '" stroke-width="' + (1.5 / k) + '"/>';
     }
     return '<g class="' + e.cat + '-g">' + g + '</g>';
   }).join('');
@@ -2214,9 +2265,10 @@ function remplirPanneau() {
         '<div class="boutons"><button type="button" class="bt petit" onclick="tailleElement(\'long\',-.5)">Plus étroite</button><button type="button" class="bt petit" onclick="tailleElement(\'long\',.5)">Plus large</button>' +
         '<button type="button" class="bt petit" onclick="retournerPorte()">⇅ Ouvrir de l\'autre côté</button><button type="button" class="bt petit danger" onclick="supprimerElement()">Supprimer</button>' + fini + '</div>';
     } else {
-      el.innerHTML = '<p class="discret"><b>' + (e.cat === 'baie' ? 'La baie vitrée' : 'La fenêtre') + '</b> glisse le long des murs : faites-la glisser jusqu\'à sa place.</p>' +
-        '<div class="grille2"><label class="champ"><span>L\'ouverture</span>' + selectHtml('po-type', e.cat, [['fenetre', 'Fenêtre'], ['baie', 'Baie vitrée (jusqu\'au sol)']], 'typerOuverture(this.value)') + '</label></div>' +
+      el.innerHTML = '<p class="discret"><b>' + (e.cat === 'baie' ? 'La baie vitrée' : 'La fenêtre') + '</b> ' + (e.cat === 'baie' ? '(vitrée du sol au plafond)' : '(dans un mur plein)') + ' glisse le long des murs, même en biais : faites-la glisser jusqu\'à sa place.</p>' +
+        '<div class="grille2"><label class="champ"><span>L\'ouverture</span>' + selectHtml('po-type', e.cat, [['fenetre', 'Fenêtre (mur plein)'], ['baie', 'Baie vitrée']], 'typerOuverture(this.value)') + '</label></div>' +
         '<div class="boutons"><button type="button" class="bt petit" onclick="tailleElement(\'long\',-.5)">Plus étroite</button><button type="button" class="bt petit" onclick="tailleElement(\'long\',.5)">Plus large</button>' +
+        '<button type="button" class="bt petit" onclick="couvrirMur()" title="D\'un bout à l\'autre du mur où elle est posée (une façade vitrée)">↔ Tout le mur</button>' +
         '<button type="button" class="bt petit danger" onclick="supprimerElement()">Supprimer</button>' + fini + '</div>';
     }
     if (actif && /^p[a-z]-/.test(actif)) { const n = $(actif); if (n) n.focus({preventScroll: true}); }
@@ -2443,6 +2495,15 @@ function segmentsCommuns(p, q) {
 // Les pièces dont un bord porte l'ouverture e (porte, fenêtre, baie) ; « ints » dit de quel côté de ce bord est l'intérieur (+1 : vers les x ou y croissants).
 function bordsDe(e, l) {
   const out = {};
+  if (e.o === 'd') {   // une ouverture sur un mur en biais (passe 238) : les arêtes de même direction qui la portent ; l'intérieur est du côté de la normale si l'arête va dans le sens du mur
+    const A = axeOuv(e);
+    l.forEach(p => aretesDe(p).forEach(t => {
+      const dx = t.x2 - t.x1, dy = t.y2 - t.y1, len = Math.hypot(dx, dy); if (len < EPS) return;
+      if (Math.abs(dx * A.uy - dy * A.ux) > 1e-4 * len || distSegment(e.x, e.y, t.x1, t.y1, t.x2, t.y2) > 1e-3) return;
+      (out[p.id] = out[p.id] || {p, ints: []}).ints.push(dx * A.ux + dy * A.uy > 0 ? 1 : -1);
+    }));
+    return Object.values(out);
+  }
   l.forEach(p => (aPoly(p) ? [] : p.rects).forEach(r => {
     let c = null;
     if (e.o === 'h') { if (e.x >= r.x - EPS && e.x <= r.x + r.w + EPS) { if (Math.abs(e.y - r.y) < EPS) c = 1; else if (Math.abs(e.y - (r.y + r.h)) < EPS) c = -1; } }
@@ -2459,7 +2520,7 @@ function bordsDe(e, l) {
 // Qu'y a-t-il en face de l'ouverture e, du côté du dehors (int : côté de l'intérieur) ? La pièce la plus proche, dans la bande de l'ouverture.
 function sonder(e, int, pieces, portee, exclure) {
   const demi = (e.long || 1) / 2; let best = null;
-  pieces.forEach(q => { if (exclure && q.id === exclure) return; if (aPoly(q)) { const t = distanceVers(q, e, int, portee); if (t !== null && (best === null || t < best.d)) best = {q, d: t}; return; } q.rects.forEach(r => {
+  pieces.forEach(q => { if (exclure && q.id === exclure) return; if (aPoly(q) || e.o === 'd') { const t = distanceVers(q, e, int, portee); if (t !== null && (best === null || t < best.d)) best = {q, d: t}; return; } q.rects.forEach(r => {
     let d;
     if (e.o === 'h') { if (Math.min(e.x + demi, r.x + r.w) - Math.max(e.x - demi, r.x) <= EPS) return; d = int === 1 ? e.y - (r.y + r.h) : r.y - e.y; }
     else { if (Math.min(e.y + demi, r.y + r.h) - Math.max(e.y - demi, r.y) <= EPS) return; d = int === 1 ? e.x - (r.x + r.w) : r.x - e.x; }
@@ -2533,7 +2594,7 @@ function lectureDuPlan(b1) {
   const adjDe = (x, y) => L.adj.find(a => (a.a === x && a.b === y) || (a.a === y && a.b === x));
   // Une enclave touche la pièce qui la contient par ses propres murs : ceux dont l'autre côté est dans la grande pièce (ni dehors, ni dans une autre enclave).
   const contient = (q, x, y) => dansStrict(q, x, y);
-  const dehorsDe = (e, int) => e.o === 'h' ? {x: e.x, y: e.y - int * .25} : {x: e.x - int * .25, y: e.y};   // un point juste de l'autre côté du mur
+  const dehorsDe = (e, int) => { const A = axeOuv(e); return {x: e.x - int * .25 * A.nx, y: e.y - int * .25 * A.ny}; };   // un point juste de l'autre côté du mur (même en biais)
   ps.filter(c => parentDe[c.id]).forEach(c => {
     const q = objDe[parentDe[c.id]], freres = enfantsDe[q.id].filter(id => id !== c.id).map(id => objDe[id]), segs = [];
     (aPoly(c) ? [mursDroitsDe(c).map(m => [m.o, m.c, m.a, m.b, -m.int])] : c.rects.map(r => [['h', r.y, r.x, r.x + r.w, -1], ['h', r.y + r.h, r.x, r.x + r.w, 1], ['v', r.x, r.y, r.y + r.h, -1], ['v', r.x + r.w, r.y, r.y + r.h, 1]])).forEach(tuples => tuples.forEach(([o, cc, a, b, sens]) => {
@@ -2579,7 +2640,7 @@ function lectureDuPlan(b1) {
         const dessous = []; nivs.forEach((m, i) => { if (i < rang[n]) parNiv[m.id].forEach(q => { if (L.pieces[q.id].ext) dessous.push(q); }); });
         v = sonder(e, int, dessous, PORTEE_VUE_HAUT); haut = !!v;
       }
-      const dir = e.o === 'h' ? {dx: 0, dy: -int} : {dx: -int, dy: 0};
+      const A = axeOuv(e), dir = {dx: -int * A.nx, dy: -int * A.ny};   // perpendiculaire au mur, vers le dehors
       L.vues.push({de: b.p.id, vers: v ? v.q.id : null, d: v ? v.d : null, e, plongeante: haut, dir});
       if (!f.ext) { if (e.cat === 'baie') f.baies++; else f.fenetres++; }
     }
@@ -3928,7 +3989,7 @@ function majSynthese() {
 }
 // Les styles des images exportées (toujours claires : elles partent dans un document). Le plan vierge et la carte les partagent.
 function styleExport() {
-  return '<style>.piece-trait{fill:none;stroke:#2C2416}.exterieur .piece-trait{stroke:#6E8F6A}.piece-fond{fill:#FFFDF8}.ouverture{stroke:#FFFDF8}.porte{stroke:#2C2416}.porte.vitree{stroke:#5A6D8B}.hublot{fill:#FFFDF8;stroke:#5A6D8B}.porte-arc{fill:none;stroke:#6B6152}.ouv-fenetre{stroke:#5A6D8B}.baie{stroke:#5A6D8B}.escalier-fond{fill:#F5E8C8;stroke:#82692D}.escalier-trait{stroke:#82692D}.escalier-nom{font-weight:700;fill:#82692D;text-anchor:middle;dominant-baseline:middle;paint-order:stroke;stroke:#F5E8C8;stroke-width:.14px}.meuble-fond{fill:#EDE7D9;stroke:#746B5B}.meuble.filigrane{opacity:.35}.piece-nom{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;font-weight:700;text-anchor:middle;dominant-baseline:middle}.piece-type{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;text-anchor:middle;dominant-baseline:middle}.piece-sous{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;text-anchor:middle;dominant-baseline:middle}text{font-family:Space Grotesk,Segoe UI,Arial,sans-serif}.zone-exterieur .piece-fond,.zone-preau .piece-fond{fill:#E3ECD6}.zone-route .piece-fond,.zone-parking .piece-fond{fill:#D9D6CF}.route-ligne,.parking-ligne{stroke:#FFFFFF;opacity:.85}.piece-sous{font-family:Space Grotesk,Segoe UI,Arial,sans-serif}.chaleur .piece-nom,.chaleur .piece-type,.chaleur .piece-sous{paint-order:stroke;stroke:#FFFDF8;stroke-width:.22;stroke-linejoin:round}.croix-point{fill:#2D3B52;stroke:#FFFDF8;stroke-width:.06;opacity:.9}.leg-texte{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;font-style:italic;font-weight:600;fill:#6B6152;text-anchor:middle;paint-order:stroke;stroke:#FFFDF8;stroke-linejoin:round}</style>';
+  return '<style>.piece-trait{fill:none;stroke:#2C2416}.exterieur .piece-trait{stroke:#6E8F6A}.piece-fond{fill:#FFFDF8}.ouverture{stroke:#FFFDF8}.porte{stroke:#2C2416}.porte.vitree{stroke:#5A6D8B}.hublot{fill:#FFFDF8;stroke:#5A6D8B}.porte-arc{fill:none;stroke:#6B6152}.ouv-fenetre{stroke:#5A6D8B}.baie{stroke:#2F7FB5}.baie-verre{fill:#D3E8F6}.escalier-fond{fill:#F5E8C8;stroke:#82692D}.escalier-trait{stroke:#82692D}.escalier-nom{font-weight:700;fill:#82692D;text-anchor:middle;dominant-baseline:middle;paint-order:stroke;stroke:#F5E8C8;stroke-width:.14px}.meuble-fond{fill:#EDE7D9;stroke:#746B5B}.meuble.filigrane{opacity:.35}.piece-nom{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;font-weight:700;text-anchor:middle;dominant-baseline:middle}.piece-type{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;text-anchor:middle;dominant-baseline:middle}.piece-sous{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;text-anchor:middle;dominant-baseline:middle}text{font-family:Space Grotesk,Segoe UI,Arial,sans-serif}.zone-exterieur .piece-fond,.zone-preau .piece-fond{fill:#E3ECD6}.zone-route .piece-fond,.zone-parking .piece-fond{fill:#D9D6CF}.route-ligne,.parking-ligne{stroke:#FFFFFF;opacity:.85}.piece-sous{font-family:Space Grotesk,Segoe UI,Arial,sans-serif}.chaleur .piece-nom,.chaleur .piece-type,.chaleur .piece-sous{paint-order:stroke;stroke:#FFFDF8;stroke-width:.22;stroke-linejoin:round}.croix-point{fill:#2D3B52;stroke:#FFFDF8;stroke-width:.06;opacity:.9}.leg-texte{font-family:Space Grotesk,Segoe UI,Arial,sans-serif;font-style:italic;font-weight:600;fill:#6B6152;text-anchor:middle;paint-order:stroke;stroke:#FFFDF8;stroke-linejoin:round}</style>';
 }
 // L'image de la carte : toujours claire (elle part dans un document), avec son titre, sa légende et l'avertissement. Celle du calque choisi.
 function svgExport() {
@@ -4058,7 +4119,6 @@ function rendreVue() {
   if (v === 'preambule') { $('b1-lieu').value = D.b1.lieu; $('b1-debut').value = D.b1.dates.debut; $('b1-fin').value = D.b1.dates.fin; rendreListes(); majEchelleTexte(); requestAnimationFrame(() => { if (!rendreVue.vu) { rendreVue.vu = true; ajusterVue(); } else rendrePlanEdition(); }); }
   if (v === 'recueillir') rendreRecueillir();
   if (v === 'synthese') { remplirFiltres(); majSynthese(); }
-  if (v === 'notes') rendreNotes();
 }
 function majBarre() {
   const el = $('barre-etat'); if (!el || !D) return;
@@ -4101,9 +4161,10 @@ function effacer() {
    troisième élément : la part des épisodes qui posent leur croix (0,85 par défaut) ; le premier épisode de chaque pièce a toujours la sienne. « rot » :
    [[numéro de la pièce, quarts de tour déjà faits]], pour que les simulations passent aussi par les pièces tournées. « formes » (passe 236) :
    [[numéro de la pièce, [[x, y], …]]], une pièce dessinée en polygone (ses sommets, dans le plan tel qu'on le voit). */
-const VERSION_SIMULATION = 3;
+// Passe 238 : une pièce à pan coupé dans chaque lieu, avec une fenêtre dans le mur en biais (fenêtre [x, y, 'd', largeur, niveau, type, [sens du mur]]).
+const VERSION_SIMULATION = 4;
 const LIEUX_SIMULES = [
-  {nom: 'Bâtiment provisoire', desc: 'Un IME déménagé dans des bureaux, dessiné sans échelle : un hall unique où tout le monde arrive, un long couloir aveugle, des salles sans fenêtre, une cour non clôturée contre la route, et le parking devant la porte. Ses fiches de pièces sont remplies en mode rapide. Son réfectoire, très grand, contient trois petites pièces : un office, un local chariots et un coin calme. Les sanitaires, un ancien bureau, ont gardé leur porte vitrée. Presque toutes ses pièces ont leurs croix (au moins une par pièce qui a des épisodes) ; la salle bleue est dessinée tournée d\'un quart de tour et le parking est un trapèze : de quoi voir ce que la carte thermique sait faire.', graine: 7,
+  {nom: 'Bâtiment provisoire', desc: 'Un IME déménagé dans des bureaux, dessiné sans échelle : un hall unique où tout le monde arrive, un long couloir aveugle, des salles sans fenêtre, une cour non clôturée contre la route, et le parking devant la porte. Ses fiches de pièces sont remplies en mode rapide. Son réfectoire, très grand, contient trois petites pièces : un office, un local chariots et un coin calme. Les sanitaires, un ancien bureau, ont gardé leur porte vitrée. Presque toutes ses pièces ont leurs croix (au moins une par pièce qui a des épisodes) ; la salle bleue est dessinée tournée d\'un quart de tour et le parking est un trapèze ; les sanitaires ont un pan coupé, avec une fenêtre dans le mur en biais : de quoi voir ce que la carte thermique sait faire.', graine: 7,
     legendes: [['Entrée principale', -4.2, 2.2, 'm', 'e'], ['Vers le centre-ville', -10.5, -4.6, 'm', 'n']],
     pronostics: [['AES / AMP', [0, 2, 4]], ['Éducateur·rice spécialisé·e', [0, 4, 9]], ['Moniteur·rice-éducateur·rice', [0, 8]]],
     dates: ['2026-09-07', '2026-09-25'], moments: null,
@@ -4112,7 +4173,7 @@ const LIEUX_SIMULES = [
       ['Route', 'route', [[-12, -3, 3, 20]]], ['Parking', 'parking', [[-9, 0, 9, 8]]], ['Cour (sans clôture)', 'exterieur', [[-9, 8, 9, 5]]],
       ['Office', 'autre', [[1, 11, 3, 3]], 0, 4], ['Local chariots', 'autre', [[6, 11, 3, 3]], 0, 4], ['Coin calme', 'repos', [[12, 11, 3, 2]], 0, 4]],
     portes: [[0, 3, 'v', 1.5, 1], [10, 3, 'v', 1, 1], [13, 4, 'h', 1, 1], [19, 4, 'h', 1, 1], [22, 11, 'v', 1, -1], [24, 3, 'v', 1, 1, 0, 'vitree'], [5, 6, 'h', 1.5, 1], [0, 12, 'v', 1.2, 1], [2.5, 11, 'h', 1, -1], [7.5, 11, 'h', 1, -1], [12, 12, 'v', 1, -1]],
-    fenetres: [[5, 0, 'h', 2], [0, 9.5, 'v', 2], [19, 14, 'h', 2], [28, 2.5, 'v', 1], [13.5, 11, 'h', 1.5]],
+    fenetres: [[5, 0, 'h', 2], [0, 9.5, 'v', 2], [19, 14, 'h', 2], [27, 1, 'd', 1.5, 0, 0, [1, 1]], [13.5, 11, 'h', 1.5]],
     meubles: [['banc', 1, 1, 3, .6], ['table', 11, 6, 2, 1.2], ['table', 14, 6, 2, 1.2], ['chaise', 11.5, 7.5, .7, .7], ['chaise', 14.5, 7.5, .7, .7], ['table', 18, 6, 2, 1.2],
       ['table', 1.5, 7.2, 3, 1.2], ['table', 5.5, 7.2, 3, 1.2], ['table', 1.5, 8.9, 3, 1.2], ['table', 5.5, 8.9, 3, 1.2], ['tapis', 16.5, 10.5, 2, 2], ['canape', 19, 12.5, 2.6, 1], ['tapis', 12.4, 11.4, 2.2, 1.2]],
     fiches: [
@@ -4134,9 +4195,9 @@ const LIEUX_SIMULES = [
       [2, [[.43, .1, .7, 3], [.5, .55, 1.6, 3]], .7], [3, [[.4, .1, .6, 3], [.5, .6, 1.2, 2]], .7], [5, [[.93, .25, .5, 3], [.5, .6, 1, 2]], .7], [6, [[.1, .6, .5, 4], [.85, .4, .5, 1]], .7], [7, [[.5, .33, 2, 2]], .7],
       [10, [[.5, .12, .4, 4], [.5, .7, .6, 1]], .7], [11, [[.5, .12, .4, 3], [.3, .75, .6, 2]], .7], [12, [[.12, .5, .4, 3], [.6, .12, .5, 2]], .7]],
     rot: [[2, 1]],
-    formes: [[8, [[-9, 2], [0, 0], [0, 8], [-9, 8]]]],   // le parking : un trapèze rectangle, son haut en pente
+    formes: [[8, [[-9, 2], [0, 0], [0, 8], [-9, 8]]], [6, [[24, 0], [26, 0], [28, 2], [28, 5], [24, 5]]]],   // le parking : un trapèze rectangle, son haut en pente ; les sanitaires : un pan coupé
     commentaires: ['Arrivée de tous les jeunes en même temps, le hall résonne.', 'S\'est bouché les oreilles puis est sorti en courant.', 'Bruit des chaises au réfectoire.', 'Descendu du taxi, a couru vers la route.']},
-  {nom: 'Foyer d\'hébergement', desc: 'Une unité de vie sur deux niveaux : salon avec baie vitrée sur le jardin, salle à manger et chambres au rez-de-chaussée ; à l\'étage, des chambres au-dessus de la salle à manger, qui voient le parking, et une salle de mise au calme. Un escalier et un ascenseur relient les deux. Deux fiches détaillées, les autres rapides. Un abri de jardin s\'ouvre sur le jardin (une pièce enclavée dans une pièce de dehors). La salle d\'eau de l\'étage a une porte vitrée. Presque toutes les pièces ont leurs croix, la chambre 1 est dessinée tournée et le jardin a un pan coupé.', graine: 19,
+  {nom: 'Foyer d\'hébergement', desc: 'Une unité de vie sur deux niveaux : salon avec baie vitrée sur le jardin, salle à manger et chambres au rez-de-chaussée ; à l\'étage, des chambres au-dessus de la salle à manger, qui voient le parking, et une salle de mise au calme. Un escalier et un ascenseur relient les deux. Deux fiches détaillées, les autres rapides. Un abri de jardin s\'ouvre sur le jardin (une pièce enclavée dans une pièce de dehors). La salle d\'eau de l\'étage a une porte vitrée. Presque toutes les pièces ont leurs croix, la chambre 1 est dessinée tournée, le jardin a un pan coupé et la cuisine aussi, avec sa fenêtre dans le mur en biais.', graine: 19,
     legendes: [['Entrée principale', 11.5, -1.8, 'm', 's'], ['Vers le centre-ville', -1, -10.5, 'm', 'o']],
     pronostics: [['Éducateur·rice spécialisé·e', [2, 4]], ['AES / AMP', [2, 8]], ['Infirmier·e', [4, 5]]],
     dates: ['2026-09-14', '2026-10-02'],
@@ -4153,13 +4214,13 @@ const LIEUX_SIMULES = [
     portes: [[0, 4.5, 'v', 1.5, 1], [8, 3, 'v', 1, 1], [15, 2, 'v', 1, 1], [4, 6, 'h', 1, -1], [2.5, 8, 'h', 1, 1], [7.5, 8, 'h', 1, 1], [12.5, 8, 'h', 1, 1],
       [19, 10, 'v', 1, 1], [19, 14, 'v', 1, 1], [17, 10.5, 'v', 1, -1], [11.5, 0, 'h', 1.5, 1],
       [2.5, 6, 'h', 1, -1, 1, 'hublot'], [6.5, 6, 'h', 1, -1, 1, 'vitree'], [10.5, 6, 'h', 1, -1, 1], [15.5, 6, 'h', 1, -1, 1], [-4.5, 10, 'h', 1, -1]],
-    fenetres: [[2.5, 13, 'h', 1.5], [7.5, 13, 'h', 1.5], [12.5, 13, 'h', 1.5], [4, 0, 'h', 2], [19, 2, 'v', 1], [23, 10, 'v', 1.5], [23, 14, 'v', 1.5], [13.5, 0, 'h', 1.5],
+    fenetres: [[2.5, 13, 'h', 1.5], [7.5, 13, 'h', 1.5], [12.5, 13, 'h', 1.5], [4, 0, 'h', 2], [18, 1, 'd', 1.5, 0, 0, [1, 1]], [23, 10, 'v', 1.5], [23, 14, 'v', 1.5], [13.5, 0, 'h', 1.5],
       [0, 1.5, 'v', 2, 0, 'baie'],
       [10.5, 0, 'h', 1.5, 1], [15.5, 0, 'h', 1.5, 1], [0, 3, 'v', 1.2, 1], [18, 3, 'v', 1.5, 1], [6.5, 0, 'h', 1, 1], [0, 7, 'v', 1.5, 1], [-4.5, 12, 'h', 1]],
     escaliers: [[13, 6, 2, 2, 0, 1, 'escalier'], [16.2, 6, 1.5, 1.5, 0, 1, 'ascenseur']],
     meubles: [['lit', .5, 9.5, 1.6, 3], ['lit', 5.5, 9.5, 1.6, 3], ['lit', 10.5, 9.5, 1.6, 3], ['armoire', 3, 12, 1.6, .7], ['armoire', 8, 12, 1.6, .7], ['armoire', 13, 12, 1.6, .7],
       ['canape', 1, 1, 2.6, 1], ['tapis', 2, 2.5, 2, 2], ['table', 9.5, 2, 4, 1.4], ['chaise', 10, 1, .7, .7], ['chaise', 12, 1, .7, .7], ['chaise', 10, 3.6, .7, .7], ['chaise', 12, 3.6, .7, .7],
-      ['plan', 15.5, .5, 3, .8], ['bureau', 19.5, 13, 2, 1], ['banc', -5, 2, 2.5, .6],
+      ['plan', 15.5, .5, 2, .8], ['bureau', 19.5, 13, 2, 1], ['banc', -5, 2, 2.5, .6],
       ['lit', 9, 1.5, 1.6, 3, 1], ['lit', 14, 1.5, 1.6, 3, 1], ['armoire', 11, 4.9, 1.6, .7, 1], ['armoire', 16, 4.9, 1.6, .7, 1], ['tapis', 1, 2, 3, 2, 1]],
     fiches: [
       [0, {oui: ['cloture', 'bancs', 'plantes-eau', 'sols-varies'], non: ['patio', 'cour-bruyante'], revue: true}],
@@ -4183,9 +4244,9 @@ const LIEUX_SIMULES = [
       [13, [[.5, .88, .6, 3], [.5, .1, .7, 3], [.25, .45, .6, 1]], .7], [14, [[.5, .88, .6, 3], [.5, .1, .7, 3], [.25, .45, .6, 1]], .7], [15, [[.5, .9, .5, 3], [.5, .12, .5, 1]], .7],
       [16, [[.5, .88, .5, 3], [.1, .5, .6, 1], [.5, .4, 1, 2]], .7], [17, [[.12, .5, .8, 2], [.9, .5, .8, 2], [.74, .5, .6, 3]], .7], [18, [[.5, .15, .4, 3], [.2, .7, .4, 1]], .7]],
     rot: [[5, 3]],
-    formes: [[0, [[-7, 3], [-4, 0], [0, 0], [0, 13], [-7, 13]]]],   // le jardin : un pan coupé en haut à gauche
+    formes: [[0, [[-7, 3], [-4, 0], [0, 0], [0, 13], [-7, 13]]], [3, [[15, 0], [17, 0], [19, 2], [19, 4], [15, 4]]]],   // le jardin : un pan coupé en haut à gauche ; la cuisine aussi, en haut à droite
     commentaires: ['Attente du repas, bruit de la vaisselle.', 'A frappé la porte de la chambre voisine au moment du coucher.', 'Salle de bain occupée, a dû attendre dans le couloir.', 'Voiture sur le parking : s\'est collé à la fenêtre, puis n\'a plus voulu se coucher.']},
-  {nom: 'Externat, groupe des grands', desc: 'Un IME en journée, plan à l\'échelle (1 case = 0,8 m) : classe, atelier, cantine, une salle multisensorielle trop petite, une salle de repli à porte à hublot, une cour avec un petit préau ; le parking des taxis à côté. Ses fiches disent la salle multisensorielle, la cantine, la salle de repli. Un coin de retrait est cloisonné dans la classe, contre l\'atelier ; la porte des sanitaires est vitrée ; la salle multisensorielle, toujours accompagnée, ne reçoit aucun épisode. Presque toutes les pièces ont leurs croix, la salle de classe est dessinée tournée et le préau est un trapèze.', graine: 31,
+  {nom: 'Externat, groupe des grands', desc: 'Un IME en journée, plan à l\'échelle (1 case = 0,8 m) : classe, atelier, cantine, une salle multisensorielle trop petite, une salle de repli à porte à hublot, une cour avec un petit préau ; le parking des taxis à côté. Ses fiches disent la salle multisensorielle, la cantine, la salle de repli. Un coin de retrait est cloisonné dans la classe, contre l\'atelier ; la porte des sanitaires est vitrée ; la salle multisensorielle, toujours accompagnée, ne reçoit aucun épisode. Presque toutes les pièces ont leurs croix, la salle de classe est dessinée tournée, avec un pan coupé et sa fenêtre en biais, et le préau est un trapèze.', graine: 31,
     legendes: [['Entrée des taxis', 23.4, 6.3, 'm', 'o'], ['Vers le centre-ville', 28.5, -3.4, 'm', 'n']],
     pronostics: [['Éducateur·rice spécialisé·e', [4, 7, 2]], ['AES / AMP', [4, 7]], ['Moniteur·rice-éducateur·rice', [7, 11]]],
     dates: ['2026-09-21', '2026-10-09'], echelle: .8,
@@ -4197,7 +4258,7 @@ const LIEUX_SIMULES = [
       ['Coin de retrait', 'repos', [[5, 3, 3, 3]], 0, 0]],
     portes: [[4, 6, 'h', 1, -1], [11.5, 6, 'h', 1, -1], [17.5, 6, 'h', 1, -1], [4.5, 8, 'h', 1, 1], [10.5, 8, 'h', 1, 1, 0, 'vitree'], [14, 8, 'h', 1, 1], [4.5, 14, 'h', 1.5, 1], [18, 8, 'h', 1.5, 1], [20, 7, 'v', 1.5, -1],
       [0, 9.5, 'v', 1, 1, 0, 'hublot'], [5, 4, 'v', 1, -1]],
-    fenetres: [[4, 0, 'h', 2], [11.5, 0, 'h', 2], [17.5, 0, 'h', 1.5], [0, 12, 'v', 2], [7.5, 14, 'h', 2], [-2, 8, 'h', 1]],
+    fenetres: [[4, 0, 'h', 2], [11.5, 0, 'h', 2], [17.5, 0, 'h', 1.5], [0, 12, 'v', 2], [7.5, 14, 'h', 2], [-2, 8, 'h', 1], [1, 1, 'd', 1.5, 0, 0, [1, -1]]],
     meubles: [['table', 1, 1.5, 2, 1.2], ['table', 4, 1.5, 2, 1.2], ['table', 1, 3.7, 2, 1.2], ['table', 3.2, 4.8, 1.6, 1], ['bureau', 6.2, .5, 1.5, .9], ['tapis', 5.4, 4.4, 2.2, 1.3],
       ['plan', 9, 1, 5, .9], ['etagere', 9, 4.8, 3, .6], ['tapis', 16, 1.5, 3, 3], ['table', 1, 9.5, 3, 1.2], ['table', 5, 9.5, 3, 1.2], ['table', 1, 12, 3, 1.2], ['table', 5, 12, 3, 1.2],
       ['banc', 2, 17, 2.5, .6], ['banc', -3.5, 16, 2.5, .6], ['bureau', 13, 10, 2, 1], ['tapis', -3, 10, 2, 2]],
@@ -4220,7 +4281,7 @@ const LIEUX_SIMULES = [
       [0, [[.5, .9, .7, 3], [.5, .12, 1.2, 2], [.22, .42, 1, 2]], .7], [1, [[.5, .9, .7, 2], [.47, .2, 1.6, 3]], .7], [5, [[.5, .1, .5, 4], [.5, .7, .6, 1]], .7], [6, [[.5, .1, .6, 3], [.6, .6, .8, 1]], .7],
       [8, [[.5, .5, 1, 3], [.85, .2, .7, 2]], .7], [10, [[.5, .4, 2.5, 2]], .7], [11, [[.88, .25, .5, 3], [.3, .7, .7, 2]], .7], [12, [[.12, .35, .4, 4], [.7, .7, .5, 2]], .7]],
     rot: [[0, 2]],
-    formes: [[8, [[-4, 14], [0, 14], [0, 19], [-3, 19]]]],   // le préau : un trapèze, son mur du fond en biais
+    formes: [[8, [[-4, 14], [0, 14], [0, 19], [-3, 19]]], [0, [[0, 2], [2, 0], [8, 0], [8, 6], [0, 6]]]],   // le préau : un trapèze, son mur du fond en biais ; la salle de classe : un pan coupé
     commentaires: ['Sonnerie de la récréation, tout le monde sort en même temps.', 'Cantine très bruyante, a renversé son plateau.', 'S\'est réfugié sous le préau.', 'Attente du taxi sur le parking, a voulu partir vers la route.', 'Est allé de lui-même à la salle de repli.']}
 ];
 // Un endroit dans une grande pièce, tiré autour d'un des « foyers » [u, v, dispersion en cases, poids], puis ramené dans la pièce, hors de ses enclaves.
@@ -4256,7 +4317,8 @@ function construireLieu(i) {
   L.pieces.forEach((t, k) => { if (t[4] !== undefined) d.b1.plan.pieces[k].dans = d.b1.plan.pieces[t[4]].id; });   // une enclave : le numéro de la pièce qui la contient
   d.b1.typesCD = L.types.map(nom => ({id: nouvelId('t'), nom}));
   d.b1.plan.elements = (L.portes || []).map(([x, y, o, long, cote, k, vitrage]) => Object.assign({id: nouvelId('e'), cat: 'porte', niveau: niv(k), x, y, o, long, cote, retourne: cote < 0}, vitrage ? {vitrage} : {}))
-    .concat((L.fenetres || []).map(([x, y, o, long, k, cat]) => ({id: nouvelId('e'), cat: cat || 'fenetre', niveau: niv(k), x, y, o, long, cote: 1, retourne: false})))
+    .concat((L.fenetres || []).map(([x, y, o, long, k, cat, sens]) => Object.assign({id: nouvelId('e'), cat: cat || 'fenetre', niveau: niv(k), x, y, o, long, cote: 1, retourne: false},
+      o === 'd' ? {dx: n6(sens[0] / Math.hypot(sens[0], sens[1])), dy: n6(sens[1] / Math.hypot(sens[0], sens[1]))} : {})))   // sur un mur en biais : le sens du mur, de gauche à droite (passe 238)
     .concat((L.meubles || []).map(([type, x, y, w, h, k]) => ({id: nouvelId('e'), cat: 'meuble', niveau: niv(k), type, x, y, w, h})))
     .concat((L.escaliers || []).map(([x, y, w, h, a, b, type]) => ({id: nouvelId('e'), cat: 'escalier', type: type || 'escalier', niveau: niv(a), niveaux: [niv(a), niv(b)], x, y, w, h})));
   d.b1.plan.legendes = (L.legendes || []).map(([texte, x, y, taille, fleche, k]) => ({id: nouvelId('l'), niveau: niv(k), x, y, texte, taille: taille || 'm', fleche: fleche || ''}));   // [texte, x, y, taille, flèche, niveau]
@@ -4391,96 +4453,6 @@ document.addEventListener('click', ev => {
   ev.preventDefault(); ev.stopPropagation(); toast('Mode administrateur : seulement des lieux simulés. Quittez-le pour ouvrir un vrai fichier.');
 }, true);
 
-/* ══ Les notes de version ══ */
-const NOTES_BASE = [
-  {version: 'BASE v2026.10.13-11', titre: 'Le double-clic marche', corps: '<p><b>Un double-clic (ou un double appui au doigt) fait ce que l\'aide dit</b> (Arthur et Émilie) : sur une pièce, il met son nom à écrire ; sur une légende, son texte ; sur un sommet d\'une pièce de forme libre, il le retire.</p><ul>' +
-    '<li>Avant, le double-clic ne faisait rien à la souris : le navigateur ne signale pas « double-clic » quand le plan a capturé le geste (seul l\'appui long, au doigt, nommait la pièce). Il est maintenant reconnu directement : deux appuis au même endroit, à moins de 0,4 seconde. Sur plusieurs pièces choisies, un double-clic sur l\'une d\'elles la garde seule et met son nom à écrire.</li>' +
-    '<li>La page ne défile vers le champ du nom que s\'il n\'est pas à l\'écran.</li></ul>'},
-  {version: 'BASE v2026.10.13-10', titre: 'Des pièces de toute forme : trapèze, triangle, forme libre', corps: '<p><b>Une pièce n\'est plus forcément faite de rectangles</b> (Arthur et Émilie) : un trapèze, un triangle, un pan coupé, une forme libre.</p><ul>' +
-    '<li><b>Changer la forme</b>. Dans la carte d\'une pièce, « Plus » puis « Forme » : rectangle, trapèze, triangle, ou forme libre (un rectangle à quatre sommets à tirer). Une pièce en plusieurs morceaux (en L, en T) garde ses angles droits.</li>' +
-    '<li><b>Tirer, ajouter, retirer des sommets</b>. Une pièce de forme libre montre ses sommets (ronds pleins : on les tire, ils se calent sur la grille) et, au milieu de chaque côté, un petit rond creux : le toucher ajoute un sommet, qu\'on tire aussitôt. Un sommet choisi se retire par Suppr, par un double-clic ou par « Retirer ce sommet » ; une forme garde trois sommets au moins. Un geste qui ferait se croiser la forme est refusé : le sommet reste où il était.</li>' +
-    '<li><b>Tout le reste suit</b>. On déplace, tourne, duplique, enclave et supprime une pièce de forme libre comme une autre (quatre quarts de tour ramènent exactement sa forme) ; la flèche ronde, le choix de plusieurs pièces et le cadre tracé avec Ctrl la prennent en compte. Les portes, les fenêtres et les meubles se posent sur ses murs droits (horizontaux ou verticaux) et dedans ; pas encore sur un mur en biais.</li>' +
-    '<li><b>Ce que la BASE lit</b>. La surface est celle de la forme, pas celle de son rectangle englobant ; les murs communs sont retrouvés, droits comme en biais (le mur en biais entre deux salles se trace dans « Lecture ») ; ce qu\'on voit par une fenêtre, la pièce où tombe un escalier, les enclaves, les croix et la carte thermique suivent la forme (une croix posée dans un coin vide est ramenée dans la pièce). Le fichier garde les sommets et le rectangle englobant : une version d\'avant la lit comme un rectangle.</li>' +
-    '<li>Les trois lieux simulés ont leur pièce de forme libre : le parking du bâtiment provisoire (un trapèze), le jardin du foyer (un pan coupé), le préau de l\'externat (un trapèze). Un lieu simulé d\'avant propose de se remettre à jour.</li></ul>'},
-  {version: 'BASE v2026.10.13-9', titre: 'Les lieux simulés : des croix partout, et ils se remettent à jour', corps: '<p><b>La carte thermique a de quoi montrer ce qu\'elle sait faire</b> (Arthur et Émilie) : les trois lieux simulés n\'avaient des croix que dans leurs grandes pièces.</p><ul>' +
-    '<li><b>Des croix dans presque toutes les pièces</b>. Chaque pièce qui a des épisodes a au moins une croix (la première est toujours posée), et la plupart des épisodes ont la leur — près de la porte, de la fenêtre, du lit ou de l\'établi, selon la pièce. La chaleur se lit donc dans les petites pièces aussi, pas seulement dans les grandes (bâtiment provisoire : 38 épisodes sur 40 ont leur croix, foyer : 36 sur 44, externat : 35 sur 42 ; avant, 26, 11 et 21).</li>' +
-    '<li><b>Une pièce dessinée tournée dans chaque lieu</b> (la salle bleue, la chambre 1, la salle de classe) : leurs croix passent par la rotation des pièces.</li>' +
-    '<li><b>Un lieu simulé gardé dans le navigateur se remet à jour</b>. Chaque lieu simulé porte le numéro de la version des simulations qui l\'a fabriqué. Quand les simulations changent, un lieu simulé d\'avant — le bac à sable de l\'administrateur, ou « Voir un exemple » resté dans le navigateur — le dit dans la barre du haut (« ↻ Remettre à jour ce lieu simulé ») et se refait d\'un clic, après confirmation : c\'est un lieu fictif, ce qu\'on y avait changé est perdu. Avant, il gardait pour toujours les données d\'avant les nouveautés.</li></ul>'},
-  {version: 'BASE v2026.10.13-8', titre: 'Plusieurs pièces à la fois : choisir avec Ctrl, déplacer, tourner, supprimer ensemble', corps: '<p><b>Plusieurs pièces d\'un coup</b> (Arthur et Émilie) : on déplace une aile entière sans reprendre les pièces une à une.</p><ul>' +
-    '<li><b>Choisir</b>. Ctrl+clic (ou Maj+clic) ajoute une pièce à ce qui est choisi, ou l\'en retire ; Ctrl+glisser sur le fond trace un cadre qui prend les pièces qu\'il touche ; Ctrl+A prend toutes les pièces du niveau affiché. Au doigt, ou sans clavier : le bouton « ☑ Plusieurs » (en bas à gauche du plan), puis on touche les pièces l\'une après l\'autre. Les pièces choisies sont surlignées, entourées d\'un contour en pointillés, avec une seule flèche ronde.</li>' +
-    '<li><b>Déplacer ensemble</b>. Glisser l\'une d\'elles les déplace toutes du même pas, avec leurs meubles, leurs portes et leurs enclaves ; « Annuler » les ramène d\'un seul geste. Un simple clic sur l\'une d\'elles, sans glisser, ne garde qu\'elle.</li>' +
-    '<li><b>Tourner, supprimer l\'ensemble</b>. La flèche ronde, la touche R ou « Tourner l\'ensemble » font tourner le tout autour de son centre ; Suppr ou « Supprimer les N » les supprime (si l\'une a déjà un épisode, rien n\'est supprimé et on dit laquelle) ; Échap lâche tout. Une porte se pose sur une seule pièce : on en choisit une.</li>' +
-    '<li><b>Détails</b>. Quatre quarts de tour ramènent maintenant exactement la pièce, quelle que soit sa taille : le pivot est une case entière, choisie pour que les tours se compensent (avant, une pièce de largeur plus hauteur impaire « marchait » d\'une case ou deux). La carte de ce qui est choisi s\'efface pendant qu\'on maintient Ctrl ou Maj, ou en mode « Plusieurs », pour ne pas cacher les pièces à toucher ; elle se pose là où elle en cache le moins.</li></ul>'},
-  {version: 'BASE v2026.10.13-7', titre: 'Le plan, un espace de travail : des outils qui flottent sur le plan', corps: '<p><b>Rester sur le plan pour faire son plan</b> (Arthur et Émilie) : plus besoin d\'aller chercher des options plus haut ou plus bas.</p><ul>' +
-    '<li><b>La barre d\'outils flotte sur le plan</b>. « ＋ Pièce », « ＋ Porte », « ＋ Fenêtre », les menus (niveau, baie ou escalier, meuble), « ＋ Légende », annuler et rétablir sont dans le cadre du plan, et « Voir tout le plan » cadre le plan sous elle. Le bouton ▴ la replie en un bouton « 🛠 Outils » ; elle se replie d\'office sur un petit écran, et le choix est gardé sur l\'appareil. La lecture, le plan vierge et le niveau en filigrane sont en bas à gauche du plan, les zooms en bas à droite. Le cadre est plus haut, pour travailler sans défiler.</li>' +
-    '<li><b>Ce qui est choisi a sa petite carte à côté de lui</b>. Pour une pièce : le nom, le type, « Tourner », « Dupliquer », « Supprimer » ; « Plus » garde le morceau en plus, l\'enclave et la fiche. La carte se pose au-dessous de la pièce, sinon au-dessus (en laissant la place de la flèche ronde), sinon à côté, sans jamais la recouvrir ; elle se range pendant qu\'on déplace ou qu\'on agrandit, et suit quand on zoome. Même chose pour une porte, une fenêtre, une baie, un meuble, un escalier, une légende. Dans un nom, Entrée valide et lâche le champ (Suppr et R retrouvent alors le plan), Échap rend l\'ancien nom.</li>' +
-    '<li>Rien n\'est choisi : la carte retourne sous le plan (nom du niveau, retirer le niveau). Un plan ou un niveau vide dit quoi faire au milieu du plan. Une nouvelle pièce, une légende, un meuble se posent au centre de ce qu\'on voit, sous la barre d\'outils.</li>' +
-    '<li>Annuler et rétablir deviennent ↶ et ↷ (leurs infobulles disent « Annuler (Ctrl+Z) » et « Rétablir (Ctrl+Y) »).</li></ul>'},
-  {version: 'BASE v2026.10.13-6', titre: 'Tourner, supprimer au clavier, une page qui ne saute plus', corps: '<p><b>Le plan se dessine plus facilement</b> (Arthur et Émilie) : trois petits manques relevés en dessinant un vrai plan.</p><ul>' +
-    '<li><b>Tourner</b>. Une pièce, un meuble ou un escalier se tourne d\'un quart de tour : par la flèche ronde posée au-dessus de ce qui est choisi, par la touche R, ou par le bouton « ↻ Tourner » du panneau. Une pièce tourne avec ce qu\'elle contient (ses meubles, ses portes, ses fenêtres, ses enclaves) ; les croix déjà posées dans ses épisodes la suivent, elles restent au même endroit de la pièce quel que soit son sens, et le déclarant qui reçoit le plan tourné pose les siennes au même endroit. Une porte, une fenêtre ou une baie ne tourne pas : elle prend la direction du mur où elle est posée.</li>' +
-    '<li><b>Supprimer au clavier</b>. Suppr (ou Retour arrière) supprime la pièce, le meuble, l\'escalier ou la légende choisis ; Échap les lâche. Cela marche aussi quand un menu de la barre d\'outils a gardé le clavier (c\'était le cas juste après avoir ajouté un escalier) ; cela ne marche pas pendant qu\'on écrit dans un champ ou qu\'une fenêtre est ouverte. Une pièce qui a déjà un épisode ne se supprime toujours pas.</li>' +
-    '<li><b>La page ne saute plus</b>. Saisir la poignée d\'une pièce, ou ajouter une pièce, ne fait plus descendre la fenêtre vers le panneau : toucher le plan lâche le champ resté actif (le nom en cours de frappe est enregistré au passage), le panneau ne reprend plus le focus en faisant défiler la page, une pièce ou une légende ajoutée ne prend le focus que si son champ est déjà à l\'écran, et l\'appui long pour nommer ne se fait plus qu\'au doigt — à la souris, c\'est le double-clic.</li></ul>'},
-  {version: 'BASE v2026.10.13-5', titre: 'Regarder autrement : autour de l\'épisode, un pronostic, des questions pour l\'équipe', corps: '<p><b>Aider celui qui remplit à regarder autrement</b> (Arthur et Émilie) : la BASE ne mesure pas seulement où et quand ; elle invite à regarder ce qui se passe autour de la personne.</p><ul>' +
-    '<li><b>Autour de l\'épisode</b>. Dans le formulaire d\'un épisode, une partie repliée et facultative (vingt secondes) : ce qu\'on a remarqué autour — les sons, la lumière et l\'air, les autres, ce qui se passait, l\'espace, la personne —, avec « rien de particulier remarqué » et « je n\'ai pas pu regarder » comme réponses à part entière. Des observations, jamais des causes : une case non cochée ne veut pas dire « non ». La synthèse en donne la part parmi les épisodes qui l\'ont remplie, avec un rappel : ce qu\'on remarque souvent l\'est peut-être tout le temps au même endroit, et la question est ce qui change entre les moments calmes et les épisodes.</li>' +
-    '<li><b>Mon pronostic</b>. Le déclarant peut, avant son premier épisode, dire dans quelles pièces il pense qu\'il y en aura le plus (trois au plus) ; le pronostic se garde, ne se modifie plus après le premier épisode, voyage dans son fichier et arrive chez le référent avec sa provenance. Le référent donne le sien en ouvrant la synthèse, avant de voir la carte (« Voir directement, sans pronostic » l\'écarte pour de bon ; rien de cela ne s\'ouvre sur les lieux simulés). La synthèse compare : les pièces citées, celles que les épisodes confirment, celles que personne n\'avait citées, celles qui sont citées mais calmes. Un écart se discute, il ne se juge pas.</li>' +
-    '<li><b>Questions pour l\'équipe</b>. Au bas de la synthèse, huit questions au plus, tirées de la carte : une pièce chaude comme le plan le laissait attendre, une pièce chaude sans alerte, une alerte calme, un endroit où les épisodes se rassemblent dans une pièce (décrit près d\'une porte, d\'une fenêtre ou d\'une enclave, sinon dans quelle partie du plan), un écart avec les pronostics, ce qu\'on remarque le plus souvent autour des épisodes. La dernière est toujours la même : un seul changement d\'environnement cette semaine, et comment verra-t-on s\'il a compté. « Copier les questions » les met dans le presse-papiers, pour le compte rendu.</li>' +
-    '<li><b>Comment regarder une pièce</b>. Dans la fiche d\'une pièce, un repli de gestes d\'observation en cinq minutes (fermer les yeux trente secondes, se mettre à hauteur d\'une personne assise, suivre un trajet…), donné comme une proposition de la BASE et non comme une règle du guide.</li>' +
-    '<li>Le déclarant ne voit jamais ce que la BASE lit dans le plan, ni avant ni pendant ses déclarations. Les trois lieux simulés ont des pronostics et des « Autour de l\'épisode ».</li></ul>'},
-  {version: 'BASE v2026.10.13-4', titre: 'La carte thermique', corps: '<p><b>Une vraie carte thermique</b> (Arthur et Émilie) : dans le calque des épisodes, « Carte thermique » colore la carte selon l\'endroit où se sont tenus les épisodes, d\'un point à l\'autre d\'une même pièce. « Par pièce » reste la carte d\'avant.</p><ul>' +
-    '<li><b>Comment elle se calcule</b>. Chaque épisode compte pour 1. Avec une croix, il est étalé autour d\'elle (un noyau d\'environ un dixième de la racine de la surface de la pièce, entre une et trois cases, borné à la pièce et sans entrer dans ses enclaves) ; sans croix, « toute la pièce », il est étalé sur toute sa pièce. La couleur est la densité, en épisodes par case, sur une seule échelle sable → brique pour tous les niveaux ; le zéro garde le ton neutre de la pièce. Le nombre d\'épisodes de chaque pièce reste écrit.</li>' +
-    '<li><b>À lire avec prudence</b>. À nombre égal d\'épisodes, une petite pièce paraît plus chaude qu\'une grande, puisque la couleur est un nombre par case ; la carte lisse les croix, elle montre des zones et non des points exacts ; sans aucune croix, chaque pièce est d\'un seul ton, et la légende le dit. La même mise en garde accompagne la carte et l\'image.</li>' +
-    '<li><b>Les croix</b> peuvent se montrer par-dessus (« Montrer les croix »). Les filtres de la synthèse (moment, comportement, dates) valent aussi pour la carte thermique ; l\'image exportée (PNG ou SVG) a sa légende et sa note. Le calque est un calcul : rien de plus n\'est enregistré dans les fichiers.</li>' +
-    '<li><b>Les trois lieux simulés</b> ont leurs croix dans les grandes pièces : la carte thermique y montre des points chauds (la porte d\'entrée, la file devant l\'office, le bout du couloir…).</li></ul>'},
-  {version: 'BASE v2026.10.13-3', titre: 'Des légendes sur le plan, et le plan vierge à télécharger', corps: '<p><b>Se repérer sur le plan</b> (Arthur et Émilie) : on peut écrire sur le plan, et en sortir une image du plan seul.</p><ul>' +
-    '<li><b>Les légendes</b>. « ＋ Légende » pose un texte libre (« Entrée principale », « Vers le centre-ville ») au centre de la vue. On le glisse où l\'on veut, même hors des pièces ; le panneau donne le texte, une flèche facultative (vers le haut, le bas, la gauche ou la droite) et trois tailles. Une légende appartient à un niveau, se défait avec « Annuler », se supprime avec « Supprimer » ou en vidant son texte. Elle se voit sur le plan du préambule, sur le plan où l\'on touche la pièce, sur la carte de la synthèse et sur les images exportées, et elle voyage dans les fichiers (socle et déclarant). La BASE ne s\'en sert pas pour lire le plan : elles servent à se repérer.</li>' +
-    '<li><b>Le plan vierge</b>. « ⬇ Plan vierge… », dans le préambule, télécharge l\'image du plan seul — les pièces, les niveaux, les portes, les fenêtres, les meubles, les légendes, et une barre d\'échelle si l\'échelle est renseignée — sans épisode ni calque : en PNG (deux fois plus fin) ou en SVG, toujours sur fond clair, à imprimer, à annoter à la main ou à glisser dans un document.</li>' +
-    '<li><b>Les trois lieux simulés</b> ont leurs légendes (l\'entrée, la route vers le centre-ville).</li></ul>'},
-  {version: 'BASE v2026.10.13-2', titre: 'Une petite pièce dans une grande, et la croix dans les grandes pièces', corps: '<p><b>Le plan comprend les très grandes pièces</b> (Arthur et Émilie, pour l\'équipe du premier essai) : des petites pièces peuvent être enclavées dans une grande, et un épisode peut se situer à un endroit précis de la pièce.</p><ul>' +
-    '<li><b>Les pièces enclavées</b>. Dans le panneau d\'une pièce, « Enclavée dans » la range dans une autre pièce du même niveau (la BASE le propose, « L\'enclaver », quand elle est entièrement dedans). Elle se dessine par-dessus ; ses portes et ses fenêtres donnent dans la grande pièce, et non plus sur le dehors ; la grande pièce ne compte plus la place de ses enclaves ; une enclave contre le mur du dehors garde ses portes sur le dehors. Déplacer la grande pièce emporte ses enclaves avec leurs portes ; la supprimer les laisse, libres.</li>' +
-    '<li><b>Ce que la BASE en lit</b>. Les passages se comptent à travers la grande pièce (un lieu de retrait enclavé est à un passage) ; un vitrage entre une enclave et la grande pièce est un lien visuel ; un coin calme dans un réfectoire est « dans » une pièce bruyante ; la grande pièce n\'est pas « une pièce de passage » et se voit signalée, pour information, comme contenant ses enclaves. Une enclave qui dépasse de sa pièce est « à vérifier dans le plan ».</li>' +
-    '<li><b>La croix</b>. À la déclaration, une fois la pièce touchée : « Toute la pièce » ou « À un endroit précis » (là où se trouvait la personne quand l\'épisode a commencé). Dans les très grandes pièces — un dehors de 40 cases ou plus, un couloir de 12 cases ou plus, une pièce qui en contient d\'autres, une pièce « très grande » parmi celles du lieu — la croix est conseillée d\'emblée : un seul toucher choisit la pièce et pose la croix, et le plan se cadre sur la pièce. Elle n\'est jamais imposée : « Toute la pièce » reste à un bouton. La position est gardée dans l\'épisode, dans le fichier du déclarant et à la fusion. Pour l\'instant, la carte de la synthèse n\'en tient pas encore compte.</li>' +
-    '<li><b>Les trois lieux simulés</b> montrent chacun une enclave (le bâtiment provisoire : un office, un local chariots et un coin calme dans son réfectoire, très grand) et des épisodes avec leur croix dans les grandes pièces. Le nom d\'une grande pièce qui en contient d\'autres se pose là où il y a de la place.</li></ul>'},
-  {version: 'BASE v2026.10.13-1', titre: 'Correctif : les fenêtres se laissent cliquer', corps: '<p><b>Un défaut corrigé</b> (Arthur et Émilie). Depuis la passe 224 (le dessin des portes et des fenêtres), les fenêtres de dialogue de la BASE — « Un épisode », « Rien à signaler », la fiche d\'une pièce, le choix du rôle, le mode administrateur — laissaient passer les clics : toucher un champ fermait la fenêtre. Le nom de la classe qui dessine une fenêtre dans un mur était aussi celui des fenêtres de dialogue, et sa règle (« ne reçoit pas les clics », un contour bleu) s\'appliquait aux deux. Les deux classes ont maintenant chacune leur nom.</p><ul>' +
-    '<li>Le plan du choix de la pièce, dans « Un épisode », reprend ses traits fins : il héritait du contour bleu, qui l\'encadrait de bandes épaisses.</li>' +
-    '<li>Les contrôles de la BASE vérifient désormais qu\'aucune fenêtre de dialogue n\'est insensible aux clics ni ne transmet un contour à son contenu.</li></ul>'},
-  {version: 'BASE v2026.10.12-6', titre: 'La synthèse lit le plan : calques, et le plan croisé avec les épisodes', corps: '<p><b>La synthèse ne se contente plus de compter</b> (Arthur et Émilie) : elle superpose à la carte des épisodes ce que le plan et les fiches disent de chaque pièce.</p><ul>' +
-    '<li><b>Quatre calques</b> sur la carte : les <b>épisodes</b> (comme avant), les <b>points de vigilance</b> (prune), les <b>points d\'appui</b> (sauge), les <b>fiches des pièces</b> (ardoise : pas de fiche, rapide, détaillée). Sur les trois derniers, le nombre d\'épisodes reste écrit sous le nom de la pièce. Un plan par niveau, et l\'image exportée est celle du calque choisi.</li>' +
-    '<li><b>Le plan et les épisodes, ensemble</b> : les pièces <b>chaudes comme le plan le laissait attendre</b> (des points de vigilance et des épisodes), les pièces <b>chaudes sans alerte au plan</b> (des épisodes que rien dans le plan ou les fiches n\'explique : à explorer, ou à compléter par la fiche), et les pièces qui <b>alertent mais restent calmes</b>.</li>' +
-    '<li><b>Facteur par facteur</b> : pour chaque point lu dans le plan ou déclaré dans une fiche, combien de pièces sont concernées et quelle part des épisodes s\'y trouve, avec la <b>concentration</b> (la part des épisodes divisée par la part des pièces). Les filtres de la synthèse (moment, comportement, dates) valent aussi pour ce croisement.</li>' +
-    '<li><b>Toujours de la co-occurrence, jamais une cause</b> : une pièce occupée plus longtemps recueille mécaniquement plus d\'épisodes (le taux de base), un point présent presque partout ne peut rien montrer (« partout »), et avec peu d\'épisodes une seule pièce change tout. Les pistes se discutent en équipe et se vérifient sur place.</li>' +
-    '<li>Les trois lieux simulés montrent des pièces dans chaque case : le foyer, l\'externat et le bâtiment provisoire.</li></ul>'},
-  {version: 'BASE v2026.10.12-5', titre: 'Les fiches des pièces : ce qu\'on y trouve, d\'après le guide', corps: '<p><b>Chaque pièce a sa fiche</b> (Arthur et Émilie) : le plan dit où sont les pièces, la fiche dit ce qu\'on y trouve, d\'après le guide « Autisme &amp; sensorialité » (CRA Alsace, 2017).</p><ul>' +
-    '<li><b>Deux façons de la remplir</b>, au choix : <b>rapide</b> (une liste à cocher, une vingtaine de points, deux minutes par pièce) ou <b>détaillée</b> (la grille complète par famille : oui, non ou on ne sait pas, l\'intensité, le sens, les chiffres). Le même dossier se remplit des deux façons.</li>' +
-    '<li><b>Quatre-vingt-neuf points en onze familles</b> : bruit, lumière naturelle, éclairage, couleurs et matériaux, air et toucher, mouvement, repères, monde et retrait, sécurité, dehors, lieux particuliers (salle de mise au calme, multisensorielle, activités, sanitaires…). Chacun dit sa fiche du guide ; une pièce n\'a que les points qui la concernent.</li>' +
-    '<li><b>Le sens est proposé, jamais imposé</b> : chaque point arrive avec le sens que lui donne le guide (peut faire monter la tension, peut apaiser, à sécuriser, ça dépend de la personne), que l\'équipe corrige pièce par pièce. Un même stimulus n\'agit pas dans le même sens pour tous.</li>' +
-    '<li><b>Les chiffres comptent</b> : hauteur sous plafond (le guide préconise 2,60 à 2,70 m), places prévues, nombre de personnes en général (le guide estime à 8 la taille maximale d\'un groupe).</li>' +
-    '<li><b>La lecture du plan s\'en nourrit</b> : ce qu\'on coche apparaît dans « Ce que la BASE lit dans le plan », marqué « Déclaré » ; ce que le plan avait déjà dit n\'est pas redit, et une occultation déclarée atténue la baie vitrée lue dans le plan.</li>' +
-    '<li>On peut reprendre la fiche d\'une autre pièce ; dupliquer une pièce copie sa fiche. Les fiches voyagent avec le dossier (fichier socle, fichier déclarant vierge) et ne sont pas défaites par « Annuler ».</li>' +
-    '<li><b>Les trois lieux simulés</b> ont leurs fiches : le bâtiment provisoire en mode rapide ; le foyer avec deux fiches détaillées (une chambre, la salle de mise au calme) ; l\'externat avec sa salle multisensorielle aux lumières intermittentes, sa cantine très bruyante et sa salle de repli.</li></ul>'},
-  {version: 'BASE v2026.10.12-4', titre: 'La BASE lit le plan : étages, escaliers, voisinages, points de vigilance', corps: '<p><b>La BASE comprend le plan</b> (Arthur et Émilie), à partir du guide « Autisme &amp; sensorialité » (CRA Alsace, 2017) :</p><ul>' +
-    '<li><b>Étages et sous-sols</b> : « ＋ Niveau… » ajoute un niveau ; un onglet par niveau, l\'étage d\'à côté en filigrane pour aligner les pièces. Un <b>escalier</b> ou un <b>ascenseur</b> relie deux niveaux et se dessine sur les deux. Dans le recueil, on choisit le niveau puis la pièce. Sur la carte et dans l\'image exportée, un plan par niveau.</li>' +
-    '<li><b>Baies vitrées</b>, <b>portes vitrées</b> ou <b>à hublot</b>, et de nouveaux types de zone : chambre, séjour, salle de mise au calme, salle multisensorielle, soins.</li>' +
-    '<li><b>Une échelle facultative</b> (une case = tant de mètres). Sans elle, la BASE compare les pièces entre elles ; avec elle, elle donne des surfaces et les compare aux repères du guide (une salle multisensorielle fait 25 à 50 m², jamais moins de 20).</li>' +
-    '<li><b>Ce que la BASE lit dans le plan</b> : les <b>voisinages</b> (un mur commun), les <b>passages</b> (une porte sur ce mur), les <b>vues</b> (une fenêtre), les pièces superposées d\'un étage à l\'autre, les distances en nombre de passages. Elle en tire des <b>points de vigilance</b> (une fenêtre sur un parking, un couloir long ou sans lumière, un lieu de retrait ou des sanitaires loin d\'un espace collectif, une pièce de passage, un très grand volume, une baie vitrée, une porte qui ouvre sur la route…), des <b>points d\'appui</b>, et des <b>contrôles du plan</b> (une porte posée dans le vide, une pièce sans porte…). Chaque point dit d\'où il vient : le guide, une déduction du guide, ou un repère propre à la BASE.</li>' +
-    '<li>Le bouton « 👁 Lecture » montre sur le plan ce que la BASE a compris (murs communs, passages, vues). Rien n\'est une conclusion : un même stimulus n\'agit pas dans le même sens pour tous, et ce sont les épisodes qui diront.</li>' +
-    '<li><b>Les trois lieux simulés</b> montrent tout cela : le foyer a deux niveaux, un escalier, une baie vitrée et des chambres qui voient le parking d\'en haut ; l\'externat a une échelle, une salle multisensorielle trop petite et une salle de repli à porte à hublot ; le bâtiment provisoire se dessine sans échelle.</li></ul>'},
-  {version: 'BASE v2026.10.12-3', titre: 'Dehors, portes, fenêtres et meubles', corps: '<p><b>Le plan s\'enrichit</b> (Arthur et Émilie) :</p><ul>' +
-    '<li><b>Intérieur et extérieur</b> : les types de zone se rangent en deux groupes ; dehors, on choisit cour ou jardin, route, parking, préau. Les zones de dehors ont un contour en pointillés, une cour est verte, une route et un parking couleur asphalte (ligne médiane, places tracées). La synthèse dit combien d\'épisodes ont eu lieu dehors.</li>' +
-    '<li><b>Portes et fenêtres</b> : sur un mur de la pièce choisie ; elles glissent le long des murs, s\'élargissent ; une porte s\'ouvre d\'un côté ou de l\'autre.</li>' +
-    '<li><b>Meubles</b> : table, chaise, canapé, lit, armoire, bureau, étagère, plan de travail, banc, tapis… On les glisse, on les tourne, on les agrandit. Ils suivent leur pièce quand on la déplace.</li>' +
-    '<li>Sur la carte et le plan du recueil, portes et fenêtres restent visibles ; les meubles passent en filigrane, pour laisser lire les effectifs.</li>' +
-    '<li><b>Les trois lieux simulés</b> ont maintenant leur route, leur parking (et un préau pour l\'externat), leurs portes, fenêtres et meubles.</li></ul>'},
-  {version: 'BASE v2026.10.12-2', titre: 'Le mode administrateur, trois lieux simulés', corps: '<p><b>Un mode administrateur</b>, comme dans la BAF (Arthur et Émilie) : trois clics sur la boussole, le même mot de passe.</p><ul>' +
-    '<li><b>Trois lieux simulés</b> : un bâtiment provisoire (un IME déménagé dans des bureaux), un foyer d\'hébergement (du lever au coucher), un externat d\'IME (classe, atelier, cantine, cour). Chacun a son plan, ses moments, ses comportements et ses points chauds.</li>' +
-    '<li><b>Un bac à sable</b> : en y entrant, votre dossier est mis de côté ; en le quittant, il revient tel qu\'il était. Aucun vrai fichier ne s\'y ouvre.</li>' +
-    '<li>La simulation est réservée à ce mode : « Voir un exemple » quitte l\'accueil. Les vérifications de la BASE sont aussi dans le panneau.</li></ul>'},
-  {version: 'BASE v2026.10.12-1', titre: 'La BASE, premier essai (niveau 1)', corps: '<p><b>Un troisième outil</b>, à part de la BAF le temps de l\'essayer (Arthur et Émilie) : la BASE regarde un lieu, pas une personne.</p><ul>' +
-    '<li><b>Préambule</b> : le nom d\'emprunt du lieu et ses dates ; le plan, dessiné comme sur une feuille (pièces, morceaux pour un L ou un T, grille magnétique, poignées, annuler, zoom, souris et doigt) ; les moments de la journée ; les comportements suivis, en gestes observables.</li>' +
-    '<li><b>Recueillir</b> : un formulaire court par épisode, la pièce choisie d\'un toucher sur le plan ; « Rien à signaler aujourd\'hui » ; un fichier déclarant vierge qui emporte le plan et les listes ; la fusion des fichiers des déclarants, chaque épisode gardant sa provenance, sans rien perdre ni doubler.</li>' +
-    '<li><b>Synthèse</b> : la carte du lieu, chaque pièce colorée selon le nombre d\'épisodes (du sable à la brique, l\'effectif écrit dedans, zéro en neutre) ; les filtres par moment, comportement et dates ; les chiffres clés en effectif et en pourcentage ; l\'avertissement de lecture ; l\'image de la carte en PNG ou SVG.</li>' +
-    '<li><b>Un vase clos</b> : un fichier de la BASE ne s\'ouvre que dans la BASE, et la BASE n\'ouvre pas les fichiers de la BAF. Elle ne lit ni n\'écrit rien du dossier du RDAF.</li></ul>'}
-];
-function rendreNotes() { $('notes-contenu').innerHTML = NOTES_BASE.map((n, i) => '<details class="repli"' + (i === 0 ? ' open' : '') + '><summary>' + esc(n.version) + ' — ' + esc(n.titre) + '</summary><div class="lecture">' + n.corps + '</div></details>').join(''); }
 
 /* ══ Les vérifications (refont les calculs par un autre chemin ; ne touchent pas au dossier) ══ */
 function verifierBASE() {
@@ -5484,17 +5456,19 @@ function verifierBASE() {
         selection = {piece: 'T', morceau: 0}; ajouterMural('porte'); const porteT = elements()[0];
         selection = {piece: 'Diamant', morceau: 0}; messages.length = 0; const avantDiamant = elements().length; ajouterMural('fenetre');
         selection = {piece: 'T', morceau: 0}; ajouterMeuble('table'); const tableT = elements().find(e => e.cat === 'meuble');
-        ok('Une porte se pose au milieu du mur du bas d\'un trapèze, sur le mur (la pièce la voit) ; sur un losange, qui n\'a pas de mur droit, on le dit et rien n\'est posé ; un meuble se pose au point le plus dégagé de la pièce',
-          porteT && porteT.o === 'h' && proche(porteT.x, 4) && proche(porteT.y, 6) && bordsDe(porteT, [pieceParId('T')]).length === 1 && elements().filter(e => e.cat === 'fenetre').length === 0 && elements().length === avantDiamant + (tableT ? 1 : 0) && messages.length === 1 && /mur droit/.test(messages[0]) && !!tableT && dansPiece(pieceParId('T'), tableT.x + tableT.w / 2, tableT.y + tableT.h / 2, 1e-6), JSON.stringify([porteT, messages]));
+        const fenDiamant = elements().find(e => e.cat === 'fenetre');
+        ok('Une porte se pose au milieu du mur du bas d\'un trapèze, sur le mur (la pièce la voit) ; sur un losange, qui n\'a pas de mur droit, la fenêtre se pose sur un mur en biais (passe 238) ; un meuble se pose au point le plus dégagé de la pièce',
+          porteT && porteT.o === 'h' && proche(porteT.x, 4) && proche(porteT.y, 6) && bordsDe(porteT, [pieceParId('T')]).length === 1 && !!fenDiamant && fenDiamant.o === 'd' && bordsDe(fenDiamant, [pieceParId('Diamant')]).length === 1 && elements().length === avantDiamant + 1 + (tableT ? 1 : 0) && messages.length === 0 && !!tableT && dansPiece(pieceParId('T'), tableT.x + tableT.w / 2, tableT.y + tableT.h / 2, 1e-6), JSON.stringify([porteT, fenDiamant, messages]));
         // 9. Le cadre tracé à la souris
         nouveau([polyP('T', T), rectP('R', 12, 0, 4, 4)], []);
         ok('Un cadre tracé avec Ctrl prend une pièce polygonale seulement s\'il touche la pièce elle-même, pas le coin vide de son rectangle englobant',
           piecesDansCadre({x0: -1, y0: -1, x1: 1, y1: 1}).join() === '' && piecesDansCadre({x0: 3, y0: 2, x1: 4, y1: 3}).join() === 'T' && piecesDansCadre({x0: -1, y0: 5, x1: .5, y1: 7}).join() === 'T' && piecesDansCadre({x0: 0, y0: 0, x1: 20, y1: 8}).join() === 'T,R' && piecesDansCadre({x0: 9, y0: 0, x1: 11, y1: 2}).join() === '');
         // 10. Les lieux simulés : une pièce de forme libre chacun
         const sims = [0, 1, 2].map(i => construireLieu(i)), formesSim = sims.map(d => d.b1.plan.pieces.filter(aPoly).map(p => p.nom + ':' + p.poly.length).join()), adjSim = (d, x, y) => { const l = lectureDuPlan(d.b1), px = d.b1.plan.pieces.find(p => p.nom === x), py = d.b1.plan.pieces.find(p => p.nom === y), e = l.adj.find(z => (z.a === px.id && z.b === py.id) || (z.a === py.id && z.b === px.id)); return e ? Math.round(e.longueur * 10) / 10 : 0; };
-        const valides = sims.every(d => { D = d; const l = lectureDuPlan(d.b1), ps = d.b1.plan.pieces.filter(aPoly); return d.sim.v === 3 && VERSION_SIMULATION === 3 && l.flottants.length === 0 && ps.every(p => anneauSimple(p.poly) && aireAnneau(p.poly) < p.rects[0].w * p.rects[0].h && d.b2.episodes.some(e => e.piece === p.id && e.pos) && d.b2.episodes.filter(e => e.piece === p.id && e.pos).every(e => { const a = pointDepuisPos(p, e.pos); return dansPiece(p, a.x, a.y, 1e-6); })); });
-        ok('Chaque lieu simulé a une pièce de forme libre (le parking en trapèze, le jardin à pan coupé, le préau en trapèze), valide, plus petite que son rectangle englobant, avec des épisodes dont les croix sont dedans ; aucune porte ni fenêtre ne flotte ; les voisinages d\'avant tiennent (parking–hall 6, jardin–salon 6, préau–cour 5) ; version 3',
-          formesSim.join(' | ') === 'Parking:4 | Jardin:5 | Préau:4' && valides && adjSim(sims[0], 'Parking', 'Hall d\'accueil') === 6 && adjSim(sims[1], 'Jardin', 'Salon') === 6 && adjSim(sims[2], 'Préau', 'Cour') === 5, formesSim.join(' | '));
+        const valides = sims.every(d => { D = d; const l = lectureDuPlan(d.b1), ps = d.b1.plan.pieces.filter(aPoly); return d.sim.v === 4 && VERSION_SIMULATION === 4 && l.flottants.length === 0 && ps.some(p => d.b2.episodes.some(e => e.piece === p.id && e.pos)) && ps.every(p => anneauSimple(p.poly) && aireAnneau(p.poly) < p.rects[0].w * p.rects[0].h && d.b2.episodes.filter(e => e.piece === p.id && e.pos).every(e => { const a = pointDepuisPos(p, e.pos); return dansPiece(p, a.x, a.y, 1e-6); })); });
+        const biaisSim = sims.map(d => { const l = lectureDuPlan(d.b1), e = d.b1.plan.elements.find(x => x.o === 'd'), b = e ? bordsDe(e, d.b1.plan.pieces.filter(p => p.niveau === e.niveau)) : []; return !!e && b.length === 1 && aPoly(b[0].p) && l.pieces[b[0].p.id].fenetres >= 1 && d.b1.plan.elements.filter(x => x.cat === 'meuble' && x.niveau === b[0].p.niveau && b[0].p.rects[0].x <= x.x && x.x < b[0].p.rects[0].x + b[0].p.rects[0].w && b[0].p.rects[0].y <= x.y && x.y < b[0].p.rects[0].y + b[0].p.rects[0].h).every(x => [[x.x, x.y], [x.x + x.w, x.y], [x.x + x.w, x.y + x.h], [x.x, x.y + x.h]].every(([px, py]) => dansPiece(b[0].p, px, py, 1e-6))); });
+        ok('Chaque lieu simulé a ses pièces de forme libre (le parking en trapèze et les sanitaires à pan coupé ; le jardin et la cuisine à pan coupé ; la salle de classe à pan coupé et le préau en trapèze), valides, plus petites que leur rectangle englobant, des épisodes dont les croix sont dedans ; une fenêtre dans un mur en biais, que la pièce voit (et ses meubles restent dedans) ; aucune porte ni fenêtre ne flotte ; les voisinages d\'avant tiennent (parking–hall 6, jardin–salon 6, préau–cour 5) ; version 4',
+          formesSim.join(' | ') === 'Sanitaires:5,Parking:4 | Jardin:5,Cuisine:5 | Salle de classe:5,Préau:4' && valides && biaisSim.every(Boolean) && adjSim(sims[0], 'Parking', 'Hall d\'accueil') === 6 && adjSim(sims[1], 'Jardin', 'Salon') === 6 && adjSim(sims[2], 'Préau', 'Cour') === 5, formesSim.join(' | ') + ' / ' + biaisSim.join());
       } finally {
         toast = vraiToast19; Object.assign(vueEdition, vue19); geste = null; selection = null; temp.forEach(x => x.remove()); vp.classList.toggle('show', avait); historique = []; refaites = [];
       }
@@ -5534,14 +5508,73 @@ function verifierBASE() {
         toast = vraiToast20; Object.assign(vueEdition, vue20); geste = null; selection = null; window.scrollTo(0, 0); vp.classList.toggle('show', avait); historique = []; refaites = []; dernierAppui = {cle: '', t: 0, x: 0, y: 0};
       }
     }
+    // 21. Les ouvertures sur un mur en biais ; la fenêtre (dans un mur plein) et la baie vitrée (du sol au plafond) se distinguent ; « Tout le mur » ; les notes de version (passe 238)
+    {
+      const vp = $('vue-preambule'), avait = vp.classList.contains('show'), vue21 = Object.assign({}, vueEdition), vraiToast21 = toast;
+      try {
+        vp.classList.add('show'); toast = () => {};
+        const poly21 = (id, type, pts) => { const p = {id, nom: id, type, niveau: 'n0', rects: [{x: 0, y: 0, w: 0, h: 0}], poly: pts}; recaler(p); return p; };
+        const rect21 = (id, type, x, y, w, h) => ({id, nom: id, type, niveau: 'n0', rects: [{x, y, w, h}]});
+        const prepa21 = (ps, els) => { D = dossierVide(); D.b1.plan = {niveaux: [{id: 'n0', nom: 'Rez-de-chaussée'}], pieces: ps, elements: els || [], legendes: []}; mode = 'socle'; historique = []; refaites = []; selection = null; niveauCourant = 'n0'; return D; };
+        const pr21 = (a, b, t) => Math.abs(a - b) <= (t || 1e-6);
+        const sejour21 = () => poly21('T', 'sejour', [[0, 6], [12, 2], [12, 12], [0, 12]]), jardin21 = () => poly21('J', 'exterieur', [[0, 0], [12, 0], [12, 2], [0, 6]]);
+        // 1. Une fenêtre posée près du mur en biais (le haut du séjour monte de (0 ; 6) à (12 ; 2)) s'y accroche
+        prepa21([sejour21(), jardin21()]);
+        const f21 = {id: 'f', cat: 'fenetre', niveau: 'n0', long: 2, retourne: false}, posee21 = accrocher(f21, 6, 4.3); D.b1.plan.elements.push(f21);
+        ok('Une fenêtre posée près d\'un mur en biais s\'y accroche : elle prend le sens du mur (de gauche à droite, à l\'unité), et reste dessus, entière',
+          posee21 && f21.o === 'd' && f21.dx > 0 && pr21(Math.hypot(f21.dx, f21.dy), 1, 1e-5) && pr21(f21.dx * 4 + f21.dy * 12, 0, 1e-4) && distSegment(f21.x, f21.y, 0, 6, 12, 2) < 1e-4 && f21.x - f21.dx >= -1e-6, JSON.stringify(f21));
+        const L21 = lectureDuPlan(D.b1), b21 = bordsDe(f21, D.b1.plan.pieces);
+        ok('La lecture la voit : sur le mur commun du séjour et du jardin (intérieur en bas pour le séjour, en haut pour le jardin), une fenêtre du séjour sur le dehors',
+          b21.length === 2 && b21.find(b => b.p.id === 'T').ints.join() === '1' && b21.find(b => b.p.id === 'J').ints.join() === '-1' && L21.pieces.T.fenetres === 1 && L21.flottants.length === 0, JSON.stringify(b21.map(b => [b.p.id, b.ints])));
+        // 2. Seule sur la façade en biais, une baie regarde dehors, perpendiculairement au mur
+        prepa21([sejour21(), rect21('R', 'parking', 3, -1, 6, 2)]);
+        const g21 = {id: 'g', cat: 'baie', niveau: 'n0', long: 2, retourne: false}; accrocher(g21, 6, 4); D.b1.plan.elements.push(g21);
+        const L21b = lectureDuPlan(D.b1), v21 = L21b.vues.find(v => v.e === g21);
+        ok('Seule sur la façade en biais, une baie vitrée compte comme baie du séjour et regarde dehors, perpendiculairement au mur : elle voit le parking, à environ trois cases',
+          L21b.pieces.T.baies === 1 && !!v21 && v21.vers === 'R' && v21.d > 2.5 && v21.d < 3.5 && pr21(v21.dir.dx * 12 - v21.dir.dy * 4, 0, 1e-4) && v21.dir.dy < 0, JSON.stringify(v21 && [v21.vers, v21.d, v21.dir]));
+        // 3. « Tout le mur » : la baie couvre la façade d'un bout à l'autre ; une fenêtre s'arrête à 8 cases ; plus large ne dépasse pas le mur
+        selection = {elem: 'g'}; couvrirMur(); const g21c = elemParId('g');
+        const tout = pr21(g21c.long, Math.hypot(12, 4), 1e-4) && pr21(g21c.x, 6, 1e-4) && pr21(g21c.y, 4, 1e-4) && bordsDe(g21c, D.b1.plan.pieces).length === 1;
+        tailleElement('long', .5); const pasPlus = pr21(elemParId('g').long, Math.hypot(12, 4), 1e-4);
+        typerOuverture('fenetre'); couvrirMur(); const fenCap = elemParId('g').cat === 'fenetre' && pr21(elemParId('g').long, 8);
+        ok('« Tout le mur » fait de la baie une façade vitrée (toute la longueur du mur en biais, centrée) ; « plus large » ne dépasse pas le mur ; une fenêtre s\'arrête à 8 cases', tout && pasPlus && fenCap, JSON.stringify(elemParId('g')));
+        prepa21([rect21('S', 'sejour', 0, 0, 10, 6), rect21('E', 'exterieur', 0, 6, 30, 4)], [{id: 'b', cat: 'baie', niveau: 'n0', x: 3, y: 6, o: 'h', long: 2.5, cote: -1, retourne: false}]);
+        selection = {elem: 'b'}; couvrirMur();
+        ok('Sur un mur que longe une terrasse plus longue, « Tout le mur » prend le mur de la pièce, pas celui de la terrasse', pr21(elemParId('b').long, 10) && pr21(elemParId('b').x, 5) && elemParId('b').y === 6, JSON.stringify(elemParId('b')));
+        // 4. Une porte sur un mur en biais fait un passage ; elle se dessine le long du mur, avec son battant et sa zone à saisir en biais
+        prepa21([sejour21(), poly21('J', 'repos', [[0, 0], [12, 0], [12, 2], [0, 6]])]);
+        const p21 = {id: 'p', cat: 'porte', niveau: 'n0', long: 1.5, retourne: false}; accrocher(p21, 3, 5); D.b1.plan.elements.push(p21);
+        const L21c = lectureDuPlan(D.b1), dess21 = dessinElements({niveau: 'n0', k: 26, edition: true, selection: 'p'});
+        ok('Une porte sur un mur en biais fait un passage entre les deux pièces ; elle se dessine en biais (battant, arc, zone à saisir)',
+          p21.o === 'd' && L21c.passages.some(x => x.e === p21 && [x.a, x.b].sort().join() === 'J,T') && /class="porte-arc"/.test(dess21) && /<polygon class="elem-zone selection" data-elem="p"/.test(dess21));
+        // 5. Quatre quarts de tour ramènent la porte à sa place, sur son mur
+        selection = {piece: 'T', morceau: 0}; const avant21 = JSON.stringify(elemParId('p')); pivoterPiece();
+        const unQuart = elemParId('p').o === 'd' && bordsDe(elemParId('p'), [pieceParId('T')]).length === 1 && elemParId('p').dx > 0;
+        selection = {piece: 'T', morceau: 0}; pivoterPiece(); selection = {piece: 'T', morceau: 0}; pivoterPiece(); selection = {piece: 'T', morceau: 0}; pivoterPiece();
+        const q = elemParId('p'), a0 = JSON.parse(avant21), retour = ['x', 'y', 'dx', 'dy', 'cote'].every(k => pr21(q[k], a0[k], 1e-5));
+        ok('Une pièce tournée emporte sa porte en biais : après un quart de tour elle est encore sur son mur, après quatre elle revient exactement', unQuart && retour, JSON.stringify([a0, q]));
+        // 6. La fenêtre et la baie ne se dessinent pas pareil
+        prepa21([rect21('S', 'sejour', 0, 0, 10, 6)], [{id: 'fen', cat: 'fenetre', niveau: 'n0', x: 3, y: 0, o: 'h', long: 2, cote: 1, retourne: false}, {id: 'bai', cat: 'baie', niveau: 'n0', x: 7, y: 0, o: 'h', long: 2, cote: 1, retourne: false}]);
+        const d21 = dessinElements({niveau: 'n0', k: 26}), gFen = (d21.match(/<g class="fenetre-g">.*?<\/g>/) || [''])[0], gBaie = (d21.match(/<g class="baie-g">.*?<\/g>/) || [''])[0];
+        const cs = getComputedStyle(document.documentElement), vitre = cs.getPropertyValue('--vitre').trim(), trait = cs.getPropertyValue('--vitre-trait').trim();
+        ok('La fenêtre (dans un mur plein : trois traits fins) et la baie vitrée (du sol au plafond : une bande de verre bleutée, des montants) ne se dessinent pas pareil, et pas de la même couleur',
+          /ouv-fenetre/.test(gFen) && !/baie/.test(gFen) && /class="baie-verre"/.test(gBaie) && (gBaie.match(/class="baie"/g) || []).length >= 4 && !!vitre && !!trait && trait !== cs.getPropertyValue('--vol-contexte-deep').trim(), [vitre, trait].join());
+        // 7. À l'ouverture d'un fichier
+        const n21 = dossierVide(); n21.b1.plan.pieces = [rect21('S', 'sejour', 0, 0, 10, 6)];
+        n21.b1.plan.elements = [{id: 'a', cat: 'fenetre', niveau: 'n0', x: 1, y: 1, o: 'd', dx: -3, dy: 4, long: 1, cote: 1}, {id: 'b', cat: 'baie', niveau: 'n0', x: 1, y: 1, o: 'd', dx: 'x', long: 1, cote: 1}, {id: 'c', cat: 'porte', niveau: 'n0', x: 1, y: 0, o: '?', long: 1, cote: 1}];
+        normaliserPlan(n21); const [na, nbb, nc] = n21.b1.plan.elements;
+        ok('À l\'ouverture d\'un fichier : le sens d\'une ouverture en biais est remis à l\'unité, de gauche à droite (et son côté suit) ; un sens illisible ou un mur inconnu la remettent à l\'horizontale',
+          na.o === 'd' && pr21(na.dx, .6) && pr21(na.dy, -.8) && na.cote === -1 && nbb.o === 'h' && nbb.dx === undefined && nc.o === 'h', JSON.stringify([na, nbb, nc]));
+        // 8. Les notes de version sont dans celles de la BAF
+        ok('Les notes de version : plus de page à part dans la BASE, elles sont dans celles de la BAF ; le pied de page y mène',
+          !$('vue-notes') && typeof NOTES_BASE === 'undefined' && $('pied-version').getAttribute('href') === 'index.html#notes-de-version' && $('pied-version').textContent.indexOf(VERSION_BASE) === 0);
+      } finally {
+        toast = vraiToast21; Object.assign(vueEdition, vue21); geste = null; selection = null; vp.classList.toggle('show', avait); historique = []; refaites = [];
+      }
+    }
   } catch (e) { ok('Les vérifications ont planté', false, e.message); }
   finally { calque = sauveCalque; persister = vraiPersister; toast = vraiToast; window.confirm = vraiConfirm; modeFiche = sauveModeFiche; pieceFiche = null; niveauCourant = sauveNiveau; D = sauveD; mode = sauveMode; selection = null; historique = []; refaites = []; }
   return r;
-}
-function afficherVerifications() {
-  const r = verifierBASE(), echecs = r.filter(x => !x.ok).length;
-  $('verifs').innerHTML = '<p><b>' + (echecs ? echecs + ' échec' + (echecs > 1 ? 's' : '') : 'Tout est juste') + '</b> — ' + r.length + ' contrôles.</p>' +
-    r.map(x => '<div class="discret">' + (x.ok ? '✓ ' : '✗ ') + esc(x.nom) + (x.detail ? ' (' + esc(x.detail) + ')' : '') + '</div>').join('');
 }
 
 /* ══ Le démarrage ══ */
@@ -5560,7 +5593,7 @@ function afficherVerifications() {
   const listeMeubles = document.querySelector('select[aria-label="Ajouter un meuble"]');
   if (listeMeubles) listeMeubles.innerHTML += MEUBLES.map(m => '<option value="' + m[0] + '">' + esc(m[1]) + '</option>').join('');
   const h = (location.hash || '').slice(1);
-  aller(['accueil', 'preambule', 'recueillir', 'synthese', 'notes'].indexOf(h) >= 0 ? h : 'accueil', true);
+  aller(['accueil', 'preambule', 'recueillir', 'synthese'].indexOf(h) >= 0 ? h : 'accueil', true);
   const bandeau = $('bandeau'); if (bandeau && window.ResizeObserver) new ResizeObserver(() => document.documentElement.style.setProperty('--hauteur-bandeau', bandeau.offsetHeight + 'px')).observe(bandeau);
   window.addEventListener('hashchange', () => { const v = location.hash.slice(1); if (v && v !== vueCourante) aller(v, true); });
   if (adminActif() && entree) { simulerLieu(0); ouvrirPanneauAdmin(); toast('Mode administrateur : un bac à sable. Votre dossier est mis de côté, il reviendra en quittant.'); }
