@@ -786,6 +786,10 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
       <div class="surtitre">Le plan et les épisodes, ensemble</div>
       <div id="croisements"></div>
     </div>
+    <div class="feuille referent-seul" id="portee-feuille" hidden>
+      <div class="surtitre">Qui est derrière les épisodes ?</div>
+      <div id="portee-synthese"></div>
+    </div>
     <div class="feuille referent-seul" id="pronostic-feuille" hidden>
       <div class="surtitre">Ce que l'équipe pensait, et ce que montrent les épisodes</div>
       <div id="pronostic-synthese"></div>
@@ -900,7 +904,7 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
    chose lue de la BAF, en lecture : le choix clair / sombre, pour s'ouvrir dans le même thème.
    ══════════════════════════════════════════════════════════════════════════════════════════════ */
 
-const VERSION_BASE = 'BASE v2026.10.16-6';
+const VERSION_BASE = 'BASE v2026.10.18-1';
 const CLE_SOCLE = 'base-dossier-v1', CLE_DECL = 'base-declarant-v1', CLE_MODE = 'base-mode', CLE_THEME = 'base-theme';
 const TYPES_ZONE = [['activite', "Salle d'activité"], ['sejour', 'Séjour, salon'], ['repas', 'Repas'], ['accueil', 'Accueil'], ['circulation', 'Circulation'],
   ['chambre', 'Chambre'], ['repos', 'Salle de repos'], ['calme', 'Salle de mise au calme'], ['snoezelen', 'Salle multisensorielle'], ['soins', 'Soins, infirmerie'],
@@ -949,7 +953,7 @@ function dossierVide() {
     b1: {lieu: '', dates: {debut: '', fin: ''}, echelle: null, fiches: {}, plan: {niveaux: [{id: 'n0', nom: 'Rez-de-chaussée'}], pieces: [], elements: []},
       moments: MOMENTS_DEFAUT.map(m => ({id: nouvelId('m'), nom: m[0], debut: m[1], fin: m[2]})), typesCD: [], journee: {}},
     b2: {episodes: [], calmes: []},
-    contributions: {}, pronostics: {}, exporte: ''
+    contributions: {}, pronostics: {}, portee: {}, exporte: ''
   };
 }
 function lireStockage(cle) { try { const t = localStorage.getItem(cle); return t ? JSON.parse(t) : null; } catch (e) { return null; } }
@@ -998,6 +1002,11 @@ function normaliserPlan(d) {
   if (!d.b1.fiches || typeof d.b1.fiches !== 'object' || Array.isArray(d.b1.fiches)) d.b1.fiches = {};
   const pids = new Set((pl.pieces || []).map(p => p.id));
   Object.keys(d.b1.fiches).forEach(id => { if (!pids.has(id) || !d.b1.fiches[id] || typeof d.b1.fiches[id] !== 'object') delete d.b1.fiches[id]; });
+  // Qui est derrière les épisodes (passe 244) : pour une pièce, « une », « quelques » ou « beaucoup » de personnes ; une pièce disparue ou une valeur inconnue est écartée.
+  if (d.idContribution === undefined) {
+    if (!d.portee || typeof d.portee !== 'object' || Array.isArray(d.portee)) d.portee = {};
+    Object.keys(d.portee).forEach(id => { if (!pids.has(id) || PORTEES.every(x => x[0] !== d.portee[id])) delete d.portee[id]; });
+  }
   // La journée type (passe 243) : pour chaque moment, les pièces où se tient le groupe (1) ou certains jours seulement (0,5) ; un moment ou une pièce disparus sont écartés.
   if (!d.b1.journee || typeof d.b1.journee !== 'object' || Array.isArray(d.b1.journee)) d.b1.journee = {};
   const mids = new Set((d.b1.moments || []).map(m => m.id));
@@ -3293,6 +3302,39 @@ function rendreListes() {
   rendreJournee();
   $('suggestions-cd').innerHTML = SUGGESTIONS_CD.map(s => '<button type="button" class="puce' + (pris.has(s.toLowerCase()) ? ' on' : '') + '" onclick="ajouterType(\'' + esc(s).replace(/'/g, '&#39;') + '\')">' + (pris.has(s.toLowerCase()) ? '✓ ' : '＋ ') + esc(s) + '</button>').join('');
 }
+/* ══ Qui est derrière les épisodes ? (passe 244, Arthur et Émilie) ══
+   Une pièce chargée peut l'être par le lieu, ou parce qu'une personne y vit beaucoup de choses. La BASE reste une lecture écologique : elle ne repère ni ne
+   nomme personne. À l'analyse, pour chaque pièce chargée, l'équipe dit seulement si les épisodes concernent surtout une personne, deux ou trois, ou beaucoup.
+   Réponse du référent, rangée dans le dossier (D.portee), jamais dans le plan ni dans le fichier du déclarant. Elle apparaît sous le nom de la pièce sur la
+   carte, dans le croisement du plan et des épisodes, dans les questions pour l'équipe, et renvoie à l'analyse fonctionnelle individuelle (outil 1). */
+const PORTEES = [['une', 'Surtout une personne'], ['quelques', 'Deux ou trois personnes'], ['beaucoup', 'Beaucoup de personnes différentes']];
+const PORTEE_COURTE = {une: 'une personne', quelques: '2-3 personnes', beaucoup: 'beaucoup de personnes'};
+function porteeDe(id) { const p = D && D.portee && typeof D.portee === 'object' ? D.portee[id] : null; return PORTEES.some(x => x[0] === p) ? p : ''; }
+const porteeEtroite = id => { const p = porteeDe(id); return p === 'une' || p === 'quelques'; };
+function choisirPortee(id, v) {
+  if (!D || mode !== 'socle' || !pieceParId(id)) return;
+  if (!D.portee || typeof D.portee !== 'object') D.portee = {};
+  if (PORTEES.some(x => x[0] === v)) D.portee[id] = v; else delete D.portee[id];
+  persister(); majSynthese();
+}
+// Les pièces à qui poser la question : les chargées (au moins le seuil des croisements), et celles qui ont déjà une réponse.
+function piecesChargees(eps) {
+  const cr = croisementsDuLieu(eps), comptes = comptesParPiece(eps);
+  return pieces().filter(p => (comptes[p.id] || 0) >= cr.seuil || (porteeDe(p.id) && comptes[p.id])).sort((a, b) => comptes[b.id] - comptes[a.id]).map(p => ({p, n: comptes[p.id], seuil: cr.seuil}));
+}
+function rendrePortee(eps) {
+  const feuille = $('portee-feuille'), el = $('portee-synthese'); if (!feuille || !el) return;
+  const l = mode === 'socle' && D.b2.episodes.length ? piecesChargees(eps) : [];
+  feuille.hidden = !l.length; if (!l.length) { el.innerHTML = ''; return; }
+  const multi = niveaux().length > 1, etroites = l.filter(x => porteeEtroite(x.p.id));
+  el.innerHTML = '<p class="lecture">Une pièce chargée l\'est peut-être par le lieu, peut-être parce qu\'une personne y passe, ou y vit beaucoup de choses. Pour chaque pièce chargée, l\'équipe dit <b>seulement</b> si les épisodes concernent surtout une personne, deux ou trois, ou beaucoup : la BASE ne demande pas qui, et ne le retient pas. Elle reste une lecture du lieu.</p>' +
+    '<div class="defile"><table class="rep portee"><thead><tr><th>Pièce</th><th class="n">Épisodes</th><th>D\'après l\'équipe, les épisodes concernent</th></tr></thead><tbody>' +
+    l.map(({p, n}) => '<tr><td>' + esc(p.nom) + (multi ? ' <span class="discret">(' + esc(nomNiveau(niveauDe(p))) + ')</span>' : '') + '</td><td class="n">' + n + '</td><td>' +
+      '<select aria-label="Qui est derrière les épisodes de ' + esc(p.nom) + '" onchange="choisirPortee(\'' + esc(p.id) + '\', this.value)"><option value="">— pas précisé</option>' +
+      PORTEES.map(([v, nom]) => '<option value="' + v + '"' + (porteeDe(p.id) === v ? ' selected' : '') + '>' + esc(nom) + '</option>').join('') + '</select></td></tr>').join('') +
+    '</tbody></table></div>' +
+    (etroites.length ? '<p class="lecture" style="margin-top:10px"><b>' + etroites.map(x => esc(x.p.nom)).join(', ') + '</b> : ' + (etroites.length > 1 ? 'des pièces dont la couleur tient à peu de personnes' : 'une pièce dont la couleur tient à peu de personnes') + '. La carte y dit autant de la trajectoire de ces personnes que du lieu : à lire avec leur analyse fonctionnelle individuelle (outil 1), et sans conclure sur la pièce toute seule.</p>' : '');
+}
 /* ══ La journée type (passe 243, Arthur et Émilie) ══
    Le référent coche une fois, pour chaque moment de la journée, les pièces où se tient le groupe (1), ou certains jours seulement (0,5). La BASE en
    tire des heures de présence par jour pour chaque pièce, puis, sur la période, un nombre d'épisodes pour 10 h de présence : une salle où l'on vit cinq
@@ -3728,13 +3770,15 @@ function questionsEquipe(eps) {
   const L = lectureDuPlan(D.b1);
   cr.attendus.slice(0, 2).forEach(p => q.push('Dans ' + nm(p.id) + ', ' + nb(p.eps, 'épisode') + ', et le plan y lit : ' + p.titres.slice(0, 3).map(t => t.charAt(0).toLowerCase() + t.slice(1)).join(' ; ') + '. Que se passe-t-il là juste avant que ça monte ? Qu\'y essayer cette semaine, sans rien acheter ?'));
   cr.surprises.slice(0, 2).forEach(p => q.push('Dans ' + nm(p.id) + ', ' + nb(p.eps, 'épisode') + ' et rien que le plan ou les fiches expliquent. Qu\'est-ce que le plan ne montre pas ici : qui est là, à quelle heure, ce qu\'on y attend, ce qu\'on y entend de la pièce d\'à côté ? Et si l\'on y passait dix minutes, à hauteur de la personne ?'));
+  const pe = pieces().filter(p => porteeEtroite(p.id) && comptesParPiece(eps)[p.id] >= 2).sort((a, b) => comptesParPiece(eps)[b.id] - comptesParPiece(eps)[a.id])[0];
+  if (pe) q.push('Dans ' + nm(pe.id) + ', l\'équipe dit que les épisodes concernent surtout ' + PORTEE_COURTE[porteeDe(pe.id)] + '. Qu\'est-ce qui tient à la pièce, et qu\'est-ce qui tient à ce que ces personnes y vivent (un moment, une attente, un voisin) ? Leur analyse fonctionnelle individuelle en dit-elle déjà quelque chose ?');
   if (journeeRemplie()) {   // la journée type (passe 243) : la pièce la plus chargée n'est pas forcément celle où il y a le plus d'épisodes
     const fm = filtres(), t = tauxParPiece(eps, calmesFiltres(fm), fm.moment), avecN = pieces().filter(p => t.comptes[p.id]).sort((a, b) => t.comptes[b.id] - t.comptes[a.id]);
     const avecT = Object.keys(t.taux).filter(id => t.comptes[id]).sort((a, b) => t.taux[b] - t.taux[a]);
     if (avecN.length && avecT.length && avecN[0].id !== avecT[0]) q.push(nm(avecN[0].id) + ' a le plus d\'épisodes (' + t.comptes[avecN[0].id] + ')' + (t.heures[avecN[0].id] ? ', mais le groupe y passe ' + dureeTexte(t.heures[avecN[0].id] * 60) + ' par jour' : '') + '. Rapporté au temps de présence, c\'est ' + nm(avecT[0]) + ' qui est le plus chargé (' + virguleSynthese(t.taux[avecT[0]].toFixed(1)) + ' pour 10 h). Que se passe-t-il là, dans ce temps plus court ?');
   }
   cr.calmes.slice(0, 1).forEach(p => q.push(nm(p.id) + ' : le plan y lit des points de vigilance, et aucun épisode n\'y est déclaré. Qu\'est-ce qui protège cette pièce (un adulte présent, un temps court, un choix possible) ? Qu\'en retenir pour les autres ? Ou n\'y déclare-t-on simplement pas ?'));
-  concentrations(eps).slice(0, 2).forEach(c => { const p = pieceParId(c.id); q.push('Dans ' + nm(c.id) + ', les épisodes se rassemblent ' + decrireEndroit(p, c.x, c.y, L) + '. Qu\'y a-t-il à cet endroit (une file, un bruit, un passage, un regard) ? Et à l\'autre bout de la pièce, qu\'est-ce qui est différent ?'); });
+  concentrations(eps).slice(0, pe ? 1 : 2).forEach(c => { const p = pieceParId(c.id); q.push('Dans ' + nm(c.id) + ', les épisodes se rassemblent ' + decrireEndroit(p, c.x, c.y, L) + '. Qu\'y a-t-il à cet endroit (une file, un bruit, un passage, un regard) ? Et à l\'autre bout de la pièce, qu\'est-ce qui est différent ?'); });
   const pr = comparaisonPronostics(eps);
   if (pr) {
     pr.surprises.slice(0, 1).forEach(id => q.push('Personne n\'avait cité ' + nm(id) + ', et il y a ' + nb(pr.comptes[id], 'épisode') + '. Qu\'est-ce qui nous échappait : qui y est, quand, ce qu\'on y fait ?'));
@@ -3768,7 +3812,7 @@ function copierQuestions() {
   if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(texte).then(fait).catch(() => copierSecours(texte, fait)); else copierSecours(texte, fait);
 }
 function rendreQuestionsSynthese(eps) { const el = $('questions-synthese'); if (el) el.innerHTML = htmlQuestions(eps); }
-function viderSupplements() { rendrePorte(); ['pronostic-synthese', 'contexte-synthese', 'questions-synthese', 'mode-carte'].forEach(id => { const el = $(id); if (el) el.innerHTML = ''; }); const f = $('pronostic-feuille'); if (f) f.hidden = true; }
+function viderSupplements() { rendrePorte(); ['portee-synthese', 'pronostic-synthese', 'contexte-synthese', 'questions-synthese', 'mode-carte'].forEach(id => { const el = $(id); if (el) el.innerHTML = ''; }); const f = $('pronostic-feuille'); if (f) f.hidden = true; }
 // Regarder une pièce : des gestes d'observation, proposés par la BASE (ce ne sont pas des règles du guide), dans la fiche de la pièce.
 function htmlRegarderPiece() {
   return '<details class="repli"><summary>Comment regarder une pièce (cinq minutes)</summary><ul class="regle-liste">' +
@@ -3827,10 +3871,10 @@ function valeursCalque(cq, eps, o) {
   const comptes = comptesParPiece(eps);
   if (cq === 'episodes' && o && o.taux) {   // par heure de présence (passe 243) : la couleur est le taux ; écrit dedans le taux (ou « — »), dessous l'effectif et le temps de présence par jour
     const t = tauxParPiece(eps, o.calmes || [], o.moment), et = {}, sous = {};
-    pieces().forEach(p => { et[p.id] = t.taux[p.id] !== undefined ? virguleSynthese(t.taux[p.id].toFixed(1)) : '—'; sous[p.id] = nb(comptes[p.id] || 0, 'épisode') + (t.heures[p.id] ? ' · ' + dureeTexte(t.heures[p.id] * 60) + '/j' : ''); });
+    pieces().forEach(p => { et[p.id] = t.taux[p.id] !== undefined ? virguleSynthese(t.taux[p.id].toFixed(1)) : '—'; sous[p.id] = nb(comptes[p.id] || 0, 'épisode') + (t.heures[p.id] ? ' · ' + dureeTexte(t.heures[p.id] * 60) + '/j' : '') + (comptes[p.id] && porteeEtroite(p.id) ? ' · ' + PORTEE_COURTE[porteeDe(p.id)] : ''); });
     return {valeurs: t.taux, etiquettes: et, sous, max: t.max, taux: t};
   }
-  if (cq === 'episodes') return {valeurs: comptes, etiquettes: null, sous: null, max: Math.max(0, ...Object.values(comptes))};
+  if (cq === 'episodes') { const sous = {}; pieces().forEach(p => { if (comptes[p.id] && porteeEtroite(p.id)) sous[p.id] = PORTEE_COURTE[porteeDe(p.id)]; }); return {valeurs: comptes, etiquettes: null, sous: Object.keys(sous).length ? sous : null, max: Math.max(0, ...Object.values(comptes))}; }
   const L = lectureDuPlan(D.b1), v = {}, et = {}, sous = {};
   pieces().forEach(p => {
     const regs = L.parPiece[p.id] || [], compte = sev => new Set(regs.filter(r => r.sev === sev).map(r => r.id + '|' + r.sens)).size;
@@ -4028,8 +4072,8 @@ function htmlCroisements(eps) {
     return '<details class="repli"' + (ouvert ? ' open' : '') + '><summary>' + titre + ' · ' + l.length + '</summary>' + table(l.slice(0, 10)) + (l.length > 10 ? '<details class="repli"><summary>Les ' + (l.length - 10) + ' autres</summary>' + table(l.slice(10)) + '</details>' : '') + '</details>'; };
   return '<p class="discret" style="margin:0 0 10px">' + nb(x.T, 'épisode') + ' sur ' + nb(x.N, 'pièce') + '. Une pièce est « chaude » à partir de ' + nb(x.seuil, 'épisode') + ' (au moins deux fois sa part si tout se répartissait également) ; elle « alerte » à partir de deux points de vigilance différents.</p>' +
     '<div class="quadrants">' +
-    quadrant('Chaudes, comme le plan le laissait attendre', 'Des points de vigilance, et des épisodes : c\'est là qu\'une piste du guide a le plus de chances de compter.', x.attendus, p => nb(p.eps, 'épisode') + ' · ' + pts(p)) +
-    quadrant('Chaudes, sans alerte au plan', 'Des épisodes sans point de vigilance : le plan et les fiches ne disent pas pourquoi. À explorer sur place, ou à compléter par la fiche.', x.surprises, p => nb(p.eps, 'épisode') + ' · ' + (p.vig ? nb(p.vig, 'point') + ' de vigilance' : 'aucun point de vigilance')) +
+    quadrant('Chaudes, comme le plan le laissait attendre', 'Des points de vigilance, et des épisodes : c\'est là qu\'une piste du guide a le plus de chances de compter.', x.attendus, p => nb(p.eps, 'épisode') + (porteeEtroite(p.id) ? ' <span class="discret">(portés par ' + PORTEE_COURTE[porteeDe(p.id)] + ')</span>' : '') + ' · ' + pts(p)) +
+    quadrant('Chaudes, sans alerte au plan', 'Des épisodes sans point de vigilance : le plan et les fiches ne disent pas pourquoi. À explorer sur place, ou à compléter par la fiche.', x.surprises, p => nb(p.eps, 'épisode') + (porteeEtroite(p.id) ? ' <span class="discret">(portés par ' + PORTEE_COURTE[porteeDe(p.id)] + ')</span>' : '') + ' · ' + (p.vig ? nb(p.vig, 'point') + ' de vigilance' : 'aucun point de vigilance')) +
     quadrant('Alertes au plan, mais calmes', 'Des points de vigilance, aucun épisode déclaré : une pièce où l\'on passe peu, où l\'on ne remplit pas, ou qui tient bon malgré tout.', x.calmes, p => pts(p)) + '</div>' +
     tableau('Points de vigilance : où sont les épisodes ?', 'vigilance', true) + tableau('Points d\'appui : où sont les épisodes ?', 'appui', false) +
     '<details class="repli"><summary>Comment lire ces tableaux</summary><p class="lecture">Chaque ligne est un point lu dans le plan ou déclaré dans une fiche. « Pièces » : combien de pièces sont concernées. « Épisodes qui s\'y trouvent » : la part des épisodes déclarés dans ces pièces. « Concentration » : la part des épisodes divisée par la part des pièces : au-dessus de ×1, les épisodes s\'y trouvent plus que le nombre de pièces ne le laisserait attendre ; au-dessous, moins.</p>' +
@@ -4078,7 +4122,7 @@ function majSynthese() {
   $('repartitions').innerHTML = tableauPieces +
     tableau('Par moment de la journée', parMoment) +
     tableau('Par comportement', parType, 'Un épisode peut porter plusieurs comportements : le total peut dépasser 100 %.');
-  rendreCroisements(eps); rendrePronosticsSynthese(eps); rendreContexteSynthese(eps); rendreQuestionsSynthese(eps); rendrePorte();
+  rendreCroisements(eps); rendrePortee(eps); rendrePronosticsSynthese(eps); rendreContexteSynthese(eps); rendreQuestionsSynthese(eps); rendrePorte();
 }
 // Les styles des images exportées (toujours claires : elles partent dans un document). Le plan vierge et la carte les partagent.
 function styleExport() {
@@ -4258,12 +4302,14 @@ function effacer() {
    [[numéro de la pièce, [[x, y], …]]], une pièce dessinée en polygone (ses sommets, dans le plan tel qu'on le voit). */
 // Passe 238 : une pièce à pan coupé dans chaque lieu, avec une fenêtre dans le mur en biais (fenêtre [x, y, 'd', largeur, niveau, type, [sens du mur]]).
 // Passe 243 : une journée type dans chaque lieu, « journee » : [[n° du moment, [pièces où est le groupe], [pièces certains jours]], …].
-const VERSION_SIMULATION = 5;
+// Passe 244 : « portee » : [[n° de la pièce, 'une' | 'quelques' | 'beaucoup'], …], l'avis de l'équipe sur qui est derrière les épisodes d'une pièce chargée.
+const VERSION_SIMULATION = 6;
 const LIEUX_SIMULES = [
   {nom: 'Bâtiment provisoire', desc: 'Un IME déménagé dans des bureaux, dessiné sans échelle : un hall unique où tout le monde arrive, un long couloir aveugle, des salles sans fenêtre, une cour non clôturée contre la route, et le parking devant la porte. Ses fiches de pièces sont remplies en mode rapide. Son réfectoire, très grand, contient trois petites pièces : un office, un local chariots et un coin calme. Les sanitaires, un ancien bureau, ont gardé leur porte vitrée. Presque toutes ses pièces ont leurs croix (au moins une par pièce qui a des épisodes) ; la salle bleue est dessinée tournée d\'un quart de tour et le parking est un trapèze ; les sanitaires ont un pan coupé, avec une fenêtre dans le mur en biais : de quoi voir ce que la carte thermique sait faire.', graine: 7,
     legendes: [['Entrée principale', -4.2, 2.2, 'm', 'e'], ['Vers le centre-ville', -10.5, -4.6, 'm', 'n']],
     pronostics: [['AES / AMP', [0, 2, 4]], ['Éducateur·rice spécialisé·e', [0, 4, 9]], ['Moniteur·rice-éducateur·rice', [0, 8]]],
     dates: ['2026-09-07', '2026-09-25'], moments: null,
+    portee: [[0, 'beaucoup'], [4, 'quelques'], [10, 'une']],
     journee: [[0, [0, 8]], [1, [2, 3]], [2, [1, 6]], [3, [4], [12, 10, 11]], [4, [5], [9]], [5, [2, 3], [9]], [6, [0, 8]]],
     pieces: [['Hall d\'accueil', 'accueil', [[0, 0, 10, 6]]], ['Couloir', 'circulation', [[10, 2, 14, 2], [22, 4, 2, 8]]], ['Salle bleue', 'activite', [[10, 4, 7, 6]]],
       ['Salle verte', 'activite', [[17, 4, 5, 6]]], ['Réfectoire', 'repas', [[0, 6, 10, 8], [10, 10, 6, 4]]], ['Salle calme', 'calme', [[16, 10, 6, 4]]], ['Sanitaires', 'sanitaires', [[24, 0, 4, 5]]],
@@ -4298,6 +4344,7 @@ const LIEUX_SIMULES = [
     legendes: [['Entrée principale', 11.5, -1.8, 'm', 's'], ['Vers le centre-ville', -1, -10.5, 'm', 'o']],
     pronostics: [['Éducateur·rice spécialisé·e', [2, 4]], ['AES / AMP', [2, 8]], ['Infirmier·e', [4, 5]]],
     dates: ['2026-09-14', '2026-10-02'],
+    portee: [[5, 'une'], [2, 'quelques'], [4, 'beaucoup']],
     journee: [[0, [4, 5, 6, 7, 8, 13, 14, 15, 17]], [1, [2]], [2, [1], [0]], [3, [2]], [4, [1], [16]], [5, [1, 0]], [6, [2]], [7, [4, 5, 6, 7, 8, 13, 14, 15, 17]]],
     moments: [['Lever', '07:00', '08:00'], ['Petit-déjeuner', '08:00', '09:00'], ['Matinée', '09:00', '12:00'], ['Déjeuner', '12:00', '13:15'], ['Temps calme', '13:15', '14:30'],
       ['Après-midi', '14:30', '18:30'], ['Dîner', '18:30', '19:45'], ['Coucher', '19:45', '21:30']],
@@ -4348,6 +4395,7 @@ const LIEUX_SIMULES = [
     legendes: [['Entrée des taxis', 23.4, 6.3, 'm', 'o'], ['Vers le centre-ville', 28.5, -3.4, 'm', 'n']],
     pronostics: [['Éducateur·rice spécialisé·e', [4, 7, 2]], ['AES / AMP', [4, 7]], ['Moniteur·rice-éducateur·rice', [7, 11]]],
     dates: ['2026-09-21', '2026-10-09'], echelle: .8,
+    portee: [[7, 'beaucoup'], [4, 'quelques'], [12, 'une']],
     journee: [[0, [9, 3]], [1, [0, 1]], [2, [7, 8]], [3, [0, 1], [2]], [4, [4]], [5, [7, 8]], [6, [0, 1], [2, 11]], [7, [3, 9]]],
     moments: [['Arrivée', '08:45', '09:15'], ['Matinée', '09:15', '10:30'], ['Récréation', '10:30', '10:50'], ['Fin de matinée', '10:50', '12:00'], ['Cantine', '12:00', '13:00'],
       ['Temps de cour', '13:00', '13:30'], ['Après-midi', '13:30', '15:45'], ['Départ', '15:45', '16:15']],
@@ -4415,6 +4463,7 @@ function construireLieu(i) {
   d.sim = {i: LIEUX_SIMULES[i] ? i : 0, v: VERSION_SIMULATION};   // quelle simulation, de quelle version (passe 235)
   L.pieces.forEach((t, k) => { if (t[4] !== undefined) d.b1.plan.pieces[k].dans = d.b1.plan.pieces[t[4]].id; });   // une enclave : le numéro de la pièce qui la contient
   d.b1.typesCD = L.types.map(nom => ({id: nouvelId('t'), nom}));
+  d.portee = {}; (L.portee || []).forEach(([k, v]) => { d.portee[d.b1.plan.pieces[k].id] = v; });   // qui est derrière les épisodes (passe 244)
   d.b1.journee = {};
   (L.journee || []).forEach(([mi, oui, parfois]) => { const m = d.b1.moments[mi]; if (!m) return; const l = {}; (oui || []).forEach(k => { l[d.b1.plan.pieces[k].id] = 1; }); (parfois || []).forEach(k => { l[d.b1.plan.pieces[k].id] = .5; }); if (Object.keys(l).length) d.b1.journee[m.id] = l; });   // la journée type (passe 243)
   d.b1.plan.elements = (L.portes || []).map(([x, y, o, long, cote, k, vitrage]) => Object.assign({id: nouvelId('e'), cat: 'porte', niveau: niv(k), x, y, o, long, cote, retourne: cote < 0}, vitrage ? {vitrage} : {}))
@@ -5569,9 +5618,9 @@ function verifierBASE() {
           piecesDansCadre({x0: -1, y0: -1, x1: 1, y1: 1}).join() === '' && piecesDansCadre({x0: 3, y0: 2, x1: 4, y1: 3}).join() === 'T' && piecesDansCadre({x0: -1, y0: 5, x1: .5, y1: 7}).join() === 'T' && piecesDansCadre({x0: 0, y0: 0, x1: 20, y1: 8}).join() === 'T,R' && piecesDansCadre({x0: 9, y0: 0, x1: 11, y1: 2}).join() === '');
         // 10. Les lieux simulés : une pièce de forme libre chacun
         const sims = [0, 1, 2].map(i => construireLieu(i)), formesSim = sims.map(d => d.b1.plan.pieces.filter(aPoly).map(p => p.nom + ':' + p.poly.length).join()), adjSim = (d, x, y) => { const l = lectureDuPlan(d.b1), px = d.b1.plan.pieces.find(p => p.nom === x), py = d.b1.plan.pieces.find(p => p.nom === y), e = l.adj.find(z => (z.a === px.id && z.b === py.id) || (z.a === py.id && z.b === px.id)); return e ? Math.round(e.longueur * 10) / 10 : 0; };
-        const valides = sims.every(d => { D = d; const l = lectureDuPlan(d.b1), ps = d.b1.plan.pieces.filter(aPoly); return d.sim.v === 5 && VERSION_SIMULATION === 5 && l.flottants.length === 0 && ps.some(p => d.b2.episodes.some(e => e.piece === p.id && e.pos)) && ps.every(p => anneauSimple(p.poly) && aireAnneau(p.poly) < p.rects[0].w * p.rects[0].h && d.b2.episodes.filter(e => e.piece === p.id && e.pos).every(e => { const a = pointDepuisPos(p, e.pos); return dansPiece(p, a.x, a.y, 1e-6); })); });
+        const valides = sims.every(d => { D = d; const l = lectureDuPlan(d.b1), ps = d.b1.plan.pieces.filter(aPoly); return d.sim.v === 6 && VERSION_SIMULATION === 6 && l.flottants.length === 0 && ps.some(p => d.b2.episodes.some(e => e.piece === p.id && e.pos)) && ps.every(p => anneauSimple(p.poly) && aireAnneau(p.poly) < p.rects[0].w * p.rects[0].h && d.b2.episodes.filter(e => e.piece === p.id && e.pos).every(e => { const a = pointDepuisPos(p, e.pos); return dansPiece(p, a.x, a.y, 1e-6); })); });
         const biaisSim = sims.map(d => { const l = lectureDuPlan(d.b1), e = d.b1.plan.elements.find(x => x.o === 'd'), b = e ? bordsDe(e, d.b1.plan.pieces.filter(p => p.niveau === e.niveau)) : []; return !!e && b.length === 1 && aPoly(b[0].p) && l.pieces[b[0].p.id].fenetres >= 1 && d.b1.plan.elements.filter(x => x.cat === 'meuble' && x.niveau === b[0].p.niveau && b[0].p.rects[0].x <= x.x && x.x < b[0].p.rects[0].x + b[0].p.rects[0].w && b[0].p.rects[0].y <= x.y && x.y < b[0].p.rects[0].y + b[0].p.rects[0].h).every(x => [[x.x, x.y], [x.x + x.w, x.y], [x.x + x.w, x.y + x.h], [x.x, x.y + x.h]].every(([px, py]) => dansPiece(b[0].p, px, py, 1e-6))); });
-        ok('Chaque lieu simulé a ses pièces de forme libre (le parking en trapèze et les sanitaires à pan coupé ; le jardin et la cuisine à pan coupé ; la salle de classe à pan coupé et le préau en trapèze), valides, plus petites que leur rectangle englobant, des épisodes dont les croix sont dedans ; une fenêtre dans un mur en biais, que la pièce voit (et ses meubles restent dedans) ; aucune porte ni fenêtre ne flotte ; les voisinages d\'avant tiennent (parking–hall 6, jardin–salon 6, préau–cour 5) ; version 5',
+        ok('Chaque lieu simulé a ses pièces de forme libre (le parking en trapèze et les sanitaires à pan coupé ; le jardin et la cuisine à pan coupé ; la salle de classe à pan coupé et le préau en trapèze), valides, plus petites que leur rectangle englobant, des épisodes dont les croix sont dedans ; une fenêtre dans un mur en biais, que la pièce voit (et ses meubles restent dedans) ; aucune porte ni fenêtre ne flotte ; les voisinages d\'avant tiennent (parking–hall 6, jardin–salon 6, préau–cour 5) ; version 6',
           formesSim.join(' | ') === 'Sanitaires:5,Parking:4 | Jardin:5,Cuisine:5 | Salle de classe:5,Préau:4' && valides && biaisSim.every(Boolean) && adjSim(sims[0], 'Parking', 'Hall d\'accueil') === 6 && adjSim(sims[1], 'Jardin', 'Salon') === 6 && adjSim(sims[2], 'Préau', 'Cour') === 5, formesSim.join(' | ') + ' / ' + biaisSim.join());
       } finally {
         toast = vraiToast19; Object.assign(vueEdition, vue19); geste = null; selection = null; temp.forEach(x => x.remove()); vp.classList.toggle('show', avait); historique = []; refaites = [];
@@ -5737,11 +5786,54 @@ function verifierBASE() {
         ok('À l\'ouverture d\'un fichier : une pièce ou un moment disparus, une valeur inconnue sont écartés de la journée type',
           JSON.stringify(n22.b1.journee) === '{"m1":{"A":1}}' && JSON.stringify(n22b.b1.journee) === '{}' && JSON.stringify(n22c.b1.journee) === '{}');
         const sims22 = [0, 1, 2].map(i => construireLieu(i));
-        const okSims = sims22.every(d => { D = d; return d.sim.v === 5 && journeeRemplie() && Object.keys(tauxParPiece(d.b2.episodes, d.b2.calmes).taux).length >= 4; });
+        const okSims = sims22.every(d => { D = d; return d.sim.v === 6 && journeeRemplie() && Object.keys(tauxParPiece(d.b2.episodes, d.b2.calmes).taux).length >= 4; });
         D = sims22[0]; const t0 = tauxParPiece(D.b2.episodes, D.b2.calmes), hall = D.b1.plan.pieces[0].id, bleue = D.b1.plan.pieces[2].id;
-        ok('Les trois lieux simulés ont leur journée type (version 5) ; au bâtiment provisoire, le hall (une heure par jour) est plus chargé au temps de présence que la salle bleue (près de cinq heures)',
+        ok('Les trois lieux simulés ont leur journée type (version 6) ; au bâtiment provisoire, le hall (une heure par jour) est plus chargé au temps de présence que la salle bleue (près de cinq heures)',
           okSims && t0.taux[hall] > t0.taux[bleue], JSON.stringify([t0.taux[hall], t0.taux[bleue], t0.heures[hall], t0.heures[bleue]]));
       } finally { modeCarte = sauveMode22; calque = sauveCq22; }
+    }
+    // 23. Qui est derrière les épisodes ? (passe 244)
+    {
+      const sauveCq23 = calque, sauveMode23 = modeCarte; let vraiPersister23 = persister, vraiMaj23 = majSynthese;
+      try {
+        const rect23 = (id, x) => ({id, nom: id, type: 'sejour', niveau: 'n0', rects: [{x, y: 0, w: 4, h: 4}]});
+        const ep23 = (piece, date) => ({id: nouvelId('ep'), date, heure: '09:00', moment: 'm1', piece, types: [], autre: '', nbPros: 1, commentaire: '', provenance: 'test'});
+        const base23 = () => { D = dossierVide(); mode = 'socle'; D.b1.plan.pieces = [rect23('A', 0), rect23('B', 4), rect23('C', 8)]; D.b1.moments = [{id: 'm1', nom: 'Matin', debut: '09:00', fin: '12:00'}];
+          D.b2.episodes = []; for (let i = 0; i < 9; i++) D.b2.episodes.push(ep23('A', '2026-10-0' + (i % 5 + 1))); for (let i = 0; i < 2; i++) D.b2.episodes.push(ep23('B', '2026-10-01')); D.b2.episodes.push(ep23('C', '2026-10-02')); return D; };
+        ['f-moment', 'f-type', 'f-debut', 'f-fin'].forEach(id => { if ($(id)) $(id).value = ''; });
+        base23();
+        persister = () => {}; majSynthese = () => {};
+        choisirPortee('A', 'une'); const un23 = porteeDe('A') === 'une';
+        choisirPortee('A', 'nimportequoi'); const sans23 = porteeDe('A') === '' && !('A' in D.portee);
+        choisirPortee('Z', 'une'); const absente23 = !('Z' in D.portee);
+        choisirPortee('A', 'quelques'); majSynthese = vraiMaj23; persister = vraiPersister23;
+        ok('Qui est derrière les épisodes : une réponse se pose (une, quelques, beaucoup), une valeur inconnue la retire, une pièce qui n\'existe pas est refusée',
+          un23 && sans23 && absente23 && porteeDe('A') === 'quelques' && PORTEES.length === 3);
+        const eps23 = D.b2.episodes, ch23 = piecesChargees(eps23);
+        ok('Les pièces à qui poser la question : les chargées (au moins le seuil des croisements), dans l\'ordre de leurs épisodes ; B (2 épisodes) et C (1) n\'y sont pas',
+          ch23.length === 1 && ch23[0].p.id === 'A' && ch23[0].n === 9 && ch23[0].seuil === croisementsDuLieu(eps23).seuil, JSON.stringify(ch23.map(x => [x.p.id, x.n, x.seuil])));
+        D.portee.B = 'une'; const ch23b = piecesChargees(eps23).map(x => x.p.id).join(); delete D.portee.B;
+        ok('Une pièce qui a déjà une réponse reste dans la liste, même peu chargée', ch23b === 'A,B', ch23b);
+        calque = 'episodes'; modeCarte = 'piece'; const c23 = svgCarte(eps23, {calque: 'episodes'}); D.portee.A = 'beaucoup'; const c23b = svgCarte(eps23, {calque: 'episodes'}); D.portee.A = 'quelques';
+        ok('Sur la carte, sous le nom de la pièce : « 2-3 personnes » quand l\'équipe dit que peu de monde est derrière ses épisodes, rien quand ce sont beaucoup de personnes',
+          /2-3 personnes/.test(c23.corps) && !/personnes/.test(c23b.corps), c23.corps.match(/piece-sous[^<]*<|2-3[^<]*/) && 'ok');
+        const q23 = questionsEquipe(eps23).join(' ');
+        ok('Les questions pour l\'équipe renvoient à l\'analyse fonctionnelle individuelle quand une pièce tient à peu de monde',
+          /Dans « A », l'équipe dit que les épisodes concernent surtout 2-3 personnes/.test(q23) && /analyse fonctionnelle individuelle/.test(q23), q23.slice(0, 400));
+        D.portee.A = 'beaucoup'; const q23b = questionsEquipe(eps23).join(' '); D.portee.A = 'quelques';
+        ok('Beaucoup de personnes : pas de question sur l\'individu', !/analyse fonctionnelle individuelle/.test(q23b));
+        ok('Le texte de la feuille ne parle d\'aucune personne en particulier et dit que la BASE ne retient pas qui', (function () { const f = $('portee-synthese'); rendrePortee(eps23); const t = f.textContent; return /ne demande pas qui, et ne le retient pas/.test(t) && /outil 1/.test(t) && f.querySelectorAll('select').length === 1 && f.querySelector('select').value === 'quelques'; })());
+        // L'avis de l'équipe voyage dans le fichier socle, jamais dans le plan ni dans le fichier du déclarant
+        const socle23 = contenuSocle(), vierge23 = contenuDeclarantVierge(), cd23 = (function () { const sauve = mode, sd = D.idContribution; mode = 'declarant'; D.idContribution = 'x'; const c = contenuDeclarant(); mode = sauve; if (sd === undefined) delete D.idContribution; else D.idContribution = sd; return c; })();
+        ok('Rangé au niveau du dossier : dans le fichier socle, ni dans le plan, ni dans le fichier déclarant vierge, ni dans celui d\'un déclarant',
+          socle23.portee.A === 'quelques' && !JSON.stringify(vierge23).includes('quelques') && !JSON.stringify(cd23).includes('quelques') && !JSON.stringify(D.b1).includes('quelques'));
+        const n23 = dossierVide(); n23.b1.plan.pieces = [rect23('A', 0)]; n23.portee = {A: 'une', Z: 'une', B: 'une'}; normaliserPlan(n23);
+        const n23b = dossierVide(); n23b.b1.plan.pieces = [rect23('A', 0)]; n23b.portee = {A: 'plusieurs'}; normaliserPlan(n23b); const n23c = dossierVide(); n23c.portee = [1]; normaliserPlan(n23c); const n23d = dossierVide(); delete n23d.portee; normaliserPlan(n23d);
+        ok('À l\'ouverture d\'un fichier : une pièce disparue, une valeur inconnue, un format illisible ou un dossier d\'avant sont écartés ou remis à zéro',
+          JSON.stringify(n23.portee) === '{"A":"une"}' && JSON.stringify(n23b.portee) === '{}' && JSON.stringify(n23c.portee) === '{}' && JSON.stringify(n23d.portee) === '{}');
+        const sims23 = [0, 1, 2].map(i => construireLieu(i)), okS23 = sims23.every(d => { D = d; const ch = piecesChargees(d.b2.episodes); return d.sim.v === 6 && Object.keys(d.portee).length === 3 && Object.keys(d.portee).every(id => pieceParId(id)) && ch.some(x => porteeEtroite(x.p.id)) && ch.some(x => porteeDe(x.p.id) === 'beaucoup'); });
+        ok('Les trois lieux simulés ont l\'avis de l\'équipe sur trois pièces (une, quelques, beaucoup), dont des pièces chargées (version 6)', okS23);
+      } finally { calque = sauveCq23; modeCarte = sauveMode23; majSynthese = vraiMaj23; persister = vraiPersister23; }
     }
   } catch (e) { ok('Les vérifications ont planté', false, e.message); }
   finally { calque = sauveCalque; persister = vraiPersister; toast = vraiToast; window.confirm = vraiConfirm; modeFiche = sauveModeFiche; pieceFiche = null; niveauCourant = sauveNiveau; D = sauveD; mode = sauveMode; selection = null; historique = []; refaites = []; try { rendreJournee(); } catch (e) { /* rien */ } }
