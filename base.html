@@ -511,6 +511,21 @@ table.croise td.n{white-space:normal;}
 .puce{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:var(--surface);border:1.5px solid var(--line);font-size:12.5px;color:var(--ink);}
 .puce.on{background:var(--sauge-pale);border-color:var(--sauge-deep);}
 /* La journée type (passe 243) : une puce par pièce et par moment ; « certains jours » en pointillés. */
+/* Avant et après un aménagement (passe 245) */
+.aa-bloc{margin:12px 0 0;}
+.aa-ligne{display:grid;grid-template-columns:150px minmax(0,1fr) auto;gap:8px;align-items:start;padding:8px 0;border-top:1px solid var(--line);}
+.aa-ligne:first-child{border-top:0;}
+.aa-ligne.periode{grid-template-columns:minmax(0,1fr) 150px 150px 34px;align-items:center;}
+.aa-pieces{grid-column:2 / -1;}
+.aa-pieces summary{font-size:12.5px;color:var(--ink-soft);cursor:pointer;}
+.aa-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.aa-choix{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:8px 0;}
+.aa-choix label{display:flex;gap:6px;align-items:center;font-size:13px;flex:1 1 260px;min-width:0;}
+.aa-choix select{width:100%;min-width:0;max-width:100%;}
+table.rep td.neg{color:var(--sauge-deep);font-weight:600;}
+table.rep td.pos{color:var(--ardoise-deep,var(--ink));font-weight:600;}
+.aa-prudence{margin:10px 0 0;padding-left:18px;font-size:13px;color:var(--ink-soft);}
+@media(max-width:680px){.aa-ligne,.aa-ligne.periode{grid-template-columns:minmax(0,1fr);}.aa-pieces{grid-column:auto;}}
 .puce.parfois{background:var(--sauge-pale);border-color:var(--sauge-deep);border-style:dashed;}
 .journee-moment{padding:9px 0;border-top:1px solid var(--line);}
 .journee-moment:first-child{border-top:0;}
@@ -790,6 +805,10 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
       <div class="surtitre">Qui est derrière les épisodes ?</div>
       <div id="portee-synthese"></div>
     </div>
+    <div class="feuille referent-seul" id="avant-apres-feuille" hidden>
+      <div class="surtitre">Avant et après un aménagement</div>
+      <div id="avant-apres"></div>
+    </div>
     <div class="feuille referent-seul" id="pronostic-feuille" hidden>
       <div class="surtitre">Ce que l'équipe pensait, et ce que montrent les épisodes</div>
       <div id="pronostic-synthese"></div>
@@ -904,7 +923,7 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
    chose lue de la BAF, en lecture : le choix clair / sombre, pour s'ouvrir dans le même thème.
    ══════════════════════════════════════════════════════════════════════════════════════════════ */
 
-const VERSION_BASE = 'BASE v2026.10.18-1';
+const VERSION_BASE = 'BASE v2026.10.18-2';
 const CLE_SOCLE = 'base-dossier-v1', CLE_DECL = 'base-declarant-v1', CLE_MODE = 'base-mode', CLE_THEME = 'base-theme';
 const TYPES_ZONE = [['activite', "Salle d'activité"], ['sejour', 'Séjour, salon'], ['repas', 'Repas'], ['accueil', 'Accueil'], ['circulation', 'Circulation'],
   ['chambre', 'Chambre'], ['repos', 'Salle de repos'], ['calme', 'Salle de mise au calme'], ['snoezelen', 'Salle multisensorielle'], ['soins', 'Soins, infirmerie'],
@@ -953,7 +972,7 @@ function dossierVide() {
     b1: {lieu: '', dates: {debut: '', fin: ''}, echelle: null, fiches: {}, plan: {niveaux: [{id: 'n0', nom: 'Rez-de-chaussée'}], pieces: [], elements: []},
       moments: MOMENTS_DEFAUT.map(m => ({id: nouvelId('m'), nom: m[0], debut: m[1], fin: m[2]})), typesCD: [], journee: {}},
     b2: {episodes: [], calmes: []},
-    contributions: {}, pronostics: {}, portee: {}, exporte: ''
+    contributions: {}, pronostics: {}, portee: {}, periodes: [], amenagements: [], exporte: ''
   };
 }
 function lireStockage(cle) { try { const t = localStorage.getItem(cle); return t ? JSON.parse(t) : null; } catch (e) { return null; } }
@@ -1006,6 +1025,12 @@ function normaliserPlan(d) {
   if (d.idContribution === undefined) {
     if (!d.portee || typeof d.portee !== 'object' || Array.isArray(d.portee)) d.portee = {};
     Object.keys(d.portee).forEach(id => { if (!pids.has(id) || PORTEES.every(x => x[0] !== d.portee[id])) delete d.portee[id]; });
+  }
+  // Avant et après un aménagement (passe 245) : des périodes (nom, dates) et un journal d'aménagements datés (quoi, pièces concernées) ; le plan ne change pas d'une période à l'autre.
+  if (d.idContribution === undefined) {
+    const dateOk = t => typeof t === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(t) && !isNaN(new Date(t + 'T12:00:00'));
+    d.periodes = (Array.isArray(d.periodes) ? d.periodes : []).filter(p => p && typeof p === 'object').map((p, i) => ({id: String(p.id || 'per' + i + '_' + Date.now().toString(36)), nom: String(p.nom || '').trim().slice(0, 60), debut: dateOk(p.debut) ? p.debut : '', fin: dateOk(p.fin) ? p.fin : ''}));
+    d.amenagements = (Array.isArray(d.amenagements) ? d.amenagements : []).filter(a => a && typeof a === 'object').map((a, i) => ({id: String(a.id || 'am' + i + '_' + Date.now().toString(36)), date: dateOk(a.date) ? a.date : '', quoi: String(a.quoi || '').replace(/\s+/g, ' ').trim().slice(0, 200), pieces: (Array.isArray(a.pieces) ? a.pieces : []).filter((id, k, l) => pids.has(id) && l.indexOf(id) === k)}));
   }
   // La journée type (passe 243) : pour chaque moment, les pièces où se tient le groupe (1) ou certains jours seulement (0,5) ; un moment ou une pièce disparus sont écartés.
   if (!d.b1.journee || typeof d.b1.journee !== 'object' || Array.isArray(d.b1.journee)) d.b1.journee = {};
@@ -3302,6 +3327,117 @@ function rendreListes() {
   rendreJournee();
   $('suggestions-cd').innerHTML = SUGGESTIONS_CD.map(s => '<button type="button" class="puce' + (pris.has(s.toLowerCase()) ? ' on' : '') + '" onclick="ajouterType(\'' + esc(s).replace(/'/g, '&#39;') + '\')">' + (pris.has(s.toLowerCase()) ? '✓ ' : '＋ ') + esc(s) + '</button>').join('');
 }
+/* ══ Avant et après un aménagement (passe 245, Arthur et Émilie) ══
+   Pour un même lieu, la BASE compare deux périodes : avant et après un aménagement. Le plan reste le même d'une période à l'autre (si l'on abat un mur, c'est
+   un nouveau lieu, donc un nouveau dossier) ; le journal dit ce qui a changé et quand. Dans la synthèse, pièce par pièce : les épisodes de chaque période,
+   rapportés aux JOURS OBSERVÉS (ceux où quelque chose est déclaré : un épisode ou « rien à signaler »), pour que des périodes de longueurs différentes se
+   comparent. Rangés dans le dossier du référent : D.periodes = [{id, nom, debut, fin}], D.amenagements = [{id, date, quoi, pieces}] ; jamais dans le plan,
+   jamais dans les fichiers des déclarants. La BASE ne conclut pas : elle montre l'écart et écrit les prudences (durées, jours observés, peu d'épisodes,
+   plusieurs changements à la fois, retour à la moyenne, effectif et saison). */
+const periodesChoisies = {a: '', b: ''};   // les deux périodes comparées (rien n'est mémorisé)
+const reDateISO = /^\d{4}-\d{2}-\d{2}$/;
+const listePeriodes = () => { if (!Array.isArray(D.periodes)) D.periodes = []; return D.periodes; };
+const listeAmenagements = () => { if (!Array.isArray(D.amenagements)) D.amenagements = []; return D.amenagements; };
+const jourMs = iso => new Date(iso + 'T12:00:00').getTime();
+const joursEntre = (a, b) => reDateISO.test(a) && reDateISO.test(b) ? Math.max(0, Math.round((jourMs(b) - jourMs(a)) / 864e5) + 1) : 0;
+const jourDecale = (iso, k) => new Date(jourMs(iso) + k * 864e5).toISOString().slice(0, 10);
+function joursOuvres(a, b) { let n = 0; for (let t = jourMs(a); t <= jourMs(b); t += 864e5) { const j = new Date(t).getDay(); if (j % 6 !== 0) n++; } return n; }
+// Un texte raccourci à la limite d'un mot, avec « … » (le nom d'une période tiré de ce qui a changé).
+const courtDe = (t, n) => { t = String(t || '').trim(); if (t.length <= n) return t; const c = t.slice(0, n), i = c.lastIndexOf(' '); return (i > n / 2 ? c.slice(0, i) : c).replace(/[ ,;:.]+$/, '') + '…'; };
+const fmtJour = x => x === null || x === undefined ? '—' : virguleSynthese((Math.round(x * 100) / 100).toString());
+const periodeComplete = p => !!p && reDateISO.test(p.debut) && reDateISO.test(p.fin) && p.debut <= p.fin;
+function modifierPeriode(id, champ, v) { const p = listePeriodes().find(x => x.id === id); if (!p) return; if (champ === 'nom') p.nom = String(v).trim().slice(0, 60); else p[champ] = reDateISO.test(v) ? v : ''; persister(); majSynthese(); }
+function ajouterPeriode(nom, debut, fin) { const p = {id: nouvelId('per'), nom: nom || '', debut: debut || '', fin: fin || ''}; listePeriodes().push(p); persister(); majSynthese(); if (!nom) { const l = $('avant-apres').querySelectorAll('.aa-ligne.periode input[type=text]'); if (l.length) l[l.length - 1].focus(); } return p; }
+function retirerPeriode(id) { D.periodes = listePeriodes().filter(p => p.id !== id); ['a', 'b'].forEach(k => { if (periodesChoisies[k] === id) periodesChoisies[k] = ''; }); persister(); majSynthese(); }
+function choisirPeriodes(k, id) { periodesChoisies[k === 'b' ? 'b' : 'a'] = id; majSynthese(); }
+function ajouterAmenagement() { listeAmenagements().push({id: nouvelId('am'), date: '', quoi: '', pieces: []}); persister(); majSynthese(); const l = $('avant-apres').querySelectorAll('.aa-ligne:not(.periode) input[type=text]'); if (l.length) l[l.length - 1].focus(); }
+function modifierAmenagement(id, champ, v) { const a = listeAmenagements().find(x => x.id === id); if (!a) return; if (champ === 'date') a.date = reDateISO.test(v) ? v : ''; else a.quoi = String(v).replace(/\s+/g, ' ').trim().slice(0, 200); persister(); majSynthese(); }
+function basculerPieceAmenagement(id, pid) { const a = listeAmenagements().find(x => x.id === id); if (!a || !pieceParId(pid)) return; const i = a.pieces.indexOf(pid); if (i >= 0) a.pieces.splice(i, 1); else a.pieces.push(pid); persister(); majSynthese(); const d = document.querySelector('#avant-apres details[data-am="' + id + '"]'); if (d) d.open = true; }
+function retirerAmenagement(id) { D.amenagements = listeAmenagements().filter(a => a.id !== id); persister(); majSynthese(); }
+// Deux périodes autour d'un aménagement : « avant » du premier jour déclaré à la veille, « après » du jour de l'aménagement au dernier jour déclaré. Les dates se corrigent ensuite.
+function periodesAutourDe(id) {
+  const a = listeAmenagements().find(x => x.id === id); if (!a || !a.date) { toast('Donnez d\'abord la date de l\'aménagement.'); return; }
+  const dates = D.b2.episodes.map(e => e.date).concat(D.b2.calmes.map(c => c.date)).filter(Boolean).sort();
+  if (!dates.length) { toast('Aucun jour déclaré pour l\'instant : il n\'y a rien à comparer.'); return; }
+  if (a.date <= dates[0] || a.date > dates[dates.length - 1]) { toast('Cette date est hors de la période déclarée (' + dateFr(dates[0]) + ' → ' + dateFr(dates[dates.length - 1]) + ') : il faut des jours avant et après.'); return; }
+  const nom = courtDe(a.quoi || 'l\'aménagement', 32), av = ajouterPeriode('Avant : ' + nom, dates[0], jourDecale(a.date, -1)), ap = ajouterPeriode('Après : ' + nom, a.date, dates[dates.length - 1]);
+  periodesChoisies.a = av.id; periodesChoisies.b = ap.id; majSynthese();
+}
+// Une période : ses épisodes (les filtres « moment » et « comportement » de la synthèse valent, pas ses dates) et ses jours observés (tout ce qui est déclaré ce jour-là).
+function statsPeriode(per, f) {
+  const dans = x => x.date && x.date >= per.debut && x.date <= per.fin;
+  const eps = episodesFiltres(Object.assign({}, f, {debut: '', fin: ''})).filter(dans);
+  const dates = new Set(D.b2.episodes.filter(dans).map(e => e.date).concat(D.b2.calmes.filter(dans).map(c => c.date)));
+  return {per, eps, n: eps.length, jours: dates.size, duree: joursEntre(per.debut, per.fin), ouvres: joursOuvres(per.debut, per.fin), comptes: comptesParPiece(eps)};
+}
+const PEU_D_EPISODES = 3;
+// La comparaison des deux périodes choisies : {erreur} si elle n'est pas possible, sinon les lignes par pièce, le total et les prudences.
+function comparaisonPeriodes(f) {
+  const A = listePeriodes().find(p => p.id === periodesChoisies.a), B = listePeriodes().find(p => p.id === periodesChoisies.b);
+  if (!A || !B) return null;
+  if (A.id === B.id) return {erreur: 'Choisissez deux périodes différentes.'};
+  if (!periodeComplete(A) || !periodeComplete(B)) return {erreur: 'Une période a besoin de ses deux dates (début et fin, dans cet ordre).'};
+  if (!(A.fin < B.debut || B.fin < A.debut)) return {erreur: 'Les deux périodes se chevauchent : choisissez des périodes distinctes.'};
+  const [avant, apres] = A.debut <= B.debut ? [A, B] : [B, A], sA = statsPeriode(avant, f), sB = statsPeriode(apres, f);
+  const dansTout = listeAmenagements().filter(a => a.date && a.date >= avant.debut && a.date <= apres.fin), entre = dansTout.filter(a => a.date > avant.fin && a.date <= apres.debut);
+  const touchees = new Set((entre.length ? entre : dansTout).flatMap(a => a.pieces));
+  const t = (n, j) => j ? n / j : null;
+  const lignes = pieces().map(p => { const nA = sA.comptes[p.id] || 0, nB = sB.comptes[p.id] || 0, tA = t(nA, sA.jours), tB = t(nB, sB.jours);
+    return {p, nA, nB, tA, tB, ecart: tA !== null && tB !== null ? tB - tA : null, pct: tA ? (tB - tA) / tA : null, amenagee: touchees.has(p.id), peu: nA < PEU_D_EPISODES && nB < PEU_D_EPISODES}; })
+    .filter(l => l.nA || l.nB || l.amenagee).sort((a, b) => (b.amenagee - a.amenagee) || (Math.abs(b.ecart || 0) - Math.abs(a.ecart || 0)) || (b.nA + b.nB) - (a.nA + a.nB));
+  const total = {nA: sA.n, nB: sB.n, tA: t(sA.n, sA.jours), tB: t(sB.n, sB.jours)};
+  const prudences = [];
+  const dA = sA.duree, dB = sB.duree;
+  if (dA && dB && Math.abs(dA - dB) / Math.max(dA, dB) > .3) prudences.push('Les deux périodes n\'ont pas la même durée (' + nb(dA, 'jour') + ' et ' + nb(dB, 'jour') + ') : la comparaison se fait par jour observé, mais une période courte pèse moins.');
+  [sA, sB].forEach(x => { if (x.ouvres && x.jours < .5 * x.ouvres) prudences.push('« ' + (x.per.nom || 'Période') + ' » : ' + nb(x.jours, 'jour observé', 'jours observés') + ' pour environ ' + nb(x.ouvres, 'jour ouvré', 'jours ouvrés') + '. Si les journées sans épisode ne sont pas déclarées (« rien à signaler »), le taux par jour observé est trop haut.'); });
+  [sA, sB].forEach(x => { if (x.n < 5) prudences.push('« ' + (x.per.nom || 'Période') + ' » : ' + nb(x.n, 'épisode') + '. Avec si peu d\'épisodes, un seul de plus ou de moins change beaucoup le chiffre.'); });
+  if (dansTout.length > 1) prudences.push(nb(dansTout.length, 'aménagement') + ' sont datés entre le début de la première période et la fin de la seconde : avec plusieurs changements à la fois, on ne peut pas dire lequel a joué (un changement à la fois, quand c\'est possible).');
+  if (!dansTout.length) prudences.push('Aucun aménagement du journal n\'est daté entre les deux périodes : la BASE compare des dates, elle ne sait pas ce qui a changé.');
+  return {avant, apres, sA, sB, lignes, total, entre: entre.length ? entre : dansTout, prudences};
+}
+// Des questions pour l'équipe, quand une comparaison est choisie : ce que l'aménagement semble avoir fait, et où les épisodes ont pu se déplacer.
+function questionsComparaison(f) {
+  const cp = comparaisonPeriodes(f), q = []; if (!cp || cp.erreur) return q;
+  const nm = id => '« ' + nomPiece(id) + ' »', av = cp.entre[0], fmt = x => fmtJour(x);
+  const vise = cp.lignes.filter(l => l.amenagee && l.tA !== null && l.tB !== null).sort((a, b) => (b.nA + b.nB) - (a.nA + a.nB))[0];
+  if (vise) q.push((av && av.quoi ? 'Après « ' + av.quoi + ' »' + (av.date ? ' (' + dateFr(av.date) + ')' : '') + ', ' : 'Entre les deux périodes, ') + nm(vise.p.id) + ' passe de ' + fmt(vise.tA) + ' à ' + fmt(vise.tB) + ' épisode' + (vise.tB > 1 ? 's' : '') + ' par jour observé (' + nb(vise.nA, 'épisode') + ' avant, ' + vise.nB + ' après). ' +
+    (vise.peu ? 'Avec si peu d\'épisodes, il est difficile de conclure : qu\'a-t-on vu sur place ? ' : 'Qu\'est-ce qui, à part l\'aménagement, a changé entre les deux périodes (effectif, personnes présentes, activité, saison) ? ') + 'Et ailleurs : les épisodes ont-ils disparu, ou se sont-ils déplacés ?');
+  const ailleurs = cp.lignes.filter(l => !l.amenagee && l.nB >= 3 && l.ecart !== null && l.ecart >= .15).sort((a, b) => b.ecart - a.ecart)[0];
+  if (ailleurs) q.push('Dans ' + nm(ailleurs.p.id) + ', où rien n\'a été changé d\'après le journal, les épisodes passent de ' + fmt(ailleurs.tA) + ' à ' + fmt(ailleurs.tB) + ' par jour observé. Les épisodes ont-ils changé de pièce plutôt que disparu ? Qu\'est-ce qui s\'est passé là entre les deux périodes ?');
+  return q;
+}
+function htmlAvantApres() {
+  const f = filtres(), ams = listeAmenagements().slice().sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999')), pers = listePeriodes(), ps = pieces();
+  const optPer = k => '<option value="">— choisir</option>' + pers.map(p => '<option value="' + esc(p.id) + '"' + (periodesChoisies[k] === p.id ? ' selected' : '') + '>' + esc(p.nom || 'Période sans nom') + (periodeComplete(p) ? ' (' + dateFr(p.debut) + ' → ' + dateFr(p.fin) + ')' : '') + '</option>').join('');
+  const journal = ams.map(a => '<div class="aa-ligne"><input type="date" value="' + esc(a.date) + '" aria-label="Date de l\'aménagement" onchange="modifierAmenagement(\'' + a.id + '\', \'date\', this.value)">' +
+    '<input type="text" value="' + esc(a.quoi) + '" maxlength="200" placeholder="Ce qui a changé : service à table, panneaux absorbants…" aria-label="Ce qui a changé" onchange="modifierAmenagement(\'' + a.id + '\', \'quoi\', this.value)">' +
+    '<div class="aa-actions"><button type="button" class="bt petit" title="Crée une période avant et une période après cette date, et les compare" onclick="periodesAutourDe(\'' + a.id + '\')">Comparer avant / après</button><button type="button" class="x" title="Retirer cet aménagement" onclick="retirerAmenagement(\'' + a.id + '\')">✕</button></div>' +
+    '<details class="aa-pieces" data-am="' + a.id + '"><summary>' + (a.pieces.length ? 'Pièces concernées : ' + esc(a.pieces.map(nomPiece).join(', ')) : 'Pièces concernées (facultatif)') + '</summary><div class="puces" style="margin-top:6px">' +
+    ps.map(p => '<button type="button" class="puce' + (a.pieces.indexOf(p.id) >= 0 ? ' on' : '') + '" aria-pressed="' + (a.pieces.indexOf(p.id) >= 0) + '" onclick="basculerPieceAmenagement(\'' + a.id + '\', \'' + p.id + '\')">' + (a.pieces.indexOf(p.id) >= 0 ? '✓ ' : '') + esc(p.nom) + '</button>').join('') + '</div></details></div>').join('');
+  const periodes = pers.map(p => '<div class="aa-ligne periode"><input type="text" value="' + esc(p.nom) + '" maxlength="60" placeholder="Nom de la période" aria-label="Nom de la période" onchange="modifierPeriode(\'' + p.id + '\', \'nom\', this.value)">' +
+    '<input type="date" value="' + esc(p.debut) + '" aria-label="Début de la période" onchange="modifierPeriode(\'' + p.id + '\', \'debut\', this.value)"><input type="date" value="' + esc(p.fin) + '" aria-label="Fin de la période" onchange="modifierPeriode(\'' + p.id + '\', \'fin\', this.value)">' +
+    '<button type="button" class="x" title="Retirer cette période" onclick="retirerPeriode(\'' + p.id + '\')">✕</button></div>').join('');
+  const cp = comparaisonPeriodes(f);
+  let resultat = '';
+  if (cp && cp.erreur) resultat = '<p class="discret">' + esc(cp.erreur) + '</p>';
+  else if (cp) {
+    const sgn = x => x === null ? '—' : (x > 0 ? '+' : x < 0 ? '−' : '') + fmtJour(Math.abs(x)), pct = x => x === null ? '' : ' (' + (x > 0 ? '+' : x < 0 ? '−' : '') + Math.round(Math.abs(x) * 100) + ' %)';
+    const ligne = l => '<tr><td>' + esc(l.p.nom) + (l.amenagee ? ' <span class="source declare">Aménagée</span>' : '') + (l.peu ? ' <span class="discret">· peu d\'épisodes</span>' : '') + '</td><td class="n">' + l.nA + ' · ' + fmtJour(l.tA) + '/j</td><td class="n">' + l.nB + ' · ' + fmtJour(l.tB) + '/j</td><td class="n ' + (l.ecart < 0 ? 'neg' : l.ecart > 0 ? 'pos' : '') + '">' + sgn(l.ecart) + '/j' + pct(l.pct) + '</td></tr>';
+    resultat = '<div class="defile"><table class="rep"><thead><tr><th></th><th class="n">' + esc(cp.avant.nom || 'Avant') + '<br><span class="discret">' + nb(cp.sA.jours, 'jour observé', 'jours observés') + '</span></th><th class="n">' + esc(cp.apres.nom || 'Après') + '<br><span class="discret">' + nb(cp.sB.jours, 'jour observé', 'jours observés') + '</span></th><th class="n">Écart</th></tr></thead><tbody>' +
+      '<tr><td><b>Tout le lieu</b></td><td class="n"><b>' + cp.total.nA + ' · ' + fmtJour(cp.total.tA) + '/j</b></td><td class="n"><b>' + cp.total.nB + ' · ' + fmtJour(cp.total.tB) + '/j</b></td><td class="n"><b>' + sgn(cp.total.tA !== null && cp.total.tB !== null ? cp.total.tB - cp.total.tA : null) + '/j</b></td></tr>' + cp.lignes.map(ligne).join('') + '</tbody></table></div>' +
+      '<p class="discret" style="margin-top:6px">Chaque case : le nombre d\'épisodes, puis les épisodes par jour observé (un jour observé est un jour où quelque chose est déclaré : un épisode, ou « rien à signaler »). L\'écart est en épisodes par jour observé.</p>' +
+      '<div class="surtitre" style="margin-top:12px">À lire avec prudence</div><ul class="aa-prudence">' + cp.prudences.map(t => '<li>' + esc(t) + '</li>').join('') +
+      '<li>Une période « avant » choisie parce qu\'elle allait mal s\'améliore souvent toute seule (retour à la moyenne) ; l\'effectif, les personnes présentes, les vacances et la saison changent aussi d\'une période à l\'autre. La BASE montre un écart, jamais l\'effet d\'un aménagement.</li></ul>';
+  } else if (pers.length > 1) resultat = '<p class="discret">Choisissez deux périodes pour les comparer.</p>';
+  return '<p class="lecture">Le plan reste le même ; le journal dit ce qui a changé et quand. La BASE compare deux périodes pièce par pièce, en épisodes par jour observé : elle montre un écart, pas l\'effet d\'un aménagement. Si l\'on abat un mur, c\'est un nouveau lieu : un nouveau dossier.</p>' +
+    '<details class="repli aa-bloc" open><summary>Le journal des aménagements' + (ams.length ? ' · ' + ams.length : '') + '</summary><div class="liste-edit" style="margin-top:8px">' + (journal || '<div class="vide">Aucun aménagement noté : ajoutez ce qui change dans le lieu, avec sa date.</div>') + '</div><button type="button" class="bt petit" onclick="ajouterAmenagement()">＋ Un aménagement</button></details>' +
+    '<details class="repli aa-bloc" open><summary>Les périodes' + (pers.length ? ' · ' + pers.length : '') + '</summary><div class="liste-edit" style="margin-top:8px">' + (periodes || '<div class="vide">Aucune période : créez-en deux (avant et après), ou utilisez « Comparer avant / après » sur un aménagement du journal.</div>') + '</div><button type="button" class="bt petit" onclick="ajouterPeriode()">＋ Une période</button></details>' +
+    (pers.length > 1 ? '<div class="aa-choix"><label>Comparer <select aria-label="Première période" onchange="choisirPeriodes(\'a\', this.value)">' + optPer('a') + '</select></label><label>avec <select aria-label="Seconde période" onchange="choisirPeriodes(\'b\', this.value)">' + optPer('b') + '</select></label></div>' : '') + resultat;
+}
+function rendreAvantApres() {
+  const feuille = $('avant-apres-feuille'), el = $('avant-apres'); if (!feuille || !el) return;
+  const visible = mode === 'socle' && pieces().length > 0; feuille.hidden = !visible; el.innerHTML = visible ? htmlAvantApres() : '';
+}
 /* ══ Qui est derrière les épisodes ? (passe 244, Arthur et Émilie) ══
    Une pièce chargée peut l'être par le lieu, ou parce qu'une personne y vit beaucoup de choses. La BASE reste une lecture écologique : elle ne repère ni ne
    nomme personne. À l'analyse, pour chaque pièce chargée, l'équipe dit seulement si les épisodes concernent surtout une personne, deux ou trois, ou beaucoup.
@@ -3768,7 +3904,9 @@ function concentrations(eps) {
 function questionsEquipe(eps) {
   const q = [], nm = id => '« ' + nomPiece(id) + ' »', cr = croisementsDuLieu(eps); if (!cr.T) return q;
   const L = lectureDuPlan(D.b1);
-  cr.attendus.slice(0, 2).forEach(p => q.push('Dans ' + nm(p.id) + ', ' + nb(p.eps, 'épisode') + ', et le plan y lit : ' + p.titres.slice(0, 3).map(t => t.charAt(0).toLowerCase() + t.slice(1)).join(' ; ') + '. Que se passe-t-il là juste avant que ça monte ? Qu\'y essayer cette semaine, sans rien acheter ?'));
+  const qc = questionsComparaison(filtres());   // une comparaison est choisie : ses questions passent d'abord (huit au plus)
+  qc.forEach(t => q.push(t));
+  cr.attendus.slice(0, qc.length ? 1 : 2).forEach(p => q.push('Dans ' + nm(p.id) + ', ' + nb(p.eps, 'épisode') + ', et le plan y lit : ' + p.titres.slice(0, 3).map(t => t.charAt(0).toLowerCase() + t.slice(1)).join(' ; ') + '. Que se passe-t-il là juste avant que ça monte ? Qu\'y essayer cette semaine, sans rien acheter ?'));
   cr.surprises.slice(0, 2).forEach(p => q.push('Dans ' + nm(p.id) + ', ' + nb(p.eps, 'épisode') + ' et rien que le plan ou les fiches expliquent. Qu\'est-ce que le plan ne montre pas ici : qui est là, à quelle heure, ce qu\'on y attend, ce qu\'on y entend de la pièce d\'à côté ? Et si l\'on y passait dix minutes, à hauteur de la personne ?'));
   const pe = pieces().filter(p => porteeEtroite(p.id) && comptesParPiece(eps)[p.id] >= 2).sort((a, b) => comptesParPiece(eps)[b.id] - comptesParPiece(eps)[a.id])[0];
   if (pe) q.push('Dans ' + nm(pe.id) + ', l\'équipe dit que les épisodes concernent surtout ' + PORTEE_COURTE[porteeDe(pe.id)] + '. Qu\'est-ce qui tient à la pièce, et qu\'est-ce qui tient à ce que ces personnes y vivent (un moment, une attente, un voisin) ? Leur analyse fonctionnelle individuelle en dit-elle déjà quelque chose ?');
@@ -3812,7 +3950,7 @@ function copierQuestions() {
   if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(texte).then(fait).catch(() => copierSecours(texte, fait)); else copierSecours(texte, fait);
 }
 function rendreQuestionsSynthese(eps) { const el = $('questions-synthese'); if (el) el.innerHTML = htmlQuestions(eps); }
-function viderSupplements() { rendrePorte(); ['portee-synthese', 'pronostic-synthese', 'contexte-synthese', 'questions-synthese', 'mode-carte'].forEach(id => { const el = $(id); if (el) el.innerHTML = ''; }); const f = $('pronostic-feuille'); if (f) f.hidden = true; }
+function viderSupplements() { const aa = $('avant-apres-feuille'); if (aa) aa.hidden = true; rendrePorte(); ['avant-apres', 'portee-synthese', 'pronostic-synthese', 'contexte-synthese', 'questions-synthese', 'mode-carte'].forEach(id => { const el = $(id); if (el) el.innerHTML = ''; }); const f = $('pronostic-feuille'); if (f) f.hidden = true; }
 // Regarder une pièce : des gestes d'observation, proposés par la BASE (ce ne sont pas des règles du guide), dans la fiche de la pièce.
 function htmlRegarderPiece() {
   return '<details class="repli"><summary>Comment regarder une pièce (cinq minutes)</summary><ul class="regle-liste">' +
@@ -4122,7 +4260,7 @@ function majSynthese() {
   $('repartitions').innerHTML = tableauPieces +
     tableau('Par moment de la journée', parMoment) +
     tableau('Par comportement', parType, 'Un épisode peut porter plusieurs comportements : le total peut dépasser 100 %.');
-  rendreCroisements(eps); rendrePortee(eps); rendrePronosticsSynthese(eps); rendreContexteSynthese(eps); rendreQuestionsSynthese(eps); rendrePorte();
+  rendreCroisements(eps); rendrePortee(eps); rendreAvantApres(); rendrePronosticsSynthese(eps); rendreContexteSynthese(eps); rendreQuestionsSynthese(eps); rendrePorte();
 }
 // Les styles des images exportées (toujours claires : elles partent dans un document). Le plan vierge et la carte les partagent.
 function styleExport() {
@@ -4302,13 +4440,15 @@ function effacer() {
    [[numéro de la pièce, [[x, y], …]]], une pièce dessinée en polygone (ses sommets, dans le plan tel qu'on le voit). */
 // Passe 238 : une pièce à pan coupé dans chaque lieu, avec une fenêtre dans le mur en biais (fenêtre [x, y, 'd', largeur, niveau, type, [sens du mur]]).
 // Passe 243 : une journée type dans chaque lieu, « journee » : [[n° du moment, [pièces où est le groupe], [pièces certains jours]], …].
+// Passe 245 : « amenagement » : {date, quoi, pieces : [n° des pièces]} — avant et après, des périodes ; après la date, 6 épisodes sur 10 de ces pièces glissent avant (le total ne change pas).
 // Passe 244 : « portee » : [[n° de la pièce, 'une' | 'quelques' | 'beaucoup'], …], l'avis de l'équipe sur qui est derrière les épisodes d'une pièce chargée.
-const VERSION_SIMULATION = 6;
+const VERSION_SIMULATION = 7;
 const LIEUX_SIMULES = [
   {nom: 'Bâtiment provisoire', desc: 'Un IME déménagé dans des bureaux, dessiné sans échelle : un hall unique où tout le monde arrive, un long couloir aveugle, des salles sans fenêtre, une cour non clôturée contre la route, et le parking devant la porte. Ses fiches de pièces sont remplies en mode rapide. Son réfectoire, très grand, contient trois petites pièces : un office, un local chariots et un coin calme. Les sanitaires, un ancien bureau, ont gardé leur porte vitrée. Presque toutes ses pièces ont leurs croix (au moins une par pièce qui a des épisodes) ; la salle bleue est dessinée tournée d\'un quart de tour et le parking est un trapèze ; les sanitaires ont un pan coupé, avec une fenêtre dans le mur en biais : de quoi voir ce que la carte thermique sait faire.', graine: 7,
     legendes: [['Entrée principale', -4.2, 2.2, 'm', 'e'], ['Vers le centre-ville', -10.5, -4.6, 'm', 'n']],
     pronostics: [['AES / AMP', [0, 2, 4]], ['Éducateur·rice spécialisé·e', [0, 4, 9]], ['Moniteur·rice-éducateur·rice', [0, 8]]],
     dates: ['2026-09-07', '2026-09-25'], moments: null,
+    amenagement: {date: '2026-09-16', quoi: 'Service à table au réfectoire, à la place de la file devant l\'office', pieces: [4, 10]},
     portee: [[0, 'beaucoup'], [4, 'quelques'], [10, 'une']],
     journee: [[0, [0, 8]], [1, [2, 3]], [2, [1, 6]], [3, [4], [12, 10, 11]], [4, [5], [9]], [5, [2, 3], [9]], [6, [0, 8]]],
     pieces: [['Hall d\'accueil', 'accueil', [[0, 0, 10, 6]]], ['Couloir', 'circulation', [[10, 2, 14, 2], [22, 4, 2, 8]]], ['Salle bleue', 'activite', [[10, 4, 7, 6]]],
@@ -4344,6 +4484,7 @@ const LIEUX_SIMULES = [
     legendes: [['Entrée principale', 11.5, -1.8, 'm', 's'], ['Vers le centre-ville', -1, -10.5, 'm', 'o']],
     pronostics: [['Éducateur·rice spécialisé·e', [2, 4]], ['AES / AMP', [2, 8]], ['Infirmier·e', [4, 5]]],
     dates: ['2026-09-14', '2026-10-02'],
+    amenagement: {date: '2026-09-23', quoi: 'Rideaux occultants et lumière chaude dans la chambre 1', pieces: [5]},
     portee: [[5, 'une'], [2, 'quelques'], [4, 'beaucoup']],
     journee: [[0, [4, 5, 6, 7, 8, 13, 14, 15, 17]], [1, [2]], [2, [1], [0]], [3, [2]], [4, [1], [16]], [5, [1, 0]], [6, [2]], [7, [4, 5, 6, 7, 8, 13, 14, 15, 17]]],
     moments: [['Lever', '07:00', '08:00'], ['Petit-déjeuner', '08:00', '09:00'], ['Matinée', '09:00', '12:00'], ['Déjeuner', '12:00', '13:15'], ['Temps calme', '13:15', '14:30'],
@@ -4395,6 +4536,7 @@ const LIEUX_SIMULES = [
     legendes: [['Entrée des taxis', 23.4, 6.3, 'm', 'o'], ['Vers le centre-ville', 28.5, -3.4, 'm', 'n']],
     pronostics: [['Éducateur·rice spécialisé·e', [4, 7, 2]], ['AES / AMP', [4, 7]], ['Moniteur·rice-éducateur·rice', [7, 11]]],
     dates: ['2026-09-21', '2026-10-09'], echelle: .8,
+    amenagement: {date: '2026-09-30', quoi: 'Panneaux absorbants à la cantine', pieces: [4]},
     portee: [[7, 'beaucoup'], [4, 'quelques'], [12, 'une']],
     journee: [[0, [9, 3]], [1, [0, 1]], [2, [7, 8]], [3, [0, 1], [2]], [4, [4]], [5, [7, 8]], [6, [0, 1], [2, 11]], [7, [3, 9]]],
     moments: [['Arrivée', '08:45', '09:15'], ['Matinée', '09:15', '10:30'], ['Récréation', '10:30', '10:50'], ['Fin de matinée', '10:50', '12:00'], ['Cantine', '12:00', '13:00'],
@@ -4507,6 +4649,15 @@ function construireLieu(i) {
     const spec = (L.croix || []).find(x => d.b1.plan.pieces[x[0]] === c.p);   // dans presque toutes les pièces, la plupart des épisodes ont leur croix, et le premier de chaque pièce a toujours la sienne
     if (spec) { const premier = !croixDeja.has(c.p.id); croixDeja.add(c.p.id); if (premier || alea2() < (spec[2] || .85)) d.b2.episodes[d.b2.episodes.length - 1].pos = positionSimulee(c.p, spec[1], d.b1.plan.pieces, alea2); }
     if (alea3() < .62) d.b2.episodes[d.b2.episodes.length - 1].contexte = contexteSimule(PROFILS_CONTEXTE[c.p.type] || PROFILS_CONTEXTE.defaut, alea3);   // un peu plus d'un épisode sur deux a rempli « Autour de l'épisode »
+  }
+  // Avant et après un aménagement (passe 245) : après sa date, 6 épisodes sur 10 des pièces aménagées glissent à un jour d'avant (tirage à part : le reste ne change pas).
+  d.amenagements = []; d.periodes = [];
+  if (L.amenagement) {
+    const am = L.amenagement, ids = am.pieces.map(k => d.b1.plan.pieces[k].id); let s4 = L.graine * 15485863 + 11; const alea4 = () => { s4 = (s4 * 9301 + 49297) % 233280; return s4 / 233280; };
+    const avant = ouvres.filter(o => calmes.indexOf(o) < 0 && o < am.date);
+    d.b2.episodes.forEach(e => { if (ids.indexOf(e.piece) >= 0 && e.date >= am.date && avant.length && alea4() < .6) e.date = avant[Math.floor(alea4() * avant.length)]; });
+    d.amenagements.push({id: nouvelId('am'), date: am.date, quoi: am.quoi, pieces: ids});
+    d.periodes.push({id: nouvelId('per'), nom: 'Avant : ' + courtDe(am.quoi, 32), debut: L.dates[0], fin: jourDecale(am.date, -1)}, {id: nouvelId('per'), nom: 'Après : ' + courtDe(am.quoi, 32), debut: am.date, fin: L.dates[1]});
   }
   d.b2.episodes.sort((a, b) => (a.date + a.heure).localeCompare(b.date + b.heure));
   calmes.sort().forEach(c => d.b2.calmes.push({id: nouvelId('calme'), date: c, provenance: roles[1], source: 'simulation'}));
@@ -5618,9 +5769,9 @@ function verifierBASE() {
           piecesDansCadre({x0: -1, y0: -1, x1: 1, y1: 1}).join() === '' && piecesDansCadre({x0: 3, y0: 2, x1: 4, y1: 3}).join() === 'T' && piecesDansCadre({x0: -1, y0: 5, x1: .5, y1: 7}).join() === 'T' && piecesDansCadre({x0: 0, y0: 0, x1: 20, y1: 8}).join() === 'T,R' && piecesDansCadre({x0: 9, y0: 0, x1: 11, y1: 2}).join() === '');
         // 10. Les lieux simulés : une pièce de forme libre chacun
         const sims = [0, 1, 2].map(i => construireLieu(i)), formesSim = sims.map(d => d.b1.plan.pieces.filter(aPoly).map(p => p.nom + ':' + p.poly.length).join()), adjSim = (d, x, y) => { const l = lectureDuPlan(d.b1), px = d.b1.plan.pieces.find(p => p.nom === x), py = d.b1.plan.pieces.find(p => p.nom === y), e = l.adj.find(z => (z.a === px.id && z.b === py.id) || (z.a === py.id && z.b === px.id)); return e ? Math.round(e.longueur * 10) / 10 : 0; };
-        const valides = sims.every(d => { D = d; const l = lectureDuPlan(d.b1), ps = d.b1.plan.pieces.filter(aPoly); return d.sim.v === 6 && VERSION_SIMULATION === 6 && l.flottants.length === 0 && ps.some(p => d.b2.episodes.some(e => e.piece === p.id && e.pos)) && ps.every(p => anneauSimple(p.poly) && aireAnneau(p.poly) < p.rects[0].w * p.rects[0].h && d.b2.episodes.filter(e => e.piece === p.id && e.pos).every(e => { const a = pointDepuisPos(p, e.pos); return dansPiece(p, a.x, a.y, 1e-6); })); });
+        const valides = sims.every(d => { D = d; const l = lectureDuPlan(d.b1), ps = d.b1.plan.pieces.filter(aPoly); return d.sim.v === 7 && VERSION_SIMULATION === 7 && l.flottants.length === 0 && ps.some(p => d.b2.episodes.some(e => e.piece === p.id && e.pos)) && ps.every(p => anneauSimple(p.poly) && aireAnneau(p.poly) < p.rects[0].w * p.rects[0].h && d.b2.episodes.filter(e => e.piece === p.id && e.pos).every(e => { const a = pointDepuisPos(p, e.pos); return dansPiece(p, a.x, a.y, 1e-6); })); });
         const biaisSim = sims.map(d => { const l = lectureDuPlan(d.b1), e = d.b1.plan.elements.find(x => x.o === 'd'), b = e ? bordsDe(e, d.b1.plan.pieces.filter(p => p.niveau === e.niveau)) : []; return !!e && b.length === 1 && aPoly(b[0].p) && l.pieces[b[0].p.id].fenetres >= 1 && d.b1.plan.elements.filter(x => x.cat === 'meuble' && x.niveau === b[0].p.niveau && b[0].p.rects[0].x <= x.x && x.x < b[0].p.rects[0].x + b[0].p.rects[0].w && b[0].p.rects[0].y <= x.y && x.y < b[0].p.rects[0].y + b[0].p.rects[0].h).every(x => [[x.x, x.y], [x.x + x.w, x.y], [x.x + x.w, x.y + x.h], [x.x, x.y + x.h]].every(([px, py]) => dansPiece(b[0].p, px, py, 1e-6))); });
-        ok('Chaque lieu simulé a ses pièces de forme libre (le parking en trapèze et les sanitaires à pan coupé ; le jardin et la cuisine à pan coupé ; la salle de classe à pan coupé et le préau en trapèze), valides, plus petites que leur rectangle englobant, des épisodes dont les croix sont dedans ; une fenêtre dans un mur en biais, que la pièce voit (et ses meubles restent dedans) ; aucune porte ni fenêtre ne flotte ; les voisinages d\'avant tiennent (parking–hall 6, jardin–salon 6, préau–cour 5) ; version 6',
+        ok('Chaque lieu simulé a ses pièces de forme libre (le parking en trapèze et les sanitaires à pan coupé ; le jardin et la cuisine à pan coupé ; la salle de classe à pan coupé et le préau en trapèze), valides, plus petites que leur rectangle englobant, des épisodes dont les croix sont dedans ; une fenêtre dans un mur en biais, que la pièce voit (et ses meubles restent dedans) ; aucune porte ni fenêtre ne flotte ; les voisinages d\'avant tiennent (parking–hall 6, jardin–salon 6, préau–cour 5) ; version 7',
           formesSim.join(' | ') === 'Sanitaires:5,Parking:4 | Jardin:5,Cuisine:5 | Salle de classe:5,Préau:4' && valides && biaisSim.every(Boolean) && adjSim(sims[0], 'Parking', 'Hall d\'accueil') === 6 && adjSim(sims[1], 'Jardin', 'Salon') === 6 && adjSim(sims[2], 'Préau', 'Cour') === 5, formesSim.join(' | ') + ' / ' + biaisSim.join());
       } finally {
         toast = vraiToast19; Object.assign(vueEdition, vue19); geste = null; selection = null; temp.forEach(x => x.remove()); vp.classList.toggle('show', avait); historique = []; refaites = [];
@@ -5786,9 +5937,9 @@ function verifierBASE() {
         ok('À l\'ouverture d\'un fichier : une pièce ou un moment disparus, une valeur inconnue sont écartés de la journée type',
           JSON.stringify(n22.b1.journee) === '{"m1":{"A":1}}' && JSON.stringify(n22b.b1.journee) === '{}' && JSON.stringify(n22c.b1.journee) === '{}');
         const sims22 = [0, 1, 2].map(i => construireLieu(i));
-        const okSims = sims22.every(d => { D = d; return d.sim.v === 6 && journeeRemplie() && Object.keys(tauxParPiece(d.b2.episodes, d.b2.calmes).taux).length >= 4; });
+        const okSims = sims22.every(d => { D = d; return d.sim.v === 7 && journeeRemplie() && Object.keys(tauxParPiece(d.b2.episodes, d.b2.calmes).taux).length >= 4; });
         D = sims22[0]; const t0 = tauxParPiece(D.b2.episodes, D.b2.calmes), hall = D.b1.plan.pieces[0].id, bleue = D.b1.plan.pieces[2].id;
-        ok('Les trois lieux simulés ont leur journée type (version 6) ; au bâtiment provisoire, le hall (une heure par jour) est plus chargé au temps de présence que la salle bleue (près de cinq heures)',
+        ok('Les trois lieux simulés ont leur journée type (version 7) ; au bâtiment provisoire, le hall (une heure par jour) est plus chargé au temps de présence que la salle bleue (près de cinq heures)',
           okSims && t0.taux[hall] > t0.taux[bleue], JSON.stringify([t0.taux[hall], t0.taux[bleue], t0.heures[hall], t0.heures[bleue]]));
       } finally { modeCarte = sauveMode22; calque = sauveCq22; }
     }
@@ -5831,9 +5982,79 @@ function verifierBASE() {
         const n23b = dossierVide(); n23b.b1.plan.pieces = [rect23('A', 0)]; n23b.portee = {A: 'plusieurs'}; normaliserPlan(n23b); const n23c = dossierVide(); n23c.portee = [1]; normaliserPlan(n23c); const n23d = dossierVide(); delete n23d.portee; normaliserPlan(n23d);
         ok('À l\'ouverture d\'un fichier : une pièce disparue, une valeur inconnue, un format illisible ou un dossier d\'avant sont écartés ou remis à zéro',
           JSON.stringify(n23.portee) === '{"A":"une"}' && JSON.stringify(n23b.portee) === '{}' && JSON.stringify(n23c.portee) === '{}' && JSON.stringify(n23d.portee) === '{}');
-        const sims23 = [0, 1, 2].map(i => construireLieu(i)), okS23 = sims23.every(d => { D = d; const ch = piecesChargees(d.b2.episodes); return d.sim.v === 6 && Object.keys(d.portee).length === 3 && Object.keys(d.portee).every(id => pieceParId(id)) && ch.some(x => porteeEtroite(x.p.id)) && ch.some(x => porteeDe(x.p.id) === 'beaucoup'); });
-        ok('Les trois lieux simulés ont l\'avis de l\'équipe sur trois pièces (une, quelques, beaucoup), dont des pièces chargées (version 6)', okS23);
+        const sims23 = [0, 1, 2].map(i => construireLieu(i)), okS23 = sims23.every(d => { D = d; const ch = piecesChargees(d.b2.episodes); return d.sim.v === 7 && Object.keys(d.portee).length === 3 && Object.keys(d.portee).every(id => pieceParId(id)) && ch.some(x => porteeEtroite(x.p.id)) && ch.some(x => porteeDe(x.p.id) === 'beaucoup'); });
+        ok('Les trois lieux simulés ont l\'avis de l\'équipe sur trois pièces (une, quelques, beaucoup), dont des pièces chargées (version 7)', okS23);
       } finally { calque = sauveCq23; modeCarte = sauveMode23; majSynthese = vraiMaj23; persister = vraiPersister23; }
+    }
+    // 24. Avant et après un aménagement (passe 245)
+    {
+      const sauveCq24 = calque, sauveMode24 = modeCarte, sauveCh24 = {a: periodesChoisies.a, b: periodesChoisies.b};
+      let vraiPersister24 = persister, vraiMaj24 = majSynthese, vraiToast24 = toast;
+      try {
+        const rect24 = (id, x) => ({id, nom: 'Salle ' + id, type: 'sejour', niveau: 'n0', rects: [{x, y: 0, w: 4, h: 4}]});
+        const ep24 = (piece, date) => ({id: nouvelId('ep'), date, heure: '09:00', moment: 'm1', piece, types: [], autre: '', nbPros: 1, commentaire: '', provenance: 'test'});
+        // 10 jours de septembre (lundi 7 → vendredi 18) ; avant (7-11) : A 6 épisodes, B 1 ; après (14-18) : A 1, B 4 ; jours calmes : le 9 et le 15
+        const base24 = () => { D = dossierVide(); mode = 'socle'; D.b1.plan.pieces = [rect24('A', 0), rect24('B', 4), rect24('C', 8)]; D.b1.moments = [{id: 'm1', nom: 'Matin', debut: '09:00', fin: '12:00'}];
+          D.b2.episodes = ['2026-09-07', '2026-09-07', '2026-09-08', '2026-09-10', '2026-09-10', '2026-09-11'].map(d => ep24('A', d)).concat([ep24('B', '2026-09-08')], [ep24('A', '2026-09-16')], ['2026-09-14', '2026-09-16', '2026-09-17', '2026-09-18'].map(d => ep24('B', d)));
+          D.b2.calmes = [{id: 'c1', date: '2026-09-09', provenance: 't'}, {id: 'c2', date: '2026-09-15', provenance: 't'}]; periodesChoisies.a = ''; periodesChoisies.b = ''; return D; };
+        ['f-moment', 'f-type', 'f-debut', 'f-fin'].forEach(id => { if ($(id)) $(id).value = ''; });
+        base24(); persister = () => {}; majSynthese = () => {}; toast = () => {};
+        ajouterAmenagement(); const a24 = D.amenagements[0]; modifierAmenagement(a24.id, 'date', '2026-09-14'); modifierAmenagement(a24.id, 'quoi', '  Service   à table '); basculerPieceAmenagement(a24.id, 'A'); basculerPieceAmenagement(a24.id, 'Z');
+        const jr24 = D.amenagements.length === 1 && a24.date === '2026-09-14' && a24.quoi === 'Service à table' && a24.pieces.join() === 'A';
+        modifierAmenagement(a24.id, 'date', 'pas une date'); const dateRefusee = a24.date === ''; modifierAmenagement(a24.id, 'date', '2026-09-14'); basculerPieceAmenagement(a24.id, 'B'); basculerPieceAmenagement(a24.id, 'B');
+        ok('Le journal : on note un aménagement (date, ce qui a changé, pièces concernées) ; les espaces sont nettoyés, une date illisible ou une pièce inconnue sont refusées', jr24 && dateRefusee && a24.pieces.join() === 'A', JSON.stringify(a24));
+        periodesAutourDe(a24.id); const [pAv, pAp] = D.periodes;
+        ok('« Comparer avant / après » crée deux périodes autour de la date (du premier jour déclaré à la veille ; du jour de l\'aménagement au dernier jour déclaré), et les choisit',
+          D.periodes.length === 2 && pAv.debut === '2026-09-07' && pAv.fin === '2026-09-13' && pAp.debut === '2026-09-14' && pAp.fin === '2026-09-18' && periodesChoisies.a === pAv.id && periodesChoisies.b === pAp.id && /Avant : Service à table/.test(pAv.nom), JSON.stringify(D.periodes));
+        const cp = comparaisonPeriodes(filtres()), lA = cp.lignes.find(l => l.p.id === 'A'), lB = cp.lignes.find(l => l.p.id === 'B');
+        ok('Les jours observés : épisodes et « rien à signaler » ensemble (avant : les 7, 8, 9, 10 et 11 ; après : les 14, 15, 16, 17 et 18) ; A passe de 6 épisodes (1,2 par jour) à 1 (0,2) ; B de 1 (0,2) à 4 (0,8) ; tout le lieu de 7 à 5',
+          cp.sA.jours === 5 && cp.sB.jours === 5 && lA.nA === 6 && lA.nB === 1 && Math.abs(lA.tA - 1.2) < 1e-9 && Math.abs(lA.tB - .2) < 1e-9 && lB.nA === 1 && lB.nB === 4 && Math.abs(lB.tB - .8) < 1e-9 && cp.total.nA === 7 && cp.total.nB === 5, JSON.stringify([cp.sA.jours, cp.sB.jours, lA, lB]));
+        ok('Les pièces aménagées passent d\'abord, signalées ; peu d\'épisodes (moins de 3 de chaque côté) est dit ; C, sans épisode, n\'est pas listée',
+          cp.lignes[0].p.id === 'A' && lA.amenagee && !lB.amenagee && lB.peu === false && !cp.lignes.some(l => l.p.id === 'C') && cp.lignes.find(l => l.p.id === 'B').nB === 4);
+        const pr = cp.prudences.join(' | ');
+        ok('Les prudences : rien à signaler ici (même durée, 5 jours observés sur 5 jours ouvrés, un seul aménagement daté, au moins 5 épisodes de chaque côté) ; le retour à la moyenne se dit à part, toujours',
+          cp.prudences.length === 0, pr);
+        // Des périodes de longueurs différentes, peu de jours observés, plusieurs aménagements
+        D.periodes = [{id: 'p1', nom: 'Avant', debut: '2026-09-07', fin: '2026-09-09'}, {id: 'p2', nom: 'Après', debut: '2026-09-10', fin: '2026-09-18'}];
+        ajouterAmenagement(); const a24b = D.amenagements[1]; modifierAmenagement(a24b.id, 'date', '2026-09-11'); periodesChoisies.a = 'p1'; periodesChoisies.b = 'p2'; D.periodes[1].fin = '2026-09-30';
+        const pr2 = comparaisonPeriodes(filtres()).prudences.join(' | ');
+        ok('Les prudences : durées différentes (3 jours et 9 jours), plusieurs aménagements datés entre les deux, et peu de jours observés pour une période longue',
+          /pas la même durée \(3 jours et 21 jours\)/.test(pr2) && /2 aménagements sont datés/.test(pr2) && /jours? observés? pour environ/.test(pr2), pr2);
+        D.periodes[1].debut = '2026-09-08'; const chev = comparaisonPeriodes(filtres()); D.periodes[1].debut = ''; const inc = comparaisonPeriodes(filtres()); periodesChoisies.b = 'p1'; const mem = comparaisonPeriodes(filtres());
+        ok('Pas de comparaison si les périodes se chevauchent, si une date manque, ou si c\'est la même période',
+          /chevauchent/.test(chev.erreur) && /deux dates/.test(inc.erreur) && /différentes/.test(mem.erreur));
+        // Les filtres de la synthèse : « moment » et « comportement » valent pour les deux périodes
+        D.periodes = [pAv, pAp]; periodesChoisies.a = pAv.id; periodesChoisies.b = pAp.id; D.b1.moments.push({id: 'm2', nom: 'Soir', debut: '17:00', fin: '18:00'}); remplirFiltres(); D.b2.episodes.filter(e => e.piece === 'A' && e.date < '2026-09-10').forEach(e => { e.moment = 'm2'; });
+        $('f-moment').value = 'm2'; const cf = comparaisonPeriodes(filtres()); const nAf = cf.lignes.find(l => l.p.id === 'A').nA; $('f-moment').value = '';
+        ok('Les filtres de la synthèse (moment, comportement) valent pour les deux périodes ; ses dates, non', nAf === 3 && cf.sA.jours === 5, String(nAf));
+        // Les questions pour l'équipe
+        base24(); periodesChoisies.a = ''; ajouterAmenagement(); const a24c = D.amenagements[0]; modifierAmenagement(a24c.id, 'date', '2026-09-14'); modifierAmenagement(a24c.id, 'quoi', 'Service à table'); basculerPieceAmenagement(a24c.id, 'A'); periodesAutourDe(a24c.id);
+        const qq = questionsEquipe(D.b2.episodes).join(' | ');
+        ok('Les questions pour l\'équipe : celle de la pièce aménagée (de 1,2 à 0,2 épisode par jour observé, ce qui a changé d\'autre, disparu ou déplacé ?) et celle d\'une pièce où rien n\'a changé et qui monte (B : de 0,2 à 0,8, changé de pièce plutôt que disparu ?)',
+          /Après « Service à table » \(14\/09\/2026\), « Salle A » passe de 1,2 à 0,2 épisode par jour observé \(6 épisodes avant, 1 après\)/.test(qq) && /à part l'aménagement/.test(qq) && /Dans « Salle B », où rien n'a été changé d'après le journal, les épisodes passent de 0,2 à 0,8 par jour observé/.test(qq) && /changé de pièce plutôt que disparu/.test(qq), qq.slice(0, 700));
+        periodesChoisies.a = ''; periodesChoisies.b = ''; const qSans = questionsEquipe(D.b2.episodes).join(' | ');
+        ok('Sans comparaison choisie, aucune question de comparaison', !/par jour observé/.test(qSans));
+        // L'écran
+        const vp = $('vue-synthese'), avait = vp.classList.contains('show'); vp.classList.add('show');
+        majSynthese = vraiMaj24; periodesChoisies.a = D.periodes[0].id; periodesChoisies.b = D.periodes[1].id; rendreAvantApres(); const h = $('avant-apres');
+        ok('L\'écran : le journal, les périodes, les deux menus, le tableau (« Tout le lieu » et une ligne par pièce, « Aménagée ») et « À lire avec prudence »',
+          !$('avant-apres-feuille').hidden && h.querySelectorAll('.aa-ligne:not(.periode)').length === 1 && h.querySelectorAll('.aa-ligne.periode').length === 2 && h.querySelectorAll('.aa-choix select').length === 2 && /Tout le lieu/.test(h.textContent) && /Aménagée/.test(h.textContent) && /À lire avec prudence/.test(h.textContent) && /retour à la moyenne/.test(h.textContent) && h.querySelectorAll('table.rep tbody tr').length === 3);
+        vp.classList.toggle('show', avait);
+        // Rangé au niveau du dossier : dans le fichier socle, ni dans le plan, ni dans les fichiers des déclarants
+        const socle24 = contenuSocle(), vierge24 = contenuDeclarantVierge();
+        ok('Rangé au niveau du dossier du référent : dans le fichier socle, ni dans le plan, ni dans le fichier déclarant vierge',
+          socle24.amenagements.length === 1 && socle24.periodes.length === 2 && !JSON.stringify(vierge24).includes('Service à table') && !JSON.stringify(D.b1).includes('Service à table'));
+        const n24 = dossierVide(); n24.b1.plan.pieces = [rect24('A', 0)];
+        n24.periodes = [{id: 'p', nom: ' Avant ', debut: '2026-09-07', fin: 'n\'importe quoi'}, 'x', null]; n24.amenagements = [{id: 'a', date: '2026-13-45', quoi: 'x'.repeat(300), pieces: ['A', 'Z', 'A']}, 5];
+        normaliserPlan(n24); const n24b = dossierVide(); n24b.periodes = 'oups'; n24b.amenagements = {}; normaliserPlan(n24b); const n24c = dossierVide(); delete n24c.periodes; delete n24c.amenagements; normaliserPlan(n24c);
+        ok('À l\'ouverture d\'un fichier : noms nettoyés, dates illisibles vidées, pièces inconnues et doublons écartés, formats illisibles ou dossier d\'avant remis à zéro',
+          n24.periodes.length === 1 && n24.periodes[0].nom === 'Avant' && n24.periodes[0].fin === '' && n24.amenagements.length === 1 && n24.amenagements[0].date === '' && n24.amenagements[0].quoi.length === 200 && n24.amenagements[0].pieces.join() === 'A' &&
+          n24b.periodes.length === 0 && n24b.amenagements.length === 0 && n24c.periodes.length === 0 && n24c.amenagements.length === 0, JSON.stringify([n24.periodes, n24.amenagements.map(a => a.pieces)]));
+        const sims24 = [0, 1, 2].map(i => construireLieu(i));
+        const okS24 = sims24.every(d => { D = d; mode = 'socle'; const am = d.amenagements[0], [av, ap] = d.periodes; if (!am || !av || !ap) return false; periodesChoisies.a = av.id; periodesChoisies.b = ap.id;
+          const c = comparaisonPeriodes(filtres()), v = c && !c.erreur ? c.lignes.find(l => l.amenagee && l.nA >= 3) : null; return d.sim.v === 7 && !!v && v.tB < v.tA && c.total.nA + c.total.nB === d.b2.episodes.length && d.b2.episodes.length >= 40; });
+        ok('Les trois lieux simulés ont un aménagement daté, deux périodes, et la pièce aménagée y a moins d\'épisodes par jour observé après qu\'avant ; le nombre d\'épisodes ne change pas (version 7)', okS24, sims24.map(d => { D = d; periodesChoisies.a = d.periodes[0].id; periodesChoisies.b = d.periodes[1].id; const c = comparaisonPeriodes(filtres()); return c.lignes.filter(l => l.amenagee).map(l => l.nA + '>' + l.nB).join('+'); }).join(' / '));
+      } finally { persister = vraiPersister24; majSynthese = vraiMaj24; toast = vraiToast24; calque = sauveCq24; modeCarte = sauveMode24; periodesChoisies.a = sauveCh24.a; periodesChoisies.b = sauveCh24.b; }
     }
   } catch (e) { ok('Les vérifications ont planté', false, e.message); }
   finally { calque = sauveCalque; persister = vraiPersister; toast = vraiToast; window.confirm = vraiConfirm; modeFiche = sauveModeFiche; pieceFiche = null; niveauCourant = sauveNiveau; D = sauveD; mode = sauveMode; selection = null; historique = []; refaites = []; try { rendreJournee(); } catch (e) { /* rien */ } }
