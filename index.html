@@ -1127,6 +1127,11 @@ body.tool-baf #view-baf-accueil .hero h1 i{color:var(--sauge-deep);}
 #view-idc-accueil .hero{padding:22px 0 16px;}
 /* L'outil 3, ses deux indices (passe 242) : la page de choix et celle de l'ICASE ont l'en-tête de l'accueil de l'ICAF, dans le rosé de l'outil. */
 :is(#view-indices,#view-icase) .hero{padding:22px 0 16px;}
+:is(#view-icase,#view-icase-main) .entree-card,:is(#view-icase) .entree-card{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;}
+#view-icase .entree-card .entree-cta{margin-top:auto;padding-top:5px;}
+#view-icase .entree-card p{margin-bottom:16px;}
+#view-icase .entrees{margin-top:0;}
+#view-icase-main .baf-ref{border-color:var(--vol-contexte-deep);}
 :is(#view-indices,#view-icase) .hero svg.bigrose{width:50px;height:50px;margin-bottom:6px;color:var(--prune);}
 :is(#view-indices,#view-icase) .hero svg.bigrose path[fill="var(--sauge)"]{fill:var(--rose);}
 :is(#view-indices,#view-icase) .hero .kicker{font-size:11px;margin-bottom:6px;color:var(--slate);}
@@ -4572,8 +4577,8 @@ html[data-theme="sombre"] .analyse-tete .rail-etape.tel-vue{color:#141A22;}
         <button class="entree-card secondary" onclick="route('icase')">
           <div class="entree-icon">🗺️</div>
           <h3>ICASE — une analyse spatio-environnementale</h3>
-          <p>L'Indice de Confiance pour une Analyse Spatio-Environnementale évaluera l'analyse d'un lieu, menée avec la BASE (outil 2) : le plan, les épisodes posés pièce par pièce, ce que l'équipe en a tiré.</p>
-          <div class="entree-cta">En construction →</div>
+          <p>L'Indice de Confiance pour une Analyse Spatio-Environnementale évalue l'analyse d'un lieu, menée avec la BASE (outil 2) : le plan, les épisodes posés pièce par pièce, ce que l'équipe en a tiré. À l'essai.</p>
+          <div class="entree-cta">Ouvrir l'ICASE →</div>
         </button>
       </div>
     </div>
@@ -4593,12 +4598,55 @@ html[data-theme="sombre"] .analyse-tete .rail-etape.tel-vue{color:#141A22;}
       </div>
 
       <div class="intro-card">
-        <div class="badge-construction">En construction</div>
-        <p><b>L'ICASE se prépare.</b> Il évaluera la qualité d'une analyse écologique, celle d'un lieu, menée avec la BASE (outil 2) : comme l'ICAF pour une personne, il regardera le processus, pas les gens.</p>
-        <p style="margin-top:12px;">Il suivra les six mêmes étapes que l'ICAF, mais avec ses propres questions : un recueil qui couvre les rôles, les moments et les journées calmes, sur un plan fidèle ; des données organisées ; des régularités repérées (pièces, moments, endroits précis, écarts avec les pronostics) ; des hypothèses sur l'environnement, qui distinguent ce qui arrive ensemble de ce qui en est la cause ; des aménagements proposés et suivis ; un document cohérent.</p>
-        <p style="margin-top:12px;">Arthur et Émilie en écrivent la grille. Elle sera d'abord proposée à l'essai.</p>
+        <div class="badge-construction">À l'essai · mouture 1</div>
+        <h3>Avant de commencer</h3>
+        <p><b>Ce que l'ICASE cote, et ce qu'il ne cote pas.</b> Le <b>processus d'analyse d'un lieu</b>, mené avec la BASE (outil 2) : jamais le lieu lui-même, ni les personnes accompagnées, ni les professionnels. Un bâtiment mal adapté mais bien analysé obtient un bon score. Il lit deux choses : <b>le dossier de la BASE</b> (le plan, les fiches, les déclarations, la synthèse) et le <b>bilan d'analyse spatio-environnementale</b> de l'équipe, écrit hors de la BASE. Les dimensions A à C se cotent surtout sur le dossier, D à F sur le bilan.</p>
+        <p style="margin-top:12px;">Comme l'ICAF, chaque critère vaut <b>1 (présent) ou 0 (absent)</b>, sans nuance, et chaque dimension a son pourcentage. Quand on part d'un fichier de la BASE, jusqu'à <b>14 critères</b> sont pré-cotés à partir de ce que le fichier dit (nombre de déclarants, échelle du plan, croix, pronostics…) : ils sont signalés, modifiables, jamais cotés à votre place.</p>
+        <p style="margin-top:12px;"><b>Une grille à discuter.</b> Cette première mouture (6 dimensions, 18 items, 81 critères) est proposée à l'essai par Arthur et Émilie : les critères, les seuils et les exemples se corrigent.</p>
       </div>
-      <p class="entrees-note"><button type="button" class="lien-retour-indices" onclick="route('indices')">← Revenir aux indices de confiance</button></p>
+
+      <div class="entrees">
+        <button class="entree-card primary" onclick="document.getElementById('icase-fichier-base').click()">
+          <div class="entree-icon">🗺️</div>
+          <h3>Coter un fichier de la BASE</h3>
+          <p>Le fichier socle du référent, après la fusion des déclarations. L'ICASE y lit le plan, les déclarations et les pronostics, et pré-cote ce qui s'y lit.</p>
+          <div class="entree-cta">Choisir le fichier →</div>
+        </button>
+        <button class="entree-card primary" onclick="coterDossierBaseOuvert()">
+          <div class="entree-icon">📂</div>
+          <h3>Coter le dossier de la BASE de ce navigateur</h3>
+          <p id="icase-dossier-ouvert">Aucun dossier de la BASE n'est gardé dans ce navigateur pour l'instant.</p>
+          <div class="entree-cta">Coter ce dossier →</div>
+        </button>
+        <button class="entree-card secondary" onclick="coterSansBase()">
+          <div class="entree-icon">📋</div>
+          <h3>Coter une analyse sans la BASE</h3>
+          <p>L'analyse du lieu a été menée par un autre moyen. Démarrez la cotation directement, dimension par dimension : rien n'est pré-coté.</p>
+          <div class="entree-cta">Démarrer la cotation →</div>
+        </button>
+        <button class="entree-card secondary" onclick="document.getElementById('icase-fichier-cotation').click()">
+          <div class="entree-icon">♻️</div>
+          <h3>Rouvrir une cotation enregistrée</h3>
+          <p>Un fichier créé par « Exporter la cotation » : les cotations et les commentaires sont repris critère par critère.</p>
+          <div class="entree-cta">Choisir le fichier →</div>
+        </button>
+      </div>
+      <input type="file" id="icase-fichier-base" accept=".json,application/json" hidden onchange="coterFichierBase(this)">
+      <input type="file" id="icase-fichier-cotation" accept=".json,application/json" hidden onchange="rouvrirCotationSE(this)">
+      <p class="entrees-note">Le dossier de la BASE est lu, jamais modifié, et la cotation exportée ne garde que des comptes (nombre d'épisodes, de déclarants…) : ni les épisodes, ni le plan. <button type="button" class="lien-retour-indices" onclick="route('indices')">← Revenir aux indices de confiance</button></p>
+    </div>
+  </section>
+
+  <section id="view-icase-main" class="view">
+    <div class="wrap">
+      <div class="mod-header">
+        <div class="crumb"><button onclick="route('icase')">← Accueil de l'ICASE</button></div>
+        <span class="temps-tag tag-m1">ICASE</span>
+        <h2>Coter l'analyse d'un lieu</h2>
+        <div class="sub">Indice de Confiance pour une Analyse Spatio-Environnementale : les critères sont cotés 1 (présent) ou 0 (absent). Mouture à discuter.</div>
+        <div class="boutons no-print" style="margin-top:10px"><button type="button" class="bt petit" onclick="exporterCotationSE()">⬇ Exporter la cotation</button><button type="button" class="bt petit danger" onclick="recommencerSE()">Recommencer</button></div>
+      </div>
+      <div id="icase-main-content"></div>
     </div>
   </section>
 
@@ -7330,7 +7378,7 @@ function route(name, fromHistory){
   const entreeParticiper = name === 'declarant' && !modeDeclarantActif();
   const isBaf = ['baf-accueil','m1','m2','m2-form','analyser','comparer','synthese','declarant','reserve'].includes(name) && !entreeParticiper;
   const isIdc = ['idc-accueil','idc-main'].includes(name);
-  const isGlobal = ['accueil','reperes','ressources','apropos','notes','parcours','charte','banc','indices','icase'].includes(name);
+  const isGlobal = ['accueil','reperes','ressources','apropos','notes','parcours','charte','banc','indices','icase','icase-main'].includes(name);
   const bafNavGroup = document.getElementById('baf-nav-group');
   const idcNavGroup = document.getElementById('idc-nav-group');
   const globalNavGroup = document.getElementById('global-nav-group');
@@ -7388,6 +7436,8 @@ function route(name, fromHistory){
   if(name==='baf-accueil') renderParcoursOutil();
   if(name==='idc-main') { setNavActive('cotation'); renderMain(); }
   if(name==='idc-accueil') { try { majEntreeDossierOuvert(); } catch(e) {} }
+  if(name==='icase') { try { majEntreesICASE(); } catch(e) {} }
+  if(name==='icase-main') { try { renderSE(); } catch(e) {} }
   setTimeout(autoGrowAllTextareas, 30);
 }
 
@@ -7929,6 +7979,7 @@ const ADRESSES_VUES = {
   'synthese':     'synthese',
   'indices':      'indices-de-confiance',
   'icase':        'icase',
+  'icase-main':   'cotation-icase',
   'idc-accueil':  'indice-de-confiance',
   'idc-main':     'cotation',
 };
@@ -16578,7 +16629,7 @@ const _CONTROLES = [
     } finally { if (vue) route(vue.replace(/^view-/, '')); }
   }},
 
-  {nom:'L\'outil 3 (passe 242) : l\'encadré rose mène au choix des deux indices ; l\'ICAF s\'ouvre comme avant et sa flèche ramène au choix ; l\'ICASE est en construction', test: () => {
+  {nom:'L\'outil 3 (passe 242) : l\'encadré rose mène au choix des deux indices ; l\'ICAF s\'ouvre comme avant et sa flèche ramène au choix ; l\'ICASE s\'ouvre (à l\'essai)', test: () => {
     const vue = (document.querySelector('section.view.show') || {}).id;
     try {
       route('accueil');
@@ -16586,15 +16637,60 @@ const _CONTROLES = [
       const surChoix = document.getElementById('view-indices').classList.contains('show') && location.hash === '#indices-de-confiance';
       const cartes = [...document.querySelectorAll('#view-indices .entree-card')].map(c => c.querySelector('h3').textContent.split(' — ')[0]).join(',');
       document.querySelectorAll('#view-indices .entree-card')[1].click();
-      const icase = document.getElementById('view-icase').classList.contains('show') && /En construction/i.test(document.querySelector('#view-icase .badge-construction').textContent);
+      const icase = document.getElementById('view-icase').classList.contains('show') && /essai/i.test(document.querySelector('#view-icase .badge-construction').textContent) && document.querySelectorAll('#view-icase .entree-card').length === 4;
       document.querySelector('#view-icase .lien-retour-indices').click(); const retourChoix = document.getElementById('view-indices').classList.contains('show');
       document.querySelectorAll('#view-indices .entree-card')[0].click();
       const icaf = document.getElementById('view-idc-accueil').classList.contains('show') && document.getElementById('subbar-retour-label').textContent === 'Indices de confiance';
       retourAccueilOutil(); const flecheChoix = document.getElementById('view-indices').classList.contains('show');
-      return _bancEgal('choix | cartes | ICASE en construction | retour | ICAF | flèche vers le choix | texte de l\'encadré',
+      return _bancEgal('choix | cartes | ICASE à l\'essai, quatre entrées | retour | ICAF | flèche vers le choix | texte de l\'encadré',
         'true | ICAF,ICASE | true | true | true | true | true',
         [surChoix, cartes, icase, retourChoix, icaf, flecheChoix, /ICAF · ICASE/.test(rose.textContent)].join(' | '));
     } finally { if (vue) route(vue.replace(/^view-/, '')); }
+  }},
+
+  {nom:'L\'ICASE (passe 246) : la grille (6 dimensions, 18 items, 81 critères), les règles de pré-cotation sur un dossier de la BASE, la cotation, la synthèse, l\'export (des comptes seulement) et la réouverture', test: () => {
+    const vue = (document.querySelector('section.view.show') || {}).id, sauveSE = SE, verifs = [], verif = (nom, cond, det) => verifs.push([nom, !!cond, det]);
+    try {
+      const nbItems = DIMS_ICASE.reduce((a, d) => a + d.items.length, 0), nbCrit = DIMS_ICASE.reduce((a, d) => a + d.items.reduce((b, it) => b + it.subItems.length, 0), 0);
+      const litOk = DIMS_ICASE.every(d => d.items.every(it => Object.keys(it.lit || {}).every(k => +k < it.subItems.length && baseRefText(it.lit[k], {n: 1, decls: 1, roles: [], jours: 1, dateMin: '', echelle: 0, nOuvertures: 0, flottantes: 0, nPiecesEp: 1, nFiche: 0, nFichesTotal: 0, nMomentEtHeure: 0, nGrandes: 1, nCroix: 0, nAutour: 0, nTypes: 0, nPros: 0, nCalmes: 0, nPronostics: 0, pronostiqueReferent: false, momentsJournee: 0, nMoments: 1}) !== null)));
+      // Un dossier de la BASE construit à la main : 10 épisodes de 3 déclarants, 8 croix dans la grande pièce, une fenêtre qui flotte
+      const eps = []; ['Éducatrice (Léa)', 'AES (Tom)', 'Infirmier·e (Max)'].forEach((p, k) => { for (let i = 0; i < (k ? 3 : 4); i++) eps.push({id: 'e' + k + i, date: '2026-09-' + String(7 + k * 3 + i).padStart(2, '0'), heure: '09:00', moment: 'm', piece: 'g', types: ['t'], autre: '', nbPros: 1, provenance: p, pos: eps.length < 8 ? {u: .5, v: .5} : undefined, contexte: eps.length < 6 ? ['bruit'] : undefined}); });
+      const dossier = {b1: {lieu: 'Lieu test', echelle: .5, moments: [{id: 'm'}], journee: {m: {g: 1}}, fiches: {g: {carac: {a: {v: 1}}}},
+        plan: {pieces: [{id: 'g', nom: 'Grand', type: 'activite', niveau: 'n0', rects: [{x: 0, y: 0, w: 10, h: 10}]}, {id: 'p', nom: 'Petit', type: 'sejour', niveau: 'n0', rects: [{x: 10, y: 0, w: 4, h: 4}]}], elements: [{cat: 'porte', niveau: 'n0', x: 10, y: 2}, {cat: 'fenetre', niveau: 'n0', x: 50, y: 50}]}},
+        b2: {episodes: eps, calmes: [{date: '2026-09-20'}]}, pronostics: {referent: {pieces: ['g'], passe: false}, sim1: {provenance: 'AES', pieces: ['p'], passe: false}}};
+      const m = computeBaseMeta(dossier);
+      const metaOk = m.n === 10 && m.decls === 3 && m.roles.length === 3 && m.jours === 14 && m.echelle === .5 && m.nOuvertures === 2 && m.flottantes === 1 && m.nPiecesEp === 1 && m.nFiche === 1 && m.nGrandes === 10 && m.nCroix === 8 && m.nAutour === 6 && m.nCalmes === 1 && m.nPronostics === 2 && m.pronostiqueReferent;
+      SE = {mode: null, lieu: '', meta: null, raters: [], tab: 0, vue: 'cotation'};
+      ouvrirCotationSE(dossier, 'base');
+      const sc = SE.raters[0].dims.map(d => d.items.map(it => it.scores.map(v => v === null ? '.' : v).join('')).join('/')).join(' | ');
+      const nAuto = Object.keys(SE.raters[0].autoCotes).length;
+      const montre = document.getElementById('view-icase-main').classList.contains('show') && document.querySelectorAll('#icase-main-content .dim-block').length === 6 && document.querySelectorAll('#icase-main-content .score-btn.auto').length === 14 && document.querySelectorAll('#icase-main-content .baf-ref').length >= 14;
+      const premier = document.querySelector('#icase-main-content .score-btn.sn'); premier.click(); const bouton = document.querySelectorAll('#icase-main-content .score-btn.s1').length === 14;
+      verif('La grille de l\'ICASE : 6 dimensions, 18 items, 81 critères ; chaque repère « lit » vise un critère qui existe et se lit', DIMS_ICASE.length === 6 && nbItems === 18 && nbCrit === 81 && litOk, [DIMS_ICASE.length, nbItems, nbCrit, litOk].join());
+      verif('Un dossier de la BASE se lit : 10 épisodes, 3 déclarants et 3 rôles, 14 jours, échelle, 2 ouvertures dont 1 qui flotte, 8 croix sur 10 dans la grande pièce, 6 « Autour », 1 journée calme, 2 pronostics dont celui du référent', metaOk, JSON.stringify(m));
+      verif('Quatorze critères sont pré-cotés (3 déclarants, 2 rôles, 2 semaines, échelle, fiche, moment et heure, croix, « autour », type, nombre de professionnels, journée calme, pronostics, comparaison) et la fenêtre qui flotte fait 0 ; rien d\'autre',
+        nAuto === 14 && sc === '11..1/1.01../11111/....1 | .../..1../.... | ...../..../1... | ...../..../.... | ...../...... | .../..../....', sc);
+      verif('Les pré-cotations sont signalées (trait pointillé) ; les repères lus dans le dossier s\'affichent à côté des critères ; un clic sur un critère non coté le cote 1', montre && bouton, [montre, bouton].join());
+      // La synthèse
+      SE.vue = 'synthese'; renderSE(); const synth = document.querySelectorAll('#icase-main-content .qual-dim').length === 6 && /Points forts/.test(document.getElementById('icase-main-content').textContent); SE.vue = 'cotation'; renderSE();
+      // L'export : des comptes, jamais les épisodes ni le plan ; et on rouvre
+      const exp = contenuCotationSE(), texte = JSON.stringify(exp);
+      const sansDonnees = exp.outil === 'icase' && exp.reperes.n === 10 && texte.indexOf('provenance') < 0 && texte.indexOf('Léa') < 0 && texte.indexOf('rects') < 0 && texte.indexOf('"pos"') < 0 && exp.lieu === 'Lieu test';
+      const avantScores = JSON.stringify(SE.raters[0].dims.map(d => d.items.map(it => it.scores))); const avantAuto = Object.keys(SE.raters[0].autoCotes).length;
+      SE = {mode: null, lieu: '', meta: null, raters: [], tab: 0, vue: 'cotation'}; appliquerCotationSE(JSON.parse(texte));
+      const rouvert = JSON.stringify(SE.raters[0].dims.map(d => d.items.map(it => it.scores))) === avantScores && Object.keys(SE.raters[0].autoCotes).length === avantAuto && SE.mode === 'base' && SE.meta.n === 10 && document.querySelectorAll('#icase-main-content .baf-ref').length >= 14;
+      const faux = {outil: 'icaf', raters: []}; let refus = false; const vraiAlert = window.alert; window.alert = () => { refus = true; }; appliquerCotationSE(faux); window.alert = vraiAlert;
+      verif('La synthèse (6 dimensions, points forts et manques) ; l\'export ne garde que des comptes (ni épisodes, ni déclarants, ni plan) ; on rouvre la cotation à l\'identique, repères compris ; un autre fichier est refusé', synth && sansDonnees && rouvert && refus, [synth, sansDonnees, rouvert, refus].join());
+      // Les fichiers acceptés
+      const e1 = verifierDossierBase({baf: {type: 'dossier'}, m1: {}, m2: {}}, true), e2 = verifierDossierBase({baf: {outil: 'base', type: 'base-declarant'}, b1: {}, b2: {}}, true), e3 = verifierDossierBase({raters: []}, true), e4 = verifierDossierBase({baf: {outil: 'base', type: 'base-dossier'}, b1: dossier.b1, b2: dossier.b2}, true), e5 = verifierDossierBase(dossier, false), e6 = verifierDossierBase({baf: {outil: 'base', type: 'base-dossier'}, b1: {}}, true);
+      verif('Les fichiers : le socle de la BASE passe ; un fichier du RDAF, un fichier déclarant, une cotation de l\'ICAF et un fichier incomplet sont refusés, chacun avec sa raison',
+        e4.ok && e5.ok && /RDAF/.test(e1.erreur) && /déclarant/.test(e2.erreur) && /cotation de l'ICAF/.test(e3.erreur) && /incomplet/.test(e6.erreur), [e1.erreur, e2.erreur, e3.erreur, e6.erreur].join(' | '));
+      // Sans la BASE : rien n'est pré-coté
+      SE = {mode: null, lieu: '', meta: null, raters: [], tab: 0, vue: 'cotation'}; coterSansBase();
+      verif('Sans la BASE : aucun repère, aucune pré-cotation ; « Coter » reste possible à la main', document.querySelectorAll('#icase-main-content .dim-block').length === 6 && document.querySelectorAll('#icase-main-content .baf-ref').length === 0 && document.querySelectorAll('#icase-main-content .score-btn.auto').length === 0 && SE.mode === 'libre');
+      const ko = verifs.filter(v => !v[1]).map(v => v[0] + ' :: ' + v[2]);
+      return _bancEgal('grille, dossier lu, pré-cotation, écran, synthèse, export, réouverture, fichiers, sans la BASE (' + verifs.length + ' vérifications)', 'aucun échec', ko.length ? ko.join(' || ') : 'aucun échec');
+    } finally { SE = sauveSE; if (vue) route(vue.replace(/^view-/, '')); }
   }},
 
   {nom:'Accueils (passe 198) : les outils en couleur, les titres centrés, le parcours en quatre blocs colorés, le détail au survol', test: () => {
@@ -22061,7 +22157,12 @@ const VUES_RESERVEES = {
   },
   icase: {
     titre: "L'indice de confiance spatio-environnemental",
-    quoi: "Une grille qui évaluera la qualité de l'analyse d'un lieu — pas la personne, pas vous : le travail produit.",
+    quoi: "Une grille qui évalue la qualité de l'analyse d'un lieu — pas la personne, pas vous : le travail produit.",
+    qui: "C'est un outil interne à l'équipe."
+  },
+  'icase-main': {
+    titre: "L'indice de confiance spatio-environnemental",
+    quoi: "Une grille qui évalue la qualité de l'analyse d'un lieu — pas la personne, pas vous : le travail produit.",
     qui: "C'est un outil interne à l'équipe."
   },
   'idc-accueil': {
@@ -24365,6 +24466,15 @@ const NOTES_VERSION = [
 
   {
     date: '2026-10-18',
+    version: 'v2026.10.18-3',
+    titre: "L'ICASE : la grille, à l'essai",
+    corps: `
+<p><b>L'ICASE, l'indice de confiance de l'outil 3 pour l'analyse d'un lieu, est codé</b> (Arthur et Émilie). Première mouture, à discuter : <b>6 dimensions, 18 items, 81 critères</b>, cotés 1 (présent) ou 0 (absent) comme dans l'ICAF — le recueil, l'organisation des données, les régularités, les hypothèses environnementales, les aménagements, le document. Même fonctionnement : un pourcentage par dimension, un radar, une synthèse, plusieurs cotateurs, un export. Il cote le <b>processus d'analyse</b> (jamais le lieu, ni les personnes) à partir du dossier de la BASE et du bilan d'analyse spatio-environnementale de l'équipe, écrit hors de la BASE.</p>
+<p>On le démarre de quatre façons : avec un fichier socle de la BASE, avec le dossier que la BASE garde dans ce navigateur (lu, jamais modifié), sans la BASE, ou en rouvrant une cotation enregistrée. Avec un dossier de la BASE, jusqu'à <b>14 critères</b> sont pré-cotés — trois déclarants, deux rôles, deux semaines de recueil, l'échelle du plan, les ouvertures qui touchent un mur, les fiches des pièces, le moment et l'heure, les croix dans les grandes pièces, « Autour de l'épisode », le type de comportement, le nombre de professionnels, les journées calmes, les pronostics et leur comparaison — signalés d'un trait pointillé, modifiables, jamais posés par-dessus une cotation. D'autres critères affichent seulement un repère lu dans le dossier. La cotation exportée ne garde que des comptes : ni les épisodes, ni le plan.</p>
+`
+  },
+  {
+    date: '2026-10-18',
     version: 'v2026.10.18-2',
     titre: "La BASE : avant et après un aménagement",
     corps: `
@@ -26569,7 +26679,7 @@ const REPERES = [
        r: `<p>Non. Elle ne pose aucun diagnostic et ne formule aucune hypothèse. Elle vous aide à structurer votre démarche au niveau individuel — le recueil et l'analyse des données (outil 1) —, au niveau écologique — le lieu où se produisent les comportements-défis (outil 2) — et, si vous le souhaitez, à en évaluer la qualité <b>après</b> (outil 3, facultatif).</p>
            <p>L'analyse fonctionnelle elle-même — formuler des hypothèses, décider quoi proposer — reste votre travail. Tout ce que l'outil fait apparaître, catégories, régularités, pourcentages, est un matériau de discussion, jamais une conclusion.</p>`},
       {q: "Qui fait quoi dans la BAF ?",
-       r: `<p>La BAF réunit trois outils : le <b>RDAF</b> (outil 1), qui recueille et prépare les données — un Préambule, Recueillir, Analyser, une Synthèse —, la <b>BASE</b> (outil 2), qui cartographie les comportements-défis dans un lieu, pièce par pièce, et l'<b>indice de confiance</b> (outil 3, facultatif), qui évalue la qualité d'une analyse terminée : l'<b>ICAF</b> pour une analyse fonctionnelle individuelle, l'<b>ICASE</b> (en construction) pour une analyse spatio-environnementale.</p>
+       r: `<p>La BAF réunit trois outils : le <b>RDAF</b> (outil 1), qui recueille et prépare les données — un Préambule, Recueillir, Analyser, une Synthèse —, la <b>BASE</b> (outil 2), qui cartographie les comportements-défis dans un lieu, pièce par pièce, et l'<b>indice de confiance</b> (outil 3, facultatif), qui évalue la qualité d'une analyse terminée : l'<b>ICAF</b> pour une analyse fonctionnelle individuelle, l'<b>ICASE</b> (à l'essai) pour une analyse spatio-environnementale.</p>
            <p><b>Le déclarant</b> remplit le recueil : il décrit ce qu'il observe là où il accompagne la personne. <b>L'analyste</b> analyse les données (il les range, les catégorise, les interprète), puis fait l'analyse fonctionnelle — dans la démarche proposée, c'est le binôme formé par le référent et le clinicien. <b>Le cotateur</b>, si l'équipe choisit d'évaluer son analyse, remplit l'ICAF.</p>`},
       {q: "Comment commencer une analyse fonctionnelle avec la BAF ?",
        r: `<p>Dans cet ordre :</p>
@@ -26688,7 +26798,7 @@ const LEXIQUE_BAF = {
   "RDAF": "L'outil 1, le recueil de données. Il se déroule en quatre modules — Préambule, Recueillir, Analyser (déclaratif brut, Découper, Catégoriser, Interpréter) et Synthèse. Il prépare l'analyse fonctionnelle, il ne la produit pas.",
   "analyser": "Le troisième module du RDAF, celui du travail de l'analyste. Il se fait un épisode à la fois, sur quatre panneaux qui glissent comme un carrousel : Déclaratif brut, Découper, Catégoriser, Interpréter. On y voit toujours l'étape d'avant pour faire la suivante.",
   "phase": "Dans la séquence d'un épisode, une suite antécédent → CD → intervention. Un épisode a une ou plusieurs phases : un CD qui en suit un autre, après une intervention, ouvre la phase suivante.",
-  "ICASE": "Indice de Confiance pour une Analyse Spatio-Environnementale : le second indice de l'outil 3 (en construction). Il évaluera la qualité de l'analyse d'un lieu, menée avec la BASE.",
+  "ICASE": "Indice de Confiance pour une Analyse Spatio-Environnementale : le second indice de l'outil 3 (à l'essai). Il évalue la qualité de l'analyse d'un lieu, menée avec la BASE : 6 dimensions, 18 items, 81 critères cotés 1 ou 0.",
   "ICAF": "Le premier indice de l'outil 3, l'indice de confiance. Il évalue la qualité méthodologique d'une analyse fonctionnelle terminée — pas la personne, pas les déclarants.",
   "préambule": "Ce que l'équipe sait déjà de la personne avant toute observation : lieux de vie, journée type, piste somatique, vase de tension connu. C'est le point de départ commun à tous les déclarants.",
   "analyste": "Celui ou celle qui analyse les données (les range, les catégorise, les interprète), puis fait l'analyse fonctionnelle. Dans la démarche proposée, c'est le binôme formé par le référent et le clinicien.",
@@ -27919,7 +28029,7 @@ function mkPbar(v){
   return d;
 }
 
-function mkRadar(ds,sz){
+function mkRadar(ds,sz,racine){
   const cx=sz/2,cy=sz/2,r=sz/2-36,n=ds.length,st=2*Math.PI/n;
   const gp=(i,v)=>({x:cx+r*v*Math.sin(i*st),y:cy-r*v*Math.cos(i*st)});
   const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
@@ -27944,7 +28054,7 @@ function mkRadar(ds,sz){
     const ci=document.createElementNS('http://www.w3.org/2000/svg','circle');
     ci.setAttribute('cx',p.x);ci.setAttribute('cy',p.y);ci.setAttribute('r','4');ci.setAttribute('fill',DC[i%DC.length]);
     ci.style.cursor='pointer';
-    ci.addEventListener('click',()=>{const el=document.querySelector('[data-di="'+i+'"]');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});});
+    ci.addEventListener('click',()=>{const el=(racine||document).querySelector('[data-di="'+i+'"]');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});});
     svg.appendChild(ci);
     const tx=document.createElementNS('http://www.w3.org/2000/svg','text');
     tx.setAttribute('x',lp.x);tx.setAttribute('y',lp.y);tx.setAttribute('text-anchor','middle');
@@ -27952,7 +28062,7 @@ function mkRadar(ds,sz){
     tx.setAttribute('font-weight','bold');tx.setAttribute('fill',DC[i%DC.length]);
     tx.setAttribute('font-family',"'Space Grotesk',sans-serif");
     tx.textContent=d.code;tx.style.cursor='pointer';
-    tx.addEventListener('click',()=>{const el=document.querySelector('[data-di="'+i+'"]');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});});
+    tx.addEventListener('click',()=>{const el=(racine||document).querySelector('[data-di="'+i+'"]');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});});
     svg.appendChild(tx);
   });
   return svg;
@@ -28082,6 +28192,401 @@ const helpObserver = new MutationObserver(() => {
 });
 helpObserver.observe(document.body, {childList:true, subtree:true});
 setupHelpToggles();
+
+// ============================================================
+// L'ICASE — Indice de Confiance pour une Analyse Spatio-Environnementale (passe 246, première mouture)
+// ============================================================
+/* Même fonctionnement que l'ICAF : six dimensions, des items, des critères cotés 1 (présent) ou 0 (absent), un pourcentage par dimension, un radar, une
+   synthèse ; plusieurs cotateurs. Ce qu'elle évalue : le processus d'analyse d'UN LIEU, mené avec la BASE (outil 2) — le dossier de la BASE (recueil, plan,
+   synthèse) et le bilan d'analyse spatio-environnementale (ASE) écrit hors de la BASE. Les dimensions A à C se cotent surtout sur le dossier, D à F sur le
+   bilan. Ni le lieu, ni les personnes ne sont jugés : le processus.
+   Un module à part (état SE, vues « icase » et « icase-main ») : il réutilise les composants de l'ICAF (calcScores, mkRadar, barreOuMention, styles) sans
+   toucher à sa logique. Mouture à discuter (Arthur et Émilie) : la grille se corrige ici, dans DIMS_ICASE.
+   « lit » : pour un critère, la clé de ce que la BASE sait lire dans son dossier — une règle (REGLES_ICASE) pré-cote le critère (signalé, modifiable, jamais
+   écrasé), sinon un repère s'affiche à côté (baseRefText). Seuils validés par Arthur le 16/10 : 3 déclarants, 2 rôles, 2 semaines, 70 % de croix dans les
+   grandes pièces, la moitié pour « Autour de l'épisode ». */
+const GRILLE_ICASE = 'ICASE, mouture 1 (16/10/2026)';
+const DIMS_ICASE = [
+{code:"A",name:"Qualité du recueil des données",items:[
+ {code:"A1",name:"Pluralité et diversité des sources",
+  examples:"Ex : « 46 épisodes déclarés par 7 personnes : 3 éducatrices, 2 AES, l'infirmière, l'enseignante. Matin, repas et après-midi sont couverts ; le temps de cour n'a qu'un déclarant. »",
+  lit:{0:'declarants',1:'roles',4:'periode'},
+  subItems:["Au moins trois déclarants différents","Plusieurs rôles professionnels sont représentés","Chaque moment de la journée a au moins un déclarant présent, ou son absence est justifiée","Les personnes accompagnées, ou leurs familles, ont été consultées sur le lieu, ou c'est justifié","La période de recueil couvre au moins deux semaines"]},
+ {code:"A2",name:"Fidélité du plan",
+  examples:"Ex : « Plan à l'échelle (1 case = 0,5 m) d'après le plan de l'architecte ; portes, fenêtres et baies posées ; 12 fiches de pièces sur 15, dont 3 détaillées. »",
+  lit:{0:'echelle',2:'ouvertures',3:'fiches'},
+  subItems:["Le plan a une échelle, ou les surfaces sont données","Toutes les pièces où vit le groupe sont dessinées, dehors compris","Les portes, fenêtres et baies sont posées, sans ouverture qui flotte","Les pièces où se passent les épisodes ont leur fiche","Le plan a été vérifié sur place (visite, photos)","Les changements du lieu pendant le recueil sont notés (mobilier déplacé, pièce fermée, travaux)"]},
+ {code:"A3",name:"Niveau de détail des déclarations",
+  examples:"Ex : « 38 épisodes sur 46 ont leur croix ; “Autour de l'épisode” est rempli pour 30 ; le moment et l'heure sont toujours renseignés. »",
+  lit:{0:'contexte',1:'croix',2:'autour',3:'types',4:'nbpros'},
+  subItems:["Le moment et l'heure sont renseignés pour chaque épisode","Dans les grandes pièces, la plupart des épisodes ont leur croix","« Autour de l'épisode » est rempli pour au moins la moitié des épisodes","Le type de comportement est renseigné pour chaque épisode","Le nombre de professionnels présents est renseigné"]},
+ {code:"A4",name:"Analyse critique du recueil",
+  examples:"Ex : « Personne ne déclare après 16 h : la carte ne dit rien du soir. Le groupe passe 5 h par jour en salle bleue et 20 min dans le hall : leurs chiffres ne se comparent pas tels quels. »",
+  lit:{0:'journee',4:'pronostics'},
+  subItems:["Le temps passé dans chaque pièce (l'exposition) est pris en compte","Les moments et les pièces sous-déclarés sont identifiés","Les biais des déclarants sont discutés (qui remplit, quand, après coup)","Ce qui a été vu et ce qui a été rapporté sont distingués","Les pronostics ont été faits avant de voir la carte"]}
+]},
+{code:"B",name:"Capacité à organiser les données",items:[
+ {code:"B1",name:"Définition des comportements recueillis",
+  examples:"Ex : « “Sort de la salle en courant” : franchit la porte en courant, sans adulte. Les cris seuls ne se déclarent pas. »",
+  subItems:["Chaque type de comportement est nommé de façon factuelle","Un observateur extérieur pourrait reconnaître chaque type","Le seuil de déclaration est précisé (ce qu'on ne déclare pas)"]},
+ {code:"B2",name:"Données descriptives par pièce et par moment",
+  examples:"Ex : « Réfectoire : 14 épisodes sur 46, dont 11 au repas. Trois journées sans épisode déclarées. Hausse la deuxième semaine. »",
+  lit:{2:'calmes'},
+  subItems:["Le nombre d'épisodes par pièce est documenté","La répartition par moment de la journée est documentée","Les journées calmes sont déclarées (« Rien à signaler »)","Les pièces sans épisode sont nommées","L'évolution dans le temps est décrite"]},
+ {code:"B3",name:"Lecture du plan",
+  examples:"Ex : « La BASE lit 9 points de vigilance ; l'équipe en discute 4 et en écarte 2 (“le couloir n'est jamais traversé seul”). »",
+  lit:{2:'fichesRepere'},
+  subItems:["Les points de vigilance et d'appui lus dans le plan sont relus par l'équipe","Les sens proposés par la BASE sont corrigés quand l'équipe les juge faux","Les fiches des pièces les plus chargées sont détaillées","Ce que le plan ne dessine pas est décrit (bruit, lumière, odeurs, affluence)"]}
+]},
+{code:"C",name:"Capacité à repérer des régularités",items:[
+ {code:"C1",name:"Régularités dans l'espace et dans le temps",
+  examples:"Ex : « 60 % des épisodes au réfectoire et dans le hall, qui font 25 % des pièces ; 80 % de ceux du hall à l'arrivée. Dans le réfectoire, les croix se regroupent devant l'office. »",
+  subItems:["Les pièces les plus chargées sont identifiées, chiffres à l'appui","Les croisements pièce × moment sont examinés","Dans les grandes pièces, les endroits précis (les croix) sont exploités","Les pièces calmes servent à affiner l'analyse (qu'ont-elles de différent ?)","Les variations et les exceptions sont discutées"]},
+ {code:"C2",name:"Croisement du plan et des épisodes",
+  examples:"Ex : « Chargé comme le plan le laissait attendre : le hall (bruit, passage). Chargée sans alerte : la chambre 1 — on cherche ce que le plan ne dit pas. Alerte mais calme : la salle multisensorielle, toujours accompagnée. »",
+  subItems:["Les pièces chargées que le plan laissait attendre sont discutées","Les pièces chargées sans alerte au plan sont explorées","Les pièces qui alertent mais restent calmes sont expliquées","Les concentrations sont lues avec prudence (peu d'épisodes, taux de base)"]},
+ {code:"C3",name:"Regards croisés : pronostics et contexte",
+  examples:"Ex : « 4 pronostics sur 5 citaient la cour ; elle n'a que 2 épisodes. Le bruit est noté dans 45 % des épisodes où “Autour de l'épisode” est rempli. »",
+  lit:{0:'comparaison'},
+  subItems:["Les pronostics sont comparés à ce qui a été observé","Les écarts sont discutés en équipe, sans juger","Ce qu'on a remarqué autour des épisodes est mis en lien avec les pièces et les moments","Les questions pour l'équipe proposées par la BASE ont été travaillées en réunion"]}
+]},
+{code:"D",name:"Capacité à produire des hypothèses environnementales testables",items:[
+ {code:"D1",name:"Formulation des hypothèses",
+  examples:"Ex : « Au réfectoire, quand la file se forme devant l'office (moment), la résonance et le passage (lieu) précèdent les cris (comportement) ; besoin supposé : échapper au bruit et à l'attente. »",
+  subItems:["Au moins une hypothèse sur l'environnement est formulée","Elle relie une caractéristique du lieu, un moment et un comportement","Elle s'appuie sur les données (pièce, moment, endroit précis)","La caractéristique invoquée est décrite dans le plan ou dans la fiche de la pièce","Elle est reliée aux besoins des personnes (sensoriels, de retrait, de repères)"]},
+ {code:"D2",name:"Prise en compte de la complexité",
+  examples:"Ex : « Le hall n'est chargé qu'à l'arrivée : l'attente des taxis pèse sans doute plus que le hall lui-même. Deux jeunes font la moitié des épisodes du couloir. »",
+  subItems:["Les facteurs autres que le lieu sont envisagés (activité, attente, effectif, personnes présentes)","La possibilité qu'une ou deux personnes fassent l'essentiel de la carte est discutée","Le lien avec les analyses fonctionnelles individuelles en cours est fait, quand il y en a","Le croisement est présenté comme ce qui arrive ensemble, pas comme une cause"]},
+ {code:"D3",name:"Testabilité et rigueur",
+  examples:"Ex : « Si l'on sert à table au lieu de faire la file, les épisodes du début du repas devraient baisser en trois semaines ; sinon, on revoit l'hypothèse. »",
+  subItems:["Les hypothèses sont présentées comme des hypothèses","Ce qui les infirmerait est dit","Les données contradictoires sont discutées","Les limites du recueil sont rappelées"]}
+]},
+{code:"E",name:"Capacité à produire des aménagements",items:[
+ {code:"E1",name:"Lien hypothèses → aménagements",
+  examples:"Ex : « Résonance du réfectoire → panneaux absorbants et tables de quatre. File devant l'office → service à table. Pas de lieu de retrait → le coin de la salle Nuage, aménagé et accessible sans demander. »",
+  subItems:["Chaque aménagement découle d'une hypothèse","Le document explique pourquoi chacun est proposé","Ils portent sur le lieu (espace, son, lumière, mobilier) et sur son usage (horaires, circulation, effectifs)","Un lieu de retrait accessible est prévu, si le lieu n'en a pas","Les ressources du lieu sont mobilisées (pièces calmes, points d'appui lus dans le plan)"]},
+ {code:"E2",name:"Faisabilité et suivi",
+  examples:"Ex : « Un changement à la fois, trois semaines chacun ; la BASE recueille avant et après ; bilan en réunion d'équipe le 14 novembre. »",
+  subItems:["Les aménagements sont concrets (quoi, où)","Ils sont hiérarchisés ou priorisés","Qui fait quoi est précisé","Les contraintes du lieu sont prises en compte (bâtiment loué, provisoire, budget)","Un recueil avant et après est prévu avec la BASE","Les changements sont datés, et faits un à la fois quand c'est possible"]}
+]},
+{code:"F",name:"Capacité à produire un document diffusable",items:[
+ {code:"F1",name:"Cohérence interne",
+  examples:"Ex : « Chaque aménagement renvoie à son hypothèse, chaque hypothèse à ses pièces et à ses chiffres. »",
+  subItems:["Le fil recueil → hypothèses → aménagements est traçable","Pas de contradiction interne non discutée","Les données laissées de côté sont discutées"]},
+ {code:"F2",name:"Clarté et accessibilité",
+  examples:"Ex : « La carte thermique est dans le compte rendu, avec sa légende et sa note de prudence ; le plan vierge sert de support en réunion. »",
+  subItems:["Le plan et la carte figurent dans le document, avec leur légende","Compréhensible par un professionnel","Compréhensible par une famille ou par la direction","Évite le jargon inutile"]},
+ {code:"F3",name:"Posture et transmissibilité",
+  examples:"Ex : « Ces pistes seront confrontées à l'expérience de l'équipe ; la carte montre où les épisodes se déclarent, pas pourquoi. »",
+  subItems:["Distingue les faits, les interprétations et les hypothèses","Rappelle que la carte montre des co-occurrences, pas des causes","Invite à la réflexion collective","Utilisable en réunion d'équipe"]}
+]}
+];
+
+// ── Ce que la BASE sait lire dans son dossier ──
+const ROLE_REFERENT = 'le référent';
+function computeBaseMeta(d) {
+  const b1 = (d && d.b1) || {}, b2 = (d && d.b2) || {}, plan = b1.plan || {};
+  const eps = (b2.episodes || []).filter(e => e && typeof e === 'object'), calmes = (b2.calmes || []).filter(c => c && c.date);
+  const pieces = (plan.pieces || []).filter(p => p && p.id), parId = {}; pieces.forEach(p => { parId[p.id] = p; });
+  const n = eps.length, reD = /^\d{4}-\d{2}-\d{2}$/;
+  const dates = eps.map(e => e.date).concat(calmes.map(c => c.date)).filter(x => reD.test(x || '')).sort();
+  const jours = dates.length ? Math.round((new Date(dates[dates.length - 1] + 'T12:00:00') - new Date(dates[0] + 'T12:00:00')) / 864e5) + 1 : 0;
+  const provs = [...new Set(eps.map(e => String(e.provenance || '').trim() || ROLE_REFERENT))];
+  const roles = [...new Set(provs.filter(p => p !== ROLE_REFERENT).map(p => p.replace(/\s*\([^)]*\)\s*$/, '').trim()).filter(Boolean))];
+  const prop = (a, t) => t ? a / t : null;
+  const aire = p => { if (Array.isArray(p.poly) && p.poly.length >= 3) { let s = 0; for (let i = 0; i < p.poly.length; i++) { const u = p.poly[i], v = p.poly[(i + 1) % p.poly.length]; s += u[0] * v[1] - v[0] * u[1]; } return Math.abs(s / 2); } return (p.rects || []).reduce((a, r) => a + r.w * r.h, 0); };
+  const contenantes = new Set(pieces.filter(p => p.dans && parId[p.dans]).map(p => p.dans));
+  const grande = p => aire(p) >= 80 || contenantes.has(p.id);   // « grande pièce » : au moins 80 cases, ou qui en contient d'autres
+  const epsGrandes = eps.filter(e => parId[e.piece] && grande(parId[e.piece]));
+  const croix = epsGrandes.filter(e => e.pos && Number.isFinite(+e.pos.u) && Number.isFinite(+e.pos.v)).length;
+  const sansFiche = new Set(['route', 'parking']);
+  const piecesEp = [...new Set(eps.map(e => e.piece))].filter(id => parId[id] && !sansFiche.has(parId[id].type));
+  const fiches = b1.fiches || {}, aFiche = id => { const f = fiches[id]; return !!f && typeof f === 'object' && (Object.keys(f.carac || {}).length > 0 || !!f.hauteur || !!f.capacite || !!f.habituel || !!f.note); };
+  const anneaux = p => Array.isArray(p.poly) && p.poly.length >= 3 ? [p.poly] : (p.rects || []).map(r => [[r.x, r.y], [r.x + r.w, r.y], [r.x + r.w, r.y + r.h], [r.x, r.y + r.h]]);
+  const dSeg = (x, y, x1, y1, x2, y2) => { const dx = x2 - x1, dy = y2 - y1, l2 = dx * dx + dy * dy; let t = l2 ? ((x - x1) * dx + (y - y1) * dy) / l2 : 0; t = Math.max(0, Math.min(1, t)); return Math.hypot(x - (x1 + t * dx), y - (y1 + t * dy)); };
+  const ouvertures = (plan.elements || []).filter(e => e && ['porte', 'fenetre', 'baie'].indexOf(e.cat) >= 0);
+  const flottantes = ouvertures.filter(e => !pieces.some(p => (p.niveau || 'n0') === (e.niveau || 'n0') && anneaux(p).some(a => a.some((u, i) => { const v = a[(i + 1) % a.length]; return dSeg(e.x, e.y, u[0], u[1], v[0], v[1]) < 1e-3; })))).length;
+  const pr = d && d.pronostics && typeof d.pronostics === 'object' ? Object.entries(d.pronostics).filter(([, p]) => p && !p.passe && Array.isArray(p.pieces) && p.pieces.length) : [];
+  const journee = b1.journee && typeof b1.journee === 'object' ? Object.values(b1.journee).filter(l => l && Object.keys(l).length).length : 0;
+  return {n, lieu: String(b1.lieu || '').trim(), dateMin: dates[0] || '', dateMax: dates[dates.length - 1] || '', jours, decls: provs.length, roles,
+    echelle: +b1.echelle > 0 ? +b1.echelle : 0, nOuvertures: ouvertures.length, flottantes, nPiecesEp: piecesEp.length, nFiche: piecesEp.filter(aFiche).length, nFichesTotal: pieces.filter(p => aFiche(p.id)).length,
+    nMomentEtHeure: eps.filter(e => e.moment && e.heure).length, nGrandes: epsGrandes.length, nCroix: croix, nAutour: eps.filter(e => Array.isArray(e.contexte) && e.contexte.length).length,
+    nTypes: eps.filter(e => (Array.isArray(e.types) && e.types.length) || e.autre).length, nPros: eps.filter(e => +e.nbPros > 0).length, nCalmes: calmes.length,
+    nPronostics: pr.length, pronostiqueReferent: !!(d.pronostics && d.pronostics.referent && !d.pronostics.referent.passe && (d.pronostics.referent.pieces || []).length), momentsJournee: journee, nMoments: (b1.moments || []).length};
+}
+// Les règles : 2 (présent), 0 (absent), null (à juger) ; bornées comme dans l'ICAF (2 → 1, 0 → 0).
+const trois = (p, haut, bas) => p === null ? null : p >= haut ? 2 : p < bas ? 0 : null;
+const REGLES_ICASE = {
+  declarants: m => m.n ? (m.decls >= 3 ? 2 : 0) : null,
+  roles: m => m.n ? (m.roles.length >= 2 ? 2 : 0) : null,
+  periode: m => m.jours ? (m.jours >= 14 ? 2 : 0) : null,
+  echelle: m => m.nPiecesEp || m.n ? (m.echelle > 0 ? 2 : 0) : null,
+  ouvertures: m => m.nOuvertures ? (m.flottantes === 0 ? 2 : 0) : 0,
+  fiches: m => m.nPiecesEp ? trois(m.nFiche / m.nPiecesEp, .8, .5) : null,
+  contexte: m => m.n ? trois(m.nMomentEtHeure / m.n, .9, .5) : null,
+  croix: m => m.nGrandes ? trois(m.nCroix / m.nGrandes, .7, .35) : null,
+  autour: m => m.n ? trois(m.nAutour / m.n, .5, .25) : null,
+  types: m => m.n ? trois(m.nTypes / m.n, .9, .5) : null,
+  nbpros: m => m.n ? trois(m.nPros / m.n, .9, .5) : null,
+  pronostics: m => m.n ? (m.nPronostics >= 1 ? 2 : 0) : null,
+  calmes: m => m.n ? (m.nCalmes >= 1 ? 2 : 0) : null,
+  comparaison: m => m.n ? (m.pronostiqueReferent ? 2 : 0) : null
+};
+const fr = n => String(n).replace('.', ',');
+function baseRefText(cle, m) {
+  if (!m || !m.n) return null;
+  const sur = (a, t, mot) => '<strong>' + a + '/' + t + '</strong> ' + mot;
+  switch (cle) {
+    case 'declarants': return '<strong>' + m.decls + ' déclarant' + (m.decls > 1 ? 's' : '') + '</strong>';
+    case 'roles': return m.roles.length ? 'Rôles renseignés : <strong>' + esc(m.roles.join(', ')) + '</strong>' : 'Aucun rôle renseigné';
+    case 'periode': return '<strong>' + m.n + ' épisode' + (m.n > 1 ? 's' : '') + '</strong>' + (m.dateMin ? ' · du <strong>' + esc(m.dateMin) + '</strong> au <strong>' + esc(m.dateMax) + '</strong> (' + m.jours + ' jour' + (m.jours > 1 ? 's' : '') + ')' : '');
+    case 'echelle': return m.echelle ? 'Échelle : <strong>1 case = ' + fr(m.echelle) + ' m</strong>' : 'Pas d\'échelle donnée au plan';
+    case 'ouvertures': return '<strong>' + m.nOuvertures + ' ouverture' + (m.nOuvertures > 1 ? 's' : '') + '</strong> posée' + (m.nOuvertures > 1 ? 's' : '') + (m.flottantes ? ', dont <strong>' + m.flottantes + '</strong> qui ne touche' + (m.flottantes > 1 ? 'nt' : '') + ' aucun mur' : '');
+    case 'fiches': return m.nPiecesEp ? 'Fiche pour ' + sur(m.nFiche, m.nPiecesEp, 'des pièces où il y a des épisodes') : null;
+    case 'fichesRepere': return '<strong>' + m.nFichesTotal + ' fiche' + (m.nFichesTotal > 1 ? 's' : '') + '</strong> de pièce renseignée' + (m.nFichesTotal > 1 ? 's' : '') + ' (rapide ou détaillée : à regarder dans la BASE)';
+    case 'contexte': return 'Moment et heure sur ' + sur(m.nMomentEtHeure, m.n, 'épisodes');
+    case 'croix': return m.nGrandes ? 'Croix posée sur ' + sur(m.nCroix, m.nGrandes, 'des épisodes des grandes pièces') : 'Aucun épisode dans une grande pièce';
+    case 'autour': return '« Autour de l\'épisode » rempli pour ' + sur(m.nAutour, m.n, 'épisodes');
+    case 'types': return 'Comportement renseigné sur ' + sur(m.nTypes, m.n, 'épisodes');
+    case 'nbpros': return 'Nombre de professionnels renseigné sur ' + sur(m.nPros, m.n, 'épisodes');
+    case 'journee': return m.momentsJournee ? 'Journée type remplie pour <strong>' + m.momentsJournee + '/' + m.nMoments + '</strong> moments' : 'Journée type non remplie';
+    case 'pronostics': return '<strong>' + m.nPronostics + ' pronostic' + (m.nPronostics > 1 ? 's' : '') + '</strong> donné' + (m.nPronostics > 1 ? 's' : '') + ' avant les épisodes';
+    case 'calmes': return '<strong>' + m.nCalmes + ' journée' + (m.nCalmes > 1 ? 's' : '') + ' « rien à signaler »</strong>';
+    case 'comparaison': return m.pronostiqueReferent ? 'Le référent a donné son pronostic : la synthèse le compare aux épisodes' : 'Pas de pronostic du référent à comparer';
+    default: return null;
+  }
+}
+
+// ── L'état ──
+let SE = {mode: null, lieu: '', meta: null, raters: [], tab: 0, vue: 'cotation'};
+function initDimsSE() { return dc(DIMS_ICASE).map(d => ({...d, items: d.items.map(it => ({...it, scores: it.subItems.map(() => null), comments: it.subItems.map(() => ''), collapsed: false}))})); }
+const aujourdhuiSE = () => new Date().toISOString().slice(0, 10);
+function nouveauCotateurSE(n, id) { return {id: n, label: 'Cotation ' + n, dims: initDimsSE(), meta: {id: id || '', rater: '', date: aujourdhuiSE()}, coll: DIMS_ICASE.map(() => false)}; }
+function preCoterSE() {
+  const m = SE.meta; if (!m || !m.n || !SE.raters.length) return;
+  const cot = SE.raters[0]; if (!cot.autoCotes) cot.autoCotes = {}; let n = 0;
+  cot.dims.forEach((dim, di) => dim.items.forEach((item, ii) => Object.keys(item.lit || {}).forEach(si => {
+    const regle = REGLES_ICASE[item.lit[si]]; if (!regle) return;
+    const v = regle(m); if (v === null || v === undefined) return;
+    if (item.scores[si] !== null && item.scores[si] !== undefined) return;   // jamais par-dessus une cotation humaine
+    const b = bornerPreCotation(v); if (b === null) return;
+    item.scores[si] = b; cot.autoCotes[di + '-' + ii + '-' + si] = true; n++;
+  })));
+  if (n) showToast(n + ' critère' + (n > 1 ? 's' : '') + ' pré-coté' + (n > 1 ? 's' : '') + ' à partir du dossier de la BASE — à vérifier, modifiable.');
+}
+function ouvrirCotationSE(dossier, mode) {
+  SE.mode = mode;
+  if (mode === 'base') { SE.meta = computeBaseMeta(dossier); SE.lieu = SE.meta.lieu; } else { SE.meta = null; SE.lieu = ''; }
+  if (!SE.raters.length) SE.raters = [nouveauCotateurSE(1, SE.lieu)]; else if (SE.lieu && !SE.raters[0].meta.id) SE.raters[0].meta.id = SE.lieu;
+  SE.tab = 0; SE.vue = 'cotation'; preCoterSE(); route('icase-main');
+}
+// Un dossier de la BASE : un fichier socle (enveloppe « base-dossier »), ou le dossier tel que la BASE le garde dans ce navigateur.
+function verifierDossierBase(o, depuisFichier) {
+  if (!o || typeof o !== 'object' || Array.isArray(o)) return {erreur: 'Ce fichier n\'est pas un fichier de la BASE.'};
+  if (depuisFichier) {
+    const env = o.baf && typeof o.baf === 'object' ? o.baf : null;
+    if (!env || env.outil !== 'base') return {erreur: Array.isArray(o.raters) ? 'Ce fichier est une cotation de l\'ICAF : on le rouvre dans l\'ICAF.' : (env || o.m1 || o.m2) ? 'Ce fichier vient du recueil RDAF (outil 1) : l\'ICASE lit un fichier de la BASE (outil 2).' : 'Ce fichier n\'est pas un fichier de la BASE.'};
+    if (env.type === 'base-declarant') return {erreur: 'C\'est un fichier déclarant de la BASE. L\'ICASE lit le fichier socle du référent, celui qui réunit les déclarations après la fusion.'};
+    if (env.type !== 'base-dossier') return {erreur: 'Ce fichier de la BASE n\'est pas un fichier socle.'};
+  }
+  if (!o.b1 || !o.b1.plan || !Array.isArray(o.b1.plan.pieces) || !o.b2 || !Array.isArray(o.b2.episodes)) return {erreur: 'Ce fichier de la BASE est incomplet : il lui manque le plan ou le recueil.'};
+  return {ok: true};
+}
+function lireFichierJSON(input, suite) {
+  const f = input.files && input.files[0]; input.value = ''; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => { let o; try { o = JSON.parse(r.result); } catch (e) { alert('Ce fichier n\'est pas lisible : ce n\'est pas un fichier JSON.'); return; } suite(o, f.name); };
+  r.readAsText(f);
+}
+function coterFichierBase(input) { lireFichierJSON(input, o => { const v = verifierDossierBase(o, true); if (v.erreur) { alert(v.erreur); return; } ouvrirCotationSE(o, 'base'); }); }
+const CLE_BASE_NAVIGATEUR = 'base-dossier-v1';   // là où la BASE garde le dossier du référent : lu, jamais écrit
+function dossierBaseDuNavigateur() { try { const t = localStorage.getItem(CLE_BASE_NAVIGATEUR); const o = t ? JSON.parse(t) : null; return o && verifierDossierBase(o, false).ok ? o : null; } catch (e) { return null; } }
+function coterDossierBaseOuvert() { const d = dossierBaseDuNavigateur(); if (!d) { alert('Aucun dossier de la BASE n\'est gardé dans ce navigateur.\n\nOuvrez un fichier de la BASE, ou remplissez le dossier dans la BASE.'); return; } ouvrirCotationSE(d, 'base'); }
+function coterSansBase() { SE.mode = 'libre'; SE.meta = null; SE.lieu = ''; if (!SE.raters.length) SE.raters = [nouveauCotateurSE(1, '')]; SE.tab = 0; SE.vue = 'cotation'; route('icase-main'); }
+function majEntreesICASE() {
+  const el = document.getElementById('icase-dossier-ouvert'); if (!el) return;
+  const d = dossierBaseDuNavigateur();
+  if (!d) { el.textContent = 'Aucun dossier de la BASE n\'est gardé dans ce navigateur pour l\'instant. Ouvrez un fichier de la BASE, ou remplissez le dossier dans la BASE (outil 2).'; return; }
+  const m = computeBaseMeta(d);
+  el.innerHTML = 'Dossier de la BASE gardé ici : <b>' + esc(m.lieu || 'lieu sans nom') + '</b>, ' + m.n + ' épisode' + (m.n > 1 ? 's' : '') + '. Il est lu, jamais modifié.';
+}
+// Rouvrir une cotation enregistrée par « Exporter » : la grille est reconstruite, les cotations reprises critère par critère (si la grille a changé depuis, ce qui ne correspond plus est écarté).
+function rouvrirCotationSE(input) { lireFichierJSON(input, appliquerCotationSE); }
+function appliquerCotationSE(o) {
+  {
+    if (!o || o.outil !== 'icase' || !Array.isArray(o.raters) || !o.raters.length) { alert('Ce fichier n\'est pas une cotation de l\'ICASE.'); return; }
+    if (SE.raters.some(r => r.dims.some(d => d.items.some(it => it.scores.some(v => v !== null)))) && !confirm('Rouvrir cette cotation remplacera celle qui est en cours dans l\'ICASE.\n\nContinuer ?')) return;
+    let ecartes = 0;
+    SE.mode = o.mode === 'base' ? 'base' : 'libre'; SE.lieu = String(o.lieu || ''); SE.meta = o.reperes && typeof o.reperes === 'object' ? o.reperes : null;
+    SE.raters = o.raters.map((r, i) => { const c = nouveauCotateurSE(i + 1, ''); c.label = r.label || c.label; c.meta = Object.assign({id: '', rater: '', date: ''}, r.meta || {});
+      c.dims.forEach(d => { const sd = (r.dims || []).find(x => x && x.code === d.code); if (!sd) return; d.items.forEach(it => { const si = (sd.items || []).find(x => x && x.code === it.code);
+        if (!si) return; if (!Array.isArray(si.scores) || si.scores.length !== it.subItems.length) { ecartes++; return; }
+        it.scores = si.scores.map(v => v === 1 || v === 0 ? v : null); it.comments = it.subItems.map((_, k) => String((si.comments || [])[k] || '')); }); });
+      c.autoCotes = r.autoCotes && typeof r.autoCotes === 'object' ? r.autoCotes : {}; return c; });
+    SE.tab = 0; SE.vue = 'cotation'; route('icase-main');
+    showToast('Cotation rouverte.' + (ecartes ? ' ' + ecartes + ' item' + (ecartes > 1 ? 's' : '') + ' n\'ont pas été repris : la grille a changé depuis.' : ''));
+  }
+}
+function contenuCotationSE() {
+  return {outil: 'icase', grille: GRILLE_ICASE, exportDate: new Date().toISOString(), mode: SE.mode, lieu: SE.lieu, reperes: SE.meta,   // seulement des comptes : ni épisodes, ni plan
+    raters: SE.raters.map(r => ({label: r.label, meta: r.meta, autoCotes: r.autoCotes || {}, dims: r.dims.map(dm => ({code: dm.code, name: dm.name, items: dm.items.map(it => ({code: it.code, name: it.name, subItems: it.subItems, scores: it.scores, comments: it.comments}))}))}))};
+}
+function exporterCotationSE() {
+  const d = contenuCotationSE();
+  const b = new Blob([JSON.stringify(d, null, 2)], {type: 'application/json'}), u = URL.createObjectURL(b), a = document.createElement('a');
+  let fn = 'ICASE'; const id = (SE.raters[0] && SE.raters[0].meta.id) || SE.lieu; if (id) fn += '_' + id.replace(/[^\p{L}\p{N}]+/gu, '_').replace(/^_|_$/g, ''); fn += '_' + aujourdhuiSE() + '.json';
+  a.href = u; a.download = fn; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(u);
+}
+function recommencerSE() { if (!confirm('Effacer cette cotation et recommencer depuis l\'accueil de l\'ICASE ? Cette action est irréversible (pensez à exporter avant si besoin).')) return; SE = {mode: null, lieu: '', meta: null, raters: [], tab: 0, vue: 'cotation'}; route('icase'); }
+
+// ── L'écran ──
+function renderSE() {
+  const el = document.getElementById('icase-main-content'); if (!el) return;
+  el.innerHTML = '';
+  el.appendChild(SE.vue === 'synthese' || SE.tab === -1 ? mkSynthSE() : mkCotationSE());
+  bindTooltips();
+}
+function mkCotationSE() {
+  const f = document.createDocumentFragment(), rac = document.getElementById('icase-main-content');
+  if (!SE.raters.length) {
+    const v = document.createElement('div'); v.className = 'feuille cot-vide';
+    v.innerHTML = '<p class="phrase" style="font-size:20px;margin:0 0 6px">Aucune cotation n\'est commencée.</p><p class="discret" style="margin:0">On la commence depuis l\'accueil de l\'ICASE : avec un fichier de la BASE, ou pour une analyse produite sans la BASE.</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"><button type="button" class="btn btn-primary" onclick="route(\'icase\')">Aller à l\'accueil de l\'ICASE</button></div>';
+    f.appendChild(v); return f;
+  }
+  const tabs = document.createElement('div'); tabs.className = 'cot-tabs';
+  SE.raters.forEach((r, i) => {
+    const b = document.createElement('button'); b.type = 'button'; b.innerHTML = esc(r.meta.rater || r.label) + (SE.raters.length > 1 ? '<span class="tab-del">✕</span>' : ''); if (i === SE.tab) b.className = 'act';
+    b.onclick = e => {
+      if (e.target.classList.contains('tab-del')) { e.stopPropagation(); if (confirm('Supprimer cette cotation ?')) { SE.raters.splice(i, 1); if (SE.tab >= SE.raters.length) SE.tab = Math.max(0, SE.raters.length - 1); renderSE(); } return; }
+      SE.tab = i; SE.vue = 'cotation'; renderSE();
+    };
+    tabs.appendChild(b);
+  });
+  const add = document.createElement('button'); add.type = 'button'; add.className = 'add-cot'; add.textContent = '+'; add.title = 'Ajouter un cotateur';
+  add.onclick = () => { SE.raters.push(nouveauCotateurSE(SE.raters.length + 1, (SE.raters[0] && SE.raters[0].meta.id) || '')); SE.tab = SE.raters.length - 1; renderSE(); };
+  tabs.appendChild(add);
+  const sy = document.createElement('button'); sy.type = 'button'; sy.className = 'synth-btn np'; sy.textContent = 'Synthèse →'; sy.onclick = () => { SE.vue = 'synthese'; renderSE(); window.scrollTo({top: 0}); };
+  tabs.appendChild(sy); f.appendChild(tabs);
+
+  const rater = SE.raters[SE.tab] || SE.raters[0];
+  const info = document.createElement('div'); info.className = 'intro-card'; info.style.padding = '12px 18px'; info.style.marginBottom = '14px';
+  info.innerHTML = '<p style="margin:0"><b>Vous cotez le processus d\'analyse d\'un lieu</b>, pas le lieu. ' + (SE.mode === 'base' ? 'Les dimensions <b>A à C</b> se cotent surtout sur le dossier de la BASE : les critères marqués d\'un repère bleu sont lus dans le fichier, certains pré-cotés (trait pointillé : à vérifier). ' : 'Sans fichier de la BASE, tout se cote à la main. ') + 'Les dimensions <b>D à F</b> se cotent sur le <b>bilan d\'analyse spatio-environnementale</b>, écrit hors de la BASE.</p>' +
+    '<p class="discret" style="margin:6px 0 0">Mouture à discuter : ' + esc(GRILLE_ICASE) + '.</p>';
+  f.appendChild(info);
+  const mg = document.createElement('div'); mg.className = 'meta-grid';
+  const mfield = (lbl, val, cb, type) => { const d = document.createElement('div'), la = document.createElement('label'); la.textContent = lbl; d.appendChild(la); const inp = document.createElement('input'); inp.type = type || 'text'; inp.value = val; inp.onchange = e => cb(e.target.value); d.appendChild(inp); return d; };
+  mg.appendChild(mfield('Lieu ou identifiant du bilan', rater.meta.id, v => { rater.meta.id = v; }));
+  mg.appendChild(mfield('Cotateur', rater.meta.rater, v => { rater.meta.rater = v; renderSE(); }));
+  mg.appendChild(mfield('Date', rater.meta.date, v => { rater.meta.date = v; }, 'date'));
+  f.appendChild(mg);
+
+  const sc = calcScores(rater.dims), gr = document.createElement('div'); gr.className = 'global-row';
+  const bw = document.createElement('div'); bw.className = 'bar-block'; const gl = document.createElement('div');
+  gl.className = 'global-label'; gl.textContent = sc.dimsCotees < sc.dimsTotal ? 'Indice de confiance — ' + sc.dimsCotees + ' dimension' + (sc.dimsCotees > 1 ? 's' : '') + ' cotée' + (sc.dimsCotees > 1 ? 's' : '') + ' sur ' + sc.dimsTotal : 'Indice de confiance global';
+  bw.appendChild(gl); bw.appendChild(barreOuMention(sc)); gr.appendChild(bw); gr.appendChild(mkRadar(sc.dims, 200, rac)); f.appendChild(gr);
+
+  const allOpen = rater.coll.some(c => !c), tgl = document.createElement('a'); tgl.href = 'javascript:void(0)'; tgl.className = 'toggle-all-link np'; tgl.textContent = allOpen ? '▾ Tout replier' : '▸ Tout déplier';
+  tgl.onclick = () => { if (allOpen) rater.coll.fill(true); else { rater.coll.fill(false); rater.dims.forEach(d => d.items.forEach(it => { it.collapsed = false; })); } renderSE(); };
+  f.appendChild(tgl);
+  const rail = document.createElement('div'); rail.className = 'dim-rail np'; const ouvertes = rater.coll.filter(c => !c).length;
+  rater.dims.forEach((dim, di) => {
+    const couv = couvertureDim(dim), b = document.createElement('button'); b.type = 'button'; b.style.setProperty('--c', DC[di % DC.length]); if (ouvertes === 1 && !rater.coll[di]) b.className = 'on'; b.title = dim.code + '. ' + dim.name;
+    b.innerHTML = '<span class="dr-l"><i></i>' + esc(dim.code + '. ' + dim.name) + '</span><small>' + couv.cotes + ' / ' + couv.total + (couv.cotes ? ' · ' + Math.round(sc.dims[di].score * 100) + ' %' : '') + '</small><span class="dr-trait"><i style="width:' + (couv.total ? Math.round(couv.cotes / couv.total * 100) : 0) + '%"></i></span>';
+    b.onclick = () => { rater.coll = rater.dims.map((_, k) => k !== di); renderSE(); const c = rac.querySelector('.dim-block[data-di="' + di + '"]'); if (c) c.scrollIntoView({behavior: 'smooth', block: 'start'}); };
+    rail.appendChild(b);
+  });
+  f.appendChild(rail);
+
+  rater.dims.forEach((dim, di) => {
+    const blk = document.createElement('div'); blk.className = 'dim-block'; blk.setAttribute('data-di', di);
+    const hd = document.createElement('div'); hd.className = 'dim-header' + (rater.coll[di] ? ' closed' : ''); hd.style.setProperty('--c', DC[di % DC.length]); hd.setAttribute('role', 'button'); hd.tabIndex = 0; hd.setAttribute('aria-expanded', String(!rater.coll[di]));
+    const couv = couvertureDim(dim);
+    hd.innerHTML = '<span class="dh-la">' + (rater.coll[di] ? '▸' : '▾') + ' ' + esc(dim.code + '. ' + dim.name) + '</span><span class="dh-couv">' + couv.cotes + ' coté' + (couv.cotes > 1 ? 's' : '') + ' sur ' + couv.total + '</span><span class="dh-bdg">' + (couv.cotes ? Math.round(sc.dims[di].score * 100) + '%' : '—') + '</span>';
+    hd.onclick = () => { const clavier = document.activeElement === hd; rater.coll[di] = !rater.coll[di]; renderSE(); const n = clavier && rac.querySelector('.dim-block[data-di="' + di + '"] .dim-header'); if (n) n.focus({preventScroll: true}); };
+    blk.appendChild(hd);
+    if (!rater.coll[di]) {
+      const body = document.createElement('div'); body.className = 'dim-body';
+      dim.items.forEach((it, ii) => {
+        const ib = document.createElement('div'); ib.className = 'item-block';
+        const ih = document.createElement('div'); ih.className = 'item-header' + (it.collapsed ? ' iclosed' : ''); ih.setAttribute('role', 'button'); ih.tabIndex = 0; ih.setAttribute('aria-expanded', String(!it.collapsed)); ih.style.background = lightC(DC[di % DC.length], 0.13);
+        const isc = sc.items[di] ? sc.items[di][ii] : null;
+        ih.innerHTML = '<span class="ih-left"><span class="ih-tg">' + (it.collapsed ? '▸' : '▾') + '</span><span class="ih-nm">' + gf(esc(it.code + '. ' + it.name)) + '</span></span><div class="ih-right"><span class="ih-sc" style="color:' + DC[di % DC.length] + '">' + (isc !== null && isc !== undefined ? Math.round(isc * 100) + '%' : '—') + '</span></div>';
+        ih.onclick = () => { it.collapsed = !it.collapsed; renderSE(); };
+        ib.appendChild(ih);
+        if (!it.collapsed) {
+          if (it.examples) { const ex = document.createElement('div'); ex.className = 'item-ex'; ex.innerHTML = gf(esc(it.examples)); ib.appendChild(ex); }
+          const tbl = document.createElement('table'); tbl.className = 'si-table'; const tbody = document.createElement('tbody');
+          it.subItems.forEach((si, siI) => {
+            const tr = document.createElement('tr'), t1 = document.createElement('td'); t1.className = 'si-text';
+            const w = document.createElement('div'); w.innerHTML = gf(esc(si)); t1.appendChild(w);
+            const cle = it.lit && it.lit[siI], txt = cle && SE.meta ? baseRefText(cle, SE.meta) : null;
+            if (txt) { const enc = document.createElement('div'); enc.className = 'baf-ref'; enc.innerHTML = '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="24" cy="24" r="20.5" fill="#3D4F6B" stroke="#8EA3C2" stroke-width="1.4"/><path d="M24 10 L28 24 L24 38 L20 24 Z" fill="#8EA3C2"/><circle cx="24" cy="24" r="2.5" fill="#3D4F6B" stroke="#fff" stroke-width="1"/></svg><span>' + txt + '</span>'; w.appendChild(enc); }
+            tr.appendChild(t1);
+            const t2 = document.createElement('td'); t2.className = 'si-score'; const btn = document.createElement('button'); btn.type = 'button';
+            const auto = !!(rater.autoCotes && rater.autoCotes[di + '-' + ii + '-' + siI]);
+            btn.className = 'score-btn s' + (it.scores[siI] === null ? 'n' : it.scores[siI]) + (auto ? ' auto' : ''); if (auto) btn.title = 'Pré-coté à partir du dossier de la BASE — à vérifier, et modifiable'; btn.textContent = it.scores[siI] === null ? '·' : it.scores[siI];
+            btn.onclick = () => { if (rater.autoCotes) delete rater.autoCotes[di + '-' + ii + '-' + siI]; it.scores[siI] = it.scores[siI] === null ? 1 : it.scores[siI] === 1 ? 0 : null; renderSE(); };
+            t2.appendChild(btn); tr.appendChild(t2);
+            const t3 = document.createElement('td'); t3.className = 'si-comment'; const inp = document.createElement('input'); inp.type = 'text'; inp.placeholder = 'Commentaire…'; inp.value = it.comments[siI] || ''; inp.onchange = e => { it.comments[siI] = e.target.value; }; t3.appendChild(inp); tr.appendChild(t3);
+            tbody.appendChild(tr);
+          });
+          tbl.appendChild(tbody); ib.appendChild(tbl);
+        }
+        body.appendChild(ib);
+      });
+      blk.appendChild(body);
+    }
+    f.appendChild(blk);
+  });
+  return f;
+}
+function mkSynthSE() {
+  const f = document.createDocumentFragment(), rac = document.getElementById('icase-main-content');
+  const retour = document.createElement('div'); retour.className = 'cot-tabs'; const rb = document.createElement('button'); rb.type = 'button'; rb.textContent = '← Cotation'; rb.onclick = () => { SE.vue = 'cotation'; renderSE(); }; retour.appendChild(rb); f.appendChild(retour);
+  const all = SE.raters.map(r => calcScores(r.dims)), sec = document.createElement('div'); sec.className = 'synth-section';
+  if (SE.raters.length > 1) {
+    const h = document.createElement('h2'); h.textContent = 'Synthèse multi-cotateurs'; sec.appendChild(h);
+    const tbl = document.createElement('table'); tbl.className = 'synth-table'; const thead = document.createElement('thead'), hr = document.createElement('tr');
+    const th = t => { const e = document.createElement('th'); e.textContent = t; return e; }, td = (t, b, c) => { const e = document.createElement('td'); e.textContent = t; if (b) e.style.fontWeight = '600'; if (c) e.style.color = c; return e; };
+    hr.appendChild(th('Dimension')); SE.raters.forEach(r => hr.appendChild(th(r.meta.rater || r.label))); hr.appendChild(th('Moy.')); hr.appendChild(th('É.-T.')); thead.appendChild(hr); tbl.appendChild(thead);
+    const tbody = document.createElement('tbody');
+    DIMS_ICASE.forEach((dim, di) => {
+      const tr = document.createElement('tr'); tr.appendChild(td(dim.code + '. ' + dim.name, true)); const vs = all.map(s => s.dims[di].score); vs.forEach(v => tr.appendChild(td(Math.round(v * 100) + '%')));
+      const mn = vs.reduce((a, b) => a + b, 0) / vs.length; tr.appendChild(td(Math.round(mn * 100) + '%', false, 'var(--sauge-deep)'));
+      const sd = vs.length > 1 ? Math.sqrt(vs.reduce((a, v) => a + (v - mn) ** 2, 0) / (vs.length - 1)) : 0; tr.appendChild(td((sd * 100).toFixed(1) + '%')); tbody.appendChild(tr);
+    });
+    const gtr = document.createElement('tr'); gtr.className = 'gr'; gtr.appendChild(td('GLOBAL', true)); const gs = all.map(s => s.global); gs.forEach(v => gtr.appendChild(td(Math.round(v * 100) + '%')));
+    const gm = gs.reduce((a, b) => a + b, 0) / gs.length; gtr.appendChild(td(Math.round(gm * 100) + '%', false, 'var(--slate)')); const gsd = gs.length > 1 ? Math.sqrt(gs.reduce((a, v) => a + (v - gm) ** 2, 0) / (gs.length - 1)) : 0; gtr.appendChild(td((gsd * 100).toFixed(1) + '%'));
+    tbody.appendChild(gtr); tbl.appendChild(tbody); sec.appendChild(tbl);
+    const rr = document.createElement('div'); rr.className = 'radars-row';
+    all.forEach((s, i) => { const col = document.createElement('div'); col.className = 'radar-col'; const lb = document.createElement('div'); lb.className = 'rc-label'; lb.textContent = SE.raters[i].meta.rater || SE.raters[i].label; col.appendChild(lb); col.appendChild(mkRadar(s.dims, 190, rac)); rr.appendChild(col); });
+    sec.appendChild(rr);
+  } else {
+    const sc = all[0], h = document.createElement('h2'); h.textContent = 'Synthèse de la cotation'; sec.appendChild(h);
+    const gr = document.createElement('div'); gr.className = 'global-row'; const bw = document.createElement('div'); bw.className = 'bar-block'; const gl = document.createElement('div'); gl.className = 'global-label';
+    gl.textContent = sc.dimsCotees < sc.dimsTotal ? 'Indice de confiance — ' + sc.dimsCotees + ' dimension' + (sc.dimsCotees > 1 ? 's' : '') + ' cotée' + (sc.dimsCotees > 1 ? 's' : '') + ' sur ' + sc.dimsTotal : 'Indice de confiance global';
+    bw.appendChild(gl); bw.appendChild(barreOuMention(sc)); gr.appendChild(bw); gr.appendChild(mkRadar(sc.dims, 230, rac)); sec.appendChild(gr);
+  }
+  const qh = document.createElement('h3'); qh.textContent = 'Analyse qualitative par dimension'; sec.appendChild(qh);
+  SE.raters.forEach((rater, ri) => {
+    if (SE.raters.length > 1) { const bn = document.createElement('div'); bn.className = 'cot-label-banner'; bn.textContent = '📋 ' + (rater.meta.rater || rater.label); sec.appendChild(bn); }
+    rater.dims.forEach((dim, di) => {
+      const sc = all[ri].dims[di], blk = document.createElement('div'); blk.className = 'qual-dim'; const hdr = document.createElement('div'); hdr.className = 'qual-dim-header'; hdr.style.background = DC[di % DC.length];
+      hdr.innerHTML = '<span class="la">' + esc(dim.code + '. ' + dim.name) + '</span><span class="bdg">' + Math.round(sc.score * 100) + '%</span>'; blk.appendChild(hdr);
+      const body = document.createElement('div'); body.className = 'qual-body'; const forts = [], manques = [], nc = [];
+      dim.items.forEach(it => it.subItems.forEach((si, k) => { const lb = esc(it.code + ' — ' + si), cm = it.comments[k]; if (it.scores[k] === 1) forts.push({lb, cm}); else if (it.scores[k] === 0) manques.push({lb, cm}); else nc.push({lb}); }));
+      const h4 = (c, t) => { const h = document.createElement('h4'); h.className = c; h.textContent = t; return h; };
+      const ul = l => { const u = document.createElement('ul'); l.forEach(s => { const li = document.createElement('li'); li.innerHTML = s.lb + (s.cm ? ' <em style="color:var(--sauge-deep)">— ' + esc(s.cm) + '</em>' : ''); u.appendChild(li); }); return u; };
+      const vide = () => { const e = document.createElement('div'); e.className = 'empty'; e.textContent = 'Aucun'; return e; };
+      body.appendChild(h4('ok', '✓ Points forts (' + forts.length + ')')); body.appendChild(forts.length ? ul(forts) : vide());
+      body.appendChild(h4('ko', '✗ Manques (' + manques.length + ')')); body.appendChild(manques.length ? ul(manques) : vide());
+      if (nc.length) { body.appendChild(h4('nc', '· Non cotés (' + nc.length + ')')); body.appendChild(ul(nc)); }
+      blk.appendChild(body); sec.appendChild(blk);
+    });
+  });
+  const note = document.createElement('div'); note.className = 'note-box'; note.innerHTML = '<strong>Note :</strong> l\'ICASE montre où l\'analyse est solide et où elle est à reprendre : il ne juge ni le lieu, ni les personnes. Mouture à discuter : ' + esc(GRILLE_ICASE) + '.'; sec.appendChild(note);
+  f.appendChild(sec); return f;
+}
 
 /* Le routage de la page d'arrivée, en DERNIER : toutes les variables du script
    sont déclarées. Le placer plus haut a déjà arrêté la page deux fois (passe 117,
