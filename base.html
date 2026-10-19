@@ -362,6 +362,20 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--slate);}
 .carte-plan details.repli > summary{padding:7px 0;font-size:12.5px;}
 .carte-plan details.repli[open]{padding-bottom:8px;}
 .plan-aide{font-size:12.5px;color:var(--ink-soft);margin:8px 0 0;}
+/* L'aide du plan (passe 247) : une ligne, le reste derrière un bouton, rangé par sujet */
+details.aide-plan{margin:8px 0 0;}
+details.aide-plan summary{font-size:12.5px;color:var(--ink-soft);}
+.aide-grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px 22px;padding:4px 0 14px;font-size:12.5px;color:var(--ink-soft);}
+.aide-grille b{display:block;color:var(--ink);margin-bottom:3px;font-size:12.5px;}
+.aide-grille ul{margin:0;padding-left:16px;}
+.aide-grille li{margin:0 0 3px;line-height:1.45;}
+.aide-grille kbd{font:600 11px/1 var(--police-ui,inherit);padding:1px 5px;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;background:var(--card);color:var(--ink);}
+/* Le glisser-déposer d'un fichier sur toute la page (passe 247) */
+#depot-voile{position:fixed;inset:0;z-index:2000;display:grid;place-items:center;background:rgba(61,79,107,.28);pointer-events:none;}
+#depot-voile[hidden]{display:none;}
+#depot-voile .depot-carte{display:flex;flex-direction:column;gap:6px;max-width:min(520px,86vw);padding:26px 34px;text-align:center;border:3px dashed var(--vol-contexte-deep);border-radius:20px;background:var(--card);box-shadow:0 14px 40px rgba(44,36,22,.25);}
+#depot-voile b{font-size:20px;color:var(--ink);}
+#depot-voile span{font-size:13.5px;color:var(--ink-soft);}
 .piece-trait{fill:none;stroke:var(--ink);}
 .piece-fond{fill:var(--sheet);cursor:grab;}
 .plan-choix .piece-fond, .plan-carte .piece-fond{cursor:pointer;}
@@ -709,7 +723,41 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
         </div>
       </div>
       <p class="plan-aide" id="lecture-legende" hidden><b>Lecture</b> — traits verts épais : murs communs ; points verts : passages (portes) ; tirets bleus : ce qu'on voit par une fenêtre (en rouge vers une route ou un parking).</p>
-      <p class="plan-aide">Glisser une pièce pour la déplacer, ses poignées pour l'agrandir ; glisser le fond pour se déplacer ; molette ou ＋ / － pour zoomer. Double-clic (ou appui long au doigt) sur une pièce pour la nommer. La flèche ronde au-dessus de ce qui est choisi (ou la touche R) le tourne d'un quart de tour, avec ce que la pièce contient ; Suppr le supprime, Échap le lâche. Ctrl+clic (ou Maj+clic, ou le bouton « Plusieurs ») choisit plusieurs pièces — Ctrl+A les prend toutes, un cadre tracé avec Ctrl en prend plusieurs d'un coup — et on les glisse ensemble. Une pièce peut prendre une autre forme (« Plus », puis « Forme » : trapèze, triangle, forme libre) : on tire ses sommets (ronds pleins), un petit rond creux au milieu d'un côté en ajoute un, un double-clic sur un sommet le retire. Les outils flottent sur le plan (▴ les replie) ; ce qui est choisi a sa petite carte à côté de lui. « ＋ Légende » pose un texte libre (« Entrée principale », « Vers le centre-ville ») qui se glisse où l'on veut. Les portes, les fenêtres (dans un mur plein) et les baies vitrées (du sol au plafond) se posent sur un mur de la pièce choisie, même en biais — « ↔ Tout le mur » fait d'une baie une façade vitrée —, les meubles et les escaliers dedans ; les zones de dehors (cour, route, parking) se choisissent dans « Type de zone ».</p>
+      <p class="plan-aide">Glisser une pièce pour la déplacer, ses poignées pour l'agrandir · double-clic (ou appui long) pour la nommer · molette ou ＋ / － pour zoomer.</p>
+      <details class="repli aide-plan"><summary>Tout ce que sait faire le plan</summary>
+        <div class="aide-grille">
+          <div><b>Une pièce</b><ul>
+            <li>Glisser pour la déplacer, ses poignées pour l'agrandir.</li>
+            <li>Double-clic (ou appui long au doigt) pour la nommer.</li>
+            <li>La flèche ronde au-dessus, ou la touche <kbd>R</kbd> : un quart de tour, avec ce qu'elle contient.</li>
+            <li><kbd>Suppr</kbd> la supprime, <kbd>Échap</kbd> la lâche.</li>
+          </ul></div>
+          <div><b>Plusieurs pièces</b><ul>
+            <li><kbd>Ctrl</kbd>+clic (ou <kbd>Maj</kbd>+clic, ou le bouton « Plusieurs ») en ajoute une.</li>
+            <li><kbd>Ctrl</kbd>+<kbd>A</kbd> les prend toutes ; un cadre tracé avec <kbd>Ctrl</kbd> en prend plusieurs d'un coup.</li>
+            <li>On les glisse ensemble.</li>
+          </ul></div>
+          <div><b>Une autre forme</b><ul>
+            <li>« Plus », puis « Forme » : trapèze, triangle, forme libre.</li>
+            <li>On tire les sommets (ronds pleins) ; un rond creux, au milieu d'un côté, en ajoute un.</li>
+            <li>Un double-clic sur un sommet le retire.</li>
+          </ul></div>
+          <div><b>Portes, fenêtres, baies</b><ul>
+            <li>Elles se posent sur un mur de la pièce choisie, même en biais, et glissent le long des murs.</li>
+            <li>La fenêtre est dans un mur plein ; la baie vitrée va du sol au plafond.</li>
+            <li>« ↔ Tout le mur » fait d'une baie une façade vitrée.</li>
+          </ul></div>
+          <div><b>Meubles, escaliers, légendes</b><ul>
+            <li>Les meubles et les escaliers se posent dans la pièce.</li>
+            <li>« ＋ Légende » pose un texte libre (« Entrée principale », « Vers le centre-ville ») qui se glisse où l'on veut.</li>
+            <li>Les zones de dehors (cour, route, parking) se choisissent dans « Type de zone ».</li>
+          </ul></div>
+          <div><b>Le plan lui-même</b><ul>
+            <li>Glisser le fond pour se déplacer ; ⤢ pour tout voir.</li>
+            <li>Les outils flottent sur le plan (▴ les replie) ; ce qui est choisi a sa petite carte à côté.</li>
+          </ul></div>
+        </div>
+      </details>
       <div id="plan-panneau-place"><div class="plan-panneau" id="plan-panneau"></div></div>
       <details class="repli" style="margin-top:12px"><summary>Échelle du plan (facultative)</summary>
         <p class="discret" id="echelle-texte"></p>
@@ -870,6 +918,14 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
   </div>
 </div>
 
+<div class="voile" id="fen-depot" hidden>
+  <div class="fenetre" role="dialog" aria-modal="true" aria-labelledby="fen-depot-titre">
+    <h3 id="fen-depot-titre">Que faire de ce fichier ?</h3>
+    <p class="lecture" id="depot-texte"></p>
+    <div class="pied"><button type="button" class="bt" onclick="fermerFenetre('fen-depot')">Annuler</button><button type="button" class="bt" onclick="depotChoisi('declarant')">L'ouvrir pour remplir, comme déclarant</button><button type="button" class="bt plein" onclick="depotChoisi('fusion')">Le fusionner dans le dossier ouvert</button></div>
+  </div>
+</div>
+
 <div class="voile" id="fen-role" hidden>
   <div class="fenetre" role="dialog" aria-modal="true" aria-labelledby="fen-role-titre">
     <h3 id="fen-role-titre">Qui déclare ?</h3>
@@ -923,7 +979,7 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
    chose lue de la BAF, en lecture : le choix clair / sombre, pour s'ouvrir dans le même thème.
    ══════════════════════════════════════════════════════════════════════════════════════════════ */
 
-const VERSION_BASE = 'BASE v2026.10.18-2';
+const VERSION_BASE = 'BASE v2026.10.19-1';
 const CLE_SOCLE = 'base-dossier-v1', CLE_DECL = 'base-declarant-v1', CLE_MODE = 'base-mode', CLE_THEME = 'base-theme';
 const TYPES_ZONE = [['activite', "Salle d'activité"], ['sejour', 'Séjour, salon'], ['repas', 'Repas'], ['accueil', 'Accueil'], ['circulation', 'Circulation'],
   ['chambre', 'Chambre'], ['repos', 'Salle de repos'], ['calme', 'Salle de mise au calme'], ['snoezelen', 'Salle multisensorielle'], ['soins', 'Soins, infirmerie'],
@@ -4758,6 +4814,61 @@ document.addEventListener('click', ev => {
 }, true);
 
 
+/* ══ Le glisser-déposer (passe 247, Arthur et Émilie) ══
+   Un fichier lâché n'importe où sur la page s'ouvre comme avec les boutons « Ouvrir » et « Fusionner ». Un cadre « Déposez votre fichier ici » apparaît dès
+   qu'un fichier survole la page ; il ne capte aucun geste (pointer-events: none). La page entière est une zone de dépôt, ce qui évite aussi que le navigateur
+   n'ouvre le fichier à la place de la BASE (et le travail non exporté avec). Seul cas ambigu : un fichier déclarant sur un dossier ouvert (le fusionner, ou
+   l'ouvrir pour remplir ?), on le demande. Le mode administrateur, lui, ne reçoit aucun vrai fichier. */
+const fichiersGlisses = ev => !!(ev.dataTransfer && [].indexOf.call(ev.dataTransfer.types || [], 'Files') >= 0);
+let glisseCompteur = 0, depotEnAttente = null;
+const typeBase = o => o && typeof o === 'object' && o.baf && typeof o.baf === 'object' && o.baf.outil === 'base' ? o.baf.type : '';
+// Que faire des fichiers déposés ? (pur : lus = [{nom, objet}], etat = {mode, socleOuvert})
+function orienterDepot(lus, etat) {
+  const erreur = message => ({action: 'erreur', message});
+  const illisibles = lus.filter(l => !l.objet || typeof l.objet !== 'object');
+  if (illisibles.length) return erreur(illisibles.map(l => '« ' + l.nom + ' » n\'est pas lisible : ce n\'est pas un fichier JSON.').join('\n'));
+  const refus = lus.map(l => ({l, r: lireFichierBASE(l.objet, ['base-dossier', 'base-declarant'])})).filter(x => !x.r.ok);
+  if (refus.length) return erreur(refus.map(x => '« ' + x.l.nom + ' » : ' + x.r.raison).join('\n\n'));
+  const socles = lus.filter(l => typeBase(l.objet) === 'base-dossier'), decls = lus.filter(l => typeBase(l.objet) === 'base-declarant');
+  if (socles.length && decls.length) return erreur('Déposez soit un seul fichier socle, soit des fichiers déclarants : pas les deux ensemble.');
+  if (socles.length > 1) return erreur('Un seul fichier socle à la fois : déposez-les l\'un après l\'autre.');
+  if (socles.length) return {action: 'socle', lu: socles[0]};
+  const peutFusionner = etat.mode === 'socle' && etat.socleOuvert;
+  if (decls.length > 1) return peutFusionner ? {action: 'fusion', lus: decls} : erreur('Plusieurs fichiers déclarants se fusionnent dans un dossier : ouvrez d\'abord le fichier socle du lieu.');
+  return peutFusionner ? {action: 'choisir', lus: decls} : {action: 'declarant', lu: decls[0]};
+}
+function ouvrirDepot(lus) {
+  const o = orienterDepot(lus, {mode, socleOuvert: !!(D && D.b1 && D.b1.plan && D.b1.plan.pieces.length)});
+  if (o.action === 'erreur') { alert(o.message); return o; }
+  if (o.action === 'socle') { const r = lireFichierBASE(o.lu.objet, ['base-dossier']); ouvrirSocle(r, o.lu.nom); }
+  else if (o.action === 'declarant') ouvrirDeclarant(lireFichierBASE(o.lu.objet, ['base-declarant']));
+  else if (o.action === 'fusion') fusionnerFichiers(o.lus);
+  else { depotEnAttente = o.lus; $('depot-texte').textContent = '« ' + o.lus[0].nom + ' » est le fichier d\'un déclarant. Le dossier du lieu est ouvert : ajouter ce que ce déclarant a écrit au dossier, ou ouvrir le fichier pour le remplir à sa place ?'; ouvrirFenetre('fen-depot'); }
+  return o;
+}
+function depotChoisi(choix) {
+  const lus = depotEnAttente; depotEnAttente = null; fermerFenetre('fen-depot'); if (!lus) return;
+  if (choix === 'fusion') fusionnerFichiers(lus); else ouvrirDeclarant(lireFichierBASE(lus[0].objet, ['base-declarant']));
+}
+function deposerFichiers(fichiers) {
+  if (!fichiers.length) return;
+  Promise.all(fichiers.map(f => f.text().then(t => { try { return {nom: f.name, objet: JSON.parse(t)}; } catch (e) { return {nom: f.name, objet: null}; } }))).then(ouvrirDepot);
+}
+function brancherDepot() {
+  const voile = document.createElement('div'); voile.id = 'depot-voile'; voile.className = 'no-print'; voile.hidden = true;
+  voile.innerHTML = '<div class="depot-carte"><b>Déposez votre fichier ici</b><span>Un fichier de la BASE (.json) : le socle d\'un lieu, ou le fichier d\'un déclarant.</span></div>'; document.body.appendChild(voile);
+  window.addEventListener('dragenter', ev => { if (!fichiersGlisses(ev)) return; glisseCompteur++; voile.hidden = false; });
+  window.addEventListener('dragover', ev => { if (!fichiersGlisses(ev)) return; ev.preventDefault(); ev.dataTransfer.dropEffect = 'copy'; });
+  window.addEventListener('dragleave', ev => { if (!fichiersGlisses(ev)) return; glisseCompteur = Math.max(0, glisseCompteur - 1); if (!glisseCompteur) voile.hidden = true; });
+  window.addEventListener('drop', ev => {
+    if (!fichiersGlisses(ev)) return;
+    ev.preventDefault(); glisseCompteur = 0; voile.hidden = true;
+    if (adminActif()) { toast('Mode administrateur : seulement des lieux simulés. Quittez-le pour ouvrir un vrai fichier.'); return; }
+    if (fenetreOuverte()) { toast('Fermez d\'abord la fenêtre ouverte, puis déposez le fichier.'); return; }
+    deposerFichiers([].slice.call(ev.dataTransfer.files || []));
+  });
+}
+
 /* ══ Les vérifications (refont les calculs par un autre chemin ; ne touchent pas au dossier) ══ */
 function verifierBASE() {
   const r = [], ok = (nom, cond, detail) => r.push({nom, ok: !!cond, detail: detail || ''});
@@ -6056,6 +6167,32 @@ function verifierBASE() {
         ok('Les trois lieux simulés ont un aménagement daté, deux périodes, et la pièce aménagée y a moins d\'épisodes par jour observé après qu\'avant ; le nombre d\'épisodes ne change pas (version 7)', okS24, sims24.map(d => { D = d; periodesChoisies.a = d.periodes[0].id; periodesChoisies.b = d.periodes[1].id; const c = comparaisonPeriodes(filtres()); return c.lignes.filter(l => l.amenagee).map(l => l.nA + '>' + l.nB).join('+'); }).join(' / '));
       } finally { persister = vraiPersister24; majSynthese = vraiMaj24; toast = vraiToast24; calque = sauveCq24; modeCarte = sauveMode24; periodesChoisies.a = sauveCh24.a; periodesChoisies.b = sauveCh24.b; }
     }
+    // 25. Le glisser-déposer (passe 247)
+    {
+      const lu = (nom, type, extra) => ({nom, objet: Object.assign({baf: {outil: 'base', type}, b1: {plan: {pieces: []}}, b2: {episodes: []}}, extra || {})});
+      const socle = lu('socle.json', 'base-dossier'), d1 = lu('declarant-lea.json', 'base-declarant'), d2 = lu('declarant-tom.json', 'base-declarant');
+      const sans = {mode: 'socle', socleOuvert: false}, avec = {mode: 'socle', socleOuvert: true}, declarant = {mode: 'declarant', socleOuvert: false};
+      const a = (lus, etat) => orienterDepot(lus, etat).action;
+      ok('Le dépôt choisit selon le fichier : un socle s\'ouvre ; un fichier déclarant s\'ouvre pour remplir (rien d\'ouvert, ou déjà déclarant), ou se choisit (fusion, ou ouverture) quand un dossier est ouvert ; plusieurs fichiers déclarants se fusionnent dans un dossier ouvert',
+        a([socle], sans) === 'socle' && a([socle], avec) === 'socle' && a([d1], sans) === 'declarant' && a([d1], declarant) === 'declarant' && a([d1], avec) === 'choisir' && a([d1, d2], avec) === 'fusion', [a([socle], sans), a([d1], sans), a([d1], avec), a([d1, d2], avec)].join());
+      const e1 = orienterDepot([d1, d2], sans), e2 = orienterDepot([socle, d1], avec), e3 = orienterDepot([socle, lu('autre.json', 'base-dossier')], avec), e4 = orienterDepot([{nom: 'x.json', objet: null}], avec), e5 = orienterDepot([{nom: 'baf.json', objet: {baf: {type: 'dossier'}, m1: {}, m2: {}}}], avec), e6 = orienterDepot([lu('incomplet.json', 'base-dossier', {b1: {}})], avec);
+      ok('Ce qui n\'a pas sa place est refusé avec sa raison : plusieurs déclarants sans dossier ouvert, un socle et un déclarant ensemble, deux socles, un fichier illisible, un fichier de la BAF, un fichier incomplet',
+        e1.action === 'erreur' && /ouvrez d'abord le fichier socle/.test(e1.message) && e2.action === 'erreur' && /pas les deux/.test(e2.message) && e3.action === 'erreur' && /Un seul fichier socle/.test(e3.message) && e4.action === 'erreur' && /pas lisible/.test(e4.message) && e5.action === 'erreur' && /BAF/.test(e5.message) && e6.action === 'erreur' && /incomplet/.test(e6.message), [e1.message, e2.message, e3.message, e4.message, e5.message, e6.message].join(' | '));
+      // Le cadre : il apparaît quand un fichier survole la page, disparaît quand il part ; un glissement sans fichier (du texte) ne fait rien
+      const voile = $('depot-voile'), avecFichier = () => { const dt = new DataTransfer(); dt.items.add(new File(['{}'], 'x.json', {type: 'application/json'})); return dt; };
+      glisseCompteur = 0; voile.hidden = true;
+      const evt = (type, dt) => document.body.dispatchEvent(new DragEvent(type, {bubbles: true, cancelable: true, dataTransfer: dt}));
+      const texte = new DataTransfer(); texte.setData('text/plain', 'bonjour'); evt('dragenter', texte); const textePasse = voile.hidden === true;
+      const dt = avecFichier(); evt('dragenter', dt); const apparait = voile.hidden === false && getComputedStyle(voile).pointerEvents === 'none'; evt('dragenter', dt); evt('dragleave', dt); const reste = voile.hidden === false; evt('dragleave', dt); const part = voile.hidden === true;
+      ok('Le cadre « Déposez votre fichier ici » apparaît dès qu\'un fichier survole la page (sans capter aucun geste), reste tant qu\'il survole un élément, disparaît quand il part ; un texte glissé ne l\'affiche pas', textePasse && apparait && reste && part, [textePasse, apparait, reste, part].join());
+      // La fenêtre du choix : un fichier déclarant sur un dossier ouvert
+      depotEnAttente = null; D = dossierVide(); mode = 'socle'; D.b1.plan.pieces = [{id: 'A', nom: 'A', type: 'sejour', niveau: 'n0', rects: [{x: 0, y: 0, w: 4, h: 4}]}];
+      const vraiAlert = window.alert; let alerte = ''; window.alert = m => { alerte = m; };
+      ouvrirDepot([d1]); const ouverte = !$('fen-depot').hidden && /declarant-lea\.json/.test($('depot-texte').textContent) && depotEnAttente && depotEnAttente.length === 1 && $('fen-depot').querySelectorAll('.pied button').length === 3; fermerFenetre('fen-depot'); depotEnAttente = null;
+      ouvrirDepot([{nom: 'x.json', objet: null}]); const dit = /pas lisible/.test(alerte); window.alert = vraiAlert;
+      ok('Un fichier déclarant déposé sur un dossier ouvert pose la question (trois boutons : annuler, l\'ouvrir pour remplir, le fusionner) ; un fichier illisible le dit', ouverte && dit, [ouverte, dit, alerte].join());
+      ok('L\'aide du plan est légère : une ligne et un volet « Tout ce que sait faire le plan », rangé en six sujets', document.querySelectorAll('p.plan-aide').length === 2 && document.querySelectorAll('details.aide-plan .aide-grille > div').length === 6 && ($('vue-preambule').querySelector('p.plan-aide:not([hidden]):not(#lecture-legende)') || {textContent: ''}).textContent.length < 220);
+    }
   } catch (e) { ok('Les vérifications ont planté', false, e.message); }
   finally { calque = sauveCalque; persister = vraiPersister; toast = vraiToast; window.confirm = vraiConfirm; modeFiche = sauveModeFiche; pieceFiche = null; niveauCourant = sauveNiveau; D = sauveD; mode = sauveMode; selection = null; historique = []; refaites = []; try { rendreJournee(); } catch (e) { /* rien */ } }
   return r;
@@ -6073,7 +6210,7 @@ function verifierBASE() {
   let m = 'socle'; try { m = localStorage.getItem(CLE_MODE) || 'socle'; } catch (e) { /* rien */ }
   changerMode(m);
   if (!D) changerMode('socle');
-  brancherEditeur(); brancherChoix(); majBoutonTheme();
+  brancherEditeur(); brancherChoix(); brancherDepot(); majBoutonTheme();
   const listeMeubles = document.querySelector('select[aria-label="Ajouter un meuble"]');
   if (listeMeubles) listeMeubles.innerHTML += MEUBLES.map(m => '<option value="' + m[0] + '">' + esc(m[1]) + '</option>').join('');
   const h = (location.hash || '').slice(1);

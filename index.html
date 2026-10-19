@@ -1142,6 +1142,12 @@ body.tool-baf #view-baf-accueil .hero h1 i{color:var(--sauge-deep);}
 #view-indices .entree-card{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;}
 #view-indices .entree-card .entree-cta{margin-top:auto;padding-top:5px;}
 #view-indices .entree-card p{margin-bottom:16px;}
+/* Le glisser-déposer d'un fichier sur toute la page (passe 247) */
+#depot-voile{position:fixed;inset:0;z-index:2000;display:grid;place-items:center;background:rgba(61,79,107,.28);pointer-events:none;}
+#depot-voile[hidden]{display:none;}
+#depot-voile .depot-carte{display:flex;flex-direction:column;gap:6px;max-width:min(520px,86vw);padding:26px 34px;text-align:center;border:3px dashed var(--vol-contexte-deep);border-radius:20px;background:var(--card);box-shadow:0 14px 40px rgba(44,36,22,.25);}
+#depot-voile b{font-size:20px;color:var(--ink);}
+#depot-voile span{font-size:13.5px;color:var(--ink-soft);}
 .badge-construction{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--prune-deep);background:var(--rose-pale);border-radius:999px;padding:4px 12px;margin-bottom:12px;}
 .lien-retour-indices{background:none;border:0;padding:0;font:inherit;font-style:normal;font-weight:600;color:var(--prune);text-decoration:underline;cursor:pointer;}
 @media(max-width:680px){:is(#view-indices,#view-icase) .hero h1{font-size:23px;} :is(#view-indices,#view-icase) .intro-card{padding:18px 18px;}}
@@ -6159,6 +6165,10 @@ function lireFichierBAF(objet, typesAcceptes) {
     return {ok:true, type:'cotation', cotation:objet};
   }
   const env = objet.baf && typeof objet.baf === 'object' ? objet.baf : null;
+  // Un fichier de la BASE (outil 2), déposé ou importé ici : on dit d'où il vient et où l'ouvrir (passe 247).
+  if (env && env.outil === 'base') {
+    return {ok:false, raison:'Ce fichier vient de la BASE (outil 2) : on l\'ouvre dans la BASE. Pour coter l\'analyse du lieu, ouvrez-le dans l\'ICASE (outil 3).'};
+  }
   // Un fichier d'avant l'enveloppe : on le reconnaît à sa forme, et c'est
   // forcément un dossier complet — les autres types n'existaient pas.
   const type = env ? String(env.type || 'dossier') : 'dossier';
@@ -16693,6 +16703,18 @@ const _CONTROLES = [
     } finally { SE = sauveSE; if (vue) route(vue.replace(/^view-/, '')); }
   }},
 
+  {nom:'Le glisser-déposer (passe 247) : le cadre apparaît quand un fichier survole la page, disparaît quand il part, ignore un texte glissé ; la destination d\'un fichier déposé', test: () => {
+    const voile = document.getElementById('depot-voile'), evt = (type, dt) => document.body.dispatchEvent(new DragEvent(type, {bubbles: true, cancelable: true, dataTransfer: dt}));
+    const avecFichier = () => { const dt = new DataTransfer(); dt.items.add(new File(['{}'], 'x.json', {type: 'application/json'})); return dt; };
+    glisseCompteurBAF = 0; voile.hidden = true;
+    const texte = new DataTransfer(); texte.setData('text/plain', 'bonjour'); evt('dragenter', texte); const textePasse = voile.hidden === true;
+    const dt = avecFichier(); evt('dragenter', dt); const apparait = voile.hidden === false && getComputedStyle(voile).pointerEvents === 'none'; evt('dragenter', dt); evt('dragleave', dt); const reste = voile.hidden === false; evt('dragleave', dt); const part = voile.hidden === true;
+    const dest = [destinationDepot('view-accueil', false), destinationDepot('view-m2', false), destinationDepot('view-icase', false), destinationDepot('view-icase-main', false), destinationDepot('view-declarant', false), destinationDepot('view-accueil', true)].join(',');
+    const refus = lireFichierBAF({baf: {outil: 'base', type: 'base-dossier'}, b1: {}, b2: {}}, ['dossier']);
+    return _bancEgal('texte ignoré | cadre | reste | part | destinations | un fichier de la BASE dit où il s\'ouvre', 'true | true | true | true | baf,baf,icase,icase,declarant,declarant | true',
+      [textePasse, apparait, reste, part, dest, !refus.ok && /vient de la BASE/.test(refus.raison) && /ICASE/.test(refus.raison)].join(' | '));
+  }},
+
   {nom:'Accueils (passe 198) : les outils en couleur, les titres centrés, le parcours en quatre blocs colorés, le détail au survol', test: () => {
     const vue = (document.querySelector('section.view.show') || {}).id;
     try {
@@ -24465,6 +24487,15 @@ function svgActiviteCode() {
 const NOTES_VERSION = [
 
   {
+    date: '2026-10-19',
+    version: 'v2026.10.19-1',
+    titre: "Glisser-déposer un fichier ; l'aide du plan allégée",
+    corps: `
+<p><b>On charge un fichier en le glissant sur la page</b> (Arthur et Émilie), dans la BAF comme dans la BASE. Dès qu'un fichier survole la page, un cadre « Déposez votre fichier ici » apparaît ; le lâcher n'importe où fait ce que fait « Importer » (BAF) ou « Ouvrir » (BASE). Dans la BAF : fichier socle, fichier déclarant, contribution, primo-codage ou cotation, avec les mêmes messages quand un fichier n'a rien à faire là ; sur les pages de l'ICASE, un fichier de la BASE ou une cotation de l'ICASE s'ouvre dans l'ICASE ; en mode déclarant, le fichier est lu comme celui d'un déclarant. Dans la BASE : un fichier socle s'ouvre, un fichier déclarant s'ouvre pour remplir — ou, quand un dossier est ouvert, on demande s'il faut le fusionner dans le dossier ou l'ouvrir pour remplir ; plusieurs fichiers déclarants se fusionnent d'un coup. La page entière étant une zone de dépôt, un fichier lâché à côté n'est plus ouvert à la place de la page par le navigateur (et le travail non exporté ne disparaît plus). Les boutons restent, et le mode administrateur ne reçoit toujours aucun vrai fichier.</p>
+<p><b>BASE : l'aide du plan tient en une ligne</b> sous le plan, avec un volet « Tout ce que sait faire le plan », rangé en six sujets (une pièce, plusieurs pièces, une autre forme, portes et fenêtres, meubles et légendes, le plan lui-même), à la place du long paragraphe.</p>
+`
+  },
+  {
     date: '2026-10-18',
     version: 'v2026.10.18-3',
     titre: "L'ICASE : la grille, à l'essai",
@@ -28392,13 +28423,14 @@ function verifierDossierBase(o, depuisFichier) {
   if (!o.b1 || !o.b1.plan || !Array.isArray(o.b1.plan.pieces) || !o.b2 || !Array.isArray(o.b2.episodes)) return {erreur: 'Ce fichier de la BASE est incomplet : il lui manque le plan ou le recueil.'};
   return {ok: true};
 }
-function lireFichierJSON(input, suite) {
-  const f = input.files && input.files[0]; input.value = ''; if (!f) return;
+function lireFichierObjet(f, suite) {
   const r = new FileReader();
-  r.onload = () => { let o; try { o = JSON.parse(r.result); } catch (e) { alert('Ce fichier n\'est pas lisible : ce n\'est pas un fichier JSON.'); return; } suite(o, f.name); };
+  r.onload = () => { let o; try { o = JSON.parse(r.result); } catch (e) { alert('« ' + f.name + ' » n\'est pas lisible : ce n\'est pas un fichier JSON.'); return; } suite(o, f.name); };
   r.readAsText(f);
 }
-function coterFichierBase(input) { lireFichierJSON(input, o => { const v = verifierDossierBase(o, true); if (v.erreur) { alert(v.erreur); return; } ouvrirCotationSE(o, 'base'); }); }
+function lireFichierJSON(input, suite) { const f = input.files && input.files[0]; input.value = ''; if (!f) return; lireFichierObjet(f, suite); }
+function traiterFichierBaseICASE(o) { const v = verifierDossierBase(o, true); if (v.erreur) { alert(v.erreur); return; } ouvrirCotationSE(o, 'base'); }
+function coterFichierBase(input) { lireFichierJSON(input, traiterFichierBaseICASE); }
 const CLE_BASE_NAVIGATEUR = 'base-dossier-v1';   // là où la BASE garde le dossier du référent : lu, jamais écrit
 function dossierBaseDuNavigateur() { try { const t = localStorage.getItem(CLE_BASE_NAVIGATEUR); const o = t ? JSON.parse(t) : null; return o && verifierDossierBase(o, false).ok ? o : null; } catch (e) { return null; } }
 function coterDossierBaseOuvert() { const d = dossierBaseDuNavigateur(); if (!d) { alert('Aucun dossier de la BASE n\'est gardé dans ce navigateur.\n\nOuvrez un fichier de la BASE, ou remplissez le dossier dans la BASE.'); return; } ouvrirCotationSE(d, 'base'); }
@@ -28587,6 +28619,43 @@ function mkSynthSE() {
   const note = document.createElement('div'); note.className = 'note-box'; note.innerHTML = '<strong>Note :</strong> l\'ICASE montre où l\'analyse est solide et où elle est à reprendre : il ne juge ni le lieu, ni les personnes. Mouture à discuter : ' + esc(GRILLE_ICASE) + '.'; sec.appendChild(note);
   f.appendChild(sec); return f;
 }
+
+/* ══ Le glisser-déposer d'un fichier sur toute la page (passe 247, Arthur et Émilie) ══
+   Un fichier lâché n'importe où s'ouvre comme avec « Importer » : mêmes types acceptés (fichier socle, fichier déclarant, contribution, primo-codage, cotation), même
+   aiguillage, mêmes messages quand un fichier n'a rien à faire là. Trois exceptions de destination : en mode déclarant (ou sur la page « Participer »),
+   le fichier est lu comme celui d'un déclarant ; sur les pages de l'ICASE, un fichier de la BASE ou une cotation de l'ICASE s'ouvre dans l'ICASE. Un
+   cadre « Déposez votre fichier ici » apparaît dès qu'un fichier survole la page (il ne capte aucun geste) ; la page entière étant une zone de dépôt,
+   le navigateur n'ouvre plus le fichier à la place de la BAF — avec le travail non exporté. La zone de dépôt du déclarant garde son propre geste ; le
+   mode administrateur, lui, ne reçoit aucun vrai fichier (voir refuserFichierAdmin). */
+const fichiersGlissesBAF = ev => !!(ev.dataTransfer && [].indexOf.call(ev.dataTransfer.types || [], 'Files') >= 0);
+let glisseCompteurBAF = 0;
+function destinationDepot(vue, declarant) {   // où va un fichier déposé ? (pur)
+  if (declarant || vue === 'view-declarant') return 'declarant';
+  if (vue === 'view-icase' || vue === 'view-icase-main') return 'icase';
+  return 'baf';
+}
+function deposerFichiersBAF(fichiers) {
+  if (!fichiers.length) return;
+  const vue = (document.querySelector('section.view.show') || {}).id, dest = destinationDepot(vue, modeDeclarantActif());
+  if (dest === 'declarant') { lireFichierDeclarant(fichiers[0]); return; }
+  if (dest === 'icase') { lireFichierObjet(fichiers[0], o => { if (o && o.outil === 'icase') appliquerCotationSE(o); else traiterFichierBaseICASE(o); }); return; }
+  lireFichiersBAF(fichiers, ['dossier', 'kit', 'contribution', 'codage-kit', 'cotation']).then(lus => aiguillerImport(lus, outilCourant === 'idc'));
+}
+function brancherDepotBAF() {
+  const voile = document.createElement('div'); voile.id = 'depot-voile'; voile.className = 'no-print'; voile.hidden = true;
+  voile.innerHTML = '<div class="depot-carte"><b>Déposez votre fichier ici</b><span>Un fichier de la BAF (.json) : fichier socle, fichier déclarant, primo-codage ou cotation.</span></div>'; document.body.appendChild(voile);
+  window.addEventListener('dragenter', ev => { if (!fichiersGlissesBAF(ev)) return; glisseCompteurBAF++; voile.hidden = false; });
+  window.addEventListener('dragover', ev => { if (!fichiersGlissesBAF(ev)) return; ev.preventDefault(); ev.dataTransfer.dropEffect = 'copy'; });
+  window.addEventListener('dragleave', ev => { if (!fichiersGlissesBAF(ev)) return; glisseCompteurBAF = Math.max(0, glisseCompteurBAF - 1); if (!glisseCompteurBAF) voile.hidden = true; });
+  window.addEventListener('drop', ev => {
+    if (!fichiersGlissesBAF(ev)) return;
+    const dejaPris = ev.defaultPrevented;   // la zone de dépôt du déclarant a déjà traité son fichier
+    ev.preventDefault(); glisseCompteurBAF = 0; voile.hidden = true;
+    if (dejaPris) return;
+    deposerFichiersBAF([].slice.call(ev.dataTransfer.files || []));
+  });
+}
+brancherDepotBAF();
 
 /* Le routage de la page d'arrivée, en DERNIER : toutes les variables du script
    sont déclarées. Le placer plus haut a déjà arrêté la page deux fois (passe 117,
