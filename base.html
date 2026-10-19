@@ -979,7 +979,7 @@ body:not(.mode-declarant) .declarant-seul{display:none !important;}
    chose lue de la BAF, en lecture : le choix clair / sombre, pour s'ouvrir dans le même thème.
    ══════════════════════════════════════════════════════════════════════════════════════════════ */
 
-const VERSION_BASE = 'BASE v2026.10.19-1';
+const VERSION_BASE = 'BASE v2026.10.19-2';
 const CLE_SOCLE = 'base-dossier-v1', CLE_DECL = 'base-declarant-v1', CLE_MODE = 'base-mode', CLE_THEME = 'base-theme';
 const TYPES_ZONE = [['activite', "Salle d'activité"], ['sejour', 'Séjour, salon'], ['repas', 'Repas'], ['accueil', 'Accueil'], ['circulation', 'Circulation'],
   ['chambre', 'Chambre'], ['repos', 'Salle de repos'], ['calme', 'Salle de mise au calme'], ['snoezelen', 'Salle multisensorielle'], ['soins', 'Soins, infirmerie'],
@@ -998,6 +998,8 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 const nb = (n, mot, pl) => n + ' ' + (n > 1 ? (pl || mot + 's') : mot);
 const clone = o => JSON.parse(JSON.stringify(o));
+// Un fichier importé ne doit pas pouvoir greffer de clés « __proto__ » / « constructor » : on les retire à la lecture.
+const jsonSur = txt => JSON.parse(txt, (k, v) => (k === '__proto__' || k === 'constructor' || k === 'prototype') ? undefined : v);
 const nouvelId = p => p + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 const aujourdhui = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 const maintenantHM = () => { const d = new Date(); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
@@ -1167,7 +1169,7 @@ function choisirFichier(usage) { usageFichier = usage; const f = $('fichier'); f
 function fichierChoisi(ev) {
   const fichiers = [...(ev.target.files || [])]; ev.target.value = '';
   if (!fichiers.length) return;
-  Promise.all(fichiers.map(f => f.text().then(t => { try { return {nom: f.name, objet: JSON.parse(t)}; } catch (e) { return {nom: f.name, objet: null}; } })))
+  Promise.all(fichiers.map(f => f.text().then(t => { try { return {nom: f.name, objet: jsonSur(t)}; } catch (e) { return {nom: f.name, objet: null}; } })))
     .then(lus => {
       if (usageFichier === 'fusion') return fusionnerFichiers(lus);
       const lu = lus[0], r = lireFichierBASE(lu.objet, usageFichier === 'declarant' ? ['base-declarant'] : ['base-dossier']);
@@ -4852,7 +4854,7 @@ function depotChoisi(choix) {
 }
 function deposerFichiers(fichiers) {
   if (!fichiers.length) return;
-  Promise.all(fichiers.map(f => f.text().then(t => { try { return {nom: f.name, objet: JSON.parse(t)}; } catch (e) { return {nom: f.name, objet: null}; } }))).then(ouvrirDepot);
+  Promise.all(fichiers.map(f => f.text().then(t => { try { return {nom: f.name, objet: jsonSur(t)}; } catch (e) { return {nom: f.name, objet: null}; } }))).then(ouvrirDepot);
 }
 function brancherDepot() {
   const voile = document.createElement('div'); voile.id = 'depot-voile'; voile.className = 'no-print'; voile.hidden = true;
@@ -6192,6 +6194,11 @@ function verifierBASE() {
       ouvrirDepot([{nom: 'x.json', objet: null}]); const dit = /pas lisible/.test(alerte); window.alert = vraiAlert;
       ok('Un fichier déclarant déposé sur un dossier ouvert pose la question (trois boutons : annuler, l\'ouvrir pour remplir, le fusionner) ; un fichier illisible le dit', ouverte && dit, [ouverte, dit, alerte].join());
       ok('L\'aide du plan est légère : une ligne et un volet « Tout ce que sait faire le plan », rangé en six sujets', document.querySelectorAll('p.plan-aide').length === 2 && document.querySelectorAll('details.aide-plan .aide-grille > div').length === 6 && ($('vue-preambule').querySelector('p.plan-aide:not([hidden]):not(#lecture-legende)') || {textContent: ''}).textContent.length < 220);
+    }
+    // 26. La sécurité des fichiers importés (passe 248)
+    {
+      const o = jsonSur('{"a":1,"__proto__":{"pollue":1},"b":{"constructor":{"x":1},"c":2}}');
+      ok('Un fichier importé ne peut pas greffer de clés « __proto__ » ou « constructor » : elles sont retirées à la lecture, le reste est gardé', ({}).pollue === undefined && o.a === 1 && o.b.c === 2 && !Object.prototype.hasOwnProperty.call(o, '__proto__') && !('x' in (o.b.constructor || {})), JSON.stringify(o));
     }
   } catch (e) { ok('Les vérifications ont planté', false, e.message); }
   finally { calque = sauveCalque; persister = vraiPersister; toast = vraiToast; window.confirm = vraiConfirm; modeFiche = sauveModeFiche; pieceFiche = null; niveauCourant = sauveNiveau; D = sauveD; mode = sauveMode; selection = null; historique = []; refaites = []; try { rendreJournee(); } catch (e) { /* rien */ } }

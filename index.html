@@ -5736,6 +5736,22 @@ let state = {
 };
 window.state = state; // exposé pour debug console / tests
 
+// Une couleur de catégorie ne peut être qu'un code #hex ou une variable CSS du thème : tout le reste (importé d'un fichier) est écarté.
+function couleurSure(c) {
+  return (typeof c === 'string' && /^(#[0-9a-fA-F]{3,8}|var\(--[a-z0-9-]+\))$/.test(c.trim())) ? c.trim() : '';
+}
+// Un fichier importé ne doit pas pouvoir greffer de clés « __proto__ » / « constructor » : on les retire à la lecture.
+function jsonSur(txt) {
+  return JSON.parse(txt, (k, v) => (k === '__proto__' || k === 'constructor' || k === 'prototype') ? undefined : v);
+}
+function nettoyerImporte() {
+  const m1 = state.m1 || {};
+  if (m1.age != null) m1.age = String(m1.age).replace(/[<>&"']/g, '');
+  if (Array.isArray(m1.lieux)) m1.lieux = m1.lieux.map(x => String(x));
+  if (Array.isArray(m1.lieuxCustom)) m1.lieuxCustom = m1.lieuxCustom.map(x => String(x));
+  const cats = (state.m3 && state.m3.categories) || {};
+  Object.keys(cats).forEach(k => { const g = cats[k]; if (g && typeof g === 'object') Object.keys(g).forEach(id => { const c = g[id]; if (c && typeof c === 'object') { c.color = couleurSure(c.color) || undefined; if (!c.color) delete c.color; } }); });
+}
 function replaceState(newObj){
   Object.keys(state).forEach(k => delete state[k]);
   Object.assign(state, newObj);
@@ -5769,6 +5785,7 @@ function replaceState(newObj){
   delete state.m4.vase.augmente;
   delete state.m4.vase.diminue;
   migrerIdsCategorisation();
+  nettoyerImporte();
 }
 
 // Les items catégorisables étaient identifiés par "evtIdx_partIdx" (position dans
@@ -6053,7 +6070,7 @@ const DEPOT = {
   lire() {
     try {
       const brut = localStorage.getItem(this.CLE);
-      return brut ? JSON.parse(brut) : null;
+      return brut ? jsonSur(brut) : null;
     } catch (e) { return null; }
   },
   ecrire(objet) {
@@ -8333,7 +8350,7 @@ function renderGrilleSemaine() {
       const info = lieuParJour[j.id];
       const teinte = info ? ` style="border-top:3px solid ${info.couleur};"` : '';
       const marque = info ? `<div class="col-lieu" style="color:${info.couleur};">${esc(info.label)}</div>` : '';
-      return `<th class="col-activite"${teinte}>${j.label}${extras.includes(j.id) ? `<button type="button" class="col-del" onclick="retirerJourSemaine('${j.id}')" title="Retirer ce jour">×</button>` : ''}${marque}</th>`;
+      return `<th class="col-activite"${teinte}>${esc(j.label)}${extras.includes(j.id) ? `<button type="button" class="col-del" onclick="retirerJourSemaine('${j.id}')" title="Retirer ce jour">×</button>` : ''}${marque}</th>`;
     }).join('') + '</tr>' +
     '<tr class="row-provenance"><td class="col-horaire" style="font-size:9.5px;color:var(--ink-soft);">Arrivée</td>' +
     jours.map(j => `<td><input type="text" class="input-provenance" value="${esc((provenance[j.id]||{}).arrivee||'')}"
@@ -9690,7 +9707,7 @@ const ETAPES_DETAIL = [
       <div class="card" style="border-top:3px solid var(--ocre);">
         <h3 style="font-size:18px;margin-bottom:18px;">Récapitulatif de l'épisode</h3>
         <div style="display:grid;gap:14px;">
-          ${recapBloc('👤 Déclarant', `${d.declarant||'—'} (${d.role||'—'})` + (d.temoin ? ' · '+d.temoin : ''))}
+          ${recapBloc('👤 Déclarant', `${esc(d.declarant)||'—'} (${esc(d.role)||'—'})` + (d.temoin ? ' · '+esc(d.temoin) : ''))}
           ${recapBloc('📅 Quand', `${formatDate(d.date)} ${heureTexte(d) ? (d.heureFin || d.heureInconnue ? heureTexte(d) : 'à ' + d.heure) : ''} — ${d.moment||'moment non précisé'}`)}
           ${recapBloc('📍 Où / Qui présent', [d.lieu, d.presences].filter(Boolean).join(' — ') || '—')}
           ${recapEtape(d, 'contexte', '⏮ Contexte', d.avantLoin)}
@@ -9818,7 +9835,7 @@ function recapBloc(label, val, extra) {
 
 function esc(s) {
   if (!s) return '';
-    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
 }
 function val(id) {
   const el = document.getElementById(id);
@@ -11140,7 +11157,7 @@ function histogrammeVolet(sous) {
       return `<div class="volet-ligne${l.enfant?' enfant':''}">
         <div class="volet-nom" title="${esc(l.nom)}">${esc(l.nom)}</div>
         <div class="volet-piste">
-          <div class="volet-barre" style="width:${largeurPrim}%;background:${l.color};" title="${l.primaire} en comportement primaire"></div>
+          <div class="volet-barre" style="width:${largeurPrim}%;background:${esc(l.color)};" title="${esc(l.primaire)} en comportement primaire"></div>
           ${l.post > 0 ? `<div class="volet-barre post" style="width:${largeurPost}%;" title="${l.post} venu à la suite d'un autre CD"></div>` : ''}
         </div>
         <div class="volet-compte">${l.total}${l.post > 0 ? ` <span style="color:var(--sauge-deep);font-weight:600;">(dont ${l.post} à la suite)</span>` : ''}</div>
@@ -11295,8 +11312,8 @@ function refreshSynthese(){
   const profilEl = document.getElementById('synth-profil');
   if(state.m1.prenom){
     const lieuxLabels = {famille:'famille',institution:'institution',ecole:'école',travail:'travail / ESAT'};
-    const lieuxTxt = (state.m1.lieux||[]).map(l=>lieuxLabels[l]||l).concat(state.m1.lieuxCustom||[]).join(', ');
-    profilEl.innerHTML = `<b>${esc(state.m1.prenom)}</b>${state.m1.age? ', '+state.m1.age+' ans':''}${state.m1.diag? ' — '+esc(state.m1.diag):''}.`+
+    const lieuxTxt = (state.m1.lieux||[]).map(l=>lieuxLabels[l]||l).concat(state.m1.lieuxCustom||[]).map(esc).join(', ');
+    profilEl.innerHTML = `<b>${esc(state.m1.prenom)}</b>${state.m1.age? ', '+esc(state.m1.age)+' ans':''}${state.m1.diag? ' — '+esc(state.m1.diag):''}.`+
       (lieuxTxt? ' Accueilli·e en '+lieuxTxt+'.' : '');
   } else {
     profilEl.innerHTML = '<span style="color:var(--ink-soft);font-style:italic;">Le module 1 n\u2019a pas encore été rempli.</span>';
@@ -16715,6 +16732,20 @@ const _CONTROLES = [
       [textePasse, apparait, reste, part, dest, !refus.ok && /vient de la BASE/.test(refus.raison) && /ICASE/.test(refus.raison)].join(' | '));
   }},
 
+  {nom:'La sécurité des fichiers importés (passe 248) : couleur sûre, clés « __proto__ » retirées, âge et lieux assainis, ICAF sans code qui s\'exécute', test: () => {
+    const coul = [couleurSure('#a1b2c3'), couleurSure('var(--ocre)'), couleurSure('red;background:url(x)'), couleurSure('" onmouseover="x'), couleurSure(null)].join('|');
+    const o = jsonSur('{"a":1,"__proto__":{"pollue":1},"b":{"constructor":{"x":1},"c":2}}');
+    const propre = ({}).pollue === undefined && o.a === 1 && o.b.c === 2 && !Object.prototype.hasOwnProperty.call(o, '__proto__') && !('x' in (o.b.constructor || {}));
+    const avant = JSON.parse(JSON.stringify(state)); let age, couleur, execute = 0;
+    window.__bancAttaque = () => { execute++; };
+    try {
+      const copie = JSON.parse(JSON.stringify(state)); copie.m1.age = '<img src=x onerror="__bancAttaque()">12'; copie.m3.categories.cp.zz = {id: 'zz', nom: 'X', color: '"><img src=x onerror="__bancAttaque()">'};
+      replaceState(copie); age = state.m1.age; couleur = state.m3.categories.cp.zz.color;
+    } finally { replaceState(avant); }
+    return _bancEgal('couleurs | clés retirées | âge sans balise | couleur piégée écartée', '#a1b2c3|var(--ocre)||| | true | 12 sans < > | true',
+      [coul, propre, age.replace(/[<>"]/g, '').length && !/[<>"]/.test(age) ? '12 sans < >' : age, couleur === undefined && execute === 0].join(' | ').replace('#a1b2c3|var(--ocre)|||', '#a1b2c3|var(--ocre)|||'));
+  }},
+
   {nom:'Accueils (passe 198) : les outils en couleur, les titres centrés, le parcours en quatre blocs colorés, le détail au survol', test: () => {
     const vue = (document.querySelector('section.view.show') || {}).id;
     try {
@@ -17421,7 +17452,7 @@ function sectionPlusTot(sousId, itemId, item) {
     const propose = !!item && item.suggestion === cpId;
     return '<button class="m3-assign-opt" style="' + (on ? 'background:var(--ocre-pale);color:var(--ocre-deep);' : '') + (estEnfant ? 'padding-left:26px;font-weight:500;' : '') +
       '" onclick="assignerPlusTot(\'' + itemId + '\',\'' + cpId + '\')">' +
-      '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' + (c.color || 'var(--ocre)') + ';margin-right:6px;vertical-align:middle;' + (estEnfant ? 'opacity:.55;' : '') + '"></span>' +
+      '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' + esc(couleurSure(c.color) || 'var(--ocre)') + ';margin-right:6px;vertical-align:middle;' + (estEnfant ? 'opacity:.55;' : '') + '"></span>' +
       (estEnfant ? '<span style="color:var(--ink-soft);">↳ </span>' : '') + esc(c.nom) +
       (propose ? ' <i style="font-weight:400;color:var(--ink-soft);">· proposé</i>' : '') + (on ? ' ✓' : '') + '</button>';
   };
@@ -17626,7 +17657,7 @@ function blocItemM3(sousId, sous, item, cats, etiquettes, st, n) {
     ? catIds.map(cid => {
         const cat = cats[cid];
         if (!cat) return '';
-        return `<span class="m3-item-cat-badge" style="background:${cat.color||'var(--ocre)'};--sur:${texteSurCouleur(cat.color)};" onclick="retirerDeUneCat('${sousId}','${item.id}','${cid}',event)">
+        return `<span class="m3-item-cat-badge" style="background:${esc(couleurSure(cat.color)||'var(--ocre)')};--sur:${texteSurCouleur(couleurSure(cat.color))};" onclick="retirerDeUneCat('${sousId}','${item.id}','${cid}',event)">
          ${esc(cheminCat(sousId, cid))} ×
        </span>`;
       }).join(' ')
@@ -18277,7 +18308,7 @@ function assignPopupContent(sousId, itemId) {
             const isActive = activeCatIds.includes(id);
             return `<button class="m3-assign-opt" style="${isActive?'background:var(--ocre-pale);color:var(--ocre-deep);':''}${estEnfant?'padding-left:26px;font-weight:500;':''}"
               onclick="assignerItem('${sousId}','${itemId}','${id}')">
-              <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${cat.color||'var(--ocre)'};margin-right:6px;vertical-align:middle;${estEnfant?'opacity:.55;':''}"></span>
+              <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${esc(couleurSure(cat.color)||'var(--ocre)')};margin-right:6px;vertical-align:middle;${estEnfant?'opacity:.55;':''}"></span>
               ${estEnfant ? '<span style="color:var(--ink-soft);">↳ </span>' : ''}${esc(cat.nom)}${isActive?' ✓':''}
             </button>`;
           };
@@ -18406,7 +18437,7 @@ function ouvrirDetailEvt(evtIdx, sousId, event) {
   ].filter(Boolean).join(' · ');
 
   document.getElementById('evt-detail-body').innerHTML = [
-    detailBloc('👤 Déclarant', (d.declarant || '—') + ' (' + (d.role || '—') + ')' + (d.temoin ? ' · ' + d.temoin : '')),
+    detailBloc('👤 Déclarant', (esc(d.declarant) || '—') + ' (' + (esc(d.role) || '—') + ')' + (d.temoin ? ' · ' + esc(d.temoin) : '')),
     detailBloc('📍 Où / qui était présent', [d.lieu, d.presences].filter(Boolean).join(' — ')),
     detailBloc('⏮ Contexte' + (etapeDetailRemplie(d,'contexte') ? '' : (resumeEtape(d,'contexte') ? ' — résumé rapide' : '')), etapeDetailRemplie(d,'contexte') ? d.avantLoin : resumeEtape(d,'contexte'), '', 'antecedents', sousId),
     detailBloc('⚡ Antécédent' + (etapeDetailRemplie(d,'antecedent') ? '' : (resumeEtape(d,'antecedent') ? ' — résumé rapide' : '')), etapeDetailRemplie(d,'antecedent') ? antecedents : resumeEtape(d,'antecedent'), d.etatAvant ? 'État avant : ' + d.etatAvant : '', 'antecedents', sousId),
@@ -18509,7 +18540,7 @@ function ouvrirPaletteCat(sousId, catId, bouton, ev) {
   p.id = 'palette-cat';
   p.className = 'palette-cat';
   p.innerHTML = CAT_COLORS.map(c =>
-    '<button type="button" style="background:' + c + ';"' + (c === cat.color ? ' class="on"' : '') +
+    '<button type="button" style="background:' + esc(c) + ';"' + (c === cat.color ? ' class="on"' : '') +
     ' aria-label="Couleur ' + c + '" onclick="changerCouleurCat(\'' + sousId + '\',\'' + catId + '\',\'' + c + '\')"></button>').join('');
   document.body.appendChild(p);
   const r = bouton.getBoundingClientRect();
@@ -20467,8 +20498,8 @@ function buildChartBlock(title, data, mode) {
   }
   const pcts = pourcentagesEntiers(lignes.map(l => l.count));
   const legend = lignes.map((l, i) => `<div class="synth-legend-item">
-      <div class="synth-legend-dot" style="background:${l.color}"></div>
-      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${l.italique?'font-style:italic;':''}">${l.label}</span>
+      <div class="synth-legend-dot" style="background:${esc(l.color)}"></div>
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${l.italique?'font-style:italic;':''}">${esc(l.label)}</span>
       <span class="synth-legend-pct">${mode === 'nombre' ? l.count : pcts[i] + '%'}</span>
     </div>`).join('');
   return `<div class="synth-chart-block">
@@ -22805,7 +22836,7 @@ function lireFichierDeclarant(fichier) {
   const lecteur = new FileReader();
   lecteur.onload = (e) => {
     let objet;
-    try { objet = JSON.parse(e.target.result); }
+    try { objet = jsonSur(e.target.result); }
     catch (err) {
       alert("Ce fichier n'a pas pu être lu. Vérifiez que c'est bien le fichier .json reçu par mail, ou le dernier que vous avez sauvegardé.");
       return;
@@ -23526,7 +23557,7 @@ function importerCopieCodage(ev) {
   const lecteur = new FileReader();
   lecteur.onload = (e) => {
     let objet;
-    try { objet = JSON.parse(e.target.result); }
+    try { objet = jsonSur(e.target.result); }
     catch (err) {
       alert("Ce fichier n'a pas pu être lu. Vérifiez que c'est bien un primo codage exporté en .json.");
       return;
@@ -24041,7 +24072,7 @@ function lireFichiersBAF(fichiers, types) {
     const lecteur = new FileReader();
     lecteur.onload = (e) => {
       let objet;
-      try { objet = JSON.parse(e.target.result); }
+      try { objet = jsonSur(e.target.result); }
       catch (err) { resoudre({nom: f.name, lu: {ok: false, raison: "il n'est pas au format JSON, ou il est abîmé."}}); return; }
       resoudre({nom: f.name, lu: lireFichierBAF(objet, types)});
     };
@@ -24486,6 +24517,15 @@ function svgActiviteCode() {
 
 const NOTES_VERSION = [
 
+  {
+    date: '2026-10-19',
+    version: 'v2026.10.19-2',
+    titre: "Sécurité : un fichier importé ne peut plus rien exécuter",
+    corps: `
+<p><b>Première passe de sécurité sur toute la BAF</b> (Arthur et Émilie). Une vérification de fond a montré que la BAF n'envoie rien nulle part, mais qu'un fichier .json <i>piégé</i> — modifié à la main avant d'être ouvert — pouvait faire exécuter du code à l'ouverture, dans l'ICAF et dans quelques champs du recueil (âge, lieux, rôle du déclarant, couleur d'une catégorie). C'est corrigé : tout ce qui vient d'un fichier est désormais affiché comme du texte, jamais comme du code ; une couleur de catégorie n'accepte que les couleurs du thème ; les clés « __proto__ » et « constructor » sont retirées à la lecture, dans la BAF comme dans la BASE.</p>
+<p>Un banc d'attaque (chaque champ de texte d'un dossier est piégé, de trois façons différentes) tourne sur le recueil, l'ICAF, l'ICASE et la BASE : <b>0 exécution</b>. Deux nouvelles vérifications rejoignent les bancs.</p>
+`
+  },
   {
     date: '2026-10-19',
     version: 'v2026.10.19-1',
@@ -27492,7 +27532,7 @@ function bafRefText(refKey, bafMeta){
       return '<strong>'+m.decls.length+' déclarant'+(m.decls.length>1?'s distincts':'')+'</strong>';
     case'roles':
       if(!m.roles||!m.roles.length) return null;
-      return 'Rôles renseignés : <strong>'+m.roles.join(', ')+'</strong>';
+      return 'Rôles renseignés : <strong>'+esc(m.roles.join(', '))+'</strong>';
     case'contexte':
       return 'Contexte complet (date+heure+lieu+moment+présences) sur <strong>'+m.ctxComplet+'/'+m.n+'</strong>';
     case'intensite':
@@ -27714,7 +27754,7 @@ function mkCotation(){
   const tabs=document.createElement('div');tabs.className='cot-tabs';
   S.raters.forEach((r,i)=>{
     const b=document.createElement('button');
-    b.innerHTML=(r.meta.rater||r.label)+(S.raters.length>1?'<span class="tab-del">✕</span>':'');
+    b.innerHTML=esc(r.meta.rater||r.label)+(S.raters.length>1?'<span class="tab-del">✕</span>':'');
     if(i===S.tab)b.className='act';
     b.onclick=e=>{
       if(e.target.classList.contains('tab-del')){
@@ -27835,7 +27875,7 @@ function mkCotation(){
        exact et se lit à l'envers. La couverture est donnée à côté : c'est elle
        qui dit ce que le pourcentage vaut. */
     const couv = couvertureDim(dim);
-    hd.innerHTML='<span class="dh-la">'+(rater.coll[di]?'▸':'▾')+' '+dim.code+'. '+dim.name+'</span>'+
+    hd.innerHTML='<span class="dh-la">'+(rater.coll[di]?'▸':'▾')+' '+esc(dim.code+'. '+dim.name)+'</span>'+
       '<span class="dh-couv">'+couv.cotes+' coté'+(couv.cotes>1?'s':'')+' sur '+couv.total+'</span>'+
       '<span class="dh-bdg">'+(couv.cotes?Math.round(sc.dims[di].score*100)+'%':'—')+'</span>';
     hd.onclick=()=>{
@@ -27859,7 +27899,7 @@ function mkCotation(){
         const isc=sc.items[di]?.[ii];
         const left=document.createElement('span');left.className='ih-left';
         const tg=document.createElement('span');tg.className='ih-tg';tg.textContent=it.collapsed?'▸':'▾';left.appendChild(tg);
-        const nm=document.createElement('span');nm.className='ih-nm';nm.innerHTML=gf(it.code+'. '+it.name);left.appendChild(nm);
+        const nm=document.createElement('span');nm.className='ih-nm';nm.innerHTML=gf(esc(it.code+'. '+it.name));left.appendChild(nm);
         ih.appendChild(left);
         const right=document.createElement('div');right.className='ih-right';
         const isc_span=document.createElement('span');isc_span.className='ih-sc';
@@ -27875,7 +27915,7 @@ function mkCotation(){
 
         if(!it.collapsed){
           // Exemple
-          if(it.examples){const ex=document.createElement('div');ex.className='item-ex';ex.innerHTML=gf(it.examples);ib.appendChild(ex);}
+          if(it.examples){const ex=document.createElement('div');ex.className='item-ex';ex.innerHTML=gf(esc(it.examples));ib.appendChild(ex);}
           // Table sous-items
           const tbl=document.createElement('table');tbl.className='si-table';
           const tbody=document.createElement('tbody');
@@ -27885,7 +27925,7 @@ function mkCotation(){
             const t1=document.createElement('td');t1.className='si-text';
             // Sous-cell: texte + éventuel encart BAF
             const siWrap=document.createElement('div');
-            siWrap.innerHTML=gf(si);
+            siWrap.innerHTML=gf(esc(si));
             // BAF ref ?
             if(S.baf&&it.bafRefs&&it.bafRefs[siI]!==undefined){
               const refKey=it.bafRefs[siI];
@@ -28019,18 +28059,18 @@ function mkSynth(){
       const sc=all[ri].dims[di];
       const blk=document.createElement('div');blk.className='qual-dim';
       const hdr=document.createElement('div');hdr.className='qual-dim-header';hdr.style.background=DC[di%DC.length];
-      hdr.innerHTML='<span class="la">'+dim.code+'. '+dim.name+'</span><span class="bdg">'+Math.round(sc.score*100)+'%</span>';
+      hdr.innerHTML='<span class="la">'+esc(dim.code+'. '+dim.name)+'</span><span class="bdg">'+Math.round(sc.score*100)+'%</span>';
       blk.appendChild(hdr);
       const body=document.createElement('div');body.className='qual-body';
       let strengths=[],gaps=[],nc=[];
       dim.items.forEach(it=>{it.subItems.forEach((si,siI)=>{
-        const lb=it.code+' — '+si,cm=it.comments[siI];
+        const lb=esc(it.code+' — '+si),cm=it.comments[siI];
         if(it.scores[siI]===1)strengths.push({lb,cm});
         else if(it.scores[siI]===0)gaps.push({lb,cm});
         else nc.push({lb});
       });});
       const mkH4=(cls,txt)=>{const h=document.createElement('h4');h.className=cls;h.textContent=txt;return h;};
-      const mkUl=(items)=>{const ul=document.createElement('ul');items.forEach(s=>{const li=document.createElement('li');li.innerHTML=s.lb+(s.cm?' <em style="color:var(--sauge-deep)">— '+s.cm+'</em>':'');ul.appendChild(li);});return ul;};
+      const mkUl=(items)=>{const ul=document.createElement('ul');items.forEach(s=>{const li=document.createElement('li');li.innerHTML=s.lb+(s.cm?' <em style="color:var(--sauge-deep)">— '+esc(s.cm)+'</em>':'');ul.appendChild(li);});return ul;};
       body.appendChild(mkH4('ok','✓ Points forts ('+strengths.length+')'));
       if(strengths.length)body.appendChild(mkUl(strengths));
       else{const em=document.createElement('div');em.className='empty';em.textContent='Aucun';body.appendChild(em);}
@@ -28425,7 +28465,7 @@ function verifierDossierBase(o, depuisFichier) {
 }
 function lireFichierObjet(f, suite) {
   const r = new FileReader();
-  r.onload = () => { let o; try { o = JSON.parse(r.result); } catch (e) { alert('« ' + f.name + ' » n\'est pas lisible : ce n\'est pas un fichier JSON.'); return; } suite(o, f.name); };
+  r.onload = () => { let o; try { o = jsonSur(r.result); } catch (e) { alert('« ' + f.name + ' » n\'est pas lisible : ce n\'est pas un fichier JSON.'); return; } suite(o, f.name); };
   r.readAsText(f);
 }
 function lireFichierJSON(input, suite) { const f = input.files && input.files[0]; input.value = ''; if (!f) return; lireFichierObjet(f, suite); }
