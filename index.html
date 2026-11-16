@@ -5302,7 +5302,7 @@ html[data-theme="sombre"] .analyse-tete .rail-etape.tel-vue{color:#141A22;}
       <span class="synth-qui" id="synth-qui"></span>
       <span class="synth-tete-droite no-print">
         <button type="button" class="synth-confiance" id="synth-confiance" onclick="ouvrirTiroir('tiroir-indice')" title="L'indice de confiance du recueil, critère par critère"></button>
-        <button type="button" class="bt plein" onclick="ouvrirExportModal()" title="Un document Word (.doc), pour le bilan">Exporter pour le bilan</button>
+        <button type="button" class="bt plein" onclick="ouvrirExportModal()" title="Un document Word (.docx), pour le bilan">Exporter pour le bilan</button>
       </span>
     </div>
 
@@ -5423,7 +5423,7 @@ html[data-theme="sombre"] .analyse-tete .rail-etape.tel-vue{color:#141A22;}
 <div id="export-modal-overlay" class="sim-modal-overlay" style="display:none;" onclick="fermerExportModal(event)">
   <div class="sim-modal" role="dialog" aria-modal="true" aria-label="Choisir les sections à exporter">
     <h3>Exporter pour le bilan</h3>
-    <p class="sim-modal-sub">Choisissez ce qui doit figurer dans le document Word. Les onglets de Catégoriser et d'Interpréter sont tous repris, pas seulement celui affiché à l'écran.</p>
+    <p class="sim-modal-sub">Choisissez ce qui doit figurer dans le document Word. Chaque épisode y figure avec son déclaratif en entier ; les onglets de Catégoriser et d'Interpréter sont tous repris, pas seulement celui affiché à l'écran. Un fichier .docx, qui s'ouvre aussi sur téléphone.</p>
     <div style="text-align:left;margin:16px 0;display:flex;flex-direction:column;gap:10px;">
       <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;cursor:pointer;"><input type="checkbox" id="exp-m1" checked> Préambule</label>
       <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;cursor:pointer;"><input type="checkbox" id="exp-m2" checked> Recueil des épisodes</label>
@@ -10994,7 +10994,7 @@ function refreshM2List(){
     const rang = sequenceActive(e);
     const p = rang ? (rang.termine ? 100 : 50) : (episodeDecoupe(e) ? 100 : 0);
     const titreAnneau = p === 100 ? 'Découpé' : p ? 'Découpage commencé' : 'Pas encore découpé';
-    g.html += '<div class="event-item" role="button" tabindex="0" onclick="ouvrirEpisode(' + i + ')">' +
+    g.html += '<div class="event-item" role="button" tabindex="0" data-i="' + i + '" onclick="ouvrirEpisode(' + i + ')">' +
       '<span class="ev-num">' + (i + 1) + '</span>' +
       '<span class="ev-quand"><b>' + esc(quand) + '</b><span>' + esc(e.moment || '') + '</span></span>' +
       '<span class="ev-desc" title="' + esc(desc) + '">' + esc(desc) + '</span>' +
@@ -11234,9 +11234,8 @@ function modeArray(arr) {
    l'équipe les a décrits, et l'état de l'échelle ; ce qui remplit et ce qui
    vide le vase, aux couleurs d'Interpréter ; les observations. Le dessin se
    calcule sur les épisodes cotés : il s'affiche même si rien n'a encore été
-   écrit dans Interpréter. Styles en ligne : l'export Word ne reprend pas la
-   feuille de style de la page, seulement la sienne (construireFichierWord), qui
-   ne connaît que quelques classes. Ce qui compte doit donc être posé sur l'élément. */
+   écrit dans Interpréter. L'export Word relit les styles calculés de la page
+   (domVersDocx, passe 250) : ce qui compte doit rester lisible en texte. */
 function vaseSaisiDansInterpreter() {
   const vase = (state.m4 && state.m4.vase) || {};
   const paliers = (state.m4 && state.m4.paliers) || {};
@@ -12401,16 +12400,15 @@ function exporterJSON(){
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  // Libéré après coup : sur certains téléphones, libérer tout de suite interrompt le téléchargement (passe 250).
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
   // Le contenu est maintenant dans un fichier : la barre le dit, et la fermeture ne gronde plus.
   if (state.origineDossier !== 'simulation') { marquerSocleSauvegarde(); persist(); majBarreDossier(outilCourant, subbarSurAccueilOutil); }
   showToast('Fichier exporté.');
 }
 
-// Export Word : produit un fichier .doc (HTML balisé Word, ouvert nativement
-// par Word) reprenant le même contenu que l'impression — pas de dépendance
-// externe, pas de vrai .docx (zip OOXML), mais éditable et intégrable
-// directement dans un bilan.
+// Export Word : un vrai .docx (passe 250 ; c'était un .doc en HTML, refusé par Word sur téléphone) reprenant le contenu
+// des vues choisies, éditable et intégrable directement dans un bilan.
 // Sections proposées à l'export. La vue est clonée telle qu'elle est rendue.
 const SECTIONS_EXPORT = [
   {cle:'m1',       label:'Préambule', vue:'view-m1'},
@@ -12447,10 +12445,19 @@ function preparerPourExport(racine) {
     const t = sel => { const e = ligne.querySelector(sel); return e ? e.textContent.replace(/\s+/g, ' ').trim() : ''; };
     const marques = [...ligne.querySelectorAll('.ev-tags > span:not(.event-niveau-ico)')].map(e => e.textContent.trim()).filter(Boolean);
     const p = document.createElement('p');
-    p.className = 'event-item';
+    p.className = 'ev-ligne-export';
     p.innerHTML = '<b>' + esc(t('.ev-num')) + '.</b> ' + esc(t('.ev-quand > b')) + (t('.ev-quand > span') ? ' · ' + esc(t('.ev-quand > span')) : '') +
       ' — <span class="ev-desc">' + esc(t('.ev-desc')) + '</span>' + (marques.length ? ' <span class="ev-pastille">(' + esc(marques.join(', ')) + ')</span>' : '');
+    // Le déclaratif en entier, champ par champ (passe 250) : la ligne de la liste n'en montre que 80 caractères.
+    const evt = ligne.hasAttribute('data-i') ? (state.m2.evenements || [])[+ligne.getAttribute('data-i')] : null;
+    const champs = evt ? champsBrut(evt).filter(c => c.champ !== 'quand') : [];
     ligne.replaceWith(p);
+    if (champs.length) {
+      const decl = document.createElement('div');
+      decl.className = 'ev-declaratif';
+      decl.innerHTML = champs.map(c => '<p class="ev-champ"><b>' + esc(c.titre || '') + '</b> : <span class="lecture">' + esc(c.texte).replace(/\n/g, '<br>') + '</span></p>').join('');
+      p.after(decl);
+    }
   });
   // La grille de la semaine : l'horaire et le nom du créneau, l'un sous l'autre (Word les collait : « 09h00 → 09h30Accueil »).
   racine.querySelectorAll('.col-horaire > span:first-child + span').forEach(el => el.before(document.createElement('br')));
@@ -12660,139 +12667,163 @@ async function lancerExportWordEnClair(){
   construireFichierWord(clone);
 }
 
+/* « Exporter pour le bilan » écrit un vrai .docx (passe 250, Arthur et Émilie). Avant, c'était une page HTML déguisée
+   en .doc : Word sur ordinateur l'ouvrait, Word sur téléphone la disait endommagée. La copie de l'écran est désormais
+   relue élément par élément, avec les styles que la page lui donne (gras, italique, couleur, police de lecture, taille),
+   et réécrite en OOXML : titres, paragraphes, listes, tableaux, et les graphiques en images. */
+const DOCX_IGNORES = '.synth-barre .b, .synth-ecart .axe, .synth-ecart .seg, .synth-ecart .base, .synth-ecart .obs, .synth-ecart .eff, ' +
+  '.synth-lire-ex, .volet-piste, .corr-bar-wrap, .m1-progress, .indice-bar-outer, script, style, template';
+function hexCouleur(c) {
+  const m = /^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)$/.exec(String(c || '').trim());
+  if (!m || (m[4] !== undefined && +m[4] < 0.5)) return '';
+  return [m[1], m[2], m[3]].map(x => (+x).toString(16).padStart(2, '0')).join('').toUpperCase();
+}
+function octetsDeDataURL(url) {
+  const m = /^data:([^;,]*)(;base64)?,(.*)$/.exec(url || '');
+  if (!m) return null;
+  const brut = m[2] ? atob(m[3]) : decodeURIComponent(m[3]);
+  const o = new Uint8Array(brut.length);
+  for (let i = 0; i < brut.length; i++) o[i] = brut.charCodeAt(i) & 0xFF;
+  return {type: m[1], octets: o};
+}
+// La taille d'une image PNG est écrite dans son en-tête (IHDR) : largeur aux octets 16-19, hauteur aux octets 20-23.
+function taillePNG(o) {
+  if (o.length < 24 || o[0] !== 0x89 || o[1] !== 0x50) return null;
+  const v = new DataView(o.buffer, o.byteOffset, o.byteLength);
+  return {w: v.getUint32(16), h: v.getUint32(20)};
+}
+// racine doit être accrochée à la page : les styles calculés disent ce qui est caché, en gras, en couleur.
+function domVersDocx(racine, largeurMaxPx) {
+  const medias = [], encre = hexCouleur(getComputedStyle(document.body).color);
+  const largeurTwips = largeurMaxPx * 15;
+  let blocs = [], runs = [], optsP = {};
+  const image = img => {
+    const d = octetsDeDataURL(img.getAttribute('src'));
+    const nat = d && /png/i.test(d.type) ? taillePNG(d.octets) : null;
+    if (!nat || !nat.w || !nat.h) return '';
+    const n = medias.length + 1, l = Math.min(+img.getAttribute('width') || nat.w, largeurMaxPx), h = Math.round(l * nat.h / nat.w);
+    medias.push({id: 'rIdImg' + n, nom: 'image' + n + '.png', octets: d.octets});
+    const cx = l * 9525, cy = h * 9525;
+    return '<w:p><w:pPr><w:spacing w:before="60" w:after="120"/></w:pPr><w:r><w:drawing>' +
+      '<wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="' + cx + '" cy="' + cy + '"/><wp:docPr id="' + n + '" name="Graphique ' + n + '"/>' +
+      '<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">' +
+      '<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="' + n + '" name="image' + n + '.png"/><pic:cNvPicPr/></pic:nvPicPr>' +
+      '<pic:blipFill><a:blip r:embed="rIdImg' + n + '"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>' +
+      '<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="' + cx + '" cy="' + cy + '"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr>' +
+      '</pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>';
+  };
+  const format = (el, parent, enLigne) => {
+    const cs = getComputedStyle(el), f = Object.assign({}, parent);
+    f.gras = parseInt(cs.fontWeight, 10) >= 600;
+    f.italique = cs.fontStyle === 'italic';
+    const c = hexCouleur(cs.color); f.couleur = c && c !== encre ? c : '';
+    const premiere = (cs.fontFamily || '').split(',')[0];
+    f.serif = /serif|georgia|times/i.test(premiere) && !/sans/i.test(premiere);
+    const px = parseFloat(cs.fontSize) || 15;
+    f.taille = px <= 12.5 ? 17 : px >= 22 ? 27 : px >= 17.5 ? 24 : 0;
+    f.pre = /pre/.test(cs.whiteSpace);
+    const fond = enLigne ? hexCouleur(cs.backgroundColor) : '';
+    if (!enLigne) f.fond = ''; else if (fond && fond !== 'FFFFFF') f.fond = fond;
+    return f;
+  };
+  const vider = () => {
+    const r = runs.filter(x => x.t); runs = [];
+    if (!r.some(x => x.t.trim())) return;
+    r[0].t = r[0].t.replace(/^ +/, ''); r[r.length - 1].t = r[r.length - 1].t.replace(/ +$/, '');
+    if (optsP.titre) { blocs.push(docxTitre(Math.min(optsP.titre, 3), r.map(x => x.t).join('').replace(/\s+/g, ' ').trim())); return; }
+    const texte = r.map(x => x.t).join('');
+    blocs.push(docxP(r.map(x => ({t: x.t, gras: x.f.gras, italique: x.f.italique, couleur: x.f.couleur, taille: x.f.taille,
+      police: x.f.serif ? 'Georgia' : '', fond: x.f.fond})),
+      {apres: 80, retrait: optsP.retrait || 0, align: !optsP.puce && texte.length > 140 && r.some(x => x.f.serif) ? 'both' : ''}));
+  };
+  const tableau = tab => {
+    const lignes = [...tab.rows].filter(tr => getComputedStyle(tr).display !== 'none');
+    if (!lignes.length) return '';
+    const nCol = Math.max(1, ...lignes.map(tr => [...tr.cells].reduce((t, c) => t + (c.colSpan || 1), 0)));
+    const lc = Math.floor(largeurTwips / nCol);
+    const bord = n => '<w:' + n + ' w:val="single" w:sz="4" w:space="0" w:color="' + DOCX_C.ligne + '"/>';
+    return '<w:tbl><w:tblPr><w:tblW w:w="' + lc * nCol + '" w:type="dxa"/><w:tblBorders>' +
+      ['top', 'left', 'bottom', 'right', 'insideH', 'insideV'].map(bord).join('') + '</w:tblBorders><w:tblLayout w:type="fixed"/></w:tblPr>' +
+      '<w:tblGrid>' + Array(nCol).fill('<w:gridCol w:w="' + lc + '"/>').join('') + '</w:tblGrid>' +
+      lignes.map(tr => '<w:tr>' + [...tr.cells].filter(td => getComputedStyle(td).display !== 'none').map(td => {
+        const span = td.colSpan || 1, fond = hexCouleur(getComputedStyle(td).backgroundColor);
+        let contenu = convertir(td);
+        if (!contenu || /<\/w:tbl>$/.test(contenu)) contenu += '<w:p/>';
+        return '<w:tc><w:tcPr><w:tcW w:w="' + lc * span + '" w:type="dxa"/>' + (span > 1 ? '<w:gridSpan w:val="' + span + '"/>' : '') +
+          (fond && fond !== 'FFFFFF' ? '<w:shd w:val="clear" w:color="auto" w:fill="' + fond + '"/>' : '') +
+          '<w:tcMar><w:top w:w="40" w:type="dxa"/><w:left w:w="80" w:type="dxa"/><w:bottom w:w="40" w:type="dxa"/><w:right w:w="80" w:type="dxa"/></w:tcMar>' +
+          '</w:tcPr>' + contenu + '</w:tc>';
+      }).join('') + '</w:tr>').join('') + '</w:tbl>' + docxP('', {apres: 60});
+  };
+  const marcher = (n, f) => {
+    if (n.nodeType === 3) {
+      let t = n.nodeValue;
+      if (!f.pre) t = t.replace(/\s+/g, ' ');
+      if (!t || (t === ' ' && (!runs.length || /\s$/.test(runs[runs.length - 1].t)))) return;
+      runs.push({t, f});
+      return;
+    }
+    if (n.nodeType !== 1) return;
+    const el = n, tag = el.tagName.toLowerCase();
+    if (el.matches(DOCX_IGNORES)) return;
+    const cs = getComputedStyle(el);
+    if (cs.display === 'none' || cs.visibility === 'hidden') return;
+    if (tag === 'br') { runs.push({t: '\n', f}); return; }
+    if (tag === 'img') { vider(); blocs.push(image(el)); return; }
+    if (tag === 'table') { vider(); blocs.push(tableau(el)); return; }
+    const titre = /^h[1-5]$/.test(tag) ? +tag[1] : 0;
+    // Une balise de texte rangée dans une ligne flexible (le nom et le nombre d'une barre) reste sur la même ligne, séparée d'un point médian.
+    const pere = el.parentElement ? getComputedStyle(el.parentElement) : null;
+    const enRang = !titre && !/^inline/.test(cs.display) && /^(span|b|strong|i|em|small|a|label|code|abbr)$/.test(tag) &&
+      pere && /flex|grid/.test(pere.display) && !/column/.test(pere.flexDirection);
+    const enLigne = !titre && (/^inline/.test(cs.display) || enRang);
+    const f2 = format(el, f, enLigne);
+    if (enRang && runs.length && !/\s$/.test(runs[runs.length - 1].t)) runs.push({t: ' · ', f});
+    if (enLigne) { [...el.childNodes].forEach(c => marcher(c, f2)); return; }
+    vider();
+    const avant = optsP;
+    optsP = {titre, retrait: el.closest('.ev-declaratif') ? 340 : (avant.retrait || 0)};
+    if (tag === 'li') {
+      const liste = el.parentElement, rang = [...liste.children].filter(x => x.tagName === 'LI').indexOf(el) + 1;
+      optsP.puce = true; optsP.retrait = (avant.retrait || 0) + 340;
+      runs.push({t: (liste.tagName === 'OL' ? rang + '. ' : '• '), f: f2});
+    }
+    [...el.childNodes].forEach(c => marcher(c, f2));
+    vider();
+    optsP = avant;
+  };
+  // Le contenu d'une cellule : la même lecture, dans sa propre suite de paragraphes.
+  const convertir = parent => {
+    const sauve = [blocs, runs, optsP];
+    blocs = []; runs = []; optsP = {};
+    const f = format(parent, {}, false);
+    [...parent.childNodes].forEach(c => marcher(c, f));
+    vider();
+    const out = blocs.join('');
+    [blocs, runs, optsP] = sauve;
+    return out;
+  };
+  const corps = convertir(racine);
+  return {corps, medias};
+}
+
 function construireFichierWord(clone){
   const prenom = state.m1.prenom || 'sans nom';
   const dateAffichee = new Date().toLocaleDateString('fr-FR');
-  /* Word rend un HTML de 1997 : pas de flex, pas de grid, pas de variables.
-     Ce qui passe : les bordures, les fonds, les couleurs littérales, les
-     tableaux et les images. On reprend donc l'allure de la synthèse avec ces
-     moyens-là — ce sera ressemblant, pas identique. */
-  const css = `
-    @page{margin:2cm 1.8cm;}
-    body{font-family:'Segoe UI',Calibri,Arial,sans-serif;font-size:10.5pt;color:#2C2416;background:#FFFFFF;}
-    h1{font-size:19pt;color:#3D4F6B;margin:0 0 2pt;}
-    h2{font-size:15pt;color:#3D4F6B;margin:20pt 0 4pt;padding-bottom:3pt;border-bottom:1.5pt solid #9AB5A8;}
-    h3{font-size:13pt;color:#3D4F6B;margin:14pt 0 4pt;}
-    h4,h5{font-size:11.5pt;color:#2C2416;margin:12pt 0 4pt;}
-    p{margin:0 0 6pt;line-height:1.45;}
-    img{max-width:100%;}
-    .temps-tag{background:#EDE7D9;color:#6B6152;font-size:8.5pt;font-weight:bold;padding:2pt 6pt;}
-    .mod-header .sub, .help, .explorer-avert, .scatter-sub, .sp-avert, .vase-part-aide{
-      color:#6B6152;font-size:9.5pt;line-height:1.5;}
-    .card, .synth-niveau, .synth-chart-block, .suggestions-patterns, .vase-palier-bloc,
-    .m3-cat, .abc-pattern, .grad-item, .indice-crit{
-      border:0.75pt solid #D9D0C0;background:#FDFAF4;padding:8pt 10pt;margin:0 0 9pt;}
-    .suggestions-patterns{border-left:3pt solid #3D4F6B;}
-    .kpi{border:0.75pt solid #D9D0C0;background:#F5F0E8;padding:7pt 9pt;margin:0 6pt 6pt 0;
-         float:left;min-width:100pt;text-align:center;}
-    .kpi .val{font-size:15pt;font-weight:bold;color:#2C2416;}
-    .kpi .lbl{font-size:8pt;color:#6B6152;text-transform:uppercase;}
-    .kpi .kpi-sub{font-size:8pt;color:#6B6152;font-style:italic;}
-    .kpi-row{overflow:hidden;}
-    .kpi-row:after{content:'';display:block;clear:both;}
-    .surtitre{font-size:8pt;font-weight:bold;letter-spacing:1pt;text-transform:uppercase;color:#746B5B;margin:18pt 0 2pt;}
-    .phrase{font-family:Georgia,'Times New Roman',serif;font-size:13pt;font-weight:bold;color:#2C2416;margin:2pt 0 8pt;line-height:1.35;}
-    .phrase em{font-style:normal;background:#FFF3CC;}
-    .feuille{border:0.75pt solid #E6DFD2;background:#FFFDF8;padding:8pt 10pt;margin:0 0 9pt;}
-    .feuille-titre{font-size:9.5pt;font-weight:bold;color:#6B6152;margin:0 0 5pt;}
-    .lecture{font-family:Georgia,'Times New Roman',serif;font-size:10.5pt;line-height:1.5;}
-    .synth-avertir, .discret{font-size:8.5pt;color:#746B5B;}
-    .synth-question{background:#FBF8F2;padding:6pt 9pt;margin:8pt 0 0;font-family:Georgia,'Times New Roman',serif;font-size:10.5pt;}
-    .synth-question b{display:block;font-family:'Segoe UI',Calibri,Arial,sans-serif;font-size:8pt;color:#746B5B;text-transform:uppercase;}
-    .synth-chaleur{border-collapse:separate;width:auto;}
-    .synth-chaleur td{border:0.5pt solid #FFFFFF;width:34pt;height:16pt;text-align:center;font-size:9pt;}
-    .synth-chaleur th{border:0;background:#FFFFFF;font-size:8.5pt;color:#6B6152;}
-    .repli-titre{font-size:9.5pt;font-weight:bold;color:#6B6152;margin:8pt 0 4pt;}
-    .synth-barre{margin:0 0 2.5pt;}
-    .synth-barre .nom{display:inline-block;width:62%;font-size:9.5pt;}
-    .synth-barre .b{display:none;}
-    .synth-barre .n{display:inline-block;width:30%;font-size:9pt;color:#6B6152;}
-    .event-item{margin:0 0 3pt;padding:3pt 0;border-top:0.5pt solid #E8E2D6;}
-    .typo-cat{margin:8pt 0 2pt;font-size:11pt;}
-    .typo-cat.sous{margin-left:14pt;font-size:10.5pt;}
-    .typo-elements{margin:0 0 4pt 14pt;}
-    .typo-elements li{font-size:9.5pt;margin:0 0 1pt;}
-    .ev-num{font-weight:bold;color:#746B5B;padding-right:6pt;}
-    .ev-quand b{padding-right:6pt;}
-    .ev-quand span{color:#6B6152;padding-right:6pt;}
-    .ev-desc{font-family:Georgia,'Times New Roman',serif;}
-    .ev-pastille{font-size:8pt;color:#6B6152;padding-left:4pt;}
-    .ev-groupe-mois{font-weight:bold;font-size:11pt;margin:10pt 0 3pt;}
-    .ev-groupe-mois small{font-weight:normal;color:#746B5B;padding-left:6pt;}
-    .ev-groupe-semaine{font-size:8pt;color:#746B5B;text-transform:uppercase;margin:4pt 0 0;}
-    .synth-piste{border:0.75pt solid #E6DFD2;background:#FFFDF8;padding:8pt 10pt;margin:0 0 8pt;}
-    .synth-solidite{font-size:8.5pt;font-weight:bold;color:#9C7A00;text-transform:uppercase;}
-    .piste-phrase{font-family:Georgia,'Times New Roman',serif;font-size:11pt;margin:2pt 0 3pt;}
-    .synth-ecart .axe, .synth-ecart .seg, .synth-ecart .base, .synth-ecart .obs, .synth-ecart .eff, .synth-lire-ex{display:none;}
-    .synth-ecart .eff-word{font-size:9pt;color:#6B6152;}
-    .synth-lire{font-size:9pt;color:#6B6152;margin:0 0 6pt;}
-    .synth-tag{padding:0 4pt;font-size:9pt;}
-    .synth-ligne{font-size:9.5pt;margin:0 0 3pt;}
-    .synth-accord{font-size:9pt;font-weight:bold;color:#46685A;}
-    .note-eq-titre{font-size:8pt;font-weight:bold;color:#746B5B;text-transform:uppercase;}
-    .synth-chaine{margin:3pt 0;}
-    .synth-autres-table td, .synth-autres-table th{font-size:9pt;}
-    .legende-volets{border:0.75pt solid #D9D0C0;background:#F5F0E8;padding:5pt 8pt;margin:0 0 8pt;font-size:9pt;}
-    .legende-volets .lv-item{margin-right:14pt;}
-    .lv-pastille{display:inline-block;width:9pt;height:9pt;}
-    .m3-item, .vase-signe, .vase-tag, .cs-chip, .m3-cat-item-chip, .corr-tag, .sp-chiffre{
-      font-size:9.5pt;}
-    .m3-item{border:0.75pt solid #D9D0C0;background:#F5F0E8;padding:5pt 7pt;margin:0 0 4pt;}
-    .m3-item-tag-post{background:#74495A;color:#FFFFFF;font-size:7.5pt;padding:1pt 5pt;}
-    .m3-item-cat-badge{background:#3D4F6B;color:#FFFFFF;font-size:8.5pt;padding:1pt 6pt;}
-    .m3-item-source{font-size:8.5pt;color:#6B6152;font-style:italic;}
-    .scatter-legend, .synth-chart-legend{font-size:9pt;color:#6B6152;}
-    .scatter-legend-swatch, .synth-legend-dot{display:inline-block;width:9pt;height:9pt;}
-    .sp-item{border-top:0.5pt solid #E8E2D6;padding:5pt 0;font-size:10pt;line-height:1.5;}
-    .sp-chiffre{background:#EDE7D9;padding:0 3pt;font-weight:bold;}
-    .ethique, .vase-prudence, .vase-alerte, .vase-ancienne{
-      background:#F8E8E0;border-left:3pt solid #A8503A;padding:6pt 9pt;font-size:9.5pt;margin:0 0 8pt;}
-    .rappel-resume{background:#EDE7D9;border-left:3pt solid #3D4F6B;padding:6pt 9pt;font-size:9.5pt;}
-    table{border-collapse:collapse;width:100%;margin:0 0 9pt;}
-    td,th{border:0.5pt solid #D9D0C0;padding:3pt 5pt;font-size:9.5pt;vertical-align:top;}
-    th{background:#EDE7D9;text-align:left;}
-    .synth-chart-title, .volet-histo-titre, .scatter-title{
-      font-size:9.5pt;font-weight:bold;color:#6B6152;text-transform:uppercase;margin:0 0 5pt;}
-    .volet-ligne{margin:0 0 2.5pt;}
-    .volet-nom{display:inline-block;width:62%;font-size:9.5pt;color:#2C2416;}
-    .volet-compte{display:inline-block;width:34%;font-size:9pt;color:#6B6152;}
-    .volet-piste, .corr-bar-wrap, .m1-progress, .indice-bar-outer{display:none;}
-    .corr-row{margin:0 0 3pt;font-size:9.5pt;}
-    .corr-tag{display:inline-block;padding:1pt 6pt;color:#FFFFFF;font-size:9pt;}
-    .corr-arrow{display:inline-block;padding:0 4pt;color:#6B6152;}
-    .corr-count, .corr-pct{display:inline-block;padding-left:6pt;color:#6B6152;font-size:9pt;}
-    .scatter-legend-item, .synth-legend-item{display:inline-block;margin-right:12pt;font-size:9pt;}
-    .synth-legend-pct{padding-left:5pt;font-weight:bold;}
-    .indice-crit{margin:0 0 5pt;}
-    .indice-crit-icon{display:inline-block;padding-right:5pt;}
-    .indice-crit-body{display:inline;}
-    .indice-crit-label{display:inline;font-weight:bold;font-size:9.5pt;}
-    .indice-crit-conseil{font-size:9pt;color:#6B6152;margin-top:2pt;}
-    .indice-score{font-size:22pt;font-weight:bold;}
-    .baf-pied{margin-top:16pt;padding-top:6pt;border-top:0.5pt solid #D9D0C0;
-              font-size:8.5pt;color:#6B6152;}
-  `;
-  const html = `<!DOCTYPE html>
-<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-<head><meta charset="utf-8"><title>BAF</title><style>${css}</style></head>
-<body>
-<h1>BAF — Boussole pour une Analyse Fonctionnelle</h1>
-<p style="color:#6B6152;font-size:10pt;margin-bottom:14pt;"><b>${esc(prenom)}</b> — document produit le ${dateAffichee}</p>
-${resoudreVariablesCSS(clone.innerHTML)}
-<div class="baf-pied">Produit par la BAF — Boussole pour une Analyse Fonctionnelle, ${versionCourante()}. Outil créé par Émilie Musard, éducatrice spécialisée, et Arthur Guillieux, psychologue clinicien.</div>
-</body></html>`;
-
-  const blob = new Blob(['﻿', html], {type:'application/msword'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  // La copie est accrochée hors de l'écran le temps de la lecture : sans elle, pas de styles calculés.
+  const hote = document.createElement('div');
+  hote.style.cssText = 'position:fixed;left:-99999px;top:0;width:1100px;';
+  hote.appendChild(clone);
+  document.body.appendChild(hote);
+  let conv;
+  try { conv = domVersDocx(clone, 640); } finally { hote.remove(); }
+  const entete = docxTitre(1, 'BAF — Boussole pour une Analyse Fonctionnelle') +
+    docxP([{t: prenom, gras: true}, {t: ' — document produit le ' + dateAffichee, couleur: DOCX_C.inkSoft}], {apres: 280});
+  const signature = docxP('Outil créé par Émilie Musard, éducatrice spécialisée, et Arthur Guillieux, psychologue clinicien.',
+    {italique: true, taille: 17, couleur: DOCX_C.inkSoft, avant: 280, apres: 0});
   const prenomFile = state.m1.prenom ? state.m1.prenom.replace(/[^\p{L}\p{N}]/gu,'_') : 'sans_nom';
   const dateFile = new Date().toISOString().slice(0,10);
-  a.href = url;
-  a.download = `RDAF-donnees_${prenomFile}_${dateFile}.doc`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  telechargerFichier(construireDocx(entete + conv.corps + signature, false, conv.medias), `RDAF-donnees_${prenomFile}_${dateFile}.docx`);
   showToast('Document Word exporté.');
 }
 
@@ -16522,6 +16553,35 @@ const _CONTROLES = [
     const txt = [...copie.children].map(c => c.textContent.replace(/\s+/g, ' ').trim()).join(' / ');
     return _bancEgal('texte exporté | marques laissées sur la page', 'Pour Word / Visible / 12. mer. 8 avr. · 09:11 · Accueil — A crié. (Nadia) | 0',
       (document.body.classList.contains('mode-codage') ? '(mode codage)' : txt) + ' | ' + marquesRestees);
+  }},
+
+  {nom:'Export pour le bilan (passe 250) : un vrai .docx, le déclaratif en entier, les graphiques en images, un XML que Word sur téléphone accepte', test: () => {
+    const evts = state.m2.evenements, sauve = evts.slice();
+    const long = 'Début. ' + 'Une phrase du déclarant qui ne doit pas être coupée. '.repeat(6) + 'FIN.';
+    evts.splice(0, evts.length, {id: 'e_banc250', date: '2026-03-02', heure: '10:00', comportement: long});
+    const hote = document.createElement('div');
+    // Un PNG d'un pixel : le document doit l'emporter dans word/media.
+    const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+    hote.innerHTML = '<h2>Recueillir</h2><div class="event-item" data-i="0"><span class="ev-num">1</span><span class="ev-quand"><b>lun. 2 mars</b><span></span></span>' +
+      '<span class="ev-desc">' + long.slice(0, 80) + '…</span><span class="ev-tags"></span></div><ul><li>un</li><li><b>deux</b></li></ul>' +
+      '<table><tr><th>A</th><th>B</th></tr><tr><td>1</td><td style="background:#C9A84C">2</td></tr></table><img src="' + png + '" width="40">';
+    let conv, docx, ok = {};
+    try {
+      preparerPourExport(hote);
+      document.body.appendChild(hote);
+      try { conv = domVersDocx(hote, 640); } finally { hote.remove(); }
+      docx = construireDocx(conv.corps, false, conv.medias);
+    } finally { evts.splice(0, evts.length, ...sauve); }
+    const xml = '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"><w:body>' + conv.corps + '</w:body></w:document>';
+    const lu = new DOMParser().parseFromString(xml, 'application/xml');
+    const texte = [...lu.getElementsByTagNameNS('*', 't')].map(t => t.textContent).join('');
+    // Dans un réglage de texte, rFonts vient avant b, b avant color, color avant sz : l'ordre du schéma.
+    const ordreOk = [...lu.getElementsByTagNameNS('*', 'rPr')].every(r => { const n = [...r.children].map(c => c.localName); const rang = ['rFonts', 'b', 'i', 'caps', 'color', 'sz', 'szCs', 'shd'];
+      return n.every((x, k) => k === 0 || rang.indexOf(n[k - 1]) <= rang.indexOf(x)); });
+    return _bancEgal('XML valide | déclaratif entier | liste | tableau | fond de cellule | image | ordre des réglages | type du fichier',
+      'true | true | true | true | true | 1 | true | application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      [!lu.querySelector('parsererror'), texte.indexOf('FIN.') > 0 && texte.indexOf(long) >= 0, /• un/.test(texte) && /• deux/.test(texte),
+        lu.getElementsByTagNameNS('*', 'tbl').length === 1, /w:fill="C9A84C"/.test(conv.corps), conv.medias.length, ordreOk, docx.type].join(' | '));
   }},
 
   {nom:'ICAF : une cotation exportée se rouvre par « Importer », sans toucher au dossier ouvert ; ailleurs elle est refusée', test: () => {
@@ -20668,7 +20728,7 @@ function zipStocke(fichiers) {
 
   fichiers.forEach(f => {
     const nom = enc.encode(f.nom);
-    const data = enc.encode(f.texte);
+    const data = f.octets || enc.encode(f.texte);
     const somme = crc32(data);
     // 0x0800 : le nom du fichier est en UTF-8.
     const entete = [].concat(
@@ -20720,12 +20780,15 @@ const DOCX_C = {
 
 function docxRun(t, o) {
   o = o || {};
+  // L'ordre des réglages est celui du schéma OOXML : Word sur ordinateur pardonne le désordre, Word sur téléphone non (passe 250).
   const rPr = '<w:rPr>' +
+    (o.police ? '<w:rFonts w:ascii="' + o.police + '" w:hAnsi="' + o.police + '" w:cs="' + o.police + '"/>' : '') +
     (o.gras ? '<w:b/>' : '') +
     (o.italique ? '<w:i/>' : '') +
-    (o.taille ? '<w:sz w:val="' + o.taille + '"/><w:szCs w:val="' + o.taille + '"/>' : '') +
-    (o.couleur ? '<w:color w:val="' + o.couleur + '"/>' : '') +
     (o.majuscules ? '<w:caps/>' : '') +
+    (o.couleur ? '<w:color w:val="' + o.couleur + '"/>' : '') +
+    (o.taille ? '<w:sz w:val="' + o.taille + '"/><w:szCs w:val="' + o.taille + '"/>' : '') +
+    (o.fond ? '<w:shd w:val="clear" w:color="auto" w:fill="' + o.fond + '"/>' : '') +
     '</w:rPr>';
   // Un saut de ligne à l'intérieur d'un paragraphe devient <w:br/>.
   const morceaux = String(t == null ? '' : t).split('\n');
@@ -20747,10 +20810,10 @@ function docxP(contenu, o) {
     : '';
   const fond = o.fond ? '<w:shd w:val="clear" w:color="auto" w:fill="' + o.fond + '"/>' : '';
   const pPr = '<w:pPr>' +
-    '<w:spacing w:before="' + (o.avant != null ? o.avant : 0) + '" w:after="' + (o.apres != null ? o.apres : 100) + '"/>' +
-    (o.align ? '<w:jc w:val="' + o.align + '"/>' : '') +
-    (o.retrait ? '<w:ind w:left="' + o.retrait + '"/>' : '') +
     bordure + fond +
+    '<w:spacing w:before="' + (o.avant != null ? o.avant : 0) + '" w:after="' + (o.apres != null ? o.apres : 100) + '"/>' +
+    (o.retrait ? '<w:ind w:left="' + o.retrait + '"/>' : '') +
+    (o.align ? '<w:jc w:val="' + o.align + '"/>' : '') +
     (o.niveauPlan != null ? '<w:outlineLvl w:val="' + o.niveauPlan + '"/>' : '') +
     '</w:pPr>';
   return '<w:p>' + pPr + corps + '</w:p>';
@@ -20778,9 +20841,9 @@ function docxCellule(contenu, largeur, o) {
 function docxTableau(lignes, largeurs, o) {
   o = o || {};
   const bord = (n) => '<w:' + n + ' w:val="single" w:sz="6" w:space="0" w:color="' + DOCX_C.ligne + '"/>';
-  const tbl = '<w:tbl><w:tblPr><w:tblW w:w="0" w:type="auto"/><w:tblLayout w:type="fixed"/>' +
+  const tbl = '<w:tbl><w:tblPr><w:tblW w:w="0" w:type="auto"/>' +
     '<w:tblBorders>' + ['top','left','bottom','right','insideH','insideV'].map(bord).join('') + '</w:tblBorders>' +
-    '</w:tblPr><w:tblGrid>' + largeurs.map(l => '<w:gridCol w:w="' + l + '"/>').join('') + '</w:tblGrid>' +
+    '<w:tblLayout w:type="fixed"/></w:tblPr><w:tblGrid>' + largeurs.map(l => '<w:gridCol w:w="' + l + '"/>').join('') + '</w:tblGrid>' +
     lignes.map((lg, i) => {
       const hauteur = (i === 0 ? (o.hauteurEntete || 0) : (o.hauteur || 0));
       return '<w:tr>' +
@@ -20790,7 +20853,8 @@ function docxTableau(lignes, largeurs, o) {
   return tbl;
 }
 
-function construireDocx(corps, paysage) {
+function construireDocx(corps, paysage, medias) {
+  medias = medias || [];
   const pgSz = paysage
     ? '<w:pgSz w:w="16838" w:h="11906" w:orient="landscape"/><w:pgMar w:top="794" w:right="794" w:bottom="794" w:left="794" w:header="0" w:footer="0" w:gutter="0"/>'
     : '<w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="0" w:footer="0" w:gutter="0"/>';
@@ -20803,7 +20867,7 @@ function construireDocx(corps, paysage) {
   }], {avant: 220, apres: 0});
 
   const document = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
-    '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">' +
+    '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">' +
     '<w:body>' + corps + pied + '<w:sectPr>' + pgSz + '</w:sectPr></w:body></w:document>';
 
   const styles = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
@@ -20821,6 +20885,7 @@ function construireDocx(corps, paysage) {
     '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
     '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
     '<Default Extension="xml" ContentType="application/xml"/>' +
+    (medias.length ? '<Default Extension="png" ContentType="image/png"/>' : '') +
     '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>' +
     '<Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>' +
     '</Types>';
@@ -20833,6 +20898,7 @@ function construireDocx(corps, paysage) {
   const relsDoc = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
     '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
     '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>' +
+    medias.map(m => '<Relationship Id="' + m.id + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/' + m.nom + '"/>').join('') +
     '</Relationships>';
 
   return zipStocke([
@@ -20841,7 +20907,7 @@ function construireDocx(corps, paysage) {
     {nom: 'word/_rels/document.xml.rels', texte: relsDoc},
     {nom: 'word/document.xml', texte: document},
     {nom: 'word/styles.xml', texte: styles}
-  ]);
+  ].concat(medias.map(m => ({nom: 'word/media/' + m.nom, octets: m.octets}))));
 }
 
 function telechargerDocx(nomFichier, corps, paysage) {
@@ -22430,7 +22496,7 @@ function telechargerTexte(texte, nom, type) {
   const a = document.createElement('a');
   a.href = url; a.download = nom;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 /* ── Côté déclarant : ouvrir un fichier ─────────────────────────────
@@ -24536,6 +24602,16 @@ function svgActiviteCode() {
 
 const NOTES_VERSION = [
 
+  {
+    date: '2026-11-16',
+    version: 'v2026.11.16-1',
+    titre: "L'export pour le bilan : un vrai Word, qui s'ouvre sur téléphone, avec le déclaratif en entier",
+    corps: `
+<p><b>« Exporter pour le bilan » produit désormais un vrai fichier Word (.docx)</b> (Arthur et Émilie). C'était une page web déguisée en .doc : Word sur ordinateur l'acceptait, Word sur téléphone la disait endommagée. Le document reprend les mêmes sections, avec les titres, les listes, les tableaux et les graphiques en images.</p>
+<p><b>Le déclaratif de chaque épisode y figure en entier</b>, champ par champ (qui déclare, où, juste avant, ce qui s'est passé, le vase, les interventions, l'issue, le commentaire…). Jusqu'ici, le document ne reprenait que la ligne de la liste, coupée à 80 caractères.</p>
+<p>Au passage : les autres documents Word de la BAF (grille ABC, préambule, guide, mode d'emploi) écrivent leurs réglages dans l'ordre exact que demande le format, ce que Word sur téléphone exige ; et les téléchargements du fichier socle, de l'ICAF, de l'ICASE et du brouillon de mail ne sont plus interrompus sur certains téléphones.</p>
+`
+  },
   {
     date: '2026-10-19',
     version: 'v2026.10.19-3',
@@ -28227,7 +28303,7 @@ function saveJ(){
   let fn='ICAF';
   if(S.raters[0]?.meta.id)fn+='_'+S.raters[0].meta.id.replace(/[^\p{L}\p{N}]/gu,'_');
   fn+='_'+new Date().toISOString().slice(0,10)+'.json';
-  a.href=u;a.download=fn;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);
+  a.href=u;a.download=fn;document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(()=>URL.revokeObjectURL(u),1000);
 }
 
 function confirmerReset(){
@@ -28536,7 +28612,7 @@ function exporterCotationSE() {
   const d = contenuCotationSE();
   const b = new Blob([JSON.stringify(d, null, 2)], {type: 'application/json'}), u = URL.createObjectURL(b), a = document.createElement('a');
   let fn = 'ICASE'; const id = (SE.raters[0] && SE.raters[0].meta.id) || SE.lieu; if (id) fn += '_' + id.replace(/[^\p{L}\p{N}]+/gu, '_').replace(/^_|_$/g, ''); fn += '_' + aujourdhuiSE() + '.json';
-  a.href = u; a.download = fn; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(u);
+  a.href = u; a.download = fn; document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(() => URL.revokeObjectURL(u), 1000);
 }
 function recommencerSE() { if (!confirm('Effacer cette cotation et recommencer depuis l\'accueil de l\'ICASE ? Cette action est irréversible (pensez à exporter avant si besoin).')) return; SE = {mode: null, lieu: '', meta: null, raters: [], tab: 0, vue: 'cotation'}; route('icase'); }
 
